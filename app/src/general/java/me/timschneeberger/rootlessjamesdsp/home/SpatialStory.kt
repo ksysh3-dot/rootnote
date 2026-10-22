@@ -527,7 +527,7 @@ private fun DistanceScene(state: StoryState, col: StageColors, description: Stri
             head(s, col)
         }
         Text(
-            stringResource(R.string.story_delay, dist.roundToInt(), degrees, delayMs),
+            stringResource(R.string.story_delay, dist.roundToInt(), degrees, String.format(java.util.Locale.ROOT, "%.2f", delayMs)),
             color = c.xtcAccentText, fontSize = 15.sp, lineHeight = 21.sp, fontWeight = FontWeight.Bold,
         )
         // distance: drag across the bar (25..60 cm)

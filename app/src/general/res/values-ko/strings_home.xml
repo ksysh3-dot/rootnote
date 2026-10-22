@@ -83,7 +83,7 @@
     <string name="story_listen_on">켜고 듣기</string>
     <string name="story_listen_hint">음악을 틀어 놓고 바꿔 보세요. 이 화면을 닫으면 원래 설정으로 돌아가요.</string>
     <string name="story_listen_unavailable">Rootnote가 켜져 있을 때 들어 볼 수 있어요.</string>
-    <string name="story_delay">%1$d cm · 두 스피커 사이 %2$d° · 늦게 닿는 시간 %3$.2f ms</string>
+    <string name="story_delay">%1$d cm · 두 스피커 사이 %2$d° · 늦게 닿는 시간 %3$s ms</string>
     <string-array name="story_scene_a11y">
         <item>위에서 본 그림. 폰의 왼쪽과 오른쪽 스피커에서 나온 음파가 두 귀에 모두 닿고, 소리 위치가 폰 가운데 한 점으로 모여요.</item>
         <item>왼쪽 스피커 소리가 오른쪽 귀로 가는 길에, 오른쪽 스피커가 뒤집힌 파형을 보내요. 두 파형을 더하면 평평한 선이 돼요.</item>

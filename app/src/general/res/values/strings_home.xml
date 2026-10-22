@@ -83,7 +83,7 @@
     <string name="story_listen_on">On</string>
     <string name="story_listen_hint">Play some music and switch. Closing this screen brings your own setting back.</string>
     <string name="story_listen_unavailable">You can listen while Rootnote is on.</string>
-    <string name="story_delay">%1$d cm · %2$d° between the speakers · arrives %3$.2f ms later</string>
+    <string name="story_delay">%1$d cm · %2$d° between the speakers · arrives %3$s ms later</string>
     <string-array name="story_scene_a11y">
         <item>Seen from above. Sound waves from the phone\'s left and right speakers reach both ears, and the sound gathers into one point in the middle of the phone.</item>
         <item>On its way from the left speaker to the right ear, the right speaker sends an inverted wave. Added together, the two waves make a flat line.</item>
