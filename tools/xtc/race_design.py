@@ -142,10 +142,10 @@ def main():
         for name, gdb in STRENGTHS.items():
             g = 10 ** (gdb / 20)
             m, s = canceller(f, fs, g, tau, args.f_lo, args.f_hi)
-            ax[0].semilogx(f, 20 * np.log10(np.abs(m)), label=f"M {name}")
-            ax[0].semilogx(f, 20 * np.log10(np.abs(s)), "--", label=f"S {name}")
+            ax[0].semilogx(f, 20 * np.log10(np.abs(m)), label=f"M {gdb:g} dB")
+            ax[0].semilogx(f, 20 * np.log10(np.abs(s)), "--", label=f"S {gdb:g} dB")
             on, off = separation(f, fs, g, tau, args.f_lo, args.f_hi, tau, HEADS["M"], theta)
-            ax[1].semilogx(f, on, label=f"on {name}")
+            ax[1].semilogx(f, on, label=f"on {gdb:g} dB")
         ax[1].semilogx(f, off, "k:", label="off")
         ax[0].set_ylabel("dB"); ax[0].set_title("mid / side response (40 cm, head M)"); ax[0].legend(ncol=3)
         ax[1].set_ylabel("separation dB (model)"); ax[1].set_xlabel("Hz"); ax[1].legend(ncol=4)
