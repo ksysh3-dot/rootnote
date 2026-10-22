@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 일반 빌드 홈 화면(Rootnote 메인 화면). 영어 기본: values/strings_home.xml. -->
+<resources>
+    <string name="home_headline_filling">저음을 채우고 있어요</string>
+    <string name="home_headline_correction_only">스피커 보정만 쓰고 있어요</string>
+    <string name="home_headline_original">원래 소리로 듣고 있어요</string>
+    <string name="home_device_measured">%1$s · 측정된 기기</string>
+    <string name="home_device_unmeasured">측정되지 않은 기기 · 보수적 설정</string>
+    <string name="home_master_action">저음 채우기</string>
+    <string name="home_strength_title">가상 저음 세기</string>
+    <string name="home_db_value">%1$s dB</string>
+    <string name="home_presets_label">프리셋</string>
+    <string name="home_chip_fullness">풍성함 증가</string>
+    <string name="home_chip_deep">초저역 강조</string>
+    <string name="home_chip_custom">사용자 지정</string>
+    <string name="home_hint_fullness">대부분의 음악에 무난한 세기예요.</string>
+    <string name="home_hint_deep">조용한 곡이나 어쿠스틱에 진하게 더해요.</string>
+    <string name="home_hint_custom">슬라이더로 원하는 세기를 맞춰요.</string>
+    <string name="home_link_title">볼륨 연동</string>
+    <string name="home_link_reduced">볼륨 %1$d%%에서 %2$s dB · 적용 %3$s dB</string>
+    <string name="home_link_none">볼륨 %1$d%%에서는 줄이지 않아요</string>
+    <string name="home_link_off">볼륨과 상관없이 같은 세기예요</string>
+    <string name="home_link_unknown">볼륨이 높을수록 세기를 줄여요</string>
+    <string name="home_advanced_title">고급 설정</string>
+    <string name="home_advanced_summary">EQ · 출력 · JamesDSP</string>
+    <string name="home_about_title">앱 정보</string>
+    <string name="home_about_summary">비공식 포크 · GPL-3.0</string>
+</resources>

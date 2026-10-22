@@ -36,7 +36,7 @@ class EngineLauncherActivity : BaseActivity() {
         if (me.timschneeberger.rootlessjamesdsp.pvb.FirstRun.mustShowNotice(
                 me.timschneeberger.rootlessjamesdsp.pvb.PvbBuild.general,
                 me.timschneeberger.rootlessjamesdsp.pvb.PvbBuild.firstRunConfirmed)) {
-            startActivity(Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            startActivity(me.timschneeberger.rootlessjamesdsp.pvb.PvbGeneral.homeIntent(this).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
             finish()
             return
         }

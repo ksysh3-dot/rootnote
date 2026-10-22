@@ -345,7 +345,8 @@ class OnboardingFragment : Fragment() {
     private fun finishSetup() {
 
         if(!redoAdbSetup) {
-            val intent = context?.let { Intent(it, MainActivity::class.java) } ?: return
+            // General build: the home screen (it asks for capture like MainActivity does); s26u: MainActivity.
+            val intent = context?.let { me.timschneeberger.rootlessjamesdsp.pvb.PvbGeneral.homeIntent(it) } ?: return
             intent.putExtra(MainActivity.EXTRA_FORCE_SHOW_CAPTURE_PROMPT, true)
             startActivity(intent)
         }

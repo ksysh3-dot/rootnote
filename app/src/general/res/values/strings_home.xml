@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- General build home screen (Rootnote main screen). Korean: values-ko/strings_home.xml. -->
+<resources>
+    <string name="home_headline_filling">Filling in the bass</string>
+    <string name="home_headline_correction_only">Speaker correction only</string>
+    <string name="home_headline_original">Playing the original sound</string>
+    <string name="home_device_measured">%1$s · Measured phone</string>
+    <string name="home_device_unmeasured">Unmeasured phone · Conservative settings</string>
+    <string name="home_master_action">Bass filling</string>
+    <string name="home_strength_title">Virtual bass strength</string>
+    <string name="home_db_value">%1$s dB</string>
+    <string name="home_presets_label">Presets</string>
+    <string name="home_chip_fullness">More fullness</string>
+    <string name="home_chip_deep">Deep bass</string>
+    <string name="home_chip_custom">Custom</string>
+    <string name="home_hint_fullness">A safe strength for most music.</string>
+    <string name="home_hint_deep">Adds rich bass to quiet or acoustic songs.</string>
+    <string name="home_hint_custom">Set the strength you like with the slider.</string>
+    <string name="home_link_title">Volume link</string>
+    <string name="home_link_reduced">At %1$d%% volume: %2$s dB · playing %3$s dB</string>
+    <string name="home_link_none">No reduction at %1$d%% volume</string>
+    <string name="home_link_off">Same strength at any volume</string>
+    <string name="home_link_unknown">Gets weaker as the volume goes up</string>
+    <string name="home_advanced_title">Advanced settings</string>
+    <string name="home_advanced_summary">EQ · Output · JamesDSP</string>
+    <string name="home_about_title">About</string>
+    <string name="home_about_summary">Unofficial fork · GPL-3.0</string>
+</resources>

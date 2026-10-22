@@ -17,7 +17,9 @@
 | 기기 프로파일 | 없음 (기존 기본값) | `assets/pvb_profiles/*.json`: S26 Ultra(SM-S948*) → `s26u`, 그 밖 → `neutral` + 1회 안내 |
 | 첫 실행 | 없음 | 안내를 확인하기 전에는 처리 꺼짐, 서비스 시작 불가 |
 | 언어 | 기존과 같음 | 영어 기본 + 한국어 (`resourceConfigurations`로 다른 언어 제외) |
-| 아이콘 | upstream 아이콘 | 같은 아이콘, 배경색만 청록색 (`src/general/res/mipmap-anydpi-v26`). 새 아이콘은 아직 없음 |
+| 아이콘 | upstream 아이콘 | 같은 아이콘, 배경색만 청록색(#0B7A7A, 심해 틸) (`src/general/res/mipmap-anydpi-v26`). 새 아이콘은 아직 없음 |
+| 첫 화면 | DSP 화면 (MainActivity) | 홈 화면 (`home/HomeActivity`, Compose). DSP 화면은 "고급 설정"으로 엶 |
+| 테마 색 | upstream 기본 | 기본 테마가 심해 틸 (`src/general/res/values*/themes_rootnote.xml`). 다른 테마 선택은 그대로 |
 
 ### 이름·패키지 바꾸기
 
@@ -90,12 +92,24 @@ CI는 `GENERAL_KEYSTORE_B64`를 `$RUNNER_TEMP/general.jks`로 풀고 `GENERAL_KE
 - 처음 설치할 때 한 번만 `pvb_settings`에 씁니다(`pvb_device_profile` 키로 기록). 이후 값은 사용자 것입니다. 측정되지 않은 기기에서는 첫 실행 안내를 확인한 뒤 "이 기기는 측정되지 않았습니다" 안내를 한 번 띄우고, 상태 카드에도 한 줄 표시합니다.
 - 새 기기를 추가하려면 JSON 파일을 하나 더 넣습니다(`settings` 키는 `DeviceProfiles.FLOAT_KEYS`/`BOOL_KEYS`만 읽음).
 
-## 6. 시험
+## 6. 홈 화면 (general)
+
+승인된 디자인(E안, 팔레트 "심해 틸")을 Jetpack Compose로 구현했습니다(`app/src/general/java/.../home/`). Compose UI 의존성은 general에만 들어가고, s26u에는 Compose 컴파일러 플러그인이 요구하는 runtime만 들어갑니다(s26u 화면은 그대로).
+
+- 맨 위 줄 전체가 처리 스위치입니다. 켜기 = `pvb_enable` + `pvb_vb_enable` 켜고 서비스가 꺼져 있으면 캡처 권한 요청. 끄기 = `pvb_enable`만 끔(서비스는 계속 돌아 다시 켤 때 캡처 창이 다시 뜨지 않음). 첫 실행 안내 전에는 켤 수 없고(안내를 먼저 띄움), 가상 저음이 꺼져 있던 상태에서 켜면 고급 화면과 같은 실험 기능 경고를 띄웁니다.
+- 문장: 저음을 채우고 있어요(서비스 + PVB + 가상 저음) / 스피커 보정만 쓰고 있어요(가상 저음만 꺼짐) / 원래 소리로 듣고 있어요.
+- 세기 슬라이더 0~9 dB(general 상한), 칩 3개는 고급 화면 모드 목록과 같은 규칙(모델 + 세기)으로 선택이 정해집니다. "사용자 지정"을 누르면 프리셋 칩을 누를 때까지 그 상태로 남습니다.
+- 볼륨 연동 줄은 컨트롤러가 쓰는 `VolumeLevelLink` 계산 그대로입니다(서비스가 돌 때는 컨트롤러가 공개한 볼륨, 아니면 같은 AudioManager 값).
+- 판단 로직은 `pvb/HomeLogic.kt`(순수 Kotlin), 시험은 `tools/pvb-harness/jvm/HomeLogicTest.kt`(문자열 영어/한국어 짝 확인 포함).
+- 시스템 "애니메이션 제거"(애니메이터 배율 0)이면 모든 움직임이 즉시 바뀝니다.
+
+## 7. 시험
 
 - 호스트 JVM: `tools/pvb-harness/jvm/run_jvm_test.sh`에 `GeneralBuildTest.kt` 추가(실제 asset으로 프로파일 일치, 상한 적용, 첫 실행 게이트, ADB 명령, 백업 제외 XML).
+- 홈 화면: `HomeLogicTest.kt`(칩 선택, 상한, 첫 실행 게이트, 볼륨 연동 줄, 문자열). CI는 general APK의 런처가 `HomeActivity` 하나인지, s26u 런처가 `MainActivity`인지 확인합니다.
 - 앱 빌드는 CI에서만 합니다(로컬 Android SDK 없음). 실기기 확인은 아직 하지 않았습니다: 첫 실행 안내 흐름, Shizuku/ADB 설정, 다른 제조사 기종, 정보 화면, 언어 전환.
 
-## 7. 알려진 과제 (known debt)
+## 8. 알려진 과제 (known debt)
 
 - **한국어 하드코딩 문자열**: Kotlin 소스에 한국어 리터럴이 약 349줄(주석 제외, 30개 파일) 남아 있습니다. general에서 보이는 것은 주로 상태 카드(`PvbStatusView.kt`), 모델 이름(`PvbModels.kt`, 연구 메뉴), 경로 이름(`PvbController.kt`)입니다. 나머지는 general에 없는 기능(블라인드 비교, 측정, 버즈 진단)입니다.
 

@@ -8,6 +8,9 @@ plugins {
     id("com.google.devtools.ksp") version AndroidConfig.kspVersion
     id("dev.rikka.tools.refine") version AndroidConfig.rikkaRefineVersion
     id("org.jetbrains.kotlin.plugin.serialization") version "2.1.0"
+    // Compose compiler (Kotlin 2.x ships it as a Kotlin plugin, same version as Kotlin). Only the general build's
+    // home screen uses Compose (src/general); see the dependencies below.
+    id("org.jetbrains.kotlin.plugin.compose") version "2.1.0"
 }
 
 // General flavor signing: GENERAL_KEYSTORE_PATH (CI decodes the GENERAL_KEYSTORE_B64 secret into it) or, for a
@@ -245,6 +248,7 @@ android {
 
     buildFeatures {
         viewBinding = true
+        compose = true
         // Disable unused features
         aidl = false
         renderScript = false
@@ -291,6 +295,18 @@ dependencies {
 
     // Material
     implementation("com.google.android.material:material:1.9.0")
+
+    // Jetpack Compose: the general build's home screen only (src/general/java/.../home). The s26u build gets just
+    // the runtime, which the Compose compiler plugin requires on every variant's classpath; it has no Compose UI.
+    val composeBom = platform("androidx.compose:compose-bom:2025.04.01")
+    implementation(composeBom)
+    implementation("androidx.compose.runtime:runtime")
+    "generalImplementation"(composeBom)
+    "generalImplementation"("androidx.compose.ui:ui")
+    "generalImplementation"("androidx.compose.foundation:foundation")
+    "generalImplementation"("androidx.compose.material3:material3")
+    "generalImplementation"("androidx.compose.ui:ui-tooling-preview")
+    "generalImplementation"("androidx.activity:activity-compose:1.9.3")
 
     // Dependency injection
     implementation("io.insert-koin:koin-android:3.3.3")

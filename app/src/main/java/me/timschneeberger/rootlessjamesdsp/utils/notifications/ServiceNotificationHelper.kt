@@ -16,7 +16,6 @@ import me.timschneeberger.rootlessjamesdsp.BuildConfig
 import me.timschneeberger.rootlessjamesdsp.R
 import me.timschneeberger.rootlessjamesdsp.activity.AppCompatibilityActivity
 import me.timschneeberger.rootlessjamesdsp.activity.EngineLauncherActivity
-import me.timschneeberger.rootlessjamesdsp.activity.MainActivity
 import me.timschneeberger.rootlessjamesdsp.activity.BuzzReportsActivity
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbBuild
 import me.timschneeberger.rootlessjamesdsp.model.IEffectSession
@@ -171,7 +170,7 @@ object ServiceNotificationHelper: KoinComponent {
             PendingIntent.getActivity(
                 context,
                 0,
-                Intent(context, MainActivity::class.java).apply {
+                me.timschneeberger.rootlessjamesdsp.pvb.PvbGeneral.homeIntent(context).apply {
                     addFlags(
                         Intent.FLAG_ACTIVITY_CLEAR_TASK
                                 or Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -202,7 +201,7 @@ object ServiceNotificationHelper: KoinComponent {
                 PendingIntent.getActivity(
                     context,
                     0,
-                    Intent(context, MainActivity::class.java).apply {
+                    me.timschneeberger.rootlessjamesdsp.pvb.PvbGeneral.homeIntent(context).apply {
                         addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK
                                 or Intent.FLAG_ACTIVITY_CLEAR_TOP
                                 or Intent.FLAG_ACTIVITY_NEW_TASK)

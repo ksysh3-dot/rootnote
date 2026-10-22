@@ -1,0 +1,392 @@
+package me.timschneeberger.rootlessjamesdsp.home
+
+import android.content.ActivityNotFoundException
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.content.SharedPreferences
+import android.content.res.Configuration
+import android.graphics.drawable.ColorDrawable
+import android.media.AudioManager
+import android.media.projection.MediaProjectionManager
+import android.net.Uri
+import android.os.Build
+import android.os.Bundle
+import android.provider.Settings
+import android.view.HapticFeedbackConstants
+import android.widget.CheckBox
+import android.widget.LinearLayout
+import androidx.activity.compose.setContent
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.core.content.ContextCompat
+import androidx.core.content.getSystemService
+import androidx.core.view.WindowCompat
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import me.timschneeberger.rootlessjamesdsp.R
+import me.timschneeberger.rootlessjamesdsp.activity.BaseActivity
+import me.timschneeberger.rootlessjamesdsp.activity.MainActivity
+import me.timschneeberger.rootlessjamesdsp.activity.OnboardingActivity
+import me.timschneeberger.rootlessjamesdsp.activity.SettingsActivity
+import me.timschneeberger.rootlessjamesdsp.pvb.FirstRun
+import me.timschneeberger.rootlessjamesdsp.pvb.HomeLogic
+import me.timschneeberger.rootlessjamesdsp.pvb.PvbBuild
+import me.timschneeberger.rootlessjamesdsp.pvb.PvbGeneral
+import me.timschneeberger.rootlessjamesdsp.pvb.PvbRuntime
+import me.timschneeberger.rootlessjamesdsp.pvb.PvbSettings
+import me.timschneeberger.rootlessjamesdsp.service.BaseAudioProcessorService
+import me.timschneeberger.rootlessjamesdsp.service.RootlessAudioProcessorService
+import me.timschneeberger.rootlessjamesdsp.utils.Constants
+import me.timschneeberger.rootlessjamesdsp.utils.SdkCheck
+import me.timschneeberger.rootlessjamesdsp.utils.extensions.AssetManagerExtensions.installPrivateAssets
+import me.timschneeberger.rootlessjamesdsp.utils.extensions.ContextExtensions.registerLocalReceiver
+import me.timschneeberger.rootlessjamesdsp.utils.extensions.ContextExtensions.toast
+import me.timschneeberger.rootlessjamesdsp.utils.extensions.ContextExtensions.unregisterLocalReceiver
+import me.timschneeberger.rootlessjamesdsp.utils.extensions.PermissionExtensions.hasDumpPermission
+import me.timschneeberger.rootlessjamesdsp.utils.extensions.PermissionExtensions.hasProjectMediaAppOp
+import me.timschneeberger.rootlessjamesdsp.utils.extensions.PermissionExtensions.hasRecordPermission
+import timber.log.Timber
+
+/**
+ * Launch screen of the general build (Rootnote). The DSP screen (MainActivity) is reached through "Advanced
+ * settings"; the s26u build keeps MainActivity as its launcher and never contains this class.
+ *
+ * The master row is the general build's processing switch: on = PVB processing (pvb_enable) and virtual bass
+ * (pvb_vb_enable) on, with the audio service running; off = pvb_enable off (the service keeps running, so turning
+ * it back on is instant). The first-run notice gates it exactly as it gates the service (FirstRun / PvbBuild), and
+ * turning virtual bass on from here shows the same experimental-feature warning as the advanced screen.
+ *
+ * Start-up mirrors MainActivity for the rootless build: private assets, onboarding when permissions are missing,
+ * first-run and unmeasured-phone notices, the Android 15 notice, and the capture prompt when processing is
+ * expected but the service is not running.
+ */
+class HomeActivity : BaseActivity() {
+    private lateinit var prefs: SharedPreferences
+    private lateinit var mediaProjectionManager: MediaProjectionManager
+    private lateinit var captureLauncher: ActivityResultLauncher<Intent>
+
+    private var uiState by mutableStateOf<HomeUiState?>(null)
+    private var reduceMotion by mutableStateOf(false)
+
+    /** "Custom" tapped on this screen: stays selected until a preset chip is tapped. */
+    private var customPinned = false
+    /** The user turned processing on and the service is being started (capture prompt, service start). */
+    private var startPending = false
+    private val clearPending = Runnable { startPending = false; refresh() }
+
+    // Kept as fields: SharedPreferences holds its listeners weakly.
+    private val prefListener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ -> refresh() }
+    private val statusListener: () -> Unit = { refresh() }
+    private val serviceReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            startPending = false
+            refresh()
+        }
+    }
+
+    private val actions = HomeActions(
+        onMaster = { on -> onMasterChanged(on) },
+        onLevel = { level ->
+            prefs.edit().putFloat(PvbSettings.KEY_VB_STRENGTH_DB, level.toFloat()).apply()
+        },
+        onChip = { chip -> onChipTapped(chip) },
+        onLink = { on -> prefs.edit().putBoolean(PvbSettings.KEY_VB_VOL_LINK, on).apply() },
+        onAdvanced = { startActivity(Intent(this, MainActivity::class.java)) },
+        onAbout = {
+            startActivity(Intent(this, SettingsActivity::class.java).putExtra(SettingsActivity.EXTRA_ABOUT, true))
+        },
+    )
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        prefs = getSharedPreferences(PvbSettings.PREFS_NAME, Context.MODE_PRIVATE)
+        mediaProjectionManager = getSystemService<MediaProjectionManager>()!!
+
+        // The window behind the screen (and the status bar area) has the screen's colour.
+        window.setBackgroundDrawable(ColorDrawable(ContextCompat.getColor(this, R.color.rn_bg)))
+        val night = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+        WindowCompat.getInsetsController(window, window.decorView).apply {
+            isAppearanceLightStatusBars = !night
+            isAppearanceLightNavigationBars = !night
+        }
+
+        val firstBoot = prefsVar.get<Boolean>(R.string.key_first_boot)
+        assets.installPrivateAssets(this, force = firstBoot)
+
+        captureLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                app.mediaProjectionStartIntent = result.data
+                RootlessAudioProcessorService.start(this, result.data)
+                armPendingTimeout()
+            } else {
+                startPending = false
+            }
+            refresh()
+        }
+
+        // Permissions missing: the setup screens first (after the first-run notice), like MainActivity.
+        if (!hasDumpPermission() || !hasRecordPermission()) {
+            Timber.i("Launching onboarding (first boot: $firstBoot)")
+            val onboarding = {
+                startActivity(Intent(this, OnboardingActivity::class.java).apply {
+                    putExtra(OnboardingActivity.EXTRA_FIX_PERMS, !firstBoot)
+                })
+                finish()
+            }
+            if (FirstRun.mustShowNotice(PvbBuild.general, PvbBuild.firstRunConfirmed))
+                PvbGeneral.showFirstRunNotice(this, onConfirmed = onboarding, onLater = onboarding)
+            else
+                onboarding()
+            return
+        }
+
+        reduceMotion = animationsOff()
+        refresh()
+        setContent {
+            uiState?.let { HomeScreen(it, actions, reduceMotion) }
+        }
+
+        if (FirstRun.mustShowNotice(PvbBuild.general, PvbBuild.firstRunConfirmed))
+            PvbGeneral.showFirstRunNotice(this, onConfirmed = {
+                PvbGeneral.maybeShowUnmeasuredNotice(this)
+                refresh()
+            })
+        else
+            PvbGeneral.maybeShowUnmeasuredNotice(this)
+
+        if (showAndroid15Alert()) return
+
+        // Back from onboarding, or processing expected but the service is not running: ask for capture now
+        // (MainActivity does the same whenever its service is not running).
+        val running = BaseAudioProcessorService.activeServices > 0
+        if (intent.getBooleanExtra(MainActivity.EXTRA_FORCE_SHOW_CAPTURE_PROMPT, false) ||
+            (!running && PvbSettings.load(prefs).enabled)) {
+            startPending = true
+            requestCapturePermission()
+            refresh()
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        if (!::prefs.isInitialized) return
+        prefs.registerOnSharedPreferenceChangeListener(prefListener)
+        PvbRuntime.addStatusListener(statusListener)
+        registerLocalReceiver(serviceReceiver, IntentFilter(Constants.ACTION_SERVICE_STARTED).apply {
+            addAction(Constants.ACTION_SERVICE_STOPPED)
+        })
+        refresh()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        reduceMotion = animationsOff()
+        refresh()
+    }
+
+    override fun onStop() {
+        if (::prefs.isInitialized) {
+            prefs.unregisterOnSharedPreferenceChangeListener(prefListener)
+            PvbRuntime.removeStatusListener(statusListener)
+            try {
+                unregisterLocalReceiver(serviceReceiver)
+            } catch (e: Exception) {
+                Timber.d(e)
+            }
+        }
+        super.onStop()
+    }
+
+    override fun onDestroy() {
+        window?.decorView?.removeCallbacks(clearPending)
+        super.onDestroy()
+    }
+
+    // ------------------------------------------------------------------------------------------------ state
+
+    private fun refresh() {
+        if (!::prefs.isInitialized) return
+        val s = PvbSettings.load(prefs)
+        val running = BaseAudioProcessorService.activeServices > 0
+        val status = PvbRuntime.status
+        val audio = getSystemService<AudioManager>()
+        // The controller's published volume while it runs; otherwise the same AudioManager values it reads.
+        val (index, max) = if (running && status.volumeMax > 0) status.volumeIndex to status.volumeMax
+            else (audio?.getStreamVolume(AudioManager.STREAM_MUSIC) ?: -1) to (audio?.getStreamMaxVolume(AudioManager.STREAM_MUSIC) ?: 0)
+        val caps = PvbBuild.caps
+        val profile = PvbGeneral.profile(this)
+        val shownRunning = running || startPending
+        uiState = HomeUiState(
+            headline = HomeLogic.headline(s, shownRunning),
+            masterOn = HomeLogic.masterOn(s, shownRunning),
+            measuredDeviceName = if (profile.measured) profile.name else null,
+            level = HomeLogic.sliderValue(s.vbLevelDb, caps),
+            levelMax = HomeLogic.sliderMax(caps),
+            chip = HomeLogic.selectedChip(HomeLogic.modelKey(s.vbAlgo), s.vbLevelDb, customPinned),
+            linkOn = s.vbVolLink,
+            linkLine = HomeLogic.linkLine(s, index, max),
+        )
+    }
+
+    private fun animationsOff(): Boolean = try {
+        Settings.Global.getFloat(contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
+    } catch (e: Exception) {
+        false
+    }
+
+    // ------------------------------------------------------------------------------------------------ actions
+
+    private fun onMasterChanged(on: Boolean) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
+            window.decorView.performHapticFeedback(
+                if (on) HapticFeedbackConstants.CONFIRM else HapticFeedbackConstants.REJECT
+            )
+        if (on) turnOn() else turnOff()
+    }
+
+    private fun turnOn() {
+        // Nothing runs before the first-run notice was confirmed (confirming turns pvb_enable on).
+        if (FirstRun.mustShowNotice(PvbBuild.general, PvbBuild.firstRunConfirmed)) {
+            PvbGeneral.showFirstRunNotice(this, onConfirmed = {
+                PvbGeneral.maybeShowUnmeasuredNotice(this)
+                turnOn()
+            })
+            return
+        }
+        if (!PvbSettings.load(prefs).vbOn) {
+            // Same warning as the virtual bass switch of the advanced screen; stays off unless confirmed.
+            MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.pvb_vb_warning_title)
+                .setMessage(R.string.pvb_vb_warning)
+                .setPositiveButton(R.string.pvb_vb_warning_ok) { _, _ ->
+                    prefs.edit()
+                        .putBoolean(PvbSettings.KEY_VB_ON, true)
+                        .putBoolean(PvbSettings.KEY_ENABLE, true)
+                        .apply()
+                    ensureRunning()
+                }
+                .setNegativeButton(android.R.string.cancel, null)
+                .show()
+            return
+        }
+        prefs.edit().putBoolean(PvbSettings.KEY_ENABLE, true).apply()
+        ensureRunning()
+    }
+
+    private fun turnOff() {
+        // The service keeps running (no new capture prompt when turning back on); PVB passes the sound through.
+        startPending = false
+        prefs.edit().putBoolean(PvbSettings.KEY_ENABLE, false).apply()
+        refresh()
+    }
+
+    private fun ensureRunning() {
+        if (BaseAudioProcessorService.activeServices == 0) {
+            startPending = true
+            requestCapturePermission()
+        }
+        refresh()
+    }
+
+    private fun onChipTapped(chip: HomeLogic.Chip) {
+        val write = HomeLogic.presetWrite(chip, PvbBuild.caps)
+        if (write == null) {
+            customPinned = true
+            refresh()
+            return
+        }
+        customPinned = false
+        // Only the model and the level, like the preset list of the advanced screen.
+        prefs.edit()
+            .putString(PvbSettings.KEY_VB_ALGO, write.first)
+            .putFloat(PvbSettings.KEY_VB_STRENGTH_DB, write.second)
+            .apply()
+        refresh()
+    }
+
+    // ------------------------------------------------------------------------------------------------ service
+
+    private fun requestCapturePermission() {
+        if (FirstRun.mustShowNotice(PvbBuild.general, PvbBuild.firstRunConfirmed)) {
+            startPending = false
+            PvbGeneral.showFirstRunNotice(this, onConfirmed = {
+                PvbGeneral.maybeShowUnmeasuredNotice(this)
+                startPending = true
+                requestCapturePermission()
+                refresh()
+            })
+            refresh()
+            return
+        }
+        if (app.mediaProjectionStartIntent != null && !SdkCheck.isVanillaIceCream) {
+            RootlessAudioProcessorService.start(this, app.mediaProjectionStartIntent)
+            armPendingTimeout()
+            return
+        }
+        try {
+            captureLauncher.launch(mediaProjectionManager.createScreenCaptureIntent())
+        } catch (ex: ActivityNotFoundException) {
+            startPending = false
+            toast(getString(R.string.error_projection_api_missing))
+            Timber.e(ex)
+            refresh()
+        }
+    }
+
+    /** The service reports its start by broadcast; if it never does, stop showing "on". */
+    private fun armPendingTimeout() {
+        window.decorView.removeCallbacks(clearPending)
+        window.decorView.postDelayed(clearPending, 5000L)
+    }
+
+    /** MainActivity's Android 15 notices. Returns true when it sent the user to the setup screens. */
+    private fun showAndroid15Alert(): Boolean {
+        if (!SdkCheck.isVanillaIceCream) return false
+
+        if (!hasProjectMediaAppOp()) {
+            MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.android_15_screenshare_warning_title)
+                .setMessage(R.string.android_15_screenshare_keyguard_warning)
+                .setCancelable(false)
+                .setPositiveButton(R.string.continue_action) { _, _ ->
+                    startActivity(Intent(this, OnboardingActivity::class.java).apply {
+                        putExtra(OnboardingActivity.EXTRA_FIX_PERMS, false)
+                    })
+                    finish()
+                }
+                .show()
+            return true
+        }
+
+        if (prefsVar.get<Boolean>(R.string.key_android15_screenrecord_restriction_seen)) return false
+
+        val checkBox = CheckBox(this).apply {
+            text = getString(R.string.never_show_warning_again)
+            isChecked = false
+        }
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.android_15_screenshare_warning_title)
+            .setMessage(R.string.android_15_screenshare_warning)
+            .setView(
+                LinearLayout(this).apply {
+                    orientation = LinearLayout.VERTICAL
+                    setPadding(48, 32, 48, 16)
+                    addView(checkBox)
+                }
+            )
+            .setPositiveButton(R.string.tutorial) { _, _ ->
+                prefsVar.set(R.string.key_android15_screenrecord_restriction_seen, checkBox.isChecked)
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://youtu.be/rVM13aY2rwU?t=31")))
+            }
+            .setNegativeButton(R.string.close) { dialog, _ ->
+                prefsVar.set(R.string.key_android15_screenrecord_restriction_seen, checkBox.isChecked)
+                dialog.dismiss()
+            }
+            .show()
+        return false
+    }
+}

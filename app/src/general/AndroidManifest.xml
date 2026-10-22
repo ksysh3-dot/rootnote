@@ -15,6 +15,27 @@
         android:protectionLevel="signature" />
 
     <application>
+        <!-- Home screen of the general build (Compose). It is the launcher entry; the DSP screen (MainActivity)
+             stays as "advanced settings" and keeps its other intent filters (audio effect panel, file import,
+             tile preferences). -->
+        <activity
+            android:name="me.timschneeberger.rootlessjamesdsp.home.HomeActivity"
+            android:exported="true"
+            android:icon="@mipmap/ic_dsp_launcher"
+            android:label="@string/app_brand_name"
+            android:theme="@style/Theme.RootlessJamesDSP">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name="me.timschneeberger.rootlessjamesdsp.activity.MainActivity">
+            <intent-filter tools:node="remove">
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
         <activity android:name="me.timschneeberger.rootlessjamesdsp.activity.BuzzReportsActivity" tools:node="remove" />
         <service android:name="me.timschneeberger.rootlessjamesdsp.service.BuzzMicrophoneService" tools:node="remove" />
         <provider android:name="me.timschneeberger.rootlessjamesdsp.activity.BuzzFileProvider" tools:node="remove" />

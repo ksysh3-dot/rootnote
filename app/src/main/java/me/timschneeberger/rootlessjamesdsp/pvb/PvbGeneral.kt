@@ -131,6 +131,20 @@ object PvbGeneral {
 
     fun brand(context: Context): String = context.getString(R.string.app_brand_name)
 
+    /**
+     * The general build's home screen (src/general, Compose). Named by string so the s26u build, which does not
+     * contain the class, still compiles; it is only used when [PvbBuild.general] is true.
+     */
+    const val HOME_ACTIVITY = "me.timschneeberger.rootlessjamesdsp.home.HomeActivity"
+
+    /**
+     * Where the app opens: the home screen in the general build, the DSP screen (MainActivity) in the s26u build.
+     * Used by the onboarding end, the service notification and the tile's first-run redirect.
+     */
+    fun homeIntent(context: Context): Intent =
+        if (PvbBuild.general) Intent().setClassName(context.packageName, HOME_ACTIVITY)
+        else Intent(context, me.timschneeberger.rootlessjamesdsp.activity.MainActivity::class.java)
+
     private var noticeDialog: WeakReference<androidx.appcompat.app.AlertDialog>? = null
 
     /**
@@ -225,7 +239,7 @@ object PvbGeneral {
         Triple("libsamplerate (Erik de Castro Lopo)", "BSD-2-Clause", "libsamplerate-BSD-2-Clause.txt"),
         Triple("dr_libs: dr_wav, dr_flac, dr_mp3 (David Reid)", "Public domain / MIT-0", "THIRD_PARTY.txt"),
         Triple("JetBrains Mono font", "SIL OFL 1.1", "OFL-1.1.txt"),
-        Triple("AndroidX, Material Components", "Apache-2.0", "Apache-2.0.txt"),
+        Triple("AndroidX (incl. Jetpack Compose), Material Components", "Apache-2.0", "Apache-2.0.txt"),
         Triple("Kotlin, kotlinx.coroutines, kotlinx.serialization", "Apache-2.0", "Apache-2.0.txt"),
         Triple("Koin", "Apache-2.0", "Apache-2.0.txt"),
         Triple("Retrofit, OkHttp, Okio (Square)", "Apache-2.0", "Apache-2.0.txt"),

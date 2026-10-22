@@ -6,7 +6,7 @@ RootlessJamesDSP 1.6.14 by Tim Schneeberger, which uses the JamesDSP engine (lib
 Both are GPL-3.0. The full GPL-3.0 text is in GPL-3.0.txt.
 
 Apache License 2.0 (Apache-2.0.txt):
-  AndroidX, Material Components for Android, Kotlin standard library, kotlinx.coroutines,
+  AndroidX (including Jetpack Compose), Material Components for Android, Kotlin standard library, kotlinx.coroutines,
   kotlinx.serialization, Koin, Retrofit, OkHttp, Okio, Gson, Timber, Treessence, Shizuku API, Refine,
   HiddenApiBypass, UniFile, jtar, Room, WorkManager, Navigation, Pluto (no-op in release builds).
 

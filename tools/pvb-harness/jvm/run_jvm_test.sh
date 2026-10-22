@@ -65,3 +65,9 @@ OUTG="$HERE/../build/jvm-general"
 rm -rf "$OUTG"; mkdir -p "$OUTG"
 $KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/DeviceProfiles.kt" "$HERE/GeneralBuildTest.kt" -d "$OUTG"
 java -cp "$OUTG:$KOTLIN_STDLIB" GeneralBuildTestKt "$HERE/../../.."
+
+# General build home screen: master/headline, preset chips from model + level, caps, volume-link line, en/ko strings.
+OUTH="$HERE/../build/jvm-home"
+rm -rf "$OUTH"; mkdir -p "$OUTH"
+$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/HomeLogic.kt" "$HERE/HomeLogicTest.kt" -d "$OUTH"
+java -cp "$OUTH:$KOTLIN_STDLIB" HomeLogicTestKt "$HERE/../../.."

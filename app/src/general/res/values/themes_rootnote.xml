@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- General build (light): the default app theme uses the Rootnote teal palette (colors_rootnote.xml).
+     Overrides the thin Theme.RootlessJamesDSP / .Dialog styles of src/main (values and values-night); the base
+     styles and every other theme choice (Monet, Green Apple, ...) are unchanged, and the s26u build never sees
+     this file. -->
+<resources>
+    <style name="Theme.RootlessJamesDSP" parent="Base.Theme.RootlessJamesDSP">
+        <item name="colorPrimary">@color/rn_m3_primary</item>
+        <item name="colorOnPrimary">@color/rn_m3_onPrimary</item>
+        <item name="colorPrimaryContainer">@color/rn_m3_primaryContainer</item>
+        <item name="colorOnPrimaryContainer">@color/rn_m3_onPrimaryContainer</item>
+        <item name="colorSecondary">@color/rn_m3_secondary</item>
+        <item name="colorOnSecondary">@color/rn_m3_onSecondary</item>
+        <item name="colorSecondaryContainer">@color/rn_m3_secondaryContainer</item>
+        <item name="colorOnSecondaryContainer">@color/rn_m3_onSecondaryContainer</item>
+        <item name="colorTertiary">@color/rn_m3_tertiary</item>
+        <item name="colorOnTertiary">@color/rn_m3_onTertiary</item>
+        <item name="colorTertiaryContainer">@color/rn_m3_tertiaryContainer</item>
+        <item name="colorOnTertiaryContainer">@color/rn_m3_onTertiaryContainer</item>
+        <item name="android:colorBackground">@color/rn_m3_background</item>
+        <item name="colorOnBackground">@color/rn_m3_onBackground</item>
+        <item name="colorSurface">@color/rn_m3_surface</item>
+        <item name="colorOnSurface">@color/rn_m3_onSurface</item>
+        <item name="colorSurfaceVariant">@color/rn_m3_surfaceVariant</item>
+        <item name="colorOnSurfaceVariant">@color/rn_m3_onSurfaceVariant</item>
+        <item name="colorOutline">@color/rn_m3_outline</item>
+        <item name="colorSurfaceInverse">@color/rn_m3_inverseSurface</item>
+        <item name="colorOnSurfaceInverse">@color/rn_m3_inverseOnSurface</item>
+        <item name="colorPrimaryInverse">@color/rn_m3_primaryInverse</item>
+        <item name="elevationOverlayColor">@color/rn_m3_primary</item>
+    </style>
+
+    <style name="Theme.RootlessJamesDSP.Dialog" parent="Base.Theme.RootlessJamesDSP.Dialog">
+        <item name="colorPrimary">@color/rn_m3_primary</item>
+        <item name="colorOnPrimary">@color/rn_m3_onPrimary</item>
+        <item name="colorPrimaryContainer">@color/rn_m3_primaryContainer</item>
+        <item name="colorOnPrimaryContainer">@color/rn_m3_onPrimaryContainer</item>
+        <item name="colorSecondary">@color/rn_m3_secondary</item>
+        <item name="colorOnSecondary">@color/rn_m3_onSecondary</item>
+        <item name="colorSecondaryContainer">@color/rn_m3_secondaryContainer</item>
+        <item name="colorOnSecondaryContainer">@color/rn_m3_onSecondaryContainer</item>
+        <item name="colorTertiary">@color/rn_m3_tertiary</item>
+        <item name="colorOnTertiary">@color/rn_m3_onTertiary</item>
+        <item name="colorTertiaryContainer">@color/rn_m3_tertiaryContainer</item>
+        <item name="colorOnTertiaryContainer">@color/rn_m3_onTertiaryContainer</item>
+        <item name="android:colorBackground">@color/rn_m3_background</item>
+        <item name="colorOnBackground">@color/rn_m3_onBackground</item>
+        <item name="colorSurface">@color/rn_m3_surface</item>
+        <item name="colorOnSurface">@color/rn_m3_onSurface</item>
+        <item name="colorSurfaceVariant">@color/rn_m3_surfaceVariant</item>
+        <item name="colorOnSurfaceVariant">@color/rn_m3_onSurfaceVariant</item>
+        <item name="colorOutline">@color/rn_m3_outline</item>
+        <item name="colorSurfaceInverse">@color/rn_m3_inverseSurface</item>
+        <item name="colorOnSurfaceInverse">@color/rn_m3_inverseOnSurface</item>
+        <item name="colorPrimaryInverse">@color/rn_m3_primaryInverse</item>
+        <item name="elevationOverlayColor">@color/rn_m3_primary</item>
+    </style>
+</resources>

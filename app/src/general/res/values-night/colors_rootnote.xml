@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Rootnote palette "심해 틸" (abyss teal), dark. Light: values/colors_rootnote.xml. -->
+<resources>
+    <color name="rn_bg">#121416</color>
+    <color name="rn_band">#1C1F22</color>
+    <color name="rn_press">#1C1F22</color>
+    <color name="rn_divider">#2A2E33</color>
+    <color name="rn_text_primary">#ECEDEF</color>
+    <color name="rn_text_secondary">#A3A9B3</color>
+    <color name="rn_chevron">#868B94</color>
+    <color name="rn_fill">#2BB0AA</color>
+    <color name="rn_accent_text">#7FDCD5</color>
+    <color name="rn_chip_bg">#121416</color>
+    <color name="rn_chip_border">#3A3F45</color>
+    <color name="rn_chip_text">#D5D8DC</color>
+    <color name="rn_chip_selected_bg">#103A3A</color>
+    <color name="rn_chip_selected_border">#2B7E7B</color>
+    <color name="rn_chip_selected_text">#7FDCD5</color>
+    <color name="rn_switch_off">#3A3F45</color>
+    <color name="rn_slider_inactive">#3A3F45</color>
+    <color name="rn_thumb">#FFFFFF</color>
+
+    <color name="rn_m3_primary">#7FDCD5</color>
+    <color name="rn_m3_onPrimary">#003734</color>
+    <color name="rn_m3_primaryContainer">#103A3A</color>
+    <color name="rn_m3_onPrimaryContainer">#A6F1EB</color>
+    <color name="rn_m3_secondary">#B0CCCA</color>
+    <color name="rn_m3_onSecondary">#1B3534</color>
+    <color name="rn_m3_secondaryContainer">#324B4A</color>
+    <color name="rn_m3_onSecondaryContainer">#CCE8E6</color>
+    <color name="rn_m3_tertiary">#B3C8E8</color>
+    <color name="rn_m3_onTertiary">#1C314B</color>
+    <color name="rn_m3_tertiaryContainer">#334863</color>
+    <color name="rn_m3_onTertiaryContainer">#D3E4FF</color>
+    <color name="rn_m3_background">#121416</color>
+    <color name="rn_m3_onBackground">#ECEDEF</color>
+    <color name="rn_m3_surface">#1C1F22</color>
+    <color name="rn_m3_onSurface">#ECEDEF</color>
+    <color name="rn_m3_surfaceVariant">#2A2E33</color>
+    <color name="rn_m3_onSurfaceVariant">#A3A9B3</color>
+    <color name="rn_m3_outline">#868B94</color>
+    <color name="rn_m3_inverseSurface">#E0E3E2</color>
+    <color name="rn_m3_inverseOnSurface">#2D3131</color>
+    <color name="rn_m3_primaryInverse">#0B7A7A</color>
+</resources>

@@ -27,7 +27,15 @@ class SettingsActivity : BaseActivity(),
         setContentView(binding.root)
         setSupportActionBar(binding.settingsToolbar)
 
-        if (savedInstanceState == null) {
+        if (savedInstanceState == null && intent.getBooleanExtra(EXTRA_ABOUT, false)) {
+            // General build home screen: "About" opens the about page directly (no title, like from the list).
+            supportActionBar?.title = ""
+            supportFragmentManager
+                .beginTransaction()
+                .replace(R.id.settings, SettingsAboutFragment())
+                .commit()
+        }
+        else if (savedInstanceState == null) {
             val fragment = SettingsFragment.newInstance()
             @Suppress("DEPRECATION")
             fragment.setTargetFragment(null, 0)
@@ -43,7 +51,7 @@ class SettingsActivity : BaseActivity(),
 
         supportFragmentManager.addOnBackStackChangedListener {
             if (supportFragmentManager.backStackEntryCount == 0) {
-                supportActionBar?.title = getString(R.string.title_activity_settings)
+                supportActionBar?.title = if (intent.getBooleanExtra(EXTRA_ABOUT, false)) "" else getString(R.string.title_activity_settings)
             }
             else {
                 supportActionBar?.title = supportFragmentManager.getBackStackEntryAt(supportFragmentManager.backStackEntryCount - 1).name
@@ -134,6 +142,8 @@ class SettingsActivity : BaseActivity(),
 
     companion object {
         private const val PERSIST_TITLE = "title"
+        /** Open the about page instead of the settings list (general build home screen). */
+        const val EXTRA_ABOUT = "open_about"
     }
 }
 
