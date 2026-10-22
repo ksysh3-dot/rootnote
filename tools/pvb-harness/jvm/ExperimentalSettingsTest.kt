@@ -49,6 +49,8 @@ fun main(args: Array<String>) {
     // 3. Parameter indices follow DIAGNOSTIC_SOLO in the order of pvb_engine.h.
     check(PvbParam.X_SMOOTH == 29 && PvbParam.X_RISE == 30 && PvbParam.X_S1M == 31 && PvbParam.X_DENSE == 32 &&
         PvbParam.COUNT == 33)
+    val dp = me.timschneeberger.rootlessjamesdsp.pvb.PvbEngine.defaultParams()
+    check(dp.size == PvbParam.COUNT && (PvbParam.X_SMOOTH..PvbParam.X_DENSE).all { dp[it] == 0f }) { "defaultParams" }
 
     // 4. Preference XML: four switches with defaultValue false, depending on the virtual bass switch; header + link.
     val doc = DocumentBuilderFactory.newInstance().apply { isNamespaceAware = true }.newDocumentBuilder()

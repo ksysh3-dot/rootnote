@@ -248,6 +248,7 @@ class PvbEngine(sampleRate: Int) : AutoCloseable {
             0f, 0f, 0f,    // virtual bass: off, hpv, 0 dB
             0f, 0f, -6f,   // flat bypass off (controller selects it), match running, initial estimate
             0f,           // generated-layer diagnostic monitor off
+            0f, 0f, 0f, 0f,   // experimental layer options off: smooth, rise, S1m, dense
         )
     }
 }
