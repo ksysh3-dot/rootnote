@@ -47,6 +47,24 @@ enum VbAlgo : int { VB_HPV = 0, VB_BANKSTOWN = 1, VB_HPV52M = 2, VB_GENTLE = 3,
 // Scene observations are unvalidated. Only the opt-in adaptive profile uses
 // them to select a harmonic attenuation budget; they are not buzz labels.
 enum VbScene : int { VB_SCENE_UNKNOWN = 0, VB_SCENE_STEADY, VB_SCENE_TRANSIENT, VB_SCENE_COMPLEX };
+// Research hook (gen-s1s2, 2026-10-22); all fields off reproduce the production profiles bit for bit. The app
+// reaches only `envelope` with the defaults below, on P1, through the experimental option P_X_S1M
+// (Engine::vbApply -> setGenEnvelope); every other field and `bursts` (S2) stay host research.
+// envelope (S1): one envelope per track harmonic replaces permission x life x fade
+//   (linear attack attackMs, one-pole release releaseMs; onsetReleaseMs only for
+//   tracks ended by a newly born note at a true onset, see onsetMode), and the envelope-imposition gain falls no
+//   faster than gainReleaseMs (0 = unchanged).
+// bursts (S2): the percussive u^k stream is replaced by fixed-envelope harmonic
+//   bursts started only at low-band onsets (attack burstAttackMs, -40 dB after
+//   burstDecayMs), harmonic weights and placement from the P1 track renderer.
+struct GenResearch52 {
+    bool envelope = false, bursts = false;
+    double attackMs = 10, releaseMs = 70, onsetReleaseMs = 20, gainReleaseMs = 70;
+    double burstAttackMs = 5, burstDecayMs = 90, onsetDb = 6, refractoryMs = 60;
+    // Which born events end lost tracks with onsetReleaseMs: 0 every born note (P1 rule),
+    // 1 only when the low band also rises 3 dB above its level 43-300 ms earlier, 2 never.
+    int onsetMode = 1;
+};
 struct VbResearchStats {
     int scene = VB_SCENE_UNKNOWN;
     uint64_t frames[4] = {};
@@ -122,6 +140,12 @@ public:
     // All use the same gentle24 placement. Legacy research setters remain separate.
     bool setAlpha2Profile(int algorithm);
     void setStageCapture(StageCapture52::Sink sink,void* user) {stageSink_=sink;stageUser_=user;}
+    // Host research only; survives setAlpha2Profile (see GenResearch52).
+    void setGenResearch(const GenResearch52& g) { gen_=g; reset(); }
+    // App option "배음별 단일 포락선" (S1m, P1 only): the S1 envelope with the research defaults. No reset here: the
+    // engine calls it while switching (faded out) and then setAlpha2Profile, which resets the module. Realtime safe.
+    void setGenEnvelope(bool on) { gen_=GenResearch52{}; gen_.envelope=on; }
+    bool genEnvelope() const { return gen_.envelope; }
 
     // Audio-thread-owned EQ, including coefficient glides and dynamic bass. A standalone module uses the
     // reference EQ v1.1 at 48 kHz. The engine binds these objects for phase matching to the actual dry path.
@@ -263,6 +287,7 @@ private:
         HarmonicPermission permission[7];
         prediction52::History prediction;
         oscillator52::State oscillator;
+        double envPeak=0; // S1 research: largest harmonic envelope after the last render
     };
     Track52 tr52_[12];
     ContinuityParams continuity_;
@@ -294,6 +319,16 @@ private:
     double hold52_[28][190]={};
     double md52_[kRing]={}, md2_52_[kRing]={}, max52_[kRing]={}, polyT52_[kRing]={};
     double poly52_=1, percEnv52_=0, harmEnv52_=0;
+    // gen-s1s2 research state (unused unless gen_ is set)
+    GenResearch52 gen_;
+    double genGain_=0, genFastE_=0, genSlowE_=0, lastFc_=60, lastGk_=0;
+    int64_t genLastOnset_=-1000000;
+    static constexpr int kBurstDelay=45; // 15 ms look-ahead for the burst amplitude, inside the hp read delay
+    double genAmpRing_[kRing]={}, genPhaseRing_[kRing]={};
+    bool genOnsetRing_[kRing]={};
+    struct Burst { double amp=0, phi=0, f=60, w[7]={}; int64_t start=0; bool on=false; };
+    Burst bursts_[2];
+    double burstSample52(int64_t j);
     double xr52_[kHalfFft+1]={}, xi52_[kHalfFft+1]={};
     double sr52_[kHalfFft+1]={}, si52_[kHalfFft+1]={}, sm52_[kHalfFft+1]={};
 };

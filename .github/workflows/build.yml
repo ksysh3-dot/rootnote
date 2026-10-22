@@ -53,6 +53,7 @@ jobs:
             python3 tools/pvb-harness/test_engine.py --report engine-report.json &&
             OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_alpha2_profiles.py --lib tools/pvb-harness/build/libpvbcapi.so --report alpha2-profiles-ci.json &&
             OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_diagnostic_solo.py &&
+            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_experimental.py --baseline-ref a224dcf3ebee956994cf7f80ac00cadefdebcd58 --report experimental-report.json &&
             OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_harmonic_continuity.py --report harmonic-continuity-report.json &&
             OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_native_renderer.py --report native-renderer-q0.json &&
             OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_native_stream.py --report native-stream-q0.json &&
@@ -95,6 +96,7 @@ jobs:
             oscillator-ci.json
             native-mutation-q0.json
             engine-report.json
+            experimental-report.json
             alpha2-profiles-ci.json
             detail-research-ci.json
             am-family-ci.json

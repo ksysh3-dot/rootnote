@@ -52,7 +52,25 @@ void VbHpv::traceTrack52(int slot,const Track52& t,int state,int reason) {
 void VbHpv::renderTrack52(Track52& tr,const double src[2][256],const int ns[2],
                         bool observed,bool fast,int traceSlot,double* grain,double& agrain) {
     const double tc=2.*80/48000+(192.+15+191)/3000-7052./48000;
-    double w[7],gain; lookup(tr.f,w,gain); const double amp=tr.a*gain*tr.fade*tr.life;
+    double w[7],gain; lookup(tr.f,w,gain);
+    // S1 research: the per-harmonic envelope below is the only time gate.
+    const double amp=gen_.envelope?tr.a*gain:tr.a*gain*tr.fade*tr.life;
+    const double hopMs=1000.*kPvH/kFsd;
+    // S1 per-harmonic envelope: the harmonic's own amplitude (a x table gain x weight x
+    // on/off) followed by one asymmetric one-pole. Attack reaches 90% in attackMs; a fall is
+    // limited to the release (onsetRelease only for a track ended by a newly born note).
+    // Returns the multiplier that turns amp*w into the envelope.
+    double envSum=0,refSum=0;
+    auto envelope=[&](HarmonicPermission& e,double weight,bool on) {
+        const double target=on?amp*weight:0.;
+        const double tau=target>e.value?gen_.attackMs/2.3:(tr.fastEnding?gen_.onsetReleaseMs:gen_.releaseMs);
+        e.value+=(target-e.value)*(1-std::exp(-hopMs/std::max(1e-3,tau)));
+        if(e.value<1e-12) e.value=0;
+        const double ref=amp*weight;
+        envSum+=e.value; refSum+=ref;
+        return ref>0?e.value/ref:0.;
+    };
+    const bool alive=!tr.fastEnding && tr.missing<=continuity_.hold;
     const bool oscillator=stageFlags_&StageOscillator;
     double targetAmplitude[7]={},targetPhase[7]={};
     for(int j=0;j<7;++j) targetPhase[j]=(j+2)*tr.phi+tr.off[j];
@@ -68,10 +86,17 @@ void VbHpv::renderTrack52(Track52& tr,const double src[2][256],const int ns[2],
         float* ht=harmonicCapture_ && traceSlot<HarmonicTrace::kTracks ?
             harmonicTrace_.data+HarmonicTrace::kHeader+traceSlot*HarmonicTrace::kTrack+14+6*(k-2) : nullptr;
         if(ht) { ht[0]=static_cast<float>(amp*w[k-2]); ht[4]=tr.residual>-15?HarmonicTrace::Fit:0; }
+        bool weightOff=false;
         if(w[k-2]<=1e-4) {
             if(ht) ht[4]=static_cast<float>(static_cast<int>(ht[4])|HarmonicTrace::Weight);
-            if(continuity_.enabled) tr.permission[k-2]={};
-            continue;
+            if(gen_.envelope) {
+                // S1: a harmonic whose table weight vanished releases like any other.
+                weightOff=true; w[k-2]=std::max(w[k-2],1e-20);
+                if(tr.permission[k-2].value<=0) continue;
+            } else {
+                if(continuity_.enabled) tr.permission[k-2]={};
+                continue;
+            }
         }
         const double fk=k*tr.f,tolGrid=std::max(4.,.1*24.7*(4.37*fk/1000+1));
         bool on=false; double distance=1e30;
@@ -85,7 +110,14 @@ void VbHpv::renderTrack52(Track52& tr,const double src[2][256],const int ns[2],
         }
         const double evidence=observed?clampv(2-distance/tolGrid,0.,1.):0.;
         if(ht) ht[5]=static_cast<float>(evidence);
-        const double mask=(stageFlags_&StageBypassPermission)?1.:
+        double mask;
+        if(gen_.envelope) {
+            auto& e=tr.permission[k-2];
+            const bool supported=observed && (evidence>=1.0 || (e.value>0 && evidence>=.5));
+            if(supported) e.missing=0; else ++e.missing;
+            const bool target=!weightOff && alive && tr.residual<=-15 && (supported || e.missing<=continuity_.hold);
+            mask=envelope(e,w[k-2],target);
+        } else mask=(stageFlags_&StageBypassPermission)?1.:
             continuity_.enabled?tr.permission[k-2].step(evidence,continuity_,fast):(on?1.:0.);
         if(ht) {
             ht[1]=static_cast<float>(amp*w[k-2]*mask); ht[2]=static_cast<float>(mask);
@@ -156,7 +188,10 @@ void VbHpv::renderTrack52(Track52& tr,const double src[2][256],const int ns[2],
         }
     }
 
-    const double nominal=tr.a*tr.fade*tr.life;
+    // S1: rendered level relative to the current target sum; nominal and removal use it.
+    const double envPeak=refSum>1e-12?envSum/refSum:(envSum>0?1.:0.);
+    tr.envPeak=envPeak;
+    const double nominal=gen_.envelope?tr.a*envPeak:tr.a*tr.fade*tr.life;
     if(oscillator) tr.oscillator.add(tr.f,targetAmplitude,targetPhase,nominal,
         stageFlags_&StageOscillatorCorrect,grain,oscillatorNominal52_);
     agrain+=nominal;
@@ -172,15 +207,18 @@ void VbHpv::missingFrame52(int reason,bool fast) {
     double grain[32]={},agrain=0; int n=0;
     for(int j=0;j<nt52_;++j) {
         auto tr=tr52_[j]; ++tr.age; ++tr.missing;
-        const bool fastEnd=fast || tr.fastEnding; tr.fastEnding=fastEnd;
+        // S1: silence (Absolute) is not a note onset; only a born note cuts fast.
+        const bool fastEnd=gen_.envelope?tr.fastEnding:(fast || tr.fastEnding); tr.fastEnding=fastEnd;
         tr.phi+=2*kPi*tr.f*kPvH/kFsd;
         if(fastEnd || tr.missing>continuity_.hold)
             tr.life=std::max(0.,tr.life-1./std::max(1,fastEnd?continuity_.fastRelease:continuity_.release));
         if(!continuity_.enabled) tr.life=0;
         if(tr.life<1e-12) tr.life=0;
+        if(gen_.envelope) tr.life=1;
         const int state=tr.life<=0?HarmonicTrace::End:(fastEnd || tr.missing>continuity_.hold?HarmonicTrace::Release:HarmonicTrace::Held);
         traceTrack52(j,tr,state,reason|HarmonicTrace::Lost);
         if(tr.life>0 || (stageFlags_&StageOscillator)) renderTrack52(tr,src,ns,false,fastEnd,j,grain,agrain);
+        if(gen_.envelope && tr.envPeak<1e-2) tr.life=0;
         if(tr.life>0) tr52_[n++]=tr;
     }
     nt52_=n;
@@ -317,6 +355,7 @@ void VbHpv::pvFrame52() {
     for(int h=std::max(0,apkCount_-8);h<apkCount_;++h) recent=std::max(recent,apk52_[h]);
     for(int h=0;h<apkCount_-8;++h) past=std::max(past,apk52_[h]);
     const bool falling=apkCount_>0 && am<recent/1.19;
+    const bool ampOnset=apkCount_>8 && am>1.41*past; // S1 research: amplitude onset for the true-onset test
     if(apkCount_<=8 || am>1.41*past || born) onsetLeft_=24;
     if(apkCount_==56) { std::move(apk52_+1,apk52_+56,apk52_); --apkCount_; }
     apk52_[apkCount_++]=am;
@@ -403,22 +442,43 @@ void VbHpv::pvFrame52() {
         }
         tr.residual=q.res; tr.rawResidual=q.raw;
         tr.fade+=((q.res>-15?0.:1.)-tr.fade)*(1-std::exp(-16./90));
+        if(gen_.envelope) {
+            // S1: one envelope per harmonic. A lost (not onset-ended) track within 3% of this
+            // peak is the same partial under another id: hand its envelopes over, render it once.
+            for(int t=0;t<nt52_;++t) if(!used[t] && t!=best && !tr52_[t].fastEnding &&
+                                         std::abs(tr52_[t].f-q.f)<.03*q.f) {
+                used[t]=true;
+                if(best<0 && tr.age==1) {tr.id=tr52_[t].id; tr.age=tr52_[t].age+1;} // trace continuity only
+                for(int k=0;k<7;++k) tr.permission[k].value=std::max(tr.permission[k].value,tr52_[t].permission[k].value);
+            }
+        }
         traceTrack52(p,tr,best>=0?HarmonicTrace::Tracked:HarmonicTrace::Birth,q.res>-15?HarmonicTrace::Fit:0);
         renderTrack52(tr,src,ns,true,false,p,grain,agrain);
         next[p]=tr;
     }
     int lost=0,traceSlot=np;
-    for(int t=0;t<nt52_;++t) if(!used[t]) {
+    // S1: when capacity runs out, the quietest lost tracks are the ones omitted.
+    int order[12]; for(int t=0;t<nt52_;++t) order[t]=t;
+    // Stable insertion sort (at most 12 entries): same order as std::stable_sort, which may allocate a buffer.
+    if(gen_.envelope) for(int x=1;x<nt52_;++x) {
+        const int v=order[x]; const double key=tr52_[v].a*tr52_[v].envPeak; int y=x;
+        for(;y>0 && key>tr52_[order[y-1]].a*tr52_[order[y-1]].envPeak;--y) order[y]=order[y-1];
+        order[y]=v;
+    }
+    for(int oi=0;oi<nt52_;++oi) if(!used[order[oi]]) {
+        const int t=order[oi];
         ++lost; auto tr=tr52_[t]; ++tr.age; ++tr.missing;
         if(!continuity_.enabled && !(stageFlags_&StageOscillator)) {
             traceTrack52(np+lost-1,tr,HarmonicTrace::End,HarmonicTrace::Lost); continue;
         }
-        const bool fast=born || tr.fastEnding; tr.fastEnding=fast;
+        const bool bornCut=!gen_.envelope?born:gen_.onsetMode==0?born:gen_.onsetMode==1?(born && ampOnset):false;
+        const bool fast=bornCut || tr.fastEnding; tr.fastEnding=fast;
         tr.phi+=2*kPi*tr.f*kPvH/kFsd;
         if(fast || tr.missing>continuity_.hold)
             tr.life=std::max(0.,tr.life-1./std::max(1,fast?continuity_.fastRelease:continuity_.release));
         if(!continuity_.enabled) tr.life=0;
         if(tr.life<1e-12) tr.life=0;
+        if(gen_.envelope) tr.life=1;
         const int state=tr.life<=0?HarmonicTrace::End:(fast || tr.missing>continuity_.hold?HarmonicTrace::Release:HarmonicTrace::Held);
         if(nextCount>=12) {
             if(harmonicCapture_) harmonicTrace_.data[21]+=1;
@@ -429,6 +489,7 @@ void VbHpv::pvFrame52() {
         traceTrack52(traceIndex,tr,state,HarmonicTrace::Lost);
         if(tr.life>0 || (stageFlags_&StageOscillator)) {
             renderTrack52(tr,src,ns,false,fast,traceIndex,grain,agrain);
+            if(gen_.envelope && tr.envPeak<1e-2) tr.life=0;
             if(tr.life>0) next[nextCount++]=tr;
         }
     }
@@ -489,7 +550,22 @@ double VbHpv::core52(double d) {
     double a=ep>percEnv52_?att:rel; percEnv52_=a*percEnv52_+(1-a)*ep;
     a=eh>harmEnv52_?att:rel; harmEnv52_=a*harmEnv52_+(1-a)*eh;
     const double gate=clampv((10*std::log10((percEnv52_+1e-20)/(harmEnv52_+1e-20))+3)/6,0.,1.);
-    hpRing_[slot]=bandLayer(pr,pi)*gate;
+    if(!gen_.bursts) hpRing_[slot]=bandLayer(pr,pi)*gate;
+    else {
+        // S2 research: onsets of the low band (analytic power of H+P, so no 2f ripple),
+        // burst written kBurstDelay samples late; the hp read below lags 207 samples.
+        bandLayer(pr,pi);
+        genAmpRing_[slot]=std::hypot(pr,pi)*lastGk_*gate; genPhaseRing_[slot]=std::atan2(pi,pr);
+        const double e=(hr+pr)*(hr+pr)+(hi+pi)*(hi+pi);
+        const double c=std::exp(-1./((e>genFastE_?.001:.010)*kFsd)),sl=std::exp(-1./(.150*kFsd));
+        genFastE_=c*genFastE_+(1-c)*e; genSlowE_=sl*genSlowE_+(1-sl)*e;
+        const bool onset=10*std::log10((genFastE_+1e-30)/(genSlowE_+1e-30))>gen_.onsetDb &&
+            static_cast<int64_t>(i)-genLastOnset_>=static_cast<int64_t>(gen_.refractoryMs*1e-3*kFsd);
+        if(onset) genLastOnset_=static_cast<int64_t>(i);
+        genOnsetRing_[slot]=onset;
+        const int64_t j=static_cast<int64_t>(i)-kBurstDelay;
+        if(j>=0) hpRing_[j&(kRing-1)]=burstSample52(j);
+    }
     if(i>=383 && (i-383)%16==0) pvFrame52();
     // Exact nearest-edge centred closing, evaluated with the existing vocoder delay.
     if(i>=90) {
@@ -510,14 +586,19 @@ double VbHpv::core52(double d) {
         conditionalGain52_=smoothing*conditionalGain52_+(1-smoothing)*gainTarget;
     }
     const double selectedGain=(stageFlags_&StageConditionalGain)?gain+(1-gain)*conditionalGain52_:gain;
-    const double appliedGain=(stageFlags_&StageBypassGain)?(apv>0?1.:0.):selectedGain;
+    double appliedGain=(stageFlags_&StageBypassGain)?(apv>0?1.:0.):selectedGain;
+    if(gen_.envelope && gen_.gainReleaseMs>0) {
+        // S1 research: the envelope-imposition gain may fall no faster than the harmonic release.
+        const double c=std::exp(-1./((appliedGain>genGain_?.003:gen_.gainReleaseMs*1e-3)*kFsd));
+        genGain_=c*genGain_+(1-c)*appliedGain; appliedGain=genGain_;
+    }
     const double target=polyT52_[slot]; polyT52_[slot]=1;
     a=std::exp(-1./(target<poly52_?60:600)); poly52_=a*poly52_+(1-a)*target;
     const double hp=i>=207?hpRing_[(i-207)&(kRing-1)]*poly52_:0;
     const double preFilter=out*appliedGain+(tonalOnly_?0:hp);
     double y=preFilter;for(auto& s:out_) y=s.tick(y);
     if(harmonicReady_) {
-        harmonicTrace_.data[17]=static_cast<float>(gain); harmonicTrace_.data[18]=static_cast<float>(poly52_);
+        harmonicTrace_.data[17]=static_cast<float>(gen_.envelope?appliedGain:gain); harmonicTrace_.data[18]=static_cast<float>(poly52_);
         harmonicTrace_.data[19]=static_cast<float>(out);
     }
     if(stageSink_) {
@@ -528,6 +609,36 @@ double VbHpv::core52(double d) {
         stageSink_(stageUser_,i_,values);
     }
     ++i_; return y;
+}
+double VbHpv::burstSample52(int64_t j) {
+    const int s=j&(kRing-1);
+    if(genOnsetRing_[s]) {
+        double amp=0;
+        for(int64_t q=j;q<=static_cast<int64_t>(i_);++q) amp=std::max(amp,genAmpRing_[q&(kRing-1)]);
+        // Harmonic composition from the current P1 track nearest the percussive frequency.
+        double f=lastFc_,best=.2*lastFc_;
+        for(int t=0;t<nt52_;++t) if(tr52_[t].life>0 && std::abs(tr52_[t].f-lastFc_)<best) {best=std::abs(tr52_[t].f-lastFc_);f=tr52_[t].f;}
+        f=clampv(f,params.fLoHz,params.fHiHz);
+        auto& v=(!bursts_[0].on || (bursts_[1].on && bursts_[0].start>bursts_[1].start))?bursts_[0]:bursts_[1];
+        double g; lookup(f,v.w,g);
+        for(int k=2;k<=8;++k) if(gentle_ && k*f>220) {
+            const double g12=std::pow(10.,-12*std::log2(k*f/220.)/20);
+            v.w[k-2]*=g12+research_.upperBlend*(g12*g12-g12);
+        }
+        v.amp=amp; v.phi=genPhaseRing_[s]; v.f=f; v.start=j; v.on=true;
+    }
+    double y=0;
+    const double ta=gen_.burstAttackMs*1e-3,td=gen_.burstDecayMs*1e-3,tau=td/std::log(100.),taper=.010;
+    for(auto& v:bursts_) if(v.on) {
+        const double t=static_cast<double>(j-v.start)/kFsd;
+        if(t>td+taper) {v.on=false;continue;}
+        double env=t<ta?t/ta:std::exp(-(t-ta)/tau);
+        if(t>td) env*=1-(t-td)/taper;
+        const double ph=v.phi+2*kPi*v.f*t;
+        double sum=0; for(int k=2;k<=8;++k) sum+=v.w[k-2]*std::cos(k*ph+vbt::kPsi[k-2]);
+        y+=v.amp*env*sum;
+    }
+    return y;
 }
 void VbHpv::spectrum52(const double* ring, int64_t s0, double* re, double* im) {
     const int half = kPvN / 2;

@@ -66,6 +66,12 @@ rm -rf "$OUTG"; mkdir -p "$OUTG"
 $KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/DeviceProfiles.kt" "$APP/HomeLogic.kt" "$HERE/GeneralBuildTest.kt" -d "$OUTG"
 java -cp "$OUTG:$KOTLIN_STDLIB" GeneralBuildTestKt "$HERE/../../.."
 
+# Experimental layer options: keys, defaults off in settings and preference XML, not in device profiles, en/ko strings.
+OUTX="$HERE/../build/jvm-experimental"
+rm -rf "$OUTX"; mkdir -p "$OUTX"
+$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/DeviceProfiles.kt" "$APP/PvbNative.kt" "$APP/PvbEngine.kt" "$HERE/ExperimentalSettingsTest.kt" -d "$OUTX"
+java -cp "$OUTX:$KOTLIN_STDLIB" ExperimentalSettingsTestKt "$HERE/../../.."
+
 # General build home screen: master/headline, preset chips from model + level, caps, volume-link line, en/ko strings.
 OUTH="$HERE/../build/jvm-home"
 rm -rf "$OUTH"; mkdir -p "$OUTH"

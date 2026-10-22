@@ -38,6 +38,12 @@ data class PvbSettings(
     val vbVolRefPct: Float = VolumeLevelLink.REF_PCT_DEFAULT,
     val vbVolSlope: Float = VolumeLevelLink.SLOPE_DEFAULT,
     val vbVolMaxDb: Float = VolumeLevelLink.MAX_DB_DEFAULT,
+    // Experimental layer options ("실험 기능"), all off by default; the engine ignores them while virtual bass is off.
+    // Not part of device profiles (DeviceProfiles.FLOAT_KEYS / BOOL_KEYS) nor of the blind-comparison conditions.
+    val xSmooth: Boolean = false,       // 층 출렁임 완화
+    val xRise: Boolean = false,         // 급상승 완화
+    val xS1m: Boolean = false,          // 배음별 단일 포락선 (P1 only)
+    val xDense: Boolean = false,        // 복합음 감응 세기
 ) {
     companion object {
         // Not "dsp_*": upstream presets, backups and device profiles swap those files behind the listeners' back.
@@ -85,6 +91,14 @@ data class PvbSettings(
         const val KEY_VB_VOL_REF_PCT = "pvb_vb_vol_ref_pct"
         const val KEY_VB_VOL_SLOPE = "pvb_vb_vol_slope"
         const val KEY_VB_VOL_MAX_DB = "pvb_vb_vol_max_db"
+        /** Experimental layer options (switches in the "실험 기능" group, default off). */
+        const val KEY_X_SMOOTH = "pvb_x_smooth"
+        const val KEY_X_RISE = "pvb_x_rise"
+        const val KEY_X_S1M = "pvb_x_s1m"
+        const val KEY_X_DENSE = "pvb_x_dense"
+        /** Not persisted: the "실험 기능" header and the feedback link (opens GitHub Issues). */
+        const val KEY_X_HEADER = "pvb_x_header"
+        const val KEY_X_FEEDBACK = "pvb_x_feedback"
         const val KEY_VB_MODEL_SCHEMA = "pvb_vb_model_schema"
         const val KEY_VB_LEGACY_MODEL = "pvb_vb_alpha1_model"
         /** The alpha 2 model a schema-3 migration replaced (only the reference is replaced). */
@@ -193,6 +207,10 @@ data class PvbSettings(
                     .coerceIn(VolumeLevelLink.SLOPE_MIN, VolumeLevelLink.SLOPE_MAX),
                 vbVolMaxDb = p.float(KEY_VB_VOL_MAX_DB, d.vbVolMaxDb)
                     .coerceIn(VolumeLevelLink.MAX_DB_MIN, VolumeLevelLink.MAX_DB_MAX),
+                xSmooth = p.bool(KEY_X_SMOOTH, d.xSmooth),
+                xRise = p.bool(KEY_X_RISE, d.xRise),
+                xS1m = p.bool(KEY_X_S1M, d.xS1m),
+                xDense = p.bool(KEY_X_DENSE, d.xDense),
             ))
         }
 

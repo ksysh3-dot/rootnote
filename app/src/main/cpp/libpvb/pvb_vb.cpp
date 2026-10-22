@@ -243,6 +243,10 @@ void VbHpv::reset() {
     std::fill(std::begin(detailRing52_),std::end(detailRing52_),0.);detailApplied52_=familyApplied52_=false;
     family52_={};familyCentre52_=0;familyCountdown52_=0;conditionalGain52_=0;
     std::fill(std::begin(oscillatorNominal52_),std::end(oscillatorNominal52_),0.);
+    genGain_=genFastE_=genSlowE_=0; lastFc_=60; lastGk_=0; genLastOnset_=-1000000;
+    std::fill(std::begin(genAmpRing_),std::end(genAmpRing_),0.); std::fill(std::begin(genPhaseRing_),std::end(genPhaseRing_),0.);
+    std::fill(std::begin(genOnsetRing_),std::end(genOnsetRing_),false);
+    for(auto& b:bursts_) b=Burst{};
 }
 
 // numpy.interp(f, grid, arange(400)), clipped, then linear interpolation of the weight and gain tables.
@@ -309,6 +313,7 @@ double VbHpv::bandLayer(double re, double im) {
     double wUnused[kKMax - 1], gk;
     lookup(fg, wUnused, gk);
     const double amp = A * gk;
+    lastFc_ = fc; lastGk_ = gk;  // read only by the S2 research bursts
     double out = 0.0;
     double kr = ur, ki = ui;
     for (int k = 2; k <= kKMax; ++k) {

@@ -155,6 +155,15 @@ void pvb_set_continuity_research(void* e,int enabled,int attack,int hold,int rel
     pvb::ContinuityParams p; p.enabled=enabled!=0; p.attack=attack; p.hold=hold; p.release=release;
     static_cast<pvb::Engine*>(e)->setContinuityResearch(p);
 }
+// gen-s1s2 research (host only). v: attackMs, releaseMs, onsetReleaseMs, gainReleaseMs,
+// burstAttackMs, burstDecayMs, onsetDb, refractoryMs, onsetMode; n may be shorter (defaults kept).
+void pvb_set_gen_research(void* e,int envelope,int bursts,const double* v,int n) {
+    pvb::GenResearch52 g; g.envelope=envelope!=0; g.bursts=bursts!=0;
+    double* f[8]={&g.attackMs,&g.releaseMs,&g.onsetReleaseMs,&g.gainReleaseMs,&g.burstAttackMs,&g.burstDecayMs,&g.onsetDb,&g.refractoryMs};
+    for(int j=0;j<n && j<8;++j) *f[j]=v[j];
+    if(n>8) g.onsetMode=static_cast<int>(v[8]);
+    static_cast<pvb::Engine*>(e)->setGenResearch(g);
+}
 void pvb_set_modulation_research(void* e,int mode,int tonalOnly) {
     static_cast<pvb::Engine*>(e)->setModulationResearch(mode,tonalOnly!=0);
 }

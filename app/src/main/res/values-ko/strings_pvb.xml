@@ -109,4 +109,17 @@
     <string name="pvb_live_ab_delete_failed">지우지 못했습니다.</string>
     <string name="pvb_live_ab_clear_all">모두 지우기</string>
     <string name="pvb_live_ab_clear_all_confirm">저장된 판정 %1$d건을 모두 지울까요? 되돌릴 수 없습니다.</string>
+    <!-- Experimental layer options ("실험 기능", default off; pvb_layer_condition.h). -->
+    <string name="pvb_x_header">실험 기능</string>
+    <string name="pvb_x_header_summary">기본은 꺼짐. 개발자 청취에서는 차이가 작거나 없었지만, 사람·기기에 따라 다르게 들릴 수 있어 넣어 둔 기능입니다. 가상 저음이 켜져 있을 때만 작동하고, 네 가지 모두 가상 저음을 줄이기만 할 뿐 키우지는 않습니다. 그래서 켜면 저음이 조금 작게 들릴 수 있습니다.</string>
+    <string name="pvb_x_smooth">층 출렁임 완화</string>
+    <string name="pvb_x_smooth_summary">가상 저음이 짧게 부풀어 오르는 부분을 눌러 ‘훙훙’ 하는 울렁임을 줄입니다. 음이 새로 시작할 때는 잠깐 작아집니다.</string>
+    <string name="pvb_x_rise">급상승 완화</string>
+    <string name="pvb_x_rise_summary">킥이나 새 음에서 가상 저음이 갑자기 커지지 않게, 약 0.15초에 걸쳐 들어오게 합니다.</string>
+    <string name="pvb_x_s1m">배음별 단일 포락선</string>
+    <string name="pvb_x_s1m_summary">‘풍성함 증가’ 모드에서만 작동합니다. 배음마다 크기 변화를 하나로 이어 갑자기 끊겼다 이어지는 일을 줄이고, 그만큼 커지는 가상 저음을 2 dB 낮춥니다. 켜고 끌 때 소리가 잠깐 끊깁니다.</string>
+    <string name="pvb_x_dense">복합음 감응 세기</string>
+    <string name="pvb_x_dense_summary">중고음(500~4000 Hz)이 그 곡의 평소보다 빽빽할 때 가상 저음을 최대 6 dB 줄입니다.</string>
+    <string name="pvb_x_feedback">의견 보내기 (GitHub Issues)</string>
+    <string name="pvb_x_feedback_summary">써 보고 달라진 점이 있거나 없으면 알려 주세요. 곡, 볼륨, 켠 기능을 함께 적어 주시면 도움이 됩니다.\ngithub.com/ksysh3-dot/rootnote/issues</string>
 </resources>

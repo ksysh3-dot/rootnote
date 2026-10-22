@@ -357,6 +357,50 @@
             android:summary="@string/pvb_vb_live_ab_summary"
             android:persistent="false"
             app:iconSpaceReserved="false" />
+        <!-- Experimental layer options (pvb_layer_condition.h): all off by default (must match PvbSettings), shown in
+             both builds without the research unlock, ignored by the engine while virtual bass is off. Not part of
+             device profiles. The header only explains; the feedback entry opens GitHub Issues (PreferenceGroupFragment). -->
+        <Preference
+            android:key="pvb_x_header"
+            android:title="@string/pvb_x_header"
+            android:summary="@string/pvb_x_header_summary"
+            android:persistent="false"
+            android:selectable="false"
+            app:iconSpaceReserved="false" />
+        <me.timschneeberger.rootlessjamesdsp.preference.MaterialSwitchPreference
+            android:key="pvb_x_smooth"
+            android:title="@string/pvb_x_smooth"
+            android:summary="@string/pvb_x_smooth_summary"
+            android:defaultValue="false"
+            android:dependency="pvb_vb_enable"
+            app:iconSpaceReserved="false" />
+        <me.timschneeberger.rootlessjamesdsp.preference.MaterialSwitchPreference
+            android:key="pvb_x_rise"
+            android:title="@string/pvb_x_rise"
+            android:summary="@string/pvb_x_rise_summary"
+            android:defaultValue="false"
+            android:dependency="pvb_vb_enable"
+            app:iconSpaceReserved="false" />
+        <me.timschneeberger.rootlessjamesdsp.preference.MaterialSwitchPreference
+            android:key="pvb_x_s1m"
+            android:title="@string/pvb_x_s1m"
+            android:summary="@string/pvb_x_s1m_summary"
+            android:defaultValue="false"
+            android:dependency="pvb_vb_enable"
+            app:iconSpaceReserved="false" />
+        <me.timschneeberger.rootlessjamesdsp.preference.MaterialSwitchPreference
+            android:key="pvb_x_dense"
+            android:title="@string/pvb_x_dense"
+            android:summary="@string/pvb_x_dense_summary"
+            android:defaultValue="false"
+            android:dependency="pvb_vb_enable"
+            app:iconSpaceReserved="false" />
+        <Preference
+            android:key="pvb_x_feedback"
+            android:title="@string/pvb_x_feedback"
+            android:summary="@string/pvb_x_feedback_summary"
+            android:persistent="false"
+            app:iconSpaceReserved="false" />
     </me.timschneeberger.rootlessjamesdsp.preference.SwitchPreferenceGroup>
     <me.timschneeberger.rootlessjamesdsp.preference.MaterialSwitchPreference
         android:key="pvb_match_on_disable"

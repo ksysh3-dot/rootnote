@@ -362,7 +362,7 @@ class BuzzDiagnostics(
         private val PARAM_NAMES = arrayOf("enabled", "hp_hz", "low_hz", "low_db", "low_q", "hi_hz", "hi_db", "hi_q",
             "out_db", "ceiling_db", "release_ms", "ramp_ms", "dyn_on", "dyn_ref_db", "dyn_down_ratio", "dyn_down_max_db",
             "dyn_up_ratio", "dyn_up_max_db", "hs_hz", "hs_db", "gate_db", "tag", "vb_on", "vb_algo", "vb_level_db",
-            "flat", "match_hold", "match_seed_db", "diagnostic_solo")
+            "flat", "match_hold", "match_seed_db", "diagnostic_solo", "x_smooth", "x_rise", "x_s1m", "x_dense")
         private fun paramsJson(params: FloatArray?): Any {
             if (params == null) return JSONObject.NULL
             val obj = JSONObject()

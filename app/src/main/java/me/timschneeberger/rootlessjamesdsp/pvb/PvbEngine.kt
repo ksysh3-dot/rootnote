@@ -36,7 +36,12 @@ object PvbParam {
     const val MATCH_HOLD = 26
     const val MATCH_SEED_DB = 27
     const val DIAGNOSTIC_SOLO = 28
-    const val COUNT = 29
+    /** Experimental layer options (1 = on, default off; ignored while virtual bass is off). See pvb_layer_condition.h. */
+    const val X_SMOOTH = 29   // 층 출렁임 완화 (cut only)
+    const val X_RISE = 30     // 급상승 완화 (cut only)
+    const val X_S1M = 31      // 배음별 단일 포락선 (S1m, P1 only, layer -2 dB)
+    const val X_DENSE = 32    // 복합음 감응 세기 (up to -6 dB)
+    const val COUNT = 33
 }
 
 /** Index of each value in the meter array (same order as pvb::Meter in pvb_engine.h). */

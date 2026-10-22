@@ -367,6 +367,15 @@ class PreferenceGroupFragment : PreferenceFragmentCompat(), KoinComponent {
             startActivity(Intent(requireContext(), LiveAbActivity::class.java))
             true
         }
+        // "실험 기능": feedback goes to GitHub Issues (a browser; nothing is sent by the app).
+        findPreference<Preference>(PvbSettings.KEY_X_FEEDBACK)?.setOnPreferenceClickListener {
+            try {
+                startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(FEEDBACK_URL)))
+            } catch (_: Exception) {
+                requireContext().toast(R.string.no_activity_found)
+            }
+            true
+        }
         val sw = findPreference<SwitchPreferenceCompat>(PvbSettings.KEY_VB_ON) ?: return
         sw.setOnPreferenceChangeListener { _, newValue ->
             if (newValue != true) return@setOnPreferenceChangeListener true
@@ -696,6 +705,7 @@ class PreferenceGroupFragment : PreferenceFragmentCompat(), KoinComponent {
     companion object {
         private const val BUNDLE_PREF_NAME = "preferencesName"
         private const val BUNDLE_XML_RES = "preferencesXmlRes"
+        private const val FEEDBACK_URL = "https://github.com/ksysh3-dot/rootnote/issues"
 
         fun newInstance(preferencesName: String?, @XmlRes preferencesXmlRes: Int): PreferenceGroupFragment {
             return PreferenceGroupFragment().apply {

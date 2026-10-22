@@ -109,4 +109,17 @@
     <string name="pvb_live_ab_delete_failed">Could not delete.</string>
     <string name="pvb_live_ab_clear_all">Delete all</string>
     <string name="pvb_live_ab_clear_all_confirm">Delete all %1$d saved verdicts? This cannot be undone.</string>
+    <!-- Experimental layer options (default off; pvb_layer_condition.h). -->
+    <string name="pvb_x_header">Experimental</string>
+    <string name="pvb_x_header_summary">Off by default. In the developer\'s listening the difference was small or none, but they may sound different to other people and on other phones, so they are here to try. They only work while virtual bass is on, and all four only reduce the virtual bass, never raise it, so the bass may sound a little smaller with them on.</string>
+    <string name="pvb_x_smooth">Smooth layer swells</string>
+    <string name="pvb_x_smooth_summary">Pushes down short swells of the virtual bass to reduce a “hoong-hoong” wobble. Right after a new note starts it is briefly quieter.</string>
+    <string name="pvb_x_rise">Soften sudden rises</string>
+    <string name="pvb_x_rise_summary">Lets the virtual bass come in over about 0.15 s on kicks and new notes instead of jumping up at once.</string>
+    <string name="pvb_x_s1m">One envelope per harmonic</string>
+    <string name="pvb_x_s1m_summary">Only with the “More fullness” mode. Joins each harmonic\'s level changes into one envelope so harmonics drop out and back in less, and lowers the virtual bass by 2 dB to make up for it getting larger. Sound pauses briefly when switched.</string>
+    <string name="pvb_x_dense">Back off in busy passages</string>
+    <string name="pvb_x_dense_summary">Lowers the virtual bass by up to 6 dB while the mids and highs (500–4000 Hz) are busier than usual for the song.</string>
+    <string name="pvb_x_feedback">Send feedback (GitHub Issues)</string>
+    <string name="pvb_x_feedback_summary">Tell us whether you hear a difference or not. The song, the volume and which options were on help.\ngithub.com/ksysh3-dot/rootnote/issues</string>
 </resources>

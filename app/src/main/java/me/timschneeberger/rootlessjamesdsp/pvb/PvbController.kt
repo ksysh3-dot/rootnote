@@ -445,6 +445,12 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
         p[PvbParam.MATCH_SEED_DB] = matchSeedDb
         if (!processing || !s.vbOn || PvbRuntime.abActive || PvbRuntime.measuring) diagnosticSolo = false
         p[PvbParam.DIAGNOSTIC_SOLO] = if (diagnosticSolo) 1f else 0f
+        // Experimental layer options: only with virtual bass on (the engine also ignores them without it).
+        val vbIn = p[PvbParam.VB_ON] == 1f
+        p[PvbParam.X_SMOOTH] = if (vbIn && s.xSmooth) 1f else 0f
+        p[PvbParam.X_RISE] = if (vbIn && s.xRise) 1f else 0f
+        p[PvbParam.X_S1M] = if (vbIn && s.xS1m) 1f else 0f
+        p[PvbParam.X_DENSE] = if (vbIn && s.xDense) 1f else 0f
         engine.setParams(p)
         publish(lowDb)
     }

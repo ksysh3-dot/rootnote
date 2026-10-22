@@ -24,6 +24,9 @@ constexpr double kGateOffDb = -90.0;       // gate at or below this: exact silen
 constexpr double kOpenMinLin = 1e-3;       // gate above -60 dB counts as audible (openMs)
 constexpr double kOpenInputPeak = 1e-4;    // a block whose input peak is below -80 dBFS does not count as heard
 constexpr double kVbFadeS = 0.03;          // virtual bass switching fade (out and in)
+// S1m: fixed layer trim. Offline S1m matched each song's layer 220-400 Hz p99 to P1 (-1.58, -3.04, -1.36 dB on the
+// three gate songs, GEN_S1S2_20261022.md); the app cannot measure per song, so it uses their mean, -2 dB.
+constexpr double kS1mTrimDb = -2.0;
 
 // Flush denormals to zero for the duration of a block (restored afterwards).
 struct DenormalScope {
@@ -81,6 +84,7 @@ void sanitizeParams(float* v) {
     v[P_MATCH_HOLD] = v[P_MATCH_HOLD] >= 0.5f ? 1.f : 0.f;
     v[P_MATCH_SEED_DB] = clampv(v[P_MATCH_SEED_DB], static_cast<float>(LoudnessMatcher::kMinDb),
                                 static_cast<float>(LoudnessMatcher::kMaxDb));
+    for (int i : {P_X_SMOOTH, P_X_RISE, P_X_S1M, P_X_DENSE}) v[i] = v[i] >= 0.5f ? 1.f : 0.f;
 }
 
 void storeMin(std::atomic<float>& a, float v) {
@@ -125,6 +129,10 @@ void defaultParams(float* v) {
     v[P_MATCH_HOLD] = 0.f;
     v[P_DIAGNOSTIC_SOLO] = 0.f;
     v[P_MATCH_SEED_DB] = -6.f;   // album average for EQ v1.1 (-6.2 dB, 23 tracks)
+    v[P_X_SMOOTH] = 0.f;         // experimental layer options: off
+    v[P_X_RISE] = 0.f;
+    v[P_X_S1M] = 0.f;
+    v[P_X_DENSE] = 0.f;
 }
 
 double estimatePhoneLimiterGr(double levelDb) { return PhoneModel::staticGr(levelDb); }
@@ -170,13 +178,35 @@ int Engine::vbWanted() const {
     return (a >= 0 && a < VB_ALGO_COUNT && vbOk_[a]) ? a : -1;
 }
 
+bool Engine::genWanted(int algo) const {
+    return algo == VB_ALPHA2_P1 && active_[P_X_S1M] >= 0.5f;
+}
+
+// Experimental layer options: only while a virtual bass algorithm is in the path (they blend out otherwise).
+void Engine::updateCondWanted() {
+    const bool vb = vbCur_ >= 0;
+    cond_.setWanted(vb && active_[P_X_SMOOTH] >= 0.5f, vb && active_[P_X_RISE] >= 0.5f, vb && active_[P_X_DENSE] >= 0.5f);
+}
+
+bool Engine::vbSwitchPending() const {
+    const int w = vbWanted();
+    return w != vbCur_ || (w >= 0 && genWanted(w) != genCur_);
+}
+
 void Engine::updateLatency() {
     latency_.store(lim_.latency() + (vbCur_ >= 0 ? vbDelay_ : 0), std::memory_order_relaxed);
 }
 
 void Engine::vbApply(int algo, bool force) {
-    if (algo == vbCur_ && !force) return;
+    const bool gen = algo >= 0 && genWanted(algo);
+    if (algo == vbCur_ && gen == genCur_ && !force) return;
     vbCur_ = algo;
+    // vbAlpha2_ serves all five Alpha2 profiles: the S1m envelope is set (or cleared) before the profile resets it.
+    genCur_ = gen;
+    // Host research (setGenResearch) keeps its own GenResearch52; the app option never overrides it.
+    if (!genHost_) vbAlpha2_.setGenEnvelope(gen);
+    cond_.clearDetectors();
+    updateCondWanted();
     if (algo >= VB_ALPHA2_P1) vbAlpha2_.setAlpha2Profile(algo);
     else if (algo >= 0) vbMods_[algo]->reset();
     vbDelay_ = algo >= 0 ? clampv(vbMods_[algo]->latencyFrames(), 0, kVbDelayLen - 1) : 0;
@@ -190,6 +220,7 @@ void Engine::configure(int sampleRate) {
     limSolo_.configure(sr_, kLookaheadMs);
     limFlat_.configure(sr_, kLookaheadMs);  // same latency as lim_: the flat path stays aligned with wet and dry
     match_.configure(sr_);
+    cond_.configure(sr_);
     for (int a = 0; a < VB_ALGO_COUNT; ++a)
         vbOk_[a] = a > VB_ALPHA2_P1 ? vbOk_[VB_ALPHA2_P1] : vbMods_[a]->configure(sr_);
     vb52_.bindEq(&hp_, &lo_, &hi_, &hs_, sr_);
@@ -274,6 +305,7 @@ void Engine::resetState() {
     vbPhase_ = VB_STEADY;
     vbX_.snap(1.0);
     if (vbCur_ >= 0) vbMods_[vbCur_]->reset();
+    cond_.clearDetectors();
 }
 
 void Engine::applyParams(const float* v, bool snap) {
@@ -370,7 +402,7 @@ void Engine::process(float* io, int frames) {
     }
 
     // Virtual bass on/off or another algorithm: switch now if nothing is audible, else fade out first.
-    if (vbPhase_ == VB_STEADY && vbWanted() != vbCur_) {
+    if (vbPhase_ == VB_STEADY && vbSwitchPending()) {
         const bool silent = gate_.value() <= kSilentGainLin || outGain_.value() <= kSilentGainLin || fade_.value() <= 0.0;
         if (silent) {
             vbApply(vbWanted(), false);
@@ -406,6 +438,8 @@ void Engine::process(float* io, int frames) {
     uint64_t openBlock = 0;
     const bool dynOn = active_[P_DYN_ON] >= 0.5f;
     if (!dynOn) dynOff_ = 0.0;
+    updateCondWanted();  // new parameters (vbApply updates it when the algorithm changes mid-block)
+    const double s1mTrim = dbToLin(kS1mTrimDb);
 
     for (int n = 0; n < frames; ++n) {
         float fl = io[2 * n], fr = io[2 * n + 1];
@@ -498,6 +532,13 @@ void Engine::process(float* io, int frames) {
             VbModule* m = vbMods_[vbCur_];
             if (m->inputAfterEq()) m->tick(wl, wr, layL, layR);
             else m->tick(xl, xr, layL, layR);
+            // Experimental options (all off: neither branch runs, the layer is untouched).
+            if (genCur_) { layL *= s1mTrim; layR *= s1mTrim; }
+            if (!cond_.idle()) {
+                const double cg = cond_.tick(layL, layR, 0.5 * (xdl + xdr));
+                layL *= cg;
+                layR *= cg;
+            }
             if(capture) if(const auto* hop=m->takeHarmonicTrace()) {
                 if(harmonicCount_>=HarmonicTrace::kBlockRows) harmonicOverflow_=true;
                 else {
@@ -631,6 +672,7 @@ void Engine::process(float* io, int frames) {
     }
     if (dynEnv_ < 1e-24) dynEnv_ = 0.0;
     match_.flushTiny();
+    cond_.flushTiny();
 
     // Meters.
     storeMax(mInPeak_, static_cast<float>(inPeak));

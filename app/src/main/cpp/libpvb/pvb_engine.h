@@ -30,6 +30,7 @@
 
 #include "pvb_analysis.h"
 #include "pvb_dsp.h"
+#include "pvb_layer_condition.h"
 #include "pvb_vb.h"
 
 namespace pvb {
@@ -69,6 +70,12 @@ enum Param : int {
     P_MATCH_HOLD,     // 1 = the loudness match keeps its value (blind comparison: other settings play meanwhile)
     P_MATCH_SEED_DB,  // loudness-match gain until the first measurement (the value saved last time), -30..+3 dB
     P_DIAGNOSTIC_SOLO, // generated layer monitor; ordinary full mix continues driving analysis/match/limiter
+    // Experimental layer options (1 = on, default 0 = off; all off = bit-identical to the engine without them).
+    // Only while virtual bass is in the path. See pvb_layer_condition.h.
+    P_X_SMOOTH,       // "층 출렁임 완화": cut the layer where its 5 ms envelope exceeds its 500 ms envelope
+    P_X_RISE,         // "급상승 완화": limit how fast the layer envelope may rise (150 ms), cut only
+    P_X_S1M,          // "배음별 단일 포락선" (S1m): P1 only; one envelope per harmonic (GenResearch52) and -2 dB layer
+    P_X_DENSE,        // "복합음 감응 세기": up to -6 dB while the dry 500-4000 Hz band is louder than usual
     P_COUNT
 };
 
@@ -133,6 +140,12 @@ public:
         for(VbHpv* m : {&vb52_, &vbGentle_, &vbGentleStrong_, &vbGentleAdaptive_}) m->setStageResearch(flags,sink,user);
         vbAlpha2_.setStageCapture(sink,user); // capture fixed app profiles without overriding their controls
     }
+    // Host research only (gen-s1s2): S1/S2 generator variants on the app profiles. Not reachable from JNI.
+    // While set (any field on), the app option P_X_S1M no longer changes the generator (its -2 dB trim still applies).
+    void setGenResearch(const GenResearch52& g) {
+        for(VbHpv* m : {&vb52_, &vbGentle_, &vbGentleStrong_, &vbGentleAdaptive_, &vbAlpha2_}) m->setGenResearch(g);
+        genHost_ = g.envelope || g.bursts;
+    }
 
     // Clears filter memory and delay lines at the next block and fades in over 50 ms (any thread).
     void requestReset() { resetRequested_.store(true, std::memory_order_release); }
@@ -160,6 +173,9 @@ private:
     void resetState();
     void publishFilters();
     int vbWanted() const;
+    bool genWanted(int algo) const;   // S1m for this algorithm (P1 only)
+    bool vbSwitchPending() const;     // algorithm or S1m differs from what runs
+    void updateCondWanted();
     void vbApply(int algo, bool force);
     void updateLatency();
     static void storeMax(std::atomic<float>& a, float v);
@@ -214,6 +230,9 @@ private:
                                      &vbAlpha2_, &vbAlpha2_, &vbAlpha2_, &vbAlpha2_, &vbAlpha2_};
     bool vbOk_[VB_ALGO_COUNT] = {};   // available at the current rate
     int vbCur_ = -1;                  // algorithm in the signal path, -1 = none
+    bool genCur_ = false;             // S1m running in vbAlpha2_ (P1 only); switched like an algorithm (faded)
+    bool genHost_ = false;            // host research hook set (setGenResearch): leave vbAlpha2_'s GenResearch52 alone
+    LayerConditioner cond_;           // experimental layer options (P_X_SMOOTH, P_X_RISE, P_X_DENSE)
     int vbDelay_ = 0;                 // frames the chain's input is delayed by while vbCur_ >= 0
     VbPhase vbPhase_ = VB_STEADY;
     int vbHold_ = 0;
