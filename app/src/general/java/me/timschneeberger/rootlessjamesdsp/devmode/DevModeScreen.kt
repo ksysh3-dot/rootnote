@@ -997,13 +997,23 @@ private fun EvidenceSheet(spec: DevSpec, state: DevUiState, actions: DevActions)
                     Text(stringResource(item.sentence), color = c.textPrimary, fontSize = 15.sp, lineHeight = 21.sp)
                     if (item.tag == DevEvidence.MEASURED && state.measuredBadge.here)
                         Text(stringResource(R.string.dev_ev_measured_here_note), color = c.accentText, fontSize = 13.sp, lineHeight = 18.sp)
-                    Text(item.sources.map { stringResource(it.label) }.joinToString(" · "), color = c.textSecondary,
-                        fontSize = 12.sp, lineHeight = 16.sp)
+                    for (src in item.sources) {
+                        val label = stringResource(src.label)
+                        val url = src.url
+                        if (url == null || url in urls) {
+                            Text(label, color = c.textSecondary, fontSize = 12.sp, lineHeight = 16.sp)
+                        } else {
+                            urls += url
+                            // each published source: its name and "출처 열기" (opens the browser; 48 dp target)
+                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                Text(label, color = c.textSecondary, fontSize = 12.sp, lineHeight = 16.sp, modifier = Modifier.weight(1f))
+                                TextAction(stringResource(R.string.dev_ev_open_source), bold = true) { actions.onOpenUrl(url) }
+                            }
+                        }
+                    }
                 }
-                item.sources.mapNotNull { it.url }.forEach { if (it !in urls) urls += it }
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
-                if (urls.isNotEmpty()) OutlineButton(stringResource(R.string.dev_ev_open_source)) { actions.onOpenUrl(urls.first()) }
                 FilledButton(stringResource(R.string.dev_ev_close)) { actions.onEvidence(null) }
             }
         }
