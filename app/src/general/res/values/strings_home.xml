@@ -76,6 +76,8 @@
         <item>Upright, the two speakers sit above each other instead of left and right. Both then reach both ears almost equally, so there is no leak to cancel, and spatial does not work.\n\nYou can choose instead (advanced settings, Held upright): leave it and only spatial switches off, stereo as it is; mono plays the same sound from both; two-way lets the bottom speaker take the bass and the top one the highs, so the two no longer play the same highs from two heights and the small top speaker is spared the bass. It changes after a second upright, and spatial comes back when you turn the phone sideways.</item>
         <item>Honest limits</item>
         <item>How much less the sides blend is calculated with a computer model (about 3-10 dB in the mid range). Ears and heads differ, so the feel differs too. Videos and calls with everything in the centre change little.\n\nIt switches off by itself on earphones or Bluetooth and during blind comparisons and measurements.</item>
+        <item>How is it different from other wideners?</item>
+        <item>Most widening effects make the difference between left and right larger, or twist the phase a little, to give a sense of width. That suits headphones well. On phone speakers, though, both speakers reach both ears from the start, so the larger difference tends to blend back in.\n\nRootnote’s spatial works on the blending itself: it calculates the leak and reduces it. That is why it asks for the distance and the head size, and why you can even out the top and bottom speakers of your own phone. The bass, and if you like the vocals in the centre, are left as they are. Which sounds better is a matter of taste: compare with “Hear it yourself” on the previous page.</item>
     </string-array>
     <string name="story_prev">Back</string>
     <string name="story_next">Next</string>
@@ -96,6 +98,7 @@
         <item>Choosing a preset changes how far the centre dot (vocals) and the side dots (instruments) spread.</item>
         <item>The phone held upright, seen from the front. Both speakers are as far from either ear; then thick bass waves spread from the bottom speaker and fine treble waves from the top one.</item>
         <item>Spatial turns on and off, and the side dots spread and close.</item>
+        <item>The screen splits in two. Left, a usual widener: arrows spread outwards but the lines to the opposite ears stay and the head is surrounded by a wobble. Right, spatial: the lines to the opposite ears fade and the sound moves out beside the ears.</item>
     </string-array>
     <string name="balance_title">Even out the speakers</string>
     <string name="home_xtc_balance">Even out the speakers</string>
@@ -135,4 +138,6 @@
     <string name="balance_failed_title">Could not measure</string>
     <string name="balance_failed_mic">The microphones could not be used on this phone. Please set it by ear.</string>
     <string name="balance_failed_quiet">The microphones did not hear the speakers well enough. Turn the volume up a little and try again, or set it by ear.</string>
+    <string name="story_compare_widen">A usual widener</string>
+    <string name="story_compare_spatial">Spatial</string>
 </resources>

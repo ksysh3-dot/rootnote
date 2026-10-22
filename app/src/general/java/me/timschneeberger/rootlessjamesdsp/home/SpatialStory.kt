@@ -64,6 +64,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.res.stringArrayResource
@@ -120,7 +121,9 @@ data class StoryState(
 )
 
 private val Ease = CubicBezierEasing(0.32f, 0.72f, 0f, 1f)
-private const val SCENES = 9
+private const val SCENES = 10
+/** The page with the honest limits and "직접 들어 보기". */
+private const val LISTEN_PAGE = 8
 
 @Composable
 fun SpatialStory(state: StoryState, onListen: (Boolean) -> Unit, onClose: () -> Unit) {
@@ -200,7 +203,7 @@ fun SpatialStory(state: StoryState, onListen: (Boolean) -> Unit, onClose: () -> 
                         color = c.textPrimary, fontSize = 20.sp, lineHeight = 26.sp, fontWeight = FontWeight.Bold,
                     )
                     Text(items.getOrElse(2 * page + 1) { "" }, color = c.textPrimary, fontSize = 15.sp, lineHeight = 22.sp)
-                    if (page == SCENES - 1) ListenControl(state, onListen)
+                    if (page == LISTEN_PAGE) ListenControl(state, onListen)
                 }
             }
         }
@@ -301,7 +304,7 @@ private class StageColors(val left: Color, val right: Color, val ink: Color, val
 private fun Scene(page: Int, state: StoryState, active: Boolean) {
     val c = rootnotePalette()
     val colors = remember(c) { StageColors(c.fill, c.xtcFill, c.textPrimary, c.textSecondary, c.chipBorder, c.bg) }
-    val periods = intArrayOf(2600, 3000, 4200, 1, 4000, 2400, 1, 5000, 2600)
+    val periods = intArrayOf(2600, 3000, 4200, 1, 4000, 2400, 1, 5000, 2600, 4000)
     // One clock per scene (0..1, looping, starting at the scene's key frame so a page that becomes active does not
     // jump); a still key frame with the animations off or off-screen. Read only inside the Canvas (draw phase).
     val clock: State<Float> = if (state.reduceMotion || !active || periods[page] <= 1) {
@@ -315,6 +318,7 @@ private fun Scene(page: Int, state: StoryState, active: Boolean) {
     }
     val description = stringArrayResource(R.array.story_scene_a11y).getOrElse(page) { "" }
     val measurer = rememberTextMeasurer()
+    val compareLabels = listOf(stringResource(R.string.story_compare_widen), stringResource(R.string.story_compare_spatial))
     when (page) {
         3 -> DistanceScene(state, colors, description)
         6 -> PresetScene(state, colors, description)
@@ -327,13 +331,14 @@ private fun Scene(page: Int, state: StoryState, active: Boolean) {
                 4 -> sceneSweetSpot(t, colors)
                 5 -> sceneBand(t, colors, measurer)
                 7 -> scenePortrait(t, colors)
+                9 -> sceneCompare(t, colors, measurer, compareLabels)
                 else -> sceneLimits(t, colors)
             }
         }
     }
 }
 
-private val KEY_FRAMES = floatArrayOf(0.55f, 0.75f, 0.85f, 0f, 0.3f, 0.4f, 0f, 0.8f, 0.5f)
+private val KEY_FRAMES = floatArrayOf(0.55f, 0.75f, 0.85f, 0f, 0.3f, 0.4f, 0f, 0.8f, 0.5f, 0.7f)
 
 /** Stage geometry (top view): the phone across the top, the head below it, ears left and right. */
 private class Stage(w: Float, h: Float, distanceScale: Float = 1f, headScale: Float = 1f) {
@@ -781,6 +786,62 @@ private fun DrawScope.scenePortrait(t: Float, col: StageColors) {
             val p = (phase * 2f + k * 0.25f) % 1f
             val r = unit * 1.6f * p
             drawCircle(col.right.copy(alpha = split * (1f - p) * 0.9f), r, top, style = Stroke(1.5.dp.toPx()))
+        }
+    }
+}
+
+/**
+ * 10: side by side, gently. Left, a usual widener: the side sound is pushed outwards, but both speakers still reach
+ * both ears (the leak lines stay) and a wobble hangs around the head. Right, spatial: the leak lines fade away and
+ * the sound moves out beside the ears. Same phone, same head, same colours as the other scenes.
+ */
+private fun DrawScope.sceneCompare(t: Float, col: StageColors, measurer: androidx.compose.ui.text.TextMeasurer, labels: List<String>) {
+    val half = size.width / 2f
+    drawLine(col.line, Offset(half, size.height * 0.08f), Offset(half, size.height * 0.95f), 1.dp.toPx())
+    val grow = smooth(t / 0.5f)
+    for (side in 0..1) {
+        val x0 = side * half
+        val label = measurer.measure(
+            labels.getOrElse(side) { "" },
+            TextStyle(fontSize = 13.dp.toSp(), color = if (side == 0) col.soft else col.right, fontWeight = FontWeight.Bold),
+        )
+        drawText(label, topLeft = Offset(x0 + ((half - label.size.width) / 2f).coerceAtLeast(0f), 0f))
+        val top = label.size.height + 6.dp.toPx()
+        translate(left = x0, top = top) {
+            val s = Stage(half, size.height - top)
+            val dash = PathEffect.dashPathEffect(floatArrayOf(8f, 6f))
+            if (side == 0) {
+                // leak lines stay; the side sound is pushed outwards; a small wobble around the head
+                drawLine(col.left.copy(alpha = 0.7f), s.spL, s.earR, 2.dp.toPx())
+                drawLine(col.right.copy(alpha = 0.7f), s.spR, s.earL, 2.dp.toPx())
+                val y = s.phoneY + s.unit * 1.4f
+                val reach = s.unit * (0.6f + 1.4f * grow)
+                drawLine(col.soft, Offset(s.cx - s.unit * 0.3f, y), Offset(s.cx - reach, y), 2.dp.toPx(), StrokeCap.Round)
+                drawLine(col.soft, Offset(s.cx + s.unit * 0.3f, y), Offset(s.cx + reach, y), 2.dp.toPx(), StrokeCap.Round)
+                val wob = Path()
+                for (i in 0..40) {
+                    val a = i / 40f * 2f * PI.toFloat()
+                    val r = s.headR * 1.25f + s.unit * 0.08f * grow * sin(6f * a + t * 12f)
+                    val px = s.cx + r * cos(a)
+                    val py = s.headY + r * sin(a)
+                    if (i == 0) wob.moveTo(px, py) else wob.lineTo(px, py)
+                }
+                drawPath(wob, col.soft.copy(alpha = 0.6f), style = Stroke(1.5.dp.toPx()))
+                drawCircle(col.ink.copy(alpha = 0.6f), s.unit * 0.18f, Offset(s.cx - reach * 0.5f, y))
+                drawCircle(col.ink.copy(alpha = 0.6f), s.unit * 0.18f, Offset(s.cx + reach * 0.5f, y))
+            } else {
+                // the leak lines fade out; the sound moves out beside the ears
+                val fade = 1f - grow
+                drawLine(col.left.copy(alpha = 0.7f * fade), s.spL, s.earR, 2.dp.toPx(), pathEffect = dash)
+                drawLine(col.right.copy(alpha = 0.7f * fade), s.spR, s.earL, 2.dp.toPx(), pathEffect = dash)
+                drawLine(col.left.copy(alpha = 0.8f), s.spL, s.earL, 2.dp.toPx())
+                drawLine(col.right.copy(alpha = 0.8f), s.spR, s.earR, 2.dp.toPx())
+                val out = s.headR + s.unit * (0.2f + 0.9f * grow)
+                drawCircle(col.left, s.unit * 0.2f, Offset(s.cx - out, s.headY))
+                drawCircle(col.right, s.unit * 0.2f, Offset(s.cx + out, s.headY))
+            }
+            phone(s, col)
+            head(s, col)
         }
     }
 }
