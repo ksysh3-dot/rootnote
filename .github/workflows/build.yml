@@ -27,6 +27,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: true   # libjamesdsp: the JamesDSP -> PVB chain test runs the real JamesDSP engine
 
       - uses: actions/setup-python@v5
         with:
@@ -69,6 +71,8 @@ jobs:
             OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/vb_quality/test_adaptive_port.py --report adaptive-port-report.json &&
             OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/vb_quality/test_quality.py --report quality-report.json &&
             python3 tools/pvb-harness/match/test_match.py &&
+            tools/pvb-harness/build_host_jdsp.sh &&
+            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_jdsp_chain.py --report jdsp-chain-report.json &&
             tools/pvb-harness/jvm/run_jvm_test.sh
           } 2>&1 | tee ci-build.log
 
@@ -101,6 +105,7 @@ jobs:
             gentle-port-report.json
             adaptive-port-report.json
             quality-report.json
+            jdsp-chain-report.json
             ci-build.log
 
   apk:

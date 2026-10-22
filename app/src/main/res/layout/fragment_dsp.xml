@@ -118,10 +118,35 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="1dp">
 
-            <androidx.fragment.app.FragmentContainerView
-                android:id="@+id/card_output_control"
+            <!-- JamesDSP -> PVB chain note (DspFragment.updatePvbNote) -->
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/note_output_control"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="16dp"
+                    android:paddingTop="12dp"
+                    android:textSize="13sp"
+                    android:visibility="gone" />
+
+                <androidx.fragment.app.FragmentContainerView
+                    android:id="@+id/card_output_control"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <!-- Covers the card while the module is sealed: the controls cannot be changed -->
+            <View
+                android:id="@+id/lock_output_control"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clickable="true"
+                android:focusable="true"
+                android:visibility="gone" />
         </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.card.MaterialCardView
@@ -129,10 +154,26 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="1dp">
 
-            <androidx.fragment.app.FragmentContainerView
-                android:id="@+id/card_compressor"
+            <!-- JamesDSP -> PVB chain note (DspFragment.updatePvbNote) -->
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/note_compressor"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="16dp"
+                    android:paddingTop="12dp"
+                    android:textSize="13sp"
+                    android:visibility="gone" />
+
+                <androidx.fragment.app.FragmentContainerView
+                    android:id="@+id/card_compressor"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.card.MaterialCardView
@@ -140,10 +181,35 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="1dp">
 
-            <androidx.fragment.app.FragmentContainerView
-                android:id="@+id/card_bass"
+            <!-- JamesDSP -> PVB chain note (DspFragment.updatePvbNote) -->
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/note_bass"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="16dp"
+                    android:paddingTop="12dp"
+                    android:textSize="13sp"
+                    android:visibility="gone" />
+
+                <androidx.fragment.app.FragmentContainerView
+                    android:id="@+id/card_bass"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <!-- Covers the card while the module is sealed: the controls cannot be changed -->
+            <View
+                android:id="@+id/lock_bass"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clickable="true"
+                android:focusable="true"
+                android:visibility="gone" />
         </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.card.MaterialCardView
@@ -151,10 +217,26 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="1dp">
 
-            <androidx.fragment.app.FragmentContainerView
-                android:id="@+id/card_eq"
+            <!-- JamesDSP -> PVB chain note (DspFragment.updatePvbNote) -->
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/note_eq"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="16dp"
+                    android:paddingTop="12dp"
+                    android:textSize="13sp"
+                    android:visibility="gone" />
+
+                <androidx.fragment.app.FragmentContainerView
+                    android:id="@+id/card_eq"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.card.MaterialCardView
@@ -162,10 +244,26 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="1dp">
 
-            <androidx.fragment.app.FragmentContainerView
-                android:id="@+id/card_peq"
+            <!-- JamesDSP -> PVB chain note (DspFragment.updatePvbNote) -->
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/note_peq"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="16dp"
+                    android:paddingTop="12dp"
+                    android:textSize="13sp"
+                    android:visibility="gone" />
+
+                <androidx.fragment.app.FragmentContainerView
+                    android:id="@+id/card_peq"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.card.MaterialCardView
@@ -173,10 +271,26 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="1dp">
 
-            <androidx.fragment.app.FragmentContainerView
-                android:id="@+id/card_geq"
+            <!-- JamesDSP -> PVB chain note (DspFragment.updatePvbNote) -->
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/note_geq"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="16dp"
+                    android:paddingTop="12dp"
+                    android:textSize="13sp"
+                    android:visibility="gone" />
+
+                <androidx.fragment.app.FragmentContainerView
+                    android:id="@+id/card_geq"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.card.MaterialCardView
@@ -217,10 +331,35 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="1dp">
 
-            <androidx.fragment.app.FragmentContainerView
-                android:id="@+id/card_tube"
+            <!-- JamesDSP -> PVB chain note (DspFragment.updatePvbNote) -->
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/note_tube"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="16dp"
+                    android:paddingTop="12dp"
+                    android:textSize="13sp"
+                    android:visibility="gone" />
+
+                <androidx.fragment.app.FragmentContainerView
+                    android:id="@+id/card_tube"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <!-- Covers the card while the module is sealed: the controls cannot be changed -->
+            <View
+                android:id="@+id/lock_tube"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clickable="true"
+                android:focusable="true"
+                android:visibility="gone" />
         </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.card.MaterialCardView

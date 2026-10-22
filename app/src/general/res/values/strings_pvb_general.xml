@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- General build: PVB strings without the internal alpha names and model wording. -->
 <resources>
-    <string name="pvb_enable">Speaker correction (replaces JamesDSP processing when on)</string>
+    <string name="pvb_enable">Speaker correction (runs after JamesDSP effects when on)</string>
     <string name="pvb_vb_enable">Virtual bass (experimental)</string>
     <string name="pvb_vb_enable_summary">Adds fullness and weight to the bass. About 0.15 s of delay</string>
     <string name="pvb_vb_warning_title">Virtual bass (experimental)</string>

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- PVB speaker correction: Korean. The default (values/strings_pvb.xml) is English. -->
 <resources>
-    <string name="pvb_enable">PVB 스피커 보정 (켜면 JamesDSP 대신 사용)</string>
+    <string name="pvb_enable">PVB 스피커 보정 (켜면 JamesDSP 효과 뒤에 적용)</string>
     <string name="pvb_match_on_disable">끌 때 음량 맞춤</string>
-    <string name="pvb_match_on_disable_summary">보정을 끄면 최근 재생 음량에 맞춘 원음을 들려줍니다. 처음에는 추정값을 쓰며 약 10초 평균으로 갱신합니다. 가상 저음 사용 중에는 비교를 위해 같은 지연을 유지합니다. 이 기능도 끄면 JamesDSP 처리를 사용합니다.</string>
+    <string name="pvb_match_on_disable_summary">보정을 끄면 최근 재생 음량에 맞춘 원음을 들려줍니다. 처음에는 추정값을 쓰며 약 10초 평균으로 갱신합니다. 가상 저음 사용 중에는 비교를 위해 같은 지연을 유지합니다. JamesDSP 효과는 그 앞에서 그대로 적용됩니다. 이 기능도 끄면 JamesDSP 처리만 사용합니다.</string>
     <string name="pvb_speaker_only">내장 스피커에서만 적용</string>
     <string name="pvb_speaker_only_summary">이어폰·블루투스로 바뀌면 자동으로 우회합니다</string>
     <string name="pvb_low_db">저중역 보정 크기</string>

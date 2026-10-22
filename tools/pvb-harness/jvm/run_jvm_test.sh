@@ -71,3 +71,10 @@ OUTH="$HERE/../build/jvm-home"
 rm -rf "$OUTH"; mkdir -p "$OUTH"
 $KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/HomeLogic.kt" "$HERE/HomeLogicTest.kt" -d "$OUTH"
 java -cp "$OUTH:$KOTLIN_STDLIB" HomeLogicTestKt "$HERE/../../.."
+
+# JamesDSP -> PVB chain: route table, module sealing and restore of the user's values, 16-bit conversion against the
+# PVB engine's own 16-bit path (host libpvbengine.so), en/ko strings of the chain notes.
+OUTC="$HERE/../build/jvm-chain"
+rm -rf "$OUTC"; mkdir -p "$OUTC"
+$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/PvbNative.kt" "$APP/PvbEngine.kt" "$APP/JdspChain.kt" "$HERE/JdspChainTest.kt" -d "$OUTC"
+java -Djava.library.path="$HERE/../build" -cp "$OUTC:$KOTLIN_STDLIB" JdspChainTestKt "$HERE/../../.." --jni

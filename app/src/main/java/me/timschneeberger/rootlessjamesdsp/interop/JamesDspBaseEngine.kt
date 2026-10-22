@@ -13,6 +13,7 @@ import me.timschneeberger.rootlessjamesdsp.interop.structure.EelVmVariable
 import me.timschneeberger.rootlessjamesdsp.model.ParametricEqBandList
 import me.timschneeberger.rootlessjamesdsp.model.ProcessorMessage
 import me.timschneeberger.rootlessjamesdsp.preference.FileLibraryPreference
+import me.timschneeberger.rootlessjamesdsp.pvb.JdspChain
 import me.timschneeberger.rootlessjamesdsp.utils.BiquadUtils
 import me.timschneeberger.rootlessjamesdsp.utils.ConvolverSampleRateFiles
 import me.timschneeberger.rootlessjamesdsp.utils.Constants
@@ -33,6 +34,32 @@ abstract class JamesDspBaseEngine(val context: Context, val callbacks: JamesDspW
     private val syncScope = CoroutineScope(Dispatchers.IO)
     private val syncMutex = Mutex()
     protected val cache = PreferenceCache(context)
+
+    /**
+     * JamesDSP -> PVB chain (rootless service only): true while PVB processes. Bass boost and analog modelling are
+     * then sent as off and the output control as 0 dB with a neutral limiter ([JdspChain]); the saved preferences are
+     * never touched, so the user's values are sent again when this turns false. Changing it re-sends those three.
+     */
+    @Volatile
+    var pvbSeal: Boolean = false
+        set(value) {
+            if (field == value) return
+            field = value
+            syncWithPreferences(SEALED_NAMESPACES)
+        }
+
+    /** Effect modules the user enabled, as of the last sync (audio thread reads [hasEffects]). */
+    @Volatile
+    var enabledEffects: Set<JdspChain.Module> = emptySet()
+        private set
+    @Volatile
+    private var effectsOpen = false
+    @Volatile
+    private var effectsSealed = false
+
+    /** At least one JamesDSP effect runs with the current seal: the chain puts JamesDSP in front of PVB. */
+    val hasEffects: Boolean
+        get() = if (pvbSeal) effectsSealed else effectsOpen
 
     override fun close() {
         Timber.d("Closing engine")
@@ -60,10 +87,18 @@ abstract class JamesDspBaseEngine(val context: Context, val callbacks: JamesDspW
         Timber.d("Synchronizing with preferences... (forced: %s)", forceUpdateNamespaces?.joinToString(";") { it })
 
         syncMutex.withLock {
+            // Read once: the values below and the forced namespaces then agree on one seal state.
+            val sealed = pvbSeal
             cache.select(Constants.PREF_OUTPUT)
-            val outputPostGain = cache.get(R.string.key_output_postgain, 0f)
-            val limiterThreshold = cache.get(R.string.key_limiter_threshold, -0.1f)
-            val limiterRelease = cache.get(R.string.key_limiter_release, 60f)
+            val userOutput = JdspChain.Output(
+                thresholdDb = cache.get(R.string.key_limiter_threshold, -0.1f),
+                releaseMs = cache.get(R.string.key_limiter_release, 60f),
+                postGainDb = cache.get(R.string.key_output_postgain, 0f),
+            )
+            val output = JdspChain.output(userOutput, sealed)
+            val outputPostGain = output.postGainDb
+            val limiterThreshold = output.thresholdDb
+            val limiterRelease = output.releaseMs
 
             cache.select(Constants.PREF_COMPANDER)
             val compEnabled = cache.get(R.string.key_compander_enable, false)
@@ -122,6 +157,23 @@ abstract class JamesDspBaseEngine(val context: Context, val callbacks: JamesDspW
             val convolverAdvImp = cache.get(R.string.key_convolver_adv_imp, Constants.DEFAULT_CONVOLVER_ADVIMP)
             val convolverMode = cache.get(R.string.key_convolver_mode, "0").toInt()
 
+            val enabled = buildSet {
+                if (compEnabled) add(JdspChain.Module.COMPRESSOR)
+                if (bassEnabled) add(JdspChain.Module.BASS)
+                if (eqEnabled) add(JdspChain.Module.EQ)
+                if (peqEnabled) add(JdspChain.Module.PEQ)
+                if (geqEnabled) add(JdspChain.Module.GEQ)
+                if (convolverEnabled) add(JdspChain.Module.CONVOLVER)
+                if (ddcEnabled) add(JdspChain.Module.DDC)
+                if (liveProgEnabled) add(JdspChain.Module.LIVEPROG)
+                if (tubeEnabled) add(JdspChain.Module.TUBE)
+                if (swEnabled) add(JdspChain.Module.STEREO_WIDE)
+                if (crossfeedEnabled) add(JdspChain.Module.CROSSFEED)
+                if (reverbEnabled) add(JdspChain.Module.REVERB)
+            }
+            val bassOn = JdspChain.allowed(JdspChain.Module.BASS, bassEnabled, sealed)
+            val tubeOn = JdspChain.allowed(JdspChain.Module.TUBE, tubeEnabled, sealed)
+
             val targets = cache.changedNamespaces.toTypedArray() + (forceUpdateNamespaces ?: arrayOf())
             targets.forEach {
                 Timber.i("Committing new changes in namespace '$it'")
@@ -129,14 +181,14 @@ abstract class JamesDspBaseEngine(val context: Context, val callbacks: JamesDspW
                 val result = when (it) {
                     Constants.PREF_OUTPUT -> setOutputControl(limiterThreshold, limiterRelease, outputPostGain)
                     Constants.PREF_COMPANDER -> setCompander(compEnabled, compTimeConst, compGranularity, compTfTransforms, compResponse)
-                    Constants.PREF_BASS -> setBassBoost(bassEnabled, bassMaxGain)
+                    Constants.PREF_BASS -> setBassBoost(bassOn, bassMaxGain)
                     Constants.PREF_EQ -> setMultiEqualizer(eqEnabled, eqFilterType, eqInterpolationMode, eqBands)
                     Constants.PREF_GEQ -> setGraphicEqCombined(geqEnabled, geqBands, peqEnabled, peqBandsStr, peqPreamp)
                     Constants.PREF_PEQ -> setGraphicEqCombined(geqEnabled, geqBands, peqEnabled, peqBandsStr, peqPreamp)
                     Constants.PREF_REVERB -> setReverb(reverbEnabled, reverbPreset)
                     Constants.PREF_STEREOWIDE -> setStereoEnhancement(swEnabled, swMode)
                     Constants.PREF_CROSSFEED -> setCrossfeed(crossfeedEnabled, crossfeedMode)
-                    Constants.PREF_TUBE -> setVacuumTube(tubeEnabled, tubeDrive)
+                    Constants.PREF_TUBE -> setVacuumTube(tubeOn, tubeDrive)
                     Constants.PREF_DDC -> setVdc(ddcEnabled, ddcFile)
                     Constants.PREF_LIVEPROG -> setLiveprog(liveProgEnabled, liveprogFile)
                     Constants.PREF_CONVOLVER -> {
@@ -159,7 +211,10 @@ abstract class JamesDspBaseEngine(val context: Context, val callbacks: JamesDspW
             }
 
             cache.markChangesAsCommitted()
-            Timber.i("Preferences synchronized")
+            enabledEffects = enabled
+            effectsOpen = JdspChain.hasEffects(enabled, false)
+            effectsSealed = JdspChain.hasEffects(enabled, true)
+            Timber.i("Preferences synchronized (PVB seal: $sealed)")
         }
     }
 
@@ -441,6 +496,9 @@ abstract class JamesDspBaseEngine(val context: Context, val callbacks: JamesDspW
     }
 
     companion object {
+        /** The namespaces whose values [pvbSeal] changes. */
+        private val SEALED_NAMESPACES = arrayOf(Constants.PREF_OUTPUT, Constants.PREF_BASS, Constants.PREF_TUBE)
+
         private val dfMergeFreq = java.text.DecimalFormat("0.00", java.text.DecimalFormatSymbols.getInstance(java.util.Locale.ENGLISH))
         private val dfMergeGain = java.text.DecimalFormat("0.000000", java.text.DecimalFormatSymbols.getInstance(java.util.Locale.ENGLISH))
     }

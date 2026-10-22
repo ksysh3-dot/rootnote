@@ -35,13 +35,29 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
     private val audioManager: AudioManager = requireNotNull(context.getSystemService(AudioManager::class.java))
 
     /**
-     * Read by the audio thread: true = use the PVB engine, false = use the original JamesDSP engine. During a blind
-     * comparison (and its volume-return wait) the PVB engine is always in the path, because its final output gate
-     * carries the comparison's mute and headroom.
+     * Read by the audio thread: true = the PVB engine is in the path (last, after any JamesDSP effects: [JdspChain]),
+     * false = the original JamesDSP engine alone. During a blind comparison (and its volume-return wait) the PVB
+     * engine is always in the path, because its final output gate carries the comparison's mute and headroom.
      */
     @Volatile
     var isActive: Boolean = false
         private set
+
+    /**
+     * PVB processes audibly with the user's own settings ([JdspChain.sealed]): JamesDSP bass boost, analog modelling
+     * and output control are then sealed. Main thread; [onSealChanged] is called whenever it changes (also once from
+     * [start]). Uses the user's settings, not a blind-comparison condition (JamesDSP is out of the path then anyway).
+     */
+    var sealJdsp: Boolean = false
+        private set
+    var onSealChanged: ((Boolean) -> Unit)? = null
+
+    private fun updateSeal() {
+        val next = started && JdspChain.sealed(base, speaker)
+        if (next == sealJdsp) return
+        sealJdsp = next
+        onSealChanged?.invoke(next)
+    }
 
     private var base = PvbSettings()       // what the user set
     private var diagnosticSolo = false // session-only; never restored after restart
@@ -91,7 +107,7 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
     }
 
     private fun updateActive() {
-        isActive = settings.enabled || settings.matchOnDisable || PvbRuntime.abActive
+        isActive = JdspChain.pvbInPath(settings, PvbRuntime.abActive)
     }
 
     private var lastMuted = false
@@ -212,6 +228,7 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
         track = null
         if (PvbRuntime.engine === engine) PvbRuntime.engine = null
         PvbRuntime.status = PvbRuntime.Status()
+        updateSeal()  // stopped: nothing is sealed any more
     }
 
     /** Called by the service whenever it creates the output track; its routed device tells us where sound goes. */
@@ -433,6 +450,7 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
     }
 
     private fun publish(lowDb: Float) {
+        updateSeal()
         val s = settings
         val vbReduction = VolumeLevelLink.reductionFor(s, volume.index, volume.max)
         PvbRuntime.status = PvbRuntime.Status(

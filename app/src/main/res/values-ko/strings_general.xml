@@ -35,7 +35,12 @@
     <string name="privacy_summary">%1$s이(가) 이 폰에 저장하는 것은 다음뿐입니다.\n• 설정(스피커 보정, 가상 저음, 앱 옵션)\n• 마지막 음량 맞춤 값(숫자 하나)\n• 앱 캐시의 기술 로그(앱을 시작할 때마다 새로 씀, 문제 해결에서 직접 공유할 때만 밖으로 나감)\n\n곡 제목·아티스트·오디오는 저장하지 않고, 마이크로 녹음하지도 않습니다. 시스템 오디오는 서비스가 도는 동안 메모리에서만 처리하고 저장하지 않습니다.\n\n어디에도 보내지 않습니다. 네트워크는 JamesDSP 이퀄라이저의 선택 기능인 AutoEQ 검색을 쓸 때만 원본 프로젝트의 AutoEQ 서버(aeq.timschneeberger.me)에 접속합니다.\n\n가상 저음 설정은 Android 클라우드 백업과 기기 간 전송에서 제외됩니다.</string>
     <string name="privacy_full_text">전문 보기(온라인)</string>
 
-    <string name="pvb_jamesdsp_note">%1$s 처리가 켜져 있어 아래 JamesDSP 설정은 지금 소리에 적용되지 않습니다. 보정과 \"%2$s\"를 모두 꺼야 JamesDSP 처리가 적용됩니다.</string>
+    <string name="pvb_jamesdsp_chain_note">JamesDSP 효과 → %1$s 순서로 함께 적용 중입니다. 마지막 단계인 %1$s 리미터가 스피커를 보호합니다. %1$s 처리 중에는 JamesDSP 베이스 부스트·아날로그 모델링·출력 제어가 잠깁니다.</string>
+    <string name="pvb_jamesdsp_chain_research">블라인드 비교·측정·버즈 진단 중에는 JamesDSP 효과를 건너뛰고 %1$s만 적용합니다.</string>
+    <string name="pvb_jamesdsp_sealed">%1$s 가상 저음이 켜져 있어 잠겨 있어요. 설정은 그대로 보관되고 %1$s를 끄면 다시 적용됩니다.</string>
+    <string name="pvb_jamesdsp_output_sealed">%1$s 가상 저음이 켜져 있어 잠겨 있어요. 지금은 JamesDSP 출력 0 dB, 리미터 꺼짐으로 동작하고 마지막 단계인 %1$s 리미터가 보호합니다. 설정은 그대로 보관되고 %1$s를 끄면 다시 적용됩니다.</string>
+    <string name="pvb_jamesdsp_compressor_info">%1$s 앞에서 적용됩니다. 컴프레서는 %1$s 가상 저음이 반응하는 음량을 바꿀 수 있어요.</string>
+    <string name="pvb_jamesdsp_eq_info">%1$s EQ 위에 더해집니다. 저음을 크게 올리면 %1$s 리미터가 더 자주 작동해요.</string>
 
     <string name="vb_preset_fullness_title">풍성함 증가 (권장)</string>
     <string name="vb_preset_fullness_desc">악기의 몸통감과 풍성함, 잔향을 키웁니다. 보수적으로 동작해 버즈음이 생길 가능성이 낮습니다.</string>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 일반 빌드: 내부 알파 이름과 모델 표현을 뺀 PVB 문자열. -->
 <resources>
-    <string name="pvb_enable">스피커 보정 (켜면 JamesDSP 대신 사용)</string>
+    <string name="pvb_enable">스피커 보정 (켜면 JamesDSP 효과 뒤에 적용)</string>
     <string name="pvb_vb_enable">가상 저음 (실험)</string>
     <string name="pvb_vb_enable_summary">저음의 풍성함과 무게를 더합니다. 약 0.15초 지연</string>
     <string name="pvb_vb_warning_title">가상 저음 (실험)</string>

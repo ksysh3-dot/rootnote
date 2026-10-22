@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- PVB speaker correction: English (default). Korean: values-ko/strings_pvb.xml. -->
 <resources>
-    <string name="pvb_enable">PVB speaker correction (replaces JamesDSP when on)</string>
+    <string name="pvb_enable">PVB speaker correction (runs after JamesDSP effects when on)</string>
     <string name="pvb_match_on_disable">Match loudness when off</string>
-    <string name="pvb_match_on_disable_summary">When the correction is off, plays the original sound matched to the recent playback loudness. It starts from an estimate and updates with a 10 s average. While virtual bass is in use, the same delay is kept for fair comparison. If this is off as well, JamesDSP processing is used.</string>
+    <string name="pvb_match_on_disable_summary">When the correction is off, plays the original sound matched to the recent playback loudness. It starts from an estimate and updates with a 10 s average. While virtual bass is in use, the same delay is kept for fair comparison. JamesDSP effects still apply before it. If this is off as well, JamesDSP processing is used alone.</string>
     <string name="pvb_speaker_only">Built-in speaker only</string>
     <string name="pvb_speaker_only_summary">Bypassed automatically on earphones and Bluetooth</string>
     <string name="pvb_low_db">Low-mid boost</string>

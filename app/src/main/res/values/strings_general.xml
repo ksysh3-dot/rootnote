@@ -42,8 +42,13 @@
     <string name="privacy_summary">%1$s stores on this phone only:\n• its settings (speaker correction, virtual bass, app options),\n• the last loudness-match level (one number),\n• a technical log in the app cache, rewritten at every start; it leaves the phone only if you share it under Troubleshooting.\n\nIt does not store song titles, artists or any audio, and it records nothing from the microphone. System audio is processed in memory while the service runs and is not saved.\n\nNothing is sent anywhere. The only network access is the optional AutoEQ search in the JamesDSP equalizer, which contacts the AutoEQ server of the original project (aeq.timschneeberger.me) when you use it.\n\nThe virtual bass settings are excluded from Android cloud backup and device transfer.</string>
     <string name="privacy_full_text">Full text online</string>
 
-    <!-- Note under the PVB card (both builds) -->
-    <string name="pvb_jamesdsp_note">%1$s processing is active, so the JamesDSP settings below do not change the sound right now. They apply only when both the correction and \"%2$s\" are off.</string>
+    <!-- JamesDSP -> PVB chain (both builds; %1$s is app_brand_name: Rootnote in general, PVB in s26u) -->
+    <string name="pvb_jamesdsp_chain_note">Order: JamesDSP effects → %1$s. Both are applied together; %1$s runs last, so its limiter is the final speaker protection. While %1$s processes, JamesDSP bass boost, analog modelling and output control are locked.</string>
+    <string name="pvb_jamesdsp_chain_research">During blind comparisons, measurements and buzz diagnostics only %1$s runs (JamesDSP effects are skipped).</string>
+    <string name="pvb_jamesdsp_sealed">Locked while %1$s virtual bass is on. Your settings are kept and apply again when %1$s is off.</string>
+    <string name="pvb_jamesdsp_output_sealed">Locked while %1$s virtual bass is on: the JamesDSP output runs at 0 dB with its limiter off, and the %1$s limiter is the last stage. Your settings are kept and apply again when %1$s is off.</string>
+    <string name="pvb_jamesdsp_compressor_info">Applied before %1$s. The compressor changes the levels the %1$s virtual bass reacts to.</string>
+    <string name="pvb_jamesdsp_eq_info">Adds to the %1$s EQ. Large low boosts make the %1$s limiter work harder.</string>
 
     <!-- Virtual bass presets of the general build (the model codenames appear only in the research section) -->
     <string name="vb_preset_fullness_title">More fullness (recommended)</string>

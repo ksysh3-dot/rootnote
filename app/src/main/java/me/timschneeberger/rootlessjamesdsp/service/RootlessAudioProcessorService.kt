@@ -40,7 +40,9 @@ import me.timschneeberger.rootlessjamesdsp.model.room.AppBlocklistDatabase
 import me.timschneeberger.rootlessjamesdsp.model.room.AppBlocklistRepository
 import me.timschneeberger.rootlessjamesdsp.model.room.BlockedApp
 import me.timschneeberger.rootlessjamesdsp.model.rootless.SessionRecordingPolicyEntry
+import me.timschneeberger.rootlessjamesdsp.pvb.JdspChain
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbController
+import me.timschneeberger.rootlessjamesdsp.pvb.PvbRuntime
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbEngine
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbParam
 import me.timschneeberger.rootlessjamesdsp.pvb.TrackLevelWatcher
@@ -87,7 +89,8 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
     @Volatile
     private var recreateRecorderRequested = false
     private lateinit var engine: JamesDspLocalEngine
-    // PVB speaker engine; replaces the JamesDSP engine in the processing loop while the PVB card is on
+    // PVB speaker engine; while the PVB card is on it is the last stage of the processing loop, after any JamesDSP
+    // effects (JdspChain)
     private lateinit var pvbEngine: PvbEngine
     private lateinit var pvbController: PvbController
     // Alpha 3.1 per-song level memory (reads media sessions through sessionManager)
@@ -163,6 +166,8 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
         // Setup PVB engine and its control layer
         pvbEngine = PvbEngine(48000)
         pvbController = PvbController(this, pvbEngine)
+        // JamesDSP -> PVB chain: seal the overlapping JamesDSP modules while PVB processes (never written to prefs)
+        pvbController.onSealChanged = { sealed -> engine.pvbSeal = sealed }
         pvbController.start()
         trackLevelWatcher = TrackLevelWatcher(this, sessionManager)
         // Per-song memory reads track titles: it does not exist in the general build (RECORD_FEATURES = false).
@@ -292,6 +297,7 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
 
         // Stop recording; release the engines only once the audio thread has really ended
         trackLevelWatcher.stop()
+        pvbController.onSealChanged = null  // the JamesDSP engine is being closed: no re-sync on the way out
         pvbController.stop()
         if (stopRecording()) closeEngines() else closeEnginesWhenStopped = true
 
@@ -845,11 +851,15 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
             val diagnosticTrace = FloatArray(BuzzRing.DETAIL_FIELDS)
             val harmonicTrace = FloatArray(me.timschneeberger.rootlessjamesdsp.pvb.HarmonicHistory.ROWS * me.timschneeberger.rootlessjamesdsp.pvb.HarmonicHistory.FIELDS)
             val floatOutBuffer = FloatArray(if (isShort) 0 else bufferSize)
+            // JamesDSP -> PVB chain: JamesDSP output (float) and, for 16-bit capture, the float input/output
+            val chainA = FloatArray(bufferSize)
+            val chainB = FloatArray(if (isShort) bufferSize else 0)
             val shortBuffer = ShortArray(if (isShort) bufferSize else 0)
             val shortOutBuffer = ShortArray(if (isShort) bufferSize else 0)
             var carry = 0            // 0 or 1: a sample of an incomplete stereo frame kept from the last read
             var readFailures = 0
             var pvbWasActive = false
+            var lastRoute: JdspChain.Route? = null
             var historySuspended = false
             while (!stopRequested) {
                 if(recreateRecorderRequested) {
@@ -892,11 +902,21 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
                         track.play()
                 }
 
-                // PVB engine re-entering the signal path: drop its stale audio and fade in
-                val pvbActive = pvbController.isActive
-                if(pvbActive && !pvbWasActive)
+                // Route of this block: JamesDSP alone (PVB not in the path), PVB alone (no JamesDSP effect on, or a
+                // research mode: blind comparison, measurement, buzz diagnostics), or JamesDSP effects -> PVB.
+                val route = JdspChain.route(
+                    pvbInPath = pvbController.isActive,
+                    research = PvbRuntime.abActive || PvbRuntime.measuring || buzzDiagnostics.armed,
+                    jdspEffects = engine.hasEffects,
+                )
+                val pvbActive = route.pvb
+                // PVB engine re-entering the signal path, or JamesDSP joining/leaving in front of it (its delay and
+                // level change): drop PVB's stale audio and fade in
+                if(pvbActive && (!pvbWasActive || route != lastRoute))
                     pvbEngine.reset()
+                if (route != lastRoute) Timber.d("Processing route: ${JdspChain.label(route)}")
                 pvbWasActive = pvbActive
+                lastRoute = route
 
                 // Read; only the samples actually read are processed and played (never the rest of an old block)
                 val got = if (isShort)
@@ -924,10 +944,17 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
                     val detailed = diagnosticRing?.detailed == true && !diagnosticRing.frozen
                     pvbEngine.setDiagnosticCapture(detailed && pvbActive)
                     if (isShort) {
-                        if(pvbActive)
-                            pvbEngine.processShort(shortBuffer, shortOutBuffer, samples)
-                        else
-                            engine.processInt16(shortBuffer, shortOutBuffer, 0, samples)
+                        when (route) {
+                            JdspChain.Route.JDSP_ONLY -> engine.processInt16(shortBuffer, shortOutBuffer, 0, samples)
+                            JdspChain.Route.PVB_ONLY -> pvbEngine.processShort(shortBuffer, shortOutBuffer, samples)
+                            JdspChain.Route.JDSP_THEN_PVB -> {
+                                // in float, so JamesDSP boosts above full scale reach the PVB limiter unclipped
+                                JdspChain.shortToFloat(shortBuffer, chainB, samples)
+                                engine.processFloat(chainB, chainA, 0, samples)
+                                pvbEngine.processFloat(chainA, chainB, samples)
+                                JdspChain.floatToShort(chainB, shortOutBuffer, samples)
+                            }
+                        }
                         val haveDetail = detailed && pvbActive && pvbEngine.copyDiagnostic(diagnosticLayer, diagnosticFull, diagnosticTrace, samples)
                         val harmonicRows = if (haveDetail) pvbEngine.copyHarmonicTrace(harmonicTrace) else -1
                         diagnosticRing?.recordShort(shortBuffer, shortOutBuffer, samples,
@@ -938,10 +965,14 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
                             if (harmonicRows >= 0) harmonicTrace else null, harmonicRows)
                         if (!writeAll(shortOutBuffer, samples)) return
                     } else {
-                        if(pvbActive)
-                            pvbEngine.processFloat(floatBuffer, floatOutBuffer, samples)
-                        else
-                            engine.processFloat(floatBuffer, floatOutBuffer, 0, samples)
+                        when (route) {
+                            JdspChain.Route.JDSP_ONLY -> engine.processFloat(floatBuffer, floatOutBuffer, 0, samples)
+                            JdspChain.Route.PVB_ONLY -> pvbEngine.processFloat(floatBuffer, floatOutBuffer, samples)
+                            JdspChain.Route.JDSP_THEN_PVB -> {
+                                engine.processFloat(floatBuffer, chainA, 0, samples)
+                                pvbEngine.processFloat(chainA, floatOutBuffer, samples)
+                            }
+                        }
                         val haveDetail = detailed && pvbActive && pvbEngine.copyDiagnostic(diagnosticLayer, diagnosticFull, diagnosticTrace, samples)
                         val harmonicRows = if (haveDetail) pvbEngine.copyHarmonicTrace(harmonicTrace) else -1
                         diagnosticRing?.recordFloat(floatBuffer, floatOutBuffer, samples,
