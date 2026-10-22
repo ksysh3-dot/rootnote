@@ -26,7 +26,7 @@
     "pvb_vol_link": false,
     "pvb_dyn_enable": false,
     "pvb_vb_enable": false,
-    "pvb_vb_vol_link": false
+    "pvb_vb_vol_link": true
   },
   "loudness_weighting": "s26u-speaker",
   "phone_model_curves": true
