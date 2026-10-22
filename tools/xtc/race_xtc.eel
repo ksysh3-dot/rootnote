@@ -1,8 +1,9 @@
 desc: Phone speaker crosstalk cancellation (RACE-style, test)
 //tags: stereo, xtc
 // Recursive crosstalk cancellation for the two built-in speakers, landscape, music at about 30-50 cm.
-// Each output subtracts the other output delayed by the head's crosstalk delay tau and scaled by g; the feedback path is
-// band-limited (high-pass fLo, low-pass fHi) so the bass and the top end pass untouched. "Centre safe" applies the
+// Each output subtracts the other output delayed by the head's crosstalk delay tau and scaled by g. The feedback path is
+// band-limited with first-order filters (high-pass fLo, low-pass fHi) and shaped by a first-order head-shadow shelf, so
+// the bass and the top end are left almost untouched. "Centre safe" applies the
 // recursion to the side signal only, so centre sounds (vocals) keep their tone; "Full RACE" also cancels for the
 // centre and separates more, at the cost of tone. tau comes from a standard spherical head (Woodworth) and the
 // listening distance: no measurement needed. Design notes and the model: tools/xtc/race_design.py, docs/XTC_PLAN.md.
@@ -12,8 +13,8 @@ strength:0<0,2,1{Gentle (-6 dB),Medium (-4.5 dB),Strong (-3 dB)}>Strength
 distance:40<25,60,1>Listening distance (cm)
 headSize:1<0,2,1{Small (hat 54 cm),Medium (hat 57 cm),Large (hat 60 cm)}>Head size
 spacing:15.5<10,20,0.1>Speaker spacing in landscape (cm)
-fLo:700<200,2000,10>Band low edge (Hz)
-fHi:5000<2000,10000,100>Band high edge (Hz)
+fLo:400<150,1500,10>Band low edge (Hz)
+fHi:8000<3000,16000,100>Band high edge (Hz)
 bypass:0<0,1,1{Off,On}>Bypass
 
 @init
@@ -22,8 +23,8 @@ strength = 0;
 distance = 40;
 headSize = 1;
 spacing = 15.5;
-fLo = 700;
-fHi = 5000;
+fLo = 400;
+fHi = 8000;
 bypass = 0;
 
 // ---- design ----
@@ -35,37 +36,42 @@ tauSamples = tau * srate;
 // the loop already delays by one sample (the previous output is fed back)
 loopDelay = max(tauSamples - 1, 0);
 
-// RBJ 2nd-order Butterworth biquads, transposed direct form II; 7 slots each: b0 b1 b2 a1 a2 z1 z2
-function bqSet(base, kind, f0) local(w0, cw, al, a0) (
-    w0 = 2 * $pi * f0 / srate;
-    cw = cos(w0);
-    al = sin(w0) / (2 * 0.7071067811865476);
-    a0 = 1 + al;
-    kind == 0 ? (
-        base[0] = (1 - cw) / 2 / a0; base[1] = (1 - cw) / a0; base[2] = (1 - cw) / 2 / a0;
-    ) : (
-        base[0] = (1 + cw) / 2 / a0; base[1] = -(1 + cw) / a0; base[2] = (1 + cw) / 2 / a0;
-    );
-    base[3] = -2 * cw / a0;
-    base[4] = (1 - al) / a0;
-    base[5] = 0; base[6] = 0;
+// first-order sections, bilinear; 5 slots each: b0 b1 a1 z1 (unused)
+function fo1Set(base, b0, b1, a0, a1) (
+    base[0] = b0 / a0; base[1] = b1 / a0; base[2] = a1 / a0; base[3] = 0;
 );
-function bq(base, x) local(y) (
-    y = base[0] * x + base[5];
-    base[5] = base[1] * x - base[3] * y + base[6];
-    base[6] = base[2] * x - base[4] * y;
+function fo1(base, x) local(y) (
+    y = base[0] * x + base[3];
+    base[3] = base[1] * x - base[2] * y;
     y;
 );
+function loopSet(base) local(k, w0, kk, alphaNear, alphaFar, bS, aS) (
+    k = tan($pi * fLo / srate);                  // high-pass
+    fo1Set(base, 1, -1, 1 + k, k - 1);
+    k = tan($pi * fHi / srate);                  // low-pass
+    fo1Set(base + 5, k, k, 1 + k, k - 1);
+    // head shadow far ear / near ear (Brown-Duda form, alpha_min 0.1, theta_min 150 deg), bilinear at 2 fs
+    alphaNear = 1.05 + 0.95 * cos(($pi / 2 - theta) / (150 / 180 * $pi) * $pi);
+    alphaFar = 1.05 + 0.95 * cos(($pi / 2 + theta) / (150 / 180 * $pi) * $pi);
+    w0 = 343 / radius;
+    kk = 2 * srate;
+    bS = alphaFar / (2 * w0) * kk;
+    aS = alphaNear / (2 * w0) * kk;
+    fo1Set(base + 10, 1 + bS, 1 - bS, 1 + aS, 1 - aS);
+);
+function loopRun(base, x) (
+    fo1(base + 10, fo1(base + 5, fo1(base, x)));
+);
 
-// memory: two fractional delay lines, then the four biquads
+// memory: two fractional delay lines, then two loop filters (A, B)
 dlA = 0;
 req = fractionalDelayLineInit(dlA, 64);
 dlB = dlA + req;
 req = fractionalDelayLineInit(dlB, 64);
-bqBase = dlB + req + 16;
-hpA = bqBase; lpA = bqBase + 8; hpB = bqBase + 16; lpB = bqBase + 24;
-bqSet(hpA, 1, fLo); bqSet(lpA, 0, fHi);
-bqSet(hpB, 1, fLo); bqSet(lpB, 0, fHi);
+lpA = dlB + req + 16;
+lpB = lpA + 16;
+loopSet(lpA);
+loopSet(lpB);
 fractionalDelayLineSetDelay(dlA, loopDelay);
 fractionalDelayLineSetDelay(dlB, loopDelay);
 
@@ -75,8 +81,8 @@ yA = 0; yB = 0;   // previous outputs fed back (full: left / right; centre safe:
 bypass == 0 ? (
     mode == 1 ? (
         // full RACE: yL = xL - g * B[yR(t - tau)], yR = xR - g * B[yL(t - tau)]
-        fbR = bq(lpB, bq(hpB, fractionalDelayLineProcess(dlB, yB)));
-        fbL = bq(lpA, bq(hpA, fractionalDelayLineProcess(dlA, yA)));
+        fbR = loopRun(lpB, fractionalDelayLineProcess(dlB, yB));
+        fbL = loopRun(lpA, fractionalDelayLineProcess(dlA, yA));
         yA = spl0 - g * fbR;
         yB = spl1 - g * fbL;
         spl0 = yA;
@@ -85,7 +91,7 @@ bypass == 0 ? (
         // centre safe: mid unchanged, side S = s + g * B[S(t - tau)]
         mid = (spl0 + spl1) * 0.5;
         side = (spl0 - spl1) * 0.5;
-        yA = side + g * bq(lpA, bq(hpA, fractionalDelayLineProcess(dlA, yA)));
+        yA = side + g * loopRun(lpA, fractionalDelayLineProcess(dlA, yA));
         spl0 = mid + yA;
         spl1 = mid - yA;
     );

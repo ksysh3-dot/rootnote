@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """RACE-style crosstalk cancellation (XTC) for phone speakers: design numbers and a model check.
 
-The canceller is the one in tools/xtc/race_xtc.eel. As in RACE, the feedback path is band-limited (B = 2nd-order
-high-pass at f_lo times 2nd-order low-pass at f_hi), so nothing outside the band is touched and no crossover is summed:
+The canceller is the one in tools/xtc/race_xtc.eel. As in RACE, the feedback path is band-limited, here with
+first-order filters (high-pass at f_lo, low-pass at f_hi) whose small phase shifts roughly cancel in the band, plus a
+first-order head-shadow shelf (far ear / near ear, the same spherical model) in the spirit of Gardner's recursive
+canceller. Second-order band filters were tried first and turned the phase in 0.6-1 kHz enough to make the separation
+worse than no processing there. With B = HP1 * LP1 * shelf:
     full RACE:   yL = xL - g * B[yR(t - tau)],   yR = xR - g * B[yL(t - tau)]
                  -> M = 1 / (1 + g B e^-jw tau),  S = 1 / (1 - g B e^-jw tau)
     centre safe: M passes unchanged, only S = 1 / (1 - g B e^-jw tau)  (less separation, no centre coloration)
@@ -62,10 +65,41 @@ def head_shadow(f, a, theta_ear):
 MODE = "full"   # "full" (RACE) or "centre" (side only); set from the command line
 
 
+def first_order(kind, fc, fs, w):
+    """Bilinear first-order low/high-pass response."""
+    z = np.exp(-1j * w)
+    k = math.tan(math.pi * fc / fs)
+    if kind == "lp":
+        return k * (1 + z) / ((1 + k) + (k - 1) * z)
+    return (1 - z) / ((1 + k) + (k - 1) * z)
+
+
+def shelf_alphas(theta):
+    """Brown-Duda alpha for the near and far ear of a speaker at theta (rad) from the front."""
+    alpha_min, theta_min = 0.1, math.radians(150)
+    def al(t):
+        return (1 + alpha_min / 2) + (1 - alpha_min / 2) * math.cos(t / theta_min * math.pi)
+    return al(math.pi / 2 - theta), al(math.pi / 2 + theta)
+
+
+def shelf_resp(a, theta, fs, w):
+    """Far/near head shadow as one bilinear pole-zero filter (as in the EEL script)."""
+    near, far = shelf_alphas(theta)
+    w0 = C / a
+    kk = 2 * fs
+    b1, a1 = far / (2 * w0), near / (2 * w0)
+    z = np.exp(-1j * w)
+    return ((1 + b1 * kk) + (1 - b1 * kk) * z) / ((1 + a1 * kk) + (1 - a1 * kk) * z)
+
+
+SHELF = (HEADS["M"], 0.0)   # (radius, theta) used for the loop shelf; set in main
+
+
 def canceller(f, fs, g, tau, f_lo, f_hi):
     """Mid and side responses of the RACE canceller with a band-limited feedback path."""
     w = 2 * np.pi * f / fs
-    loop = g * biquad_resp("hp", f_lo, fs, w) * biquad_resp("lp", f_hi, fs, w) * np.exp(-1j * 2 * np.pi * f * tau)
+    loop = (g * first_order("hp", f_lo, fs, w) * first_order("lp", f_hi, fs, w) * shelf_resp(SHELF[0], SHELF[1], fs, w)
+            * np.exp(-1j * 2 * np.pi * f * tau))
     m = np.ones_like(loop) if MODE == "centre" else 1 / (1 + loop)
     s = 1 / (1 - loop)
     return m, s
@@ -94,8 +128,8 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("--spacing", type=float, default=0.155, help="speaker port spacing in landscape (m)")
     p.add_argument("--fs", type=float, default=48000)
-    p.add_argument("--f-lo", type=float, default=700)
-    p.add_argument("--f-hi", type=float, default=5000)
+    p.add_argument("--f-lo", type=float, default=400)
+    p.add_argument("--f-hi", type=float, default=8000)
     p.add_argument("--mode", choices=["full", "centre"], default="full")
     p.add_argument("--plot", help="write a PNG of the mid/side responses and separation")
     args = p.parse_args()
@@ -118,6 +152,8 @@ def main():
     print("   (M = centre, e.g. vocals, 150 Hz-8 kHz; S = side; separation averaged over 1-4 kHz)")
     print("   strength  g      M max  M min  S max   sep 1-4k off/on   worst sep 1-4k (30-50 cm, head S-L)")
     theta, tau = geometry(args.spacing, 0.40, HEADS["M"])
+    global SHELF
+    SHELF = (HEADS["M"], theta)
     for name, gdb in STRENGTHS.items():
         g = 10 ** (gdb / 20)
         m, s = canceller(f, fs, g, tau, args.f_lo, args.f_hi)
