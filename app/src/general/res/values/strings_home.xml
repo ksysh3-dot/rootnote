@@ -72,6 +72,8 @@
         <item>Low notes have long wavelengths; cancelling them would need a lot of boost, which strains the speakers and fights the virtual bass. So spatial works only from about 400 Hz to 8 kHz, where voices and instruments get their place. Virtual bass and spatial each look after their own range.</item>
         <item>Presets</item>
         <item>Subtle: only the parts that differ left and right, so the vocals in the centre keep their tone.\nBalanced: the centre too, so it gets wider; the vocals change a little.\nClear: the strongest. In the right spot the sound spreads out to beside your ears.</item>
+        <item>Held upright</item>
+        <item>Upright, the two speakers sit above each other instead of left and right. Both then reach both ears almost equally, so there is no leak to cancel, and spatial does not work.\n\nYou can choose instead (advanced settings, Held upright): leave it and only spatial switches off, stereo as it is; mono plays the same sound from both; two-way lets the bottom speaker take the bass and the top one the highs, so the two no longer play the same highs from two heights and the small top speaker is spared the bass. It changes after a second upright, and spatial comes back when you turn the phone sideways.</item>
         <item>Honest limits</item>
         <item>How much less the sides blend is calculated with a computer model (about 3-10 dB in the mid range). Ears and heads differ, so the feel differs too. Videos and calls with everything in the centre change little.\n\nIt switches off by itself on earphones or Bluetooth and during blind comparisons and measurements.</item>
     </string-array>
@@ -92,6 +94,7 @@
         <item>The best spot glows in front of the face. As the head moves sideways the lines misalign and the glow fades, but the sound stays.</item>
         <item>On a strip from 20 Hz to 20 kHz, below 400 Hz is teal (virtual bass) and 400 Hz to 8 kHz is purple (spatial).</item>
         <item>Choosing a preset changes how far the centre dot (vocals) and the side dots (instruments) spread.</item>
+        <item>The phone held upright, seen from the front. Both speakers are as far from either ear; then thick bass waves spread from the bottom speaker and fine treble waves from the top one.</item>
         <item>Spatial turns on and off, and the side dots spread and close.</item>
     </string-array>
     <string name="balance_title">Even out the speakers</string>

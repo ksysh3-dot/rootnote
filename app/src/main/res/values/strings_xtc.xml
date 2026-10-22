@@ -6,8 +6,16 @@
     <string name="pvb_xtc_preset_balanced">Balanced (full, medium)</string>
     <string name="pvb_xtc_preset_clear">Clear (full, strong)</string>
     <string name="pvb_xtc_preset_custom">Custom</string>
-    <string name="pvb_xtc_portrait_off">Off while held upright</string>
-    <string name="pvb_xtc_portrait_off_summary">Upright, the two speakers sit above each other instead of left and right, so spatial cannot work; it switches off after a second upright and back on when you turn the phone sideways. Uses the motion sensor only while spatial is on.</string>
+    <string name="pvb_xtc_portrait">Held upright</string>
+    <string name="pvb_xtc_portrait_keep">Spatial off (stereo as it is)</string>
+    <string name="pvb_xtc_portrait_mono">Mono from both speakers</string>
+    <string name="pvb_xtc_portrait_split">Two-way: bass from the bottom, highs from the top</string>
+    <string name="pvb_xtc_portrait_low">Bottom speaker channel</string>
+    <string name="pvb_xtc_portrait_low_l">Left channel</string>
+    <string name="pvb_xtc_portrait_low_r">Right channel</string>
+    <string name="pvb_xtc_portrait_test">Which one is the bottom speaker?</string>
+    <string name="pvb_xtc_portrait_test_summary">Hold the phone upright and tap: the left channel plays alone for 3 s. If it comes from the bottom, choose left; if from the top, choose right.</string>
+    <string name="pvb_xtc_portrait_test_off">Rootnote has to be on and playing on the phone speakers.</string>
     <string name="pvb_xtc_mode">Spatial (crosstalk cancellation)</string>
     <string name="pvb_xtc_off">Off</string>
     <string name="pvb_xtc_centre">Keep centre (vocals keep their tone)</string>
@@ -50,5 +58,23 @@
         <item>54</item>
         <item>57</item>
         <item>60</item>
+    </string-array>
+    <string-array name="pvb_xtc_portrait_entries" translatable="false">
+        <item>@string/pvb_xtc_portrait_keep</item>
+        <item>@string/pvb_xtc_portrait_mono</item>
+        <item>@string/pvb_xtc_portrait_split</item>
+    </string-array>
+    <string-array name="pvb_xtc_portrait_values" translatable="false">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+    <string-array name="pvb_xtc_portrait_low_entries" translatable="false">
+        <item>@string/pvb_xtc_portrait_low_l</item>
+        <item>@string/pvb_xtc_portrait_low_r</item>
+    </string-array>
+    <string-array name="pvb_xtc_portrait_low_values" translatable="false">
+        <item>L</item>
+        <item>R</item>
     </string-array>
 </resources>

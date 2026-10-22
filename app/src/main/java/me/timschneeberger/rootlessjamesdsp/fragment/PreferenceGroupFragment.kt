@@ -301,7 +301,23 @@ class PreferenceGroupFragment : PreferenceFragmentCompat(), KoinComponent {
         val mode = findPreference<ListPreference>(PvbSettings.KEY_XTC_MODE) ?: return
         val strength = findPreference<ListPreference>(PvbSettings.KEY_XTC_STRENGTH)
         val details = listOfNotNull(strength, findPreference<Preference>(PvbSettings.KEY_XTC_DISTANCE),
-            findPreference<Preference>(PvbSettings.KEY_XTC_HEAD), findPreference<Preference>(PvbSettings.KEY_XTC_PORTRAIT_OFF))
+            findPreference<Preference>(PvbSettings.KEY_XTC_HEAD), findPreference<Preference>(PvbSettings.KEY_XTC_PORTRAIT))
+        val splitRows = listOfNotNull(findPreference<Preference>(PvbSettings.KEY_XTC_PORTRAIT_LOW),
+            findPreference<Preference>(PvbSettings.KEY_XTC_PORTRAIT_TEST))
+        // "Which one is the bottom speaker?": the left channel alone for 3 s through the normal path (DevTestSound).
+        findPreference<Preference>(PvbSettings.KEY_XTC_PORTRAIT_TEST)?.setOnPreferenceClickListener {
+            val ctx = requireContext()
+            val ok = me.timschneeberger.rootlessjamesdsp.service.BaseAudioProcessorService.activeServices > 0 &&
+                me.timschneeberger.rootlessjamesdsp.pvb.PvbRuntime.status.processing
+            if (!ok) {
+                android.widget.Toast.makeText(ctx, R.string.pvb_xtc_portrait_test_off, android.widget.Toast.LENGTH_LONG).show()
+            } else {
+                val sound = me.timschneeberger.rootlessjamesdsp.pvb.DevTestSound
+                sound.start(me.timschneeberger.rootlessjamesdsp.pvb.DevTestKind.XTC_SWEEP_L)
+                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ sound.stop() }, 3300L)
+            }
+            true
+        }
         val preset = findPreference<ListPreference>(PvbSettings.KEY_XTC_PRESET)
         // preset key -> (mode, strength); "custom" writes nothing
         val presets = linkedMapOf(
@@ -321,6 +337,7 @@ class PreferenceGroupFragment : PreferenceFragmentCompat(), KoinComponent {
             val prefs = preferenceManager.sharedPreferences ?: return
             val s = PvbSettings.load(prefs)
             details.forEach { it.isVisible = s.xtcMode != PvbSettings.XTC_OFF }
+            splitRows.forEach { it.isVisible = s.xtcMode != PvbSettings.XTC_OFF && s.xtcPortrait == PvbSettings.XTC_PORTRAIT_SPLIT }
             preset?.value = presets.entries.firstOrNull { (_, v) ->
                 v.first == s.xtcMode && (s.xtcMode == PvbSettings.XTC_OFF || v.second.toFloat() == s.xtcStrengthDb)
             }?.key ?: "custom"
@@ -334,7 +351,7 @@ class PreferenceGroupFragment : PreferenceFragmentCompat(), KoinComponent {
             false  // derived, never stored
         }
         pvbXtcListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-            if (key == PvbSettings.KEY_XTC_MODE || key == PvbSettings.KEY_XTC_STRENGTH) refresh()
+            if (key == PvbSettings.KEY_XTC_MODE || key == PvbSettings.KEY_XTC_STRENGTH || key == PvbSettings.KEY_XTC_PORTRAIT) refresh()
         }.also { preferenceManager.sharedPreferences?.registerOnSharedPreferenceChangeListener(it) }
     }
 

@@ -28,7 +28,14 @@ namespace pvb {
 
 class Xtc {
 public:
-    enum Mode { OFF = 0, CENTRE = 1, FULL = 2 };
+    // PORTRAIT_*: the phone held upright, its speakers above each other (no left/right to cancel). Both channels are
+    // summed to mono and crossed over at kSplitHz (4th-order Linkwitz-Riley: the two parts add up flat, in phase):
+    // MONO plays the mono sum from both speakers; SPLIT_LOW_L / SPLIT_LOW_R send the low part to that channel's
+    // speaker (the bottom one, which has the bass) and the high part to the other (the earpiece), as a two-way speaker,
+    // so the two speakers no longer play the same highs from two heights (comb filtering) and the earpiece is spared
+    // the bass. Each part is played at +3 dB (sqrt 2): one speaker instead of two.
+    enum Mode { OFF = 0, CENTRE = 1, FULL = 2, PORTRAIT_MONO = 3, SPLIT_LOW_L = 4, SPLIT_LOW_R = 5 };
+    static constexpr double kSplitHz = 1000.0;
 
     struct Config {
         int mode = OFF;
@@ -91,6 +98,7 @@ public:
         yA_ = yB_ = 0.0;
         for (auto* s : {&lA_, &lB_}) for (auto& f : s->f) f.z = 0.0;
         for (auto& st : sBal_) st = BiquadState{};
+        for (auto& st : sSplit_) st = BiquadState{};
     }
 
     // After the engine dropped its audio (route change): forget the old signal and finish any switch at once.
@@ -121,6 +129,21 @@ public:
             return;
         }
         double pl, pr;
+        if (cur_.mode >= PORTRAIT_MONO) {
+            const double mono = 0.5 * (inL + inR);
+            if (cur_.mode == PORTRAIT_MONO) {
+                pl = pr = mono;
+            } else {
+                const double low = split_[0].tick(sSplit_[1], split_[0].tick(sSplit_[0], mono));
+                const double high = split_[1].tick(sSplit_[3], split_[1].tick(sSplit_[2], mono));
+                const double lo2 = low * 1.4142135623730951, hi2 = high * 1.4142135623730951;
+                pl = cur_.mode == SPLIT_LOW_L ? lo2 : hi2;
+                pr = cur_.mode == SPLIT_LOW_L ? hi2 : lo2;
+            }
+            outL = inL + x_ * (pl - inL);
+            outR = inR + x_ * (pr - inR);
+            return;
+        }
         if (cur_.mode == FULL) {
             const double fbR = loop(lB_, delayRead(dB_));
             const double fbL = loop(lA_, delayRead(dA_));
@@ -218,6 +241,13 @@ private:
             l->f[1].set(k, k, 1 + k, k - 1);
             l->f[2].set(1 + bS, 1 - bS, 1 + aS, 1 - aS);
         }
+        {
+            const double w = 2 * pi * kSplitHz / sr_, al = std::sin(w) / (2 * 0.7071067811865476), cw = std::cos(w);
+            const double a0 = 1 + al;
+            split_[0].b0 = (1 - cw) / 2 / a0; split_[0].b1 = (1 - cw) / a0; split_[0].b2 = (1 - cw) / 2 / a0;
+            split_[1].b0 = (1 + cw) / 2 / a0; split_[1].b1 = -(1 + cw) / a0; split_[1].b2 = (1 + cw) / 2 / a0;
+            for (auto& b : split_) { b.a1 = -2 * cw / a0; b.a2 = (1 - al) / a0; }
+        }
         setBalance(c.balLoDb, c.balHiDb);
     }
 
@@ -249,6 +279,8 @@ private:
     Biquad bal_[4];               // left lo, left hi, right lo, right hi
     BiquadState sBal_[4];
     bool balOn_ = false;
+    Biquad split_[2];             // portrait crossover: Butterworth low-pass, high-pass (each run twice = LR4)
+    BiquadState sSplit_[4];
 };
 
 }  // namespace pvb

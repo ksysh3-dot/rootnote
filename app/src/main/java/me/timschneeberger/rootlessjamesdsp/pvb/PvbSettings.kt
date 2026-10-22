@@ -71,8 +71,14 @@ data class PvbSettings(
     val xtcBalLoDb: Float = 0f,
     val xtcBalHiDb: Float = 0f,
     val xtcBalRotation: Int = 0,
-    /** Spatial off while the phone is held upright (its speakers then sit above each other, not left and right). */
-    val xtcPortraitOff: Boolean = true,
+    /**
+     * Held upright the two speakers sit above each other, so there is nothing to cancel. [XTC_PORTRAIT_OFF]: spatial
+     * simply switches off; [XTC_PORTRAIT_MONO]: both speakers play the mono sum; [XTC_PORTRAIT_SPLIT]: the mono sum
+     * as a two-way speaker, lows from [xtcPortraitLowRight] ? right : left channel (the bottom speaker), highs from the
+     * other (the earpiece).
+     */
+    val xtcPortrait: Int = XTC_PORTRAIT_OFF,
+    val xtcPortraitLowRight: Boolean = true,
 ) {
     companion object {
         // Not "dsp_*": upstream presets, backups and device profiles swap those files behind the listeners' back.
@@ -137,7 +143,13 @@ data class PvbSettings(
         const val KEY_XTC_BAL_HI = "pvb_xtc_bal_hi_db"
         const val KEY_XTC_BAL_ROT = "pvb_xtc_bal_rotation"
         const val KEY_XTC_BAL_SOURCE = "pvb_xtc_bal_source"
-        const val KEY_XTC_PORTRAIT_OFF = "pvb_xtc_portrait_off"
+        const val KEY_XTC_PORTRAIT = "pvb_xtc_portrait"
+        const val KEY_XTC_PORTRAIT_LOW = "pvb_xtc_portrait_low"
+        /** Not persisted: plays the left channel alone for a moment (which speaker is it?). */
+        const val KEY_XTC_PORTRAIT_TEST = "pvb_xtc_portrait_test"
+        const val XTC_PORTRAIT_OFF = 0
+        const val XTC_PORTRAIT_MONO = 1
+        const val XTC_PORTRAIT_SPLIT = 2
         const val XTC_BAL_MAX = 6f
 
         /** A balance value as stored: half-dB steps within +-[XTC_BAL_MAX]; non-finite = 0. */
@@ -298,7 +310,9 @@ data class PvbSettings(
                 xtcBalLoDb = clampBalance(p.float(KEY_XTC_BAL_LO, 0f)),
                 xtcBalHiDb = clampBalance(p.float(KEY_XTC_BAL_HI, 0f)),
                 xtcBalRotation = p.int(KEY_XTC_BAL_ROT, 0).takeIf { it == 1 || it == 3 } ?: 0,
-                xtcPortraitOff = p.bool(KEY_XTC_PORTRAIT_OFF, d.xtcPortraitOff),
+                xtcPortrait = p.str(KEY_XTC_PORTRAIT, "0").trim().toIntOrNull()
+                    ?.takeIf { it in XTC_PORTRAIT_OFF..XTC_PORTRAIT_SPLIT } ?: d.xtcPortrait,
+                xtcPortraitLowRight = p.str(KEY_XTC_PORTRAIT_LOW, "R") != "L",
             ))
         }
 

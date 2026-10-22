@@ -63,6 +63,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.res.stringArrayResource
@@ -119,7 +120,7 @@ data class StoryState(
 )
 
 private val Ease = CubicBezierEasing(0.32f, 0.72f, 0f, 1f)
-private const val SCENES = 8
+private const val SCENES = 9
 
 @Composable
 fun SpatialStory(state: StoryState, onListen: (Boolean) -> Unit, onClose: () -> Unit) {
@@ -300,7 +301,7 @@ private class StageColors(val left: Color, val right: Color, val ink: Color, val
 private fun Scene(page: Int, state: StoryState, active: Boolean) {
     val c = rootnotePalette()
     val colors = remember(c) { StageColors(c.fill, c.xtcFill, c.textPrimary, c.textSecondary, c.chipBorder, c.bg) }
-    val periods = intArrayOf(2600, 3000, 4200, 1, 4000, 2400, 1, 2600)
+    val periods = intArrayOf(2600, 3000, 4200, 1, 4000, 2400, 1, 5000, 2600)
     // One clock per scene (0..1, looping, starting at the scene's key frame so a page that becomes active does not
     // jump); a still key frame with the animations off or off-screen. Read only inside the Canvas (draw phase).
     val clock: State<Float> = if (state.reduceMotion || !active || periods[page] <= 1) {
@@ -325,13 +326,14 @@ private fun Scene(page: Int, state: StoryState, active: Boolean) {
                 2 -> sceneOrigin(t, colors, measurer)
                 4 -> sceneSweetSpot(t, colors)
                 5 -> sceneBand(t, colors, measurer)
+                7 -> scenePortrait(t, colors)
                 else -> sceneLimits(t, colors)
             }
         }
     }
 }
 
-private val KEY_FRAMES = floatArrayOf(0.55f, 0.75f, 0.85f, 0f, 0.3f, 0.4f, 0f, 0.5f)
+private val KEY_FRAMES = floatArrayOf(0.55f, 0.75f, 0.85f, 0f, 0.3f, 0.4f, 0f, 0.8f, 0.5f)
 
 /** Stage geometry (top view): the phone across the top, the head below it, ears left and right. */
 private class Stage(w: Float, h: Float, distanceScale: Float = 1f, headScale: Float = 1f) {
@@ -724,4 +726,61 @@ private fun DrawScope.sceneLimits(t: Float, col: StageColors) {
         Brush.radialGradient(listOf(col.right.copy(alpha = 0.25f * fade), Color.Transparent), Offset(s.cx, s.headY), s.unit * 2f),
         s.unit * 2f, Offset(s.cx, s.headY),
     )
+}
+
+/**
+ * 8: held upright (seen from the front this time): the phone turns from sideways to upright, its two speakers end
+ * up above each other, at the same distance from both ears (nothing to cancel); then the two-way split: a long
+ * teal wave (bass) from the bottom speaker, short purple waves (highs) from the top one.
+ */
+private fun DrawScope.scenePortrait(t: Float, col: StageColors) {
+    val unit = min(size.width / 10f, size.height / 7f)
+    val cx = size.width / 2f
+    // face (front view): head, ears at the sides
+    val headC = Offset(cx, size.height * 0.36f)
+    val headR = unit * 1.5f
+    drawCircle(col.bg, headR, headC)
+    drawCircle(col.ink.copy(alpha = 0.7f), headR, headC, style = Stroke(2.dp.toPx()))
+    val earL = Offset(cx - headR, headC.y)
+    val earR = Offset(cx + headR, headC.y)
+    drawCircle(col.ink.copy(alpha = 0.7f), unit * 0.18f, earL)
+    drawCircle(col.ink.copy(alpha = 0.7f), unit * 0.18f, earR)
+    // the phone in front of the face, lower down, turning upright
+    val turn = smooth(t / 0.3f)
+    val angle = 90f * turn
+    val pc = Offset(cx, size.height * 0.74f)
+    val len = unit * 3.2f
+    val wid = unit * 0.9f
+    rotate(angle, pc) {
+        drawRoundRect(col.ink.copy(alpha = 0.85f), Offset(pc.x - len / 2, pc.y - wid / 2), Size(len, wid), CornerRadius(wid * 0.35f))
+    }
+    val rad = Math.toRadians(angle.toDouble())
+    val dx = (len / 2 - unit * 0.35f) * kotlin.math.cos(rad).toFloat()
+    val dy = (len / 2 - unit * 0.35f) * kotlin.math.sin(rad).toFloat()
+    val top = Offset(pc.x + dx, pc.y - dy)        // the earpiece ends up on top
+    val bottom = Offset(pc.x - dx, pc.y + dy)
+    drawCircle(col.right, unit * 0.17f, top)
+    drawCircle(col.left, unit * 0.17f, bottom)
+    // upright: both speakers the same distance from both ears
+    val equal = smooth((t - 0.3f) / 0.15f) * (1f - smooth((t - 0.55f) / 0.1f))
+    if (equal > 0f) {
+        val dash = PathEffect.dashPathEffect(floatArrayOf(8f, 6f))
+        for (sp in listOf(top, bottom)) for (ear in listOf(earL, earR))
+            drawLine(col.soft.copy(alpha = 0.8f * equal), sp, ear, 1.5.dp.toPx(), pathEffect = dash)
+    }
+    // the two-way split: bass from the bottom, highs from the top
+    val split = smooth((t - 0.6f) / 0.15f)
+    if (split > 0f) {
+        val phase = (t * 3f) % 1f
+        for (k in 0 until 2) {
+            val p = (phase + k * 0.5f) % 1f
+            val r = unit * 2.6f * p
+            drawCircle(col.left.copy(alpha = split * (1f - p) * 0.9f), r, bottom, style = Stroke(4.dp.toPx()))
+        }
+        for (k in 0 until 4) {
+            val p = (phase * 2f + k * 0.25f) % 1f
+            val r = unit * 1.6f * p
+            drawCircle(col.right.copy(alpha = split * (1f - p) * 0.9f), r, top, style = Stroke(1.5.dp.toPx()))
+        }
+    }
 }

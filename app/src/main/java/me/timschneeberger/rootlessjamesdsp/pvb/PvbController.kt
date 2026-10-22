@@ -79,9 +79,9 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
         }
     }
 
-    /** Listen to the posture only while it can change something (spatial on, portrait switch on). */
+    /** Listen to the posture only while it can change something (spatial on). */
     private fun updatePostureListening() {
-        val want = started && settings.xtcMode != PvbSettings.XTC_OFF && settings.xtcPortraitOff
+        val want = started && settings.xtcMode != PvbSettings.XTC_OFF
         if (want == postureListening) return
         postureListening = want
         val sm = sensorManager ?: return
@@ -556,9 +556,16 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
         // right of the listener; not tied to the screen rotation, which a locked rotation would misreport); never
         // during a comparison or a measurement.
         updatePostureListening()
-        val xtcOn = s.xtcMode != PvbSettings.XTC_OFF && speaker && !PvbRuntime.abActive && !PvbRuntime.measuring &&
-            !(s.xtcPortraitOff && upright)
-        p[PvbParam.XTC_MODE] = if (xtcOn) s.xtcMode.toFloat() else 0f
+        val xtcOn = s.xtcMode != PvbSettings.XTC_OFF && speaker && !PvbRuntime.abActive && !PvbRuntime.measuring
+        // Held upright: no left/right to cancel; off, mono, or the two-way split (pvb_xtc.h PORTRAIT_*).
+        val mode = when {
+            !xtcOn -> 0
+            !upright -> s.xtcMode
+            s.xtcPortrait == PvbSettings.XTC_PORTRAIT_MONO -> 3
+            s.xtcPortrait == PvbSettings.XTC_PORTRAIT_SPLIT -> if (s.xtcPortraitLowRight) 5 else 4
+            else -> 0
+        }
+        p[PvbParam.XTC_MODE] = mode.toFloat()
         p[PvbParam.XTC_STRENGTH_DB] = s.xtcStrengthDb
         p[PvbParam.XTC_DIST_CM] = s.xtcDistanceCm
         p[PvbParam.XTC_HAT_CM] = s.xtcHatCm
@@ -569,8 +576,8 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
         // speakers, so the correction swaps sides too. Portrait and unknown rotations keep it as set.
         val landscape = rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270
         val sign = if (s.xtcBalRotation != 0 && landscape && rotation != s.xtcBalRotation) -1f else 1f
-        p[PvbParam.XTC_BAL_LO_DB] = sign * s.xtcBalLoDb
-        p[PvbParam.XTC_BAL_HI_DB] = sign * s.xtcBalHiDb
+        p[PvbParam.XTC_BAL_LO_DB] = if (upright) 0f else sign * s.xtcBalLoDb   // the balance is a sideways one
+        p[PvbParam.XTC_BAL_HI_DB] = if (upright) 0f else sign * s.xtcBalHiDb
         engine.setParams(p)
         publish(lowDb)
     }

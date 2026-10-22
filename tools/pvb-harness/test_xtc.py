@@ -130,6 +130,26 @@ def main():
     check('moving the balance while playing: no dip (10 ms RMS stays above half the median)',
           np.min(rms[k:]) > 0.5 * np.median(rms[k:]), f'min/median={np.min(rms[k:]) / np.median(rms[k:]):.2f}')
 
+    # Held upright: mono (3) and the two-way split (4: low to the left channel, 5: low to the right).
+    xs = noise(sr, 3, -30, seed=7)
+    k0 = int(0.1 * sr)
+    ref = te.Engine(lib, sr, **NEUTRAL).process(xs)
+    ym = te.Engine(lib, sr, **NEUTRAL, xtc_mode=3).process(xs)
+    mono_ref = te.Engine(lib, sr, **NEUTRAL).process(np.repeat(xs.mean(axis=1, keepdims=True), 2, axis=1).astype(np.float32))
+    merr = np.max(np.abs(ym[k0:] - mono_ref[k0:])) / np.max(np.abs(mono_ref))
+    check('upright mono: both channels play the mono sum', merr < 1e-4, f'max_rel_err={merr:.1e}')
+    for mode, low_ch in ((4, 0), (5, 1)):
+        y = te.Engine(lib, sr, **NEUTRAL, xtc_mode=mode).process(xs)
+        hi_ch = 1 - low_ch
+        lo_l = band_db(y, 150, 400); hi_h = band_db(y, 3000, 6000)
+        # LR4: the two parts add up to an all-pass of the mono sum, so compare levels per third-octave
+        summed = ((y[:, 0] + y[:, 1]) / np.sqrt(2))[:, None]
+        flat = max(abs(band_db(summed, f / 1.12, f * 1.12)[0] - band_db(mono_ref[:, :1], f / 1.12, f * 1.12)[0])
+                   for f in (200, 500, 800, 1000, 1250, 2000, 5000))
+        check(f'upright split {mode}: lows on channel {low_ch} (>= 20 dB over the other), highs on the other, parts add up flat (mono +3 dB)',
+              lo_l[low_ch] - lo_l[hi_ch] > 20 and hi_h[hi_ch] - hi_h[low_ch] > 20 and flat < 0.5,
+              f'low {lo_l[low_ch] - lo_l[hi_ch]:.1f} dB, high {hi_h[hi_ch] - hi_h[low_ch]:.1f} dB, sum within {flat:.2f} dB')
+
     z = te.Engine(lib, sr, xtc_mode=2, xtc_strength_db=-3).process(np.zeros((sr, 2), np.float32))
     check('silence in, silence out (no self-oscillation)', np.max(np.abs(z)) == 0.0)
     loud = noise(sr, 5, -3, seed=4)

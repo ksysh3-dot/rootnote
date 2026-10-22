@@ -63,11 +63,29 @@
             app:updatesContinuously="true"
             app:showSeekBarValue="true"
             app:iconSpaceReserved="false" />
-        <me.timschneeberger.rootlessjamesdsp.preference.MaterialSwitchPreference
-            android:key="pvb_xtc_portrait_off"
-            android:title="@string/pvb_xtc_portrait_off"
-            android:summary="@string/pvb_xtc_portrait_off_summary"
-            android:defaultValue="true"
+        <ListPreference
+            android:key="pvb_xtc_portrait"
+            android:title="@string/pvb_xtc_portrait"
+            android:dialogTitle="@string/pvb_xtc_portrait"
+            android:entries="@array/pvb_xtc_portrait_entries"
+            android:entryValues="@array/pvb_xtc_portrait_values"
+            android:defaultValue="0"
+            app:useSimpleSummaryProvider="true"
+            app:iconSpaceReserved="false" />
+        <ListPreference
+            android:key="pvb_xtc_portrait_low"
+            android:title="@string/pvb_xtc_portrait_low"
+            android:dialogTitle="@string/pvb_xtc_portrait_low"
+            android:entries="@array/pvb_xtc_portrait_low_entries"
+            android:entryValues="@array/pvb_xtc_portrait_low_values"
+            android:defaultValue="R"
+            app:useSimpleSummaryProvider="true"
+            app:iconSpaceReserved="false" />
+        <Preference
+            android:key="pvb_xtc_portrait_test"
+            android:title="@string/pvb_xtc_portrait_test"
+            android:summary="@string/pvb_xtc_portrait_test_summary"
+            android:persistent="false"
             app:iconSpaceReserved="false" />
         <ListPreference
             android:key="pvb_xtc_head"
