@@ -509,6 +509,14 @@ void Engine::process(float* io, int frames) {
     if (!dynOn) dynOff_ = 0.0;
     updateCondWanted();  // new parameters (vbApply updates it when the algorithm changes mid-block)
     const double s1mTrim = dbToLin(kS1mTrimDb);
+    // Display-only phone model: only while its meters are read (it starts fresh when it starts again).
+    const bool phoneOn = tapBase < phoneUntil_.load(std::memory_order_relaxed);
+    if (phoneOn && !phoneRun_) phone_.reset();
+    phoneRun_ = phoneOn;
+    // The loudness match only matters for the matched bypass: measure while that is set (or still fading).
+    const bool matchOn = flatX_.target() > 0.0 || flatX_.value() > 0.0;
+    if (matchOn && !matchRun_) match_.resetFilters();  // no stale filter memory from before the pause
+    matchRun_ = matchOn;
 
     for (int n = 0; n < frames; ++n) {
         float fl = io[2 * n], fr = io[2 * n + 1];
@@ -642,7 +650,8 @@ void Engine::process(float* io, int frames) {
         // Keep this small delay warm even when diagnostics are off: exact component alignment on arming.
         const double preL = vg * layL * og, preR = vg * layR * og;
         layerDelayL_[layerPos_] = preL; layerDelayR_[layerPos_] = preR;
-        const int layerRead = (layerPos_ - lat + kDryLen) % kDryLen;
+        int layerRead = layerPos_ - lat;  // lat < kDryLen
+        if (layerRead < 0) layerRead += kDryLen;
         const double delayedLayerL = layerDelayL_[layerRead], delayedLayerR = layerDelayR_[layerRead];
         if (++layerPos_ >= kDryLen) layerPos_ = 0;
         wl = (wl + vg * layL) * og;
@@ -671,12 +680,13 @@ void Engine::process(float* io, int frames) {
         // Dry path, delayed by the limiter latency so the crossfade stays phase aligned.
         dryL_[dryPos_] = xdl;
         dryR_[dryPos_] = xdr;
-        const int rd = (dryPos_ - lat + kDryLen) % kDryLen;
+        int rd = dryPos_ - lat;
+        if (rd < 0) rd += kDryLen;
         const double dl = dryL_[rd], dr = dryR_[rd];
         if (++dryPos_ >= kDryLen) dryPos_ = 0;
 
         // Loudness match: processed output vs the input it came from (both time aligned, before any gate or fade).
-        match_.push(dl, dr, ll, lr);
+        if (matchOn) match_.push(dl, dr, ll, lr);
         // Flat bypass: the input at the matched loudness, through its own limiter (same ceiling, same latency). The
         // limiter stays warm whenever matched bypass is enabled, including while the wet path is selected.
         const double fx = flatX_.next();
@@ -718,7 +728,7 @@ void Engine::process(float* io, int frames) {
         }
 
         // What the phone's own processor will do with this (display only); left and right powers, not the mid.
-        phone_.push(yl, yr);
+        if (phoneOn) phone_.push(yl, yr);
 
         io[2 * n] = static_cast<float>(yl);
         io[2 * n + 1] = static_cast<float>(yr);
@@ -761,7 +771,7 @@ void Engine::process(float* io, int frames) {
         sDyn_[c].flushTiny();
     }
     if (dynEnv_ < 1e-24) dynEnv_ = 0.0;
-    match_.flushTiny();
+    if (matchOn) match_.flushTiny();
     cond_.flushTiny();
     if (devMeterOn_) {
         sDevLp_.flushTiny(); sDevBpDry_.flushTiny(); sDevBpLay_.flushTiny();
@@ -799,8 +809,8 @@ void Engine::process(float* io, int frames) {
     mMix_.store(static_cast<float>(mix_.value()), std::memory_order_relaxed);
     mMatchDb_.store(static_cast<float>(match_.gainDb()), std::memory_order_relaxed);
     mMatchMeasured_.store(match_.measured(), std::memory_order_relaxed);
-    mEstLevel_.store(static_cast<float>(std::max(-120.0, phone_.maxLevelDb())), std::memory_order_relaxed);
-    mEstGr_.store(static_cast<float>(phone_.grDb(1)), std::memory_order_relaxed);
+    mEstLevel_.store(phoneOn ? static_cast<float>(std::max(-120.0, phone_.maxLevelDb())) : -120.f, std::memory_order_relaxed);
+    mEstGr_.store(phoneOn ? static_cast<float>(phone_.grDb(1)) : 0.f, std::memory_order_relaxed);
     mBlocks_.fetch_add(1, std::memory_order_relaxed);
     const auto research = vbCur_ >= 0 ? vbMods_[vbCur_]->researchStats() : VbResearchStats{};
     mVbScene_.store(research.scene, std::memory_order_relaxed);
@@ -891,8 +901,18 @@ int Engine::openMs(int tag) const {
     return static_cast<int>(std::min<uint64_t>(f * 1000u / sr, static_cast<uint64_t>(INT_MAX)));
 }
 
+void Engine::wantPhoneModel() {
+    // a few seconds of audio past what has been processed (the UI reads several times a second while it shows them)
+    const uint64_t until = tapFrames_.load(std::memory_order_relaxed) +
+                           3ull * static_cast<uint64_t>(srMeter_.load(std::memory_order_relaxed));
+    uint64_t cur = phoneUntil_.load(std::memory_order_relaxed);
+    while (until > cur && !phoneUntil_.compare_exchange_weak(cur, until, std::memory_order_relaxed)) {
+    }
+}
+
 void Engine::readMeters(float* out, int count) {
     if (out == nullptr || count <= 0) return;
+    wantPhoneModel();
     float m[M_COUNT];
     m[M_DIAGNOSTIC_SOLO_BLEND] = mSoloBlend_.load(std::memory_order_relaxed);
     m[M_DIAGNOSTIC_SOLO_EXTRA_GR_DB] = static_cast<float>(std::max(0.0, -linToDb(mSoloExtraMin_.exchange(1.f, std::memory_order_relaxed))));

@@ -388,7 +388,10 @@ public:
     static constexpr int kMaxLookahead = 300;  // 1.5 ms up to 192 kHz
     static constexpr int kDelayLen = kDetectDelay + kMaxLookahead + 1;
 
-    TruePeakLimiter() { initInterpolator(); }
+    TruePeakLimiter() {
+        initInterpolator();
+        reset();  // consistent state (rRing_ / rMin_) even before configure()
+    }
 
     void configure(double fs, double lookaheadMs) {
         fs_ = fs;
@@ -412,11 +415,16 @@ public:
         sinceResum_ = 0;
         g_ = 1.0;
         minGain_ = 1.0;
+        quiet_ = 0;
+        rMin_ = 1.0;
     }
 
     void setCeilingDb(double db) {
         // 0.1 dB margin covers the residual error of the 4x estimate.
         ceiling_ = dbToLin(db - 0.1);
+        // Below quietLevel_ no interpolated value can exceed the ceiling (see process()). Margin 1e-9 >> rounding.
+        quietLevel_ = ceiling_ / (coefAbsMax_ * (1.0 + 1e-9));
+        quiet_ = 0;
     }
 
     void setReleaseMs(double ms) {
@@ -437,22 +445,27 @@ public:
     }
 
     inline void process(double inL, double inR, double& outL, double& outR) {
-        // Audio delay line and interpolator history.
+        // Audio delay line and interpolator history. The history is stored twice (positions h and h + kTaps), so the
+        // last 32 inputs are always one contiguous run, oldest first: hist + hpos_ + 1 .. hist + hpos_ + kTaps.
         delayL_[dpos_] = inL;
         delayR_[dpos_] = inR;
-        histL_[hpos_] = inL;
-        histR_[hpos_] = inR;
+        histL_[hpos_] = histL_[hpos_ + kTaps] = inL;
+        histR_[hpos_] = histR_[hpos_ + kTaps] = inR;
+        // Frames in a row (up to kTaps) at or below quietLevel_ in both channels. When all kTaps inputs of the window
+        // are that quiet, |each interpolated value| <= sum |coef| * quietLevel_ < ceiling (rounding is far inside the
+        // 1e-9 margin), so the detection below would find no peak above the ceiling: r = 1 exactly, without it.
+        if (std::fabs(inL) <= quietLevel_ && std::fabs(inR) <= quietLevel_) {
+            if (quiet_ < kTaps) ++quiet_;
+        } else {
+            quiet_ = 0;
+        }
 
         // Detection at position j = i - D, using x[j-15] .. x[j+16] = the last 32 inputs.
-        double peak = 0.0;
-        {
-            double xl[kTaps], xr[kTaps];
-            for (int t = 0; t < kTaps; ++t) {
-                const int idx = (hpos_ - (kTaps - 1) + t + kHist) & (kHist - 1);
-                xl[t] = histL_[idx];
-                xr[t] = histR_[idx];
-            }
-            peak = std::max(std::fabs(xl[15]), std::fabs(xr[15]));  // x[j] itself
+        double r = 1.0;
+        if (quiet_ < kTaps) {
+            const double* xl = histL_ + hpos_ + 1;
+            const double* xr = histR_ + hpos_ + 1;
+            double peak = std::max(std::fabs(xl[15]), std::fabs(xr[15]));  // x[j] itself
             for (int p = 0; p < kPhases; ++p) {
                 double yl = 0.0, yr = 0.0;
                 for (int t = 0; t < kTaps; ++t) {
@@ -461,14 +474,22 @@ public:
                 }
                 peak = std::max(peak, std::max(std::fabs(yl), std::fabs(yr)));
             }
+            if (peak > ceiling_) r = ceiling_ / peak;
         }
-        const double r = (peak > ceiling_) ? ceiling_ / peak : 1.0;
 
-        // Minimum of the required gain over the look-ahead window (L + 1 positions).
+        // Minimum of the required gain over the look-ahead window (L + 1 positions), kept up to date: it only has to
+        // be searched again when the value leaving the window was the minimum and the new one is larger.
+        const double leaving = rRing_[rpos_];
         rRing_[rpos_] = r;
         if (++rpos_ > L_) rpos_ = 0;
-        double m = 1.0;
-        for (int k = 0; k <= L_; ++k) m = std::min(m, rRing_[k]);
+        if (r <= rMin_) {
+            rMin_ = r;
+        } else if (leaving == rMin_) {
+            double mm = 1.0;
+            for (int k = 0; k <= L_; ++k) mm = std::min(mm, rRing_[k]);
+            rMin_ = mm;
+        }
+        const double m = rMin_;
 
         // Moving average over L + 1 values.
         mSum_ += m - mRing_[mpos_];
@@ -489,16 +510,16 @@ public:
 
         // Output: the sample that entered D + L frames ago.
         const int lat = kDetectDelay + L_;
-        const int rd = (dpos_ - lat + kDelayLen) % kDelayLen;
+        int rd = dpos_ - lat;  // lat < kDelayLen
+        if (rd < 0) rd += kDelayLen;
         outL = delayL_[rd] * g_;
         outR = delayR_[rd] * g_;
 
         if (++dpos_ >= kDelayLen) dpos_ = 0;
-        hpos_ = (hpos_ + 1) & (kHist - 1);
+        if (++hpos_ >= kTaps) hpos_ = 0;
     }
 
 private:
-    static constexpr int kHist = 32;  // power of two >= kTaps
 
     static double besselI0(double x) {
         double sum = 1.0, term = 1.0;
@@ -525,10 +546,21 @@ private:
             }
             for (int t = 0; t < kTaps; ++t) coef_[p][t] /= sum;
         }
+        coefAbsMax_ = 1.0;
+        for (int p = 0; p < kPhases; ++p) {
+            double a = 0.0;
+            for (int t = 0; t < kTaps; ++t) a += std::fabs(coef_[p][t]);
+            coefAbsMax_ = std::max(coefAbsMax_, a);
+        }
+        quietLevel_ = ceiling_ / (coefAbsMax_ * (1.0 + 1e-9));
     }
 
     double coef_[kPhases][kTaps] = {};
-    double histL_[kHist] = {}, histR_[kHist] = {};
+    double coefAbsMax_ = 1.0;       // max over phases of sum |coef|
+    double quietLevel_ = 0.0;       // see process()
+    int quiet_ = 0;
+    double rMin_ = 1.0;             // minimum of rRing_
+    double histL_[2 * kTaps] = {}, histR_[2 * kTaps] = {};
     double delayL_[kDelayLen] = {}, delayR_[kDelayLen] = {};
     double rRing_[kMaxLookahead + 1] = {};
     double mRing_[kMaxLookahead + 1] = {};

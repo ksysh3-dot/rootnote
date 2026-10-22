@@ -68,6 +68,10 @@ jobs:
             OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_track_prediction_mutation.py --report track-prediction-mutation-ci.json &&
             g++ -std=c++17 -O2 -Wall -Wextra -Werror -Iapp/src/main/cpp/libpvb tools/pvb-harness/vb_quality/test_track_prediction.cpp -o /tmp/pvb-track-prediction && /tmp/pvb-track-prediction &&
             g++ -std=c++17 -O2 -Wall -Wextra -Werror -Iapp/src/main/cpp/libpvb tools/pvb-harness/vb_quality/test_continuity_policy.cpp -o /tmp/pvb-continuity-policy && /tmp/pvb-continuity-policy &&
+            g++ -std=c++17 -O2 -Wall -Wextra -Werror -Iapp/src/main/cpp/libpvb -Itools/pvb-harness tools/pvb-harness/fit_equivalence.cpp -o /tmp/pvb-fit-equivalence && /tmp/pvb-fit-equivalence &&
+            g++ -std=c++17 -O2 -Wall -Wextra -Werror -Iapp/src/main/cpp/libpvb tools/pvb-harness/fastmath_check.cpp -o /tmp/pvb-fastmath-check && /tmp/pvb-fastmath-check &&
+            clang++ -std=c++17 -O2 -mfma -ffp-contract=on -fno-fast-math -Iapp/src/main/cpp/libpvb -Itools/pvb-harness tools/pvb-harness/fit_equivalence.cpp -o /tmp/pvb-fit-equivalence-fma && /tmp/pvb-fit-equivalence-fma &&
+            clang++ -std=c++17 -O2 -mfma -ffp-contract=on -fno-fast-math -Iapp/src/main/cpp/libpvb tools/pvb-harness/fastmath_check.cpp -o /tmp/pvb-fastmath-check-fma && /tmp/pvb-fastmath-check-fma &&
             python3 tools/pvb-harness/vb51/test_port52.py port52-report.json &&
             OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/vb_quality/test_gentle_port.py --report gentle-port-report.json &&
             OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/vb_quality/test_adaptive_port.py --report adaptive-port-report.json &&

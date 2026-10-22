@@ -29,7 +29,10 @@ submodule at the commit recorded in that tag (`git clone --recursive`).
   (@james34602), GPL-3.0. DSP engine used when the fork's own engine is off.
 - Upstream translators (Crowdin project "rootlessjamesdsp"); the general build ships only English and Korean.
 
-Third-party components and their licences (Apache-2.0, BSD-2-Clause, SIL OFL 1.1, MIT, public domain/MIT-0) are
+The engine's sine/cosine (`app/src/main/cpp/libpvb/pvb_fastmath.h`) uses the range reduction and kernel polynomials of
+**fdlibm** (Sun Microsystems, 1993; permissive notice preserved in the file and in the third-party list).
+
+Third-party components and their licences (Apache-2.0, BSD-2-Clause, SIL OFL 1.1, MIT, public domain/MIT-0, fdlibm) are
 listed in the app (About, Third-party licenses) and in `app/src/general/assets/licenses/THIRD_PARTY.txt`.
 
 ## Modified upstream files
@@ -89,5 +92,5 @@ Removed upstream files:
 - `.github/FUNDING.yml`
 - `.github/workflows/crowdin-contributors.yml`
 
-Files added by this fork (not listed): 195. New source files carry their own GPL-3.0 header or are covered by this notice.
+Files added by this fork (not listed): 205. New source files carry their own GPL-3.0 header or are covered by this notice.
 <!-- END GENERATED -->

@@ -412,10 +412,14 @@ def t_high_shelf(lib, sr=48000):
 
 
 def t_phone_model(lib, sr=48000):
-    """The phone-processor estimate (display) behaves like the fitted model ('octx'): own band and cross-band ducking."""
+    """The phone-processor estimate (display) behaves like the fitted model ('octx'): own band and cross-band ducking.
+    It runs only while its meters are read (a screen showing them reads several times a second), so each case reads
+    once before the audio, like an open screen."""
     m = np.zeros(lib.pvb_meter_count(), np.float32)
-    def gr_after(x, rate=sr):
+    def gr_after(x, rate=sr, watched=True):
         e = Engine(lib, rate, enabled=0)        # bypass: the estimate then sees the input itself
+        if watched:
+            lib.pvb_read_meters(e.h, m.ctypes.data_as(FP), len(m))
         e.process(x)
         lib.pvb_read_meters(e.h, m.ctypes.data_as(FP), len(m)); e.close()
         return float(m[M['EST_GR_DB']]), float(m[M['EST_LEVEL_DB']])
@@ -433,6 +437,16 @@ def t_phone_model(lib, sr=48000):
           abs(own - 10.19) < 0.4 and abs(own_lvl + 13) < 0.3 and abs(own44 - 10.19) < 0.4 and quiet == 0.0
           and abs(cross - 7.3) < 1.0 and abs(cross8 - 1.66) < 0.6 and low < cross,
           own_db=own, level_db=own_lvl, own_44k_db=own44, quiet_db=quiet, cross_db=cross, cross_m8_db=cross8, from_63hz_db=low)
+    # Nobody reading: the model does not run (battery) and reports no estimate; 3 s after the last read it stops.
+    idle_gr, idle_lvl = gr_after(stereo(10 ** (-13 / 20) * np.sin(2 * np.pi * 250 * t)), watched=False)
+    e = Engine(lib, sr, enabled=0)
+    lib.pvb_read_meters(e.h, m.ctypes.data_as(FP), len(m))
+    e.process(np.tile(stereo(10 ** (-13 / 20) * np.sin(2 * np.pi * 250 * t)), (4, 1)))   # 4 s, read only at 0
+    lib.pvb_read_meters(e.h, m.ctypes.data_as(FP), len(m)); e.close()
+    stopped_lvl = float(m[M['EST_LEVEL_DB']])
+    check('phone estimate: runs only while read (none without a reader; stops 3 s after the last read)',
+          idle_lvl == -120.0 and idle_gr == 0.0 and stopped_lvl == -120.0,
+          unread_level_db=idle_lvl, unread_gr_db=idle_gr, after_4s_unread_level_db=stopped_lvl)
 
 
 def t_mute(lib, sr=48000):
@@ -528,12 +542,14 @@ def t_phone_stereo(lib, sr=48000):
     for label, sign in (('same', 1.0), ('opposite', -1.0)):
         x = np.stack([s, sign * s], 1).astype(np.float32)
         e = Engine(lib, sr, enabled=0)
+        lib.pvb_read_meters(e.h, m.ctypes.data_as(FP), len(m))   # the estimate runs while it is read
         e.process(x)
         lib.pvb_read_meters(e.h, m.ctypes.data_as(FP), len(m))
         e.close()
         res[label] = (float(m[M['EST_LEVEL_DB']]), float(m[M['EST_GR_DB']]))
     one = np.stack([s, np.zeros_like(s)], 1).astype(np.float32)
-    e = Engine(lib, sr, enabled=0); e.process(one); lib.pvb_read_meters(e.h, m.ctypes.data_as(FP), len(m)); e.close()
+    e = Engine(lib, sr, enabled=0); lib.pvb_read_meters(e.h, m.ctypes.data_as(FP), len(m))
+    e.process(one); lib.pvb_read_meters(e.h, m.ctypes.data_as(FP), len(m)); e.close()
     single = float(m[M['EST_LEVEL_DB']])
     check('phone estimate: R = -L reads like R = L (per-channel power), one channel 3 dB lower',
           abs(res['same'][0] - res['opposite'][0]) < 1e-6 and abs(res['same'][1] - res['opposite'][1]) < 1e-6
