@@ -1,0 +1,92 @@
+desc: Phone speaker crosstalk cancellation (RACE-style, test)
+//tags: stereo, xtc
+// Recursive crosstalk cancellation for the two built-in speakers, landscape, music at about 30-50 cm.
+// Each output subtracts the other output delayed by the head's crosstalk delay tau and scaled by g; the feedback path is
+// band-limited (high-pass fLo, low-pass fHi) so the bass and the top end pass untouched. "Centre safe" applies the
+// recursion to the side signal only, so centre sounds (vocals) keep their tone; "Full RACE" also cancels for the
+// centre and separates more, at the cost of tone. tau comes from a standard spherical head (Woodworth) and the
+// listening distance: no measurement needed. Design notes and the model: tools/xtc/race_design.py, docs/XTC_PLAN.md.
+
+mode:0<0,1,1{Centre safe (side only),Full RACE}>Mode
+strength:0<0,2,1{Gentle (-6 dB),Medium (-4.5 dB),Strong (-3 dB)}>Strength
+distance:40<25,60,1>Listening distance (cm)
+headSize:1<0,2,1{Small (hat 54 cm),Medium (hat 57 cm),Large (hat 60 cm)}>Head size
+spacing:15.5<10,20,0.1>Speaker spacing in landscape (cm)
+fLo:700<200,2000,10>Band low edge (Hz)
+fHi:5000<2000,10000,100>Band high edge (Hz)
+bypass:0<0,1,1{Off,On}>Bypass
+
+@init
+mode = 0;
+strength = 0;
+distance = 40;
+headSize = 1;
+spacing = 15.5;
+fLo = 700;
+fHi = 5000;
+bypass = 0;
+
+// ---- design ----
+g = strength == 0 ? 0.501187 : (strength == 1 ? 0.595662 : 0.707946);   // -6 / -4.5 / -3 dB
+radius = 0.0875 * (headSize == 0 ? 54 : (headSize == 1 ? 57 : 60)) / 57;  // m, standard head scaled by hat size
+theta = atan((spacing * 0.005) / (distance * 0.01));                     // speaker angle from the front (rad)
+tau = radius / 343 * (theta + sin(theta));                               // Woodworth crosstalk delay (s)
+tauSamples = tau * srate;
+// the loop already delays by one sample (the previous output is fed back)
+loopDelay = max(tauSamples - 1, 0);
+
+// RBJ 2nd-order Butterworth biquads, transposed direct form II; 7 slots each: b0 b1 b2 a1 a2 z1 z2
+function bqSet(base, kind, f0) local(w0, cw, al, a0) (
+    w0 = 2 * $pi * f0 / srate;
+    cw = cos(w0);
+    al = sin(w0) / (2 * 0.7071067811865476);
+    a0 = 1 + al;
+    kind == 0 ? (
+        base[0] = (1 - cw) / 2 / a0; base[1] = (1 - cw) / a0; base[2] = (1 - cw) / 2 / a0;
+    ) : (
+        base[0] = (1 + cw) / 2 / a0; base[1] = -(1 + cw) / a0; base[2] = (1 + cw) / 2 / a0;
+    );
+    base[3] = -2 * cw / a0;
+    base[4] = (1 - al) / a0;
+    base[5] = 0; base[6] = 0;
+);
+function bq(base, x) local(y) (
+    y = base[0] * x + base[5];
+    base[5] = base[1] * x - base[3] * y + base[6];
+    base[6] = base[2] * x - base[4] * y;
+    y;
+);
+
+// memory: two fractional delay lines, then the four biquads
+dlA = 0;
+req = fractionalDelayLineInit(dlA, 64);
+dlB = dlA + req;
+req = fractionalDelayLineInit(dlB, 64);
+bqBase = dlB + req + 16;
+hpA = bqBase; lpA = bqBase + 8; hpB = bqBase + 16; lpB = bqBase + 24;
+bqSet(hpA, 1, fLo); bqSet(lpA, 0, fHi);
+bqSet(hpB, 1, fLo); bqSet(lpB, 0, fHi);
+fractionalDelayLineSetDelay(dlA, loopDelay);
+fractionalDelayLineSetDelay(dlB, loopDelay);
+
+yA = 0; yB = 0;   // previous outputs fed back (full: left / right; centre safe: side / unused)
+
+@sample
+bypass == 0 ? (
+    mode == 1 ? (
+        // full RACE: yL = xL - g * B[yR(t - tau)], yR = xR - g * B[yL(t - tau)]
+        fbR = bq(lpB, bq(hpB, fractionalDelayLineProcess(dlB, yB)));
+        fbL = bq(lpA, bq(hpA, fractionalDelayLineProcess(dlA, yA)));
+        yA = spl0 - g * fbR;
+        yB = spl1 - g * fbL;
+        spl0 = yA;
+        spl1 = yB;
+    ) : (
+        // centre safe: mid unchanged, side S = s + g * B[S(t - tau)]
+        mid = (spl0 + spl1) * 0.5;
+        side = (spl0 - spl1) * 0.5;
+        yA = side + g * bq(lpA, bq(hpA, fractionalDelayLineProcess(dlA, yA)));
+        spl0 = mid + yA;
+        spl1 = mid - yA;
+    );
+);
