@@ -75,4 +75,23 @@
         <item>Honest limits</item>
         <item>How much less the sides blend is calculated with a computer model (about 3-10 dB in the mid range). Ears and heads differ, so the feel differs too. Videos and calls with everything in the centre change little.\n\nIt switches off by itself on earphones or Bluetooth and during blind comparisons and measurements.</item>
     </string-array>
+    <string name="story_prev">Back</string>
+    <string name="story_next">Next</string>
+    <string name="story_done">Done</string>
+    <string name="story_listen_title">Hear it yourself</string>
+    <string name="story_listen_off">Off</string>
+    <string name="story_listen_on">On</string>
+    <string name="story_listen_hint">Play some music and switch. Closing this screen brings your own setting back.</string>
+    <string name="story_listen_unavailable">You can listen while Rootnote is on.</string>
+    <string name="story_delay">%1$d cm · %2$d° between the speakers · arrives %3$.2f ms later</string>
+    <string-array name="story_scene_a11y">
+        <item>Seen from above. Sound waves from the phone\'s left and right speakers reach both ears, and the sound gathers into one point in the middle of the phone.</item>
+        <item>On its way from the left speaker to the right ear, the right speaker sends an inverted wave. Added together, the two waves make a flat line.</item>
+        <item>Two loudspeakers far away move in and become the phone, seen from the head at the same angle. Below, a timeline: the 1960s, 2007, Rootnote.</item>
+        <item>Change the distance to the phone and the head size. The numbers below show the angle and how much later the sound arrives.</item>
+        <item>The best spot glows in front of the face. As the head moves sideways the lines misalign and the glow fades, but the sound stays.</item>
+        <item>On a strip from 20 Hz to 20 kHz, below 400 Hz is teal (virtual bass) and 400 Hz to 8 kHz is purple (spatial).</item>
+        <item>Choosing a preset changes how far the centre dot (vocals) and the side dots (instruments) spread.</item>
+        <item>Spatial turns on and off, and the side dots spread and close.</item>
+    </string-array>
 </resources>

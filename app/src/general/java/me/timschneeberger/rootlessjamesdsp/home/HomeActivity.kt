@@ -128,6 +128,7 @@ class HomeActivity : BaseActivity() {
             prefs.edit().putFloat(PvbSettings.KEY_XTC_DISTANCE, HomeLogic.xtcDistanceCm(step).toFloat()).apply()
         },
         onXtcHead = { hat -> prefs.edit().putString(PvbSettings.KEY_XTC_HEAD, hat.toString()).apply() },
+        onSpatialInfo = { startActivity(Intent(this, SpatialStoryActivity::class.java)) },
     )
 
     /** Spatial preset: mode + strength, as the list values of the advanced settings ("-6", "-4.5", "-3"). */

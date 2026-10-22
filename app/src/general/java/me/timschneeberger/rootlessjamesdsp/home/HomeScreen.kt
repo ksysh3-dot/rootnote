@@ -53,7 +53,6 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
@@ -89,7 +88,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
@@ -170,6 +168,8 @@ class HomeActions(
     val onXtcDistance: (Int) -> Unit = {},
     /** Hat size, cm: 54 / 57 / 60. */
     val onXtcHead: (Int) -> Unit = {},
+    /** (i) next to the tabs: the spatial motion story (SpatialStoryActivity). */
+    val onSpatialInfo: () -> Unit = {},
 )
 
 /** The "심해 틸" palette (res/values[-night]/colors_rootnote.xml of the general flavor). */
@@ -290,12 +290,10 @@ private fun HomeContent(state: HomeUiState, actions: HomeActions, initialTab: In
             label = "dim",
         )
         var tab by rememberSaveable { mutableIntStateOf(initialTab) }
-        var info by rememberSaveable { mutableStateOf(false) }
         FeatureTabs(
             tab, onSelect = { tab = it }, bassOn = state.masterOn, spatialOn = state.processingOn && state.xtcOn,
-            onInfo = { info = true },
+            onInfo = actions.onSpatialInfo,
         )
-        if (info) SpatialInfoDialog { info = false }
         val reduce = LocalReduceMotion.current
         AnimatedContent(
             targetState = tab,
@@ -379,49 +377,6 @@ private fun InfoButton(description: String, tint: Color, onClick: () -> Unit) {
     }
 }
 
-/** "공간감은 어떻게 만들어질까요?": headed paragraphs from home_xtc_info (heading, body pairs), scrollable. */
-@Composable
-private fun SpatialInfoDialog(onClose: () -> Unit) {
-    val c = LocalPalette.current
-    val items = stringArrayResource(R.array.home_xtc_info)
-    AlertDialog(
-        onDismissRequest = onClose,
-        containerColor = c.bg,
-        shape = RoundedCornerShape(28.dp),
-        title = {
-            Text(
-                stringResource(R.string.home_xtc_info_title),
-                color = c.textPrimary, fontSize = 22.sp, lineHeight = 30.sp, fontWeight = FontWeight.Bold,
-            )
-        },
-        text = {
-            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                for (i in 0 until items.size / 2) {
-                    Text(
-                        items[2 * i],
-                        modifier = Modifier.padding(top = if (i == 0) 0.dp else 12.dp).semantics { heading() },
-                        color = c.xtcAccentText, fontSize = 16.sp, lineHeight = 22.sp, fontWeight = FontWeight.Bold,
-                    )
-                    Text(items[2 * i + 1], color = c.textPrimary, fontSize = 15.sp, lineHeight = 22.sp)
-                }
-            }
-        },
-        confirmButton = {
-            Box(
-                Modifier
-                    .heightIn(min = 48.dp)
-                    .clickable(role = Role.Button, onClick = onClose)
-                    .padding(horizontal = 16.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    stringResource(R.string.home_xtc_info_close),
-                    color = c.xtcAccentText, fontSize = 16.sp, lineHeight = 22.sp, fontWeight = FontWeight.Bold,
-                )
-            }
-        },
-    )
-}
 
 @Composable
 private fun RowScope.FeatureTab(label: String, selected: Boolean, on: Boolean, accent: Color, dot: Color, onClick: () -> Unit) {

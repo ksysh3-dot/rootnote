@@ -52,6 +52,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <!-- Spatial explanation as a landscape motion story (home screen (i)). Landscape only while it is open. -->
+        <activity
+            android:name="me.timschneeberger.rootlessjamesdsp.home.SpatialStoryActivity"
+            android:exported="false"
+            android:label="@string/home_xtc_info_title"
+            android:screenOrientation="sensorLandscape"
+            android:theme="@style/Theme.RootlessJamesDSP" />
         <!-- Developer mode (Compose): opened from the About screen's research section or the PVB settings row once
              the research tools are unlocked. Not exported. -->
         <activity

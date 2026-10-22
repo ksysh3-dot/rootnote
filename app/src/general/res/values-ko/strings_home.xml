@@ -75,4 +75,23 @@
         <item>솔직한 한계</item>
         <item>얼마나 덜 섞이는지는 컴퓨터 모델로 계산한 값이에요(중간 대역에서 처리 전보다 대략 3~10 dB). 사람마다 귀와 머리 모양이 달라서 느낌도 달라요. 소리가 한가운데 모인 영상이나 통화에서는 차이가 작아요.\n\n이어폰이나 블루투스로 들을 때, 블라인드 비교와 측정 중에는 저절로 꺼져요.</item>
     </string-array>
+    <string name="story_prev">이전</string>
+    <string name="story_next">다음</string>
+    <string name="story_done">다 봤어요</string>
+    <string name="story_listen_title">직접 들어 보기</string>
+    <string name="story_listen_off">끄고 듣기</string>
+    <string name="story_listen_on">켜고 듣기</string>
+    <string name="story_listen_hint">음악을 틀어 놓고 바꿔 보세요. 이 화면을 닫으면 원래 설정으로 돌아가요.</string>
+    <string name="story_listen_unavailable">Rootnote가 켜져 있을 때 들어 볼 수 있어요.</string>
+    <string name="story_delay">%1$d cm · 두 스피커 사이 %2$d° · 늦게 닿는 시간 %3$.2f ms</string>
+    <string-array name="story_scene_a11y">
+        <item>위에서 본 그림. 폰의 왼쪽과 오른쪽 스피커에서 나온 음파가 두 귀에 모두 닿고, 소리 위치가 폰 가운데 한 점으로 모여요.</item>
+        <item>왼쪽 스피커 소리가 오른쪽 귀로 가는 길에, 오른쪽 스피커가 뒤집힌 파형을 보내요. 두 파형을 더하면 평평한 선이 돼요.</item>
+        <item>멀리 떨어진 스피커 두 대가 다가와 폰으로 바뀌어요. 머리에서 본 각도는 같아요. 아래에는 1960년대, 2007년, Rootnote 연표가 있어요.</item>
+        <item>폰까지의 거리와 머리 크기를 바꿔 볼 수 있어요. 아래 숫자가 각도와 늦게 닿는 시간을 보여 줘요.</item>
+        <item>얼굴 앞에 잘 들리는 자리가 빛나요. 머리가 옆으로 움직이면 선이 어긋나며 빛이 옅어지지만 소리는 그대로예요.</item>
+        <item>20 Hz부터 20 kHz까지의 띠에서 400 Hz 아래는 청록(가상 저음), 400 Hz부터 8 kHz는 보라(공간감)로 칠해져요.</item>
+        <item>프리셋을 고르면 가운데 점(보컬)과 양옆 점(악기)이 퍼지는 정도가 달라져요.</item>
+        <item>공간감이 켜졌다 꺼졌다 하며 양옆 점이 넓어졌다 좁아져요.</item>
+    </string-array>
 </resources>
