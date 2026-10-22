@@ -131,9 +131,11 @@ object HomeLogic {
     fun xtcPreset(mode: Int, strengthDb: Float): XtcPreset =
         xtcChips.firstOrNull { it.mode == mode && it.strengthDb == strengthDb } ?: XtcPreset.CUSTOM
 
-    /** Turning spatial on from the home switch: the balanced preset, unless the stored strength already is one. */
-    fun xtcOnWrite(strengthDb: Float): XtcPreset =
-        xtcChips.firstOrNull { it.mode == PvbSettings.XTC_FULL && it.strengthDb == strengthDb } ?: XtcPreset.BALANCED
+    /**
+     * Turning spatial back on from the home switch: the mode it had before it was turned off (the strength was left
+     * as it was), or null for none (first time: the balanced preset).
+     */
+    fun xtcResumeMode(lastMode: Int?): Int? = lastMode?.takeIf { it == PvbSettings.XTC_CENTRE || it == PvbSettings.XTC_FULL }
 
     /** Distance slider: 25..60 cm in 5 cm steps (step index 0..7). */
     const val XTC_DIST_STEP_CM = 5

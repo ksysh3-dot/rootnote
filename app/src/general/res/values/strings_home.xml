@@ -45,6 +45,7 @@
     <string name="home_xtc_hint_subtle">Widens left and right and leaves the vocals as they are.</string>
     <string name="home_xtc_hint_balanced">Wider; the vocals change a little.</string>
     <string name="home_xtc_hint_clear">The widest. Best when your head is where it is set for.</string>
+    <string name="home_xtc_hint_off">Turn it on to widen left and right with the chosen preset.</string>
     <string name="home_xtc_hint_custom">A combination chosen in the advanced settings.</string>
     <string name="home_xtc_distance">Listening distance</string>
     <string name="home_xtc_distance_value">%1$d cm</string>
@@ -53,4 +54,25 @@
     <string name="home_xtc_head_m">Medium</string>
     <string name="home_xtc_head_l">Large</string>
     <string name="home_xtc_head_hint">Go by hat size: small about 54 cm, medium about 57 cm, large about 60 cm.</string>
+    <string name="home_xtc_info_open">About spatial</string>
+    <string name="home_xtc_info_title">How does spatial work?</string>
+    <string name="home_xtc_info_close">Close</string>
+    <string-array name="home_xtc_info">
+        <item>Why phone stereo sounds narrow</item>
+        <item>The two phone speakers are about 15 cm apart. The left speaker does not only reach your left ear: its sound bends around your head and reaches the right ear almost as loud. The same goes for the right speaker. This leak to the other ear is called crosstalk.\n\nWith both ears hearing nearly the same thing, your brain places the sound in a small spot in the middle of the phone. A song that spreads wide on earphones gathers into the centre on the phone.</item>
+        <item>Cancelling the leak in advance</item>
+        <item>Spatial (XTC, crosstalk cancellation) sends an upside-down copy of the leak from the other speaker. Just as the left speaker reaches the right ear, the right speaker plays the same sound inverted and a little later, and the two cancel near the right ear.\n\nThat inverted sound leaks to the left ear too, so another one cancels it, and so on. The calculation repeats, each round weaker, and dies away quickly.</item>
+        <item>Where the idea comes from</item>
+        <item>It goes back to Atal and Schroeder at Bell Labs in the 1960s. Rootnote builds on RACE, which Ralph Glasgal published in 2007: two loudspeakers placed close together, seen at nearly the same angle as a phone at 30-50 cm.\n\nCommercial systems such as Dolby Atmos do similar things on phone speakers. Rootnote uses only published methods and its own code.</item>
+        <item>Why it asks for distance and head size</item>
+        <item>To cancel well, the inverted sound has to come at the right moment. The left speaker reaches the right ear about 0.1 ms after the left ear, and that time depends on the distance to the phone and the size of your head.\n\nNo need to measure your head: a standard head (hat about 57 cm) is the default, and small / medium / large by hat size is enough. The distance matters much more than the head size.</item>
+        <item>Where it sounds best</item>
+        <item>The inverted sound has to meet the leak right at your ears, so the best spot is small. Hold the phone sideways with your face in front of the screen. Turning your head or tilting the phone only weakens the effect; it does not break the sound.</item>
+        <item>It leaves the bass alone</item>
+        <item>Low notes have long wavelengths; cancelling them would need a lot of boost, which strains the speakers and fights the virtual bass. So spatial works only from about 400 Hz to 8 kHz, where voices and instruments get their place. Virtual bass and spatial each look after their own range.</item>
+        <item>Presets</item>
+        <item>Subtle: only the parts that differ left and right, so the vocals in the centre keep their tone.\nBalanced: the centre too, so it gets wider; the vocals change a little.\nClear: the strongest. In the right spot the sound spreads out to beside your ears.</item>
+        <item>Honest limits</item>
+        <item>How much less the sides blend is calculated with a computer model (about 3-10 dB in the mid range). Ears and heads differ, so the feel differs too. Videos and calls with everything in the centre change little.\n\nIt switches off by itself on earphones or Bluetooth and during blind comparisons and measurements.</item>
+    </string-array>
 </resources>

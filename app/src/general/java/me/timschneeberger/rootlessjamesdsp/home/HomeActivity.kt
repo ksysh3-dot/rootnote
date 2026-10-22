@@ -111,8 +111,17 @@ class HomeActivity : BaseActivity() {
             refresh()
         },
         onXtc = { on ->
-            if (on) writeXtcPreset(HomeLogic.xtcOnWrite(PvbSettings.load(prefs).xtcStrengthDb))
-            else prefs.edit().putString(PvbSettings.KEY_XTC_MODE, PvbSettings.XTC_OFF.toString()).apply()
+            if (on) {
+                val last = try { prefs.getString(PvbSettings.KEY_XTC_LAST_MODE, null)?.toIntOrNull() } catch (_: ClassCastException) { null }
+                val mode = HomeLogic.xtcResumeMode(last)
+                if (mode != null) prefs.edit().putString(PvbSettings.KEY_XTC_MODE, mode.toString()).apply()
+                else writeXtcPreset(HomeLogic.XtcPreset.BALANCED)
+            } else {
+                prefs.edit()
+                    .putString(PvbSettings.KEY_XTC_LAST_MODE, PvbSettings.load(prefs).xtcMode.toString())
+                    .putString(PvbSettings.KEY_XTC_MODE, PvbSettings.XTC_OFF.toString())
+                    .apply()
+            }
         },
         onXtcPreset = { preset -> if (preset != HomeLogic.XtcPreset.CUSTOM) writeXtcPreset(preset) },
         onXtcDistance = { step ->
@@ -263,6 +272,8 @@ class HomeActivity : BaseActivity() {
             linkLine = HomeLogic.linkLine(s, index, max),
             killBanner = KillWatch.showBanner(PvbBuild.general, kill, shownRunning, s.enabled),
             xtcOn = s.xtcMode != PvbSettings.XTC_OFF,
+            processingOn = HomeLogic.headline(s, shownRunning) != HomeLogic.Headline.ORIGINAL,
+            xtcDistanceCm = s.xtcDistanceCm.toInt(),
             xtcPreset = HomeLogic.xtcPreset(s.xtcMode, s.xtcStrengthDb),
             xtcDistanceStep = HomeLogic.xtcDistanceStep(s.xtcDistanceCm),
             xtcDistanceSteps = HomeLogic.xtcDistanceSteps(),

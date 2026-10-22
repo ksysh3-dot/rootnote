@@ -166,8 +166,10 @@ fun main(args: Array<String>) {
     expect(HomeLogic.xtcPreset(PvbSettings.XTC_FULL, -3f) == HomeLogic.XtcPreset.CLEAR, "spatial clear")
     expect(HomeLogic.xtcPreset(PvbSettings.XTC_FULL, -6f) == HomeLogic.XtcPreset.CUSTOM, "spatial full + gentle = custom")
     expect(HomeLogic.xtcPreset(PvbSettings.XTC_OFF, -6f) == HomeLogic.XtcPreset.CUSTOM, "spatial off = no preset")
-    expect(HomeLogic.xtcOnWrite(-6f) == HomeLogic.XtcPreset.BALANCED && HomeLogic.xtcOnWrite(-3f) == HomeLogic.XtcPreset.CLEAR,
-        "spatial on: balanced, or the stored full-mode strength")
+    expect(HomeLogic.xtcResumeMode(PvbSettings.XTC_CENTRE) == PvbSettings.XTC_CENTRE &&
+        HomeLogic.xtcResumeMode(PvbSettings.XTC_FULL) == PvbSettings.XTC_FULL &&
+        HomeLogic.xtcResumeMode(PvbSettings.XTC_OFF) == null && HomeLogic.xtcResumeMode(null) == null && HomeLogic.xtcResumeMode(7) == null,
+        "spatial on again: the mode it had (subtle stays subtle), else none (balanced)")
     expect(HomeLogic.xtcDistanceSteps() == 7 && HomeLogic.xtcDistanceStep(40f) == 3 && HomeLogic.xtcDistanceCm(3) == 40 &&
         HomeLogic.xtcDistanceStep(99f) == 7 && HomeLogic.xtcDistanceCm(0) == 25, "distance slider 25..60 cm in 5 cm steps")
     expect(PvbSettings().xtcMode == PvbSettings.XTC_OFF, "spatial off by default")

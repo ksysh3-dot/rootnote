@@ -302,6 +302,8 @@ class PvbEngine(sampleRate: Int) : AutoCloseable {
             0f,               // upper roll-off offset, dB/oct
             0f, 0f,           // sustained / percussive path, dB
             32f / 3f, 32f,    // attack (2 hops), release (6 hops), ms
+            0f, -6f, 40f, 57f, // crosstalk cancellation off; gentle, 40 cm, standard head (hat 57 cm)
+            15.5f, 400f, 8000f, // speaker spacing, feedback band
         )
     }
 }
