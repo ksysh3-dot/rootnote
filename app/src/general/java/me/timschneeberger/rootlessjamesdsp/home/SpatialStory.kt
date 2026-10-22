@@ -17,6 +17,10 @@ import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -42,7 +46,9 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.State
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -64,7 +70,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.setProgress
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
@@ -93,7 +104,7 @@ import kotlin.math.sin
  *
  * Layout: progress dots and close on top; the stage (about 60 %) and the scene's heading and text (scrolls with
  * large fonts); previous / next at the bottom; swiping also turns the page. Motion tokens are the home screen's:
- * iOS easing, 300 ms colour changes, sequential text fades.
+ * iOS easing and 300 ms colour changes. The scene clock is read only while drawing (no recomposition per frame).
  */
 
 @Immutable
@@ -131,6 +142,7 @@ fun SpatialStory(state: StoryState, onListen: (Boolean) -> Unit, onClose: () -> 
                 stringResource(R.string.home_xtc_info_title),
                 modifier = Modifier.weight(1f).semantics { heading() },
                 color = c.textPrimary, fontSize = 16.sp, lineHeight = 22.sp, fontWeight = FontWeight.Bold,
+                maxLines = 1, overflow = TextOverflow.Ellipsis,
             )
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                 for (i in 0 until SCENES) {
@@ -255,7 +267,9 @@ private fun ListenControl(state: StoryState, onListen: (Boolean) -> Unit) {
         ) {
             for ((on, label) in listOf(false to R.string.story_listen_off, true to R.string.story_listen_on)) {
                 val selected = state.listening == on
-                val bg by animateColorAsState(if (selected) c.bg else c.band, tween(300, easing = Ease), label = "listenBg")
+                val bg by animateColorAsState(
+                    if (selected) c.bg else c.band, tween(if (state.reduceMotion) 0 else 300, easing = Ease), label = "listenBg",
+                )
                 Box(
                     Modifier
                         .heightIn(min = 48.dp)
@@ -285,17 +299,18 @@ private class StageColors(val left: Color, val right: Color, val ink: Color, val
 @Composable
 private fun Scene(page: Int, state: StoryState, active: Boolean) {
     val c = rootnotePalette()
-    val colors = StageColors(c.fill, c.xtcFill, c.textPrimary, c.textSecondary, c.chipBorder, c.bg)
+    val colors = remember(c) { StageColors(c.fill, c.xtcFill, c.textPrimary, c.textSecondary, c.chipBorder, c.bg) }
     val periods = intArrayOf(2600, 3000, 4200, 1, 4000, 2400, 1, 2600)
-    // One shared clock per scene (0..1, looping); still key frame with the animations off or off-screen.
-    val t = if (state.reduceMotion || !active || periods[page] <= 1) {
-        KEY_FRAMES[page]
+    // One clock per scene (0..1, looping, starting at the scene's key frame so a page that becomes active does not
+    // jump); a still key frame with the animations off or off-screen. Read only inside the Canvas (draw phase).
+    val clock: State<Float> = if (state.reduceMotion || !active || periods[page] <= 1) {
+        remember(page) { androidx.compose.runtime.mutableFloatStateOf(KEY_FRAMES[page]) }
     } else {
         val inf = rememberInfiniteTransition(label = "scene$page")
-        val v by inf.animateFloat(
-            0f, 1f, infiniteRepeatable(tween(periods[page], easing = LinearEasing), RepeatMode.Restart), label = "t$page",
+        inf.animateFloat(
+            KEY_FRAMES[page], KEY_FRAMES[page] + 1f,
+            infiniteRepeatable(tween(periods[page], easing = LinearEasing), RepeatMode.Restart), label = "t$page",
         )
-        v
     }
     val description = stringArrayResource(R.array.story_scene_a11y).getOrElse(page) { "" }
     val measurer = rememberTextMeasurer()
@@ -303,6 +318,7 @@ private fun Scene(page: Int, state: StoryState, active: Boolean) {
         3 -> DistanceScene(state, colors, description)
         6 -> PresetScene(state, colors, description)
         else -> Canvas(Modifier.fillMaxSize().padding(12.dp).semantics { contentDescription = description }) {
+            val t = clock.value % 1f
             when (page) {
                 0 -> sceneLeak(t, colors)
                 1 -> sceneCancel(t, colors)
@@ -482,24 +498,27 @@ private fun DrawScope.sceneOrigin(t: Float, col: StageColors, measurer: androidx
         val x = size.width * (0.15f + 0.35f * i)
         val lit = now > i * 0.35f
         drawCircle(if (lit) col.right else col.line, 5.dp.toPx(), Offset(x, ty))
-        val r = measurer.measure(label, TextStyle(fontSize = 11.sp, color = if (lit) col.ink else col.soft))
+        val r = measurer.measure(label, TextStyle(fontSize = 11.dp.toSp(), color = if (lit) col.ink else col.soft))
         drawText(r, topLeft = Offset(x - r.size.width / 2f, ty - 10.dp.toPx() - r.size.height))
     }
 }
 
 /** 4: distance and head size (interactive): the delay follows the distance much more than the head size. */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun DistanceScene(state: StoryState, col: StageColors, description: String) {
     val c = rootnotePalette()
-    var dist by remember { mutableFloatStateOf(state.distanceCm.toFloat()) }
-    var hat by remember { mutableIntStateOf(state.hatCm) }
+    var dist by rememberSaveable { mutableFloatStateOf(state.distanceCm.toFloat()) }
+    var hat by rememberSaveable { mutableIntStateOf(state.hatCm) }
     val spacing = 15.5f
     val radius = 0.0875f * hat / 57f
     val theta = atan((spacing * 0.005f) / (dist * 0.01f))
     val delayMs = radius / 343f * (theta + sin(theta)) * 1000f
     val degrees = (2 * theta * 180f / PI.toFloat()).roundToInt()
-    Column(Modifier.fillMaxSize().padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Canvas(Modifier.weight(1f).fillMaxWidth().semantics { contentDescription = description }) {
+    BoxWithConstraints(Modifier.fillMaxSize().padding(12.dp)) {
+    val stageH = maxHeight * 0.62f
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Canvas(Modifier.height(stageH).fillMaxWidth().semantics { contentDescription = description }) {
             val s = Stage(size.width, size.height, distanceScale = dist / 40f * 0.75f, headScale = hat / 57f)
             val apex = Offset(s.cx, s.headY - s.headR)
             drawLine(col.left.copy(alpha = 0.7f), s.spL, apex, 2.dp.toPx())
@@ -515,14 +534,15 @@ private fun DistanceScene(state: StoryState, col: StageColors, description: Stri
         DragBar(
             value = (dist - 25f) / 35f,
             label = stringResource(R.string.home_xtc_distance),
+            valueText = "${dist.roundToInt()} cm",
             fill = c.xtcFill, track = c.sliderInactive, thumb = c.thumb,
         ) { f -> dist = 25f + 35f * f }
-        Row(Modifier.selectableGroup(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FlowRow(Modifier.selectableGroup(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             for ((h, label) in listOf(54 to R.string.home_xtc_head_s, 57 to R.string.home_xtc_head_m, 60 to R.string.home_xtc_head_l)) {
                 val sel = hat == h
                 Box(
                     Modifier
-                        .heightIn(min = 40.dp)
+                        .heightIn(min = 48.dp)
                         .background(if (sel) c.xtcChipSelectedBg else c.chipBg, CircleShape)
                         .border(1.dp, if (sel) c.xtcChipSelectedBorder else c.chipBorder, CircleShape)
                         .selectable(selected = sel, role = Role.RadioButton) { hat = h }
@@ -534,28 +554,39 @@ private fun DistanceScene(state: StoryState, col: StageColors, description: Stri
             }
         }
     }
+    }
 }
 
 /** A plain drag bar (0..1) for the distance demo; tap or drag. */
 @Composable
-private fun DragBar(value: Float, label: String, fill: Color, track: Color, thumb: Color, onChange: (Float) -> Unit) {
+private fun DragBar(value: Float, label: String, valueText: String, fill: Color, track: Color, thumb: Color, onChange: (Float) -> Unit) {
     var width by remember { mutableFloatStateOf(1f) }
+    var inset by remember { mutableFloatStateOf(0f) }
+    fun at(x: Float) = ((x - inset) / (width - 2 * inset).coerceAtLeast(1f)).coerceIn(0f, 1f)
     Box(
         Modifier
             .fillMaxWidth()
-            .heightIn(min = 40.dp)
+            .heightIn(min = 48.dp)
             .onSizeChanged { width = it.width.toFloat().coerceAtLeast(1f) }
-            .pointerInput(Unit) { detectTapGestures(onTap = { onChange((it.x / width).coerceIn(0f, 1f)) }) }
+            .pointerInput(Unit) {
+                inset = 12.dp.toPx()
+                detectTapGestures(onTap = { onChange(at(it.x)) })
+            }
             .pointerInput(Unit) {
                 detectHorizontalDragGestures { change, _ ->
                     change.consume()
-                    onChange((change.position.x / width).coerceIn(0f, 1f))
+                    onChange(at(change.position.x))
                 }
             }
-            .semantics { contentDescription = label },
+            .semantics(mergeDescendants = true) {
+                contentDescription = label
+                stateDescription = valueText
+                progressBarRangeInfo = ProgressBarRangeInfo(value.coerceIn(0f, 1f), 0f..1f, steps = 34)
+                setProgress { v -> onChange(v.coerceIn(0f, 1f)); true }
+            },
         contentAlignment = Alignment.CenterStart,
     ) {
-        Canvas(Modifier.fillMaxWidth().heightIn(min = 40.dp)) {
+        Canvas(Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
             val y = size.height / 2f
             val r = 12.dp.toPx()
             drawLine(track, Offset(r, y), Offset(size.width - r, y), 4.dp.toPx(), StrokeCap.Round)
@@ -603,8 +634,9 @@ private fun DrawScope.sceneBand(t: Float, col: StageColors, measurer: androidx.c
     drawRoundRect(col.left, Offset(xOf(20f), y), Size((xOf(400f) - xOf(20f)) * grow, h), CornerRadius(h / 2f))
     drawRoundRect(col.right, Offset(xOf(400f), y), Size((xOf(8000f) - xOf(400f)) * grow, h), CornerRadius(h / 2f))
     for ((f, label) in listOf(20f to "20 Hz", 400f to "400 Hz", 8000f to "8 kHz", 20000f to "20 kHz")) {
-        val r = measurer.measure(label, TextStyle(fontSize = 11.sp, color = col.soft))
-        drawText(r, topLeft = Offset((xOf(f) - r.size.width / 2f).coerceIn(0f, size.width - r.size.width), y + h + 6.dp.toPx()))
+        val r = measurer.measure(label, TextStyle(fontSize = 11.dp.toSp(), color = col.soft))
+        val x = (xOf(f) - r.size.width / 2f).coerceAtMost(size.width - r.size.width).coerceAtLeast(0f)
+        drawText(r, topLeft = Offset(x, y + h + 6.dp.toPx()))
     }
     // a long bass wave over the teal part, short waves over the purple part
     val shift = t * 2f * PI.toFloat()
@@ -622,18 +654,21 @@ private fun DrawScope.sceneBand(t: Float, col: StageColors, measurer: androidx.c
 }
 
 /** 7: presets (interactive): the centre dot (vocals) and the side dots (instruments) spread differently. */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun PresetScene(state: StoryState, col: StageColors, description: String) {
     val c = rootnotePalette()
-    var preset by remember { mutableIntStateOf(1) }
+    var preset by rememberSaveable { mutableIntStateOf(1) }
     val spread by animateFloatAsState(
         when (preset) { 0 -> 0.55f; 1 -> 0.8f; else -> 1f }, tween(if (state.reduceMotion) 0 else 450, easing = Ease), label = "spread",
     )
     val tint by animateFloatAsState(
         when (preset) { 0 -> 0f; 1 -> 0.4f; else -> 0.6f }, tween(if (state.reduceMotion) 0 else 450, easing = Ease), label = "tint",
     )
-    Column(Modifier.fillMaxSize().padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Canvas(Modifier.weight(1f).fillMaxWidth().semantics { contentDescription = description }) {
+    BoxWithConstraints(Modifier.fillMaxSize().padding(12.dp)) {
+    val stageH = maxHeight * 0.7f
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Canvas(Modifier.height(stageH).fillMaxWidth().semantics { contentDescription = description }) {
             val s = Stage(size.width, size.height)
             phone(s, col)
             head(s, col)
@@ -649,12 +684,12 @@ private fun PresetScene(state: StoryState, col: StageColors, description: String
             drawCircle(centre.copy(alpha = 0.2f), s.unit * 0.42f, Offset(s.cx, y))
             drawCircle(centre, s.unit * 0.22f, Offset(s.cx, y))
         }
-        Row(Modifier.selectableGroup(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FlowRow(Modifier.selectableGroup(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             for ((i, label) in listOf(R.string.home_xtc_chip_subtle, R.string.home_xtc_chip_balanced, R.string.home_xtc_chip_clear).withIndex()) {
                 val sel = preset == i
                 Box(
                     Modifier
-                        .heightIn(min = 40.dp)
+                        .heightIn(min = 48.dp)
                         .background(if (sel) c.xtcChipSelectedBg else c.chipBg, CircleShape)
                         .border(1.dp, if (sel) c.xtcChipSelectedBorder else c.chipBorder, CircleShape)
                         .selectable(selected = sel, role = Role.RadioButton) { preset = i }
@@ -665,6 +700,7 @@ private fun PresetScene(state: StoryState, col: StageColors, description: String
                 }
             }
         }
+    }
     }
 }
 

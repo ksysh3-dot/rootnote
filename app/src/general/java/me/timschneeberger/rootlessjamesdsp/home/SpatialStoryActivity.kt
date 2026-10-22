@@ -71,7 +71,8 @@ class SpatialStoryActivity : BaseActivity() {
         reduceMotion = try {
             Settings.Global.getFloat(contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
         } catch (_: Exception) { false }
-        running = BaseAudioProcessorService.activeServices > 0
+        // Listening only makes sense while our engine plays on the speaker (not bypassed, not in a comparison).
+        running = BaseAudioProcessorService.activeServices > 0 && PvbRuntime.status.processing && !PvbRuntime.abActive
     }
 
     override fun onStop() {
