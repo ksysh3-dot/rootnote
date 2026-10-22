@@ -71,6 +71,7 @@ import me.timschneeberger.rootlessjamesdsp.utils.sdkAbove
 import org.koin.android.ext.android.inject
 import timber.log.Timber
 import java.io.IOException
+import java.util.concurrent.locks.LockSupport
 import org.json.JSONObject
 
 
@@ -406,6 +407,7 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
         override fun onSessionChanged(sessionList: HashMap<Int, IEffectSession>) {
             isProcessorIdle = sessionList.size == 0
             Timber.d("onSessionChanged: isProcessorIdle=$isProcessorIdle")
+            worker?.wake()
 
             notificationSessions = sessionList.values.toTypedArray()
 
@@ -470,6 +472,7 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
             getString(R.string.key_powersave_suspend) -> {
                 suspendOnIdle = preferences.get<Boolean>(R.string.key_powersave_suspend)
                 Timber.d("Suspend on idle set to $suspendOnIdle")
+                worker?.wake()
             }
             getString(R.string.key_session_exclude_restricted) -> {
                 excludeRestrictedSessions = preferences.get<Boolean>(R.string.key_session_exclude_restricted)
@@ -669,6 +672,12 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
         @Volatile private var trackGeneration = 0
         @Volatile private var lastGainResult = AudioTrack.SUCCESS
         val thread = Thread(this, "pvb-audio")
+        // Battery: output paused after a long silence (audio thread only; see SilenceGate)
+        private val silenceGate = SilenceGate.forRate(sampleRate)
+        private var outputPaused = false
+
+        /** Any thread: ends an idle wait early (sessions or the power-save setting changed). */
+        fun wake() = LockSupport.unpark(thread)
 
         fun setDiagnosticGain(gain: Float) {
             try { lastGainResult = track.setVolume(gain) }
@@ -792,6 +801,8 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
                 track = newTrack
                 ++trackGeneration
                 writtenSamples = 0
+                silenceGate.reset()
+                outputPaused = false
                 try { newTrack.setVolume(diagnosticGain) } catch (_: Exception) {}
             }
             Timber.d("Track recreated")
@@ -893,7 +904,12 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
                     // PVB holds audio from before the pause in its delay lines; start clean on resume
                     pvbWasActive = false
                     carry = 0
-                    if (!pause(50)) return
+                    silenceGate.reset()
+                    outputPaused = false
+                    // Wait for a session (onSessionChanged wakes this thread) instead of polling every 50 ms; the
+                    // timeout still notices a developer-mode test sound.
+                    LockSupport.parkNanos(IDLE_WAIT_NS)
+                    if (stopRequested) return
                     continue
                 }
                 historySuspended = false
@@ -903,15 +919,16 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
                     if (stopRequested) return
                     if(recorder.recordingState == AudioRecord.RECORDSTATE_STOPPED)
                         recorder.startRecording()
-                    if(track.playState != AudioTrack.PLAYSTATE_PLAYING)
+                    if(!outputPaused && track.playState != AudioTrack.PLAYSTATE_PLAYING)
                         track.play()
                 }
 
                 // Route of this block: JamesDSP alone (PVB not in the path), PVB alone (no JamesDSP effect on, or a
                 // research mode: blind comparison, measurement, buzz diagnostics), or JamesDSP effects -> PVB.
+                val research = PvbRuntime.abActive || PvbRuntime.measuring || buzzDiagnostics.armed
                 val route = JdspChain.route(
                     pvbInPath = pvbController.isActive,
-                    research = PvbRuntime.abActive || PvbRuntime.measuring || buzzDiagnostics.armed,
+                    research = research,
                     jdspEffects = engine.hasEffects,
                 )
                 val pvbActive = route.pvb
@@ -944,11 +961,26 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
                 // Whole stereo frames only; an odd trailing sample waits for the next read
                 val total = carry + got
                 val samples = PcmPump.wholeFrames(carry, got)
+                var inputSilent = false
                 if (samples > 0) {
                     // Developer mode (general build): a test sound replaces the captured music, so it takes the same
                     // engine and speaker path. Nothing changes while none plays.
                     if (isShort) me.timschneeberger.rootlessjamesdsp.pvb.DevTestSound.render(shortBuffer, samples / 2, sampleRate)
                     else me.timschneeberger.rootlessjamesdsp.pvb.DevTestSound.render(floatBuffer, samples / 2, sampleRate)
+                    inputSilent = if (isShort) SilenceGate.isSilent(shortBuffer, samples) else SilenceGate.isSilent(floatBuffer, samples)
+                }
+                // Long silence: the output rests and nothing is processed until sound comes back (never in a
+                // research mode or with a test sound; follows the power-save setting like the idle suspension).
+                val pauseAllowed = suspendOnIdle && !research && !me.timschneeberger.rootlessjamesdsp.pvb.DevTestSound.playing
+                if (samples > 0 && !silenceGate.skip(inputSilent, pauseAllowed)) {
+                    if (outputPaused) {
+                        synchronized(ioLock) {
+                            if (stopRequested) return
+                            track.play()
+                        }
+                        outputPaused = false
+                        Timber.d("Output resumed")
+                    }
                     val diagnosticRing = buzzDiagnostics.ring
                     val detailed = diagnosticRing?.detailed == true && !diagnosticRing.frozen
                     pvbEngine.setDiagnosticCapture(detailed && pvbActive)
@@ -991,6 +1023,18 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
                             if (haveDetail) diagnosticTrace else null, android.os.SystemClock.elapsedRealtimeNanos(),
                             if (harmonicRows >= 0) harmonicTrace else null, harmonicRows)
                         if (!writeAll(floatOutBuffer, samples)) return
+                    }
+                    val outputSilent = if (isShort) SilenceGate.isSilent(shortOutBuffer, samples)
+                        else SilenceGate.isSilent(floatOutBuffer, samples)
+                    if (silenceGate.afterBlock(inputSilent && outputSilent, samples / 2, pauseAllowed)) {
+                        // Pause (not stop): the little silence still queued plays first when it resumes.
+                        synchronized(ioLock) {
+                            if (stopRequested) return
+                            try { track.pause() } catch (ignored: Exception) {}
+                        }
+                        outputPaused = true
+                        buzzDiagnostics.audioDiscontinuity("output_paused_silence")
+                        Timber.d("Output paused: silence")
                     }
                 }
                 carry = if (isShort) PcmPump.keepCarry(shortBuffer, total, samples)
@@ -1102,6 +1146,8 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
         /** Failed or empty reads/writes in a row before the recorder/track is recreated. */
         private const val MAX_IO_FAILURES = 50
         private const val IO_RETRY_MS = 10L
+        /** Longest idle wait (no session) before the loop looks again; session changes wake it at once. */
+        private const val IDLE_WAIT_NS = 250_000_000L
         /** Zero-length blocking writes (track paused or interrupted) before the rest of a block is dropped. */
         private const val MAX_EMPTY_WRITES = 3
 

@@ -20,6 +20,11 @@ OUTP="$HERE/../build/jvm-pump"
 rm -rf "$OUTP"; mkdir -p "$OUTP"
 $KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/../../../app/src/main/java/me/timschneeberger/rootlessjamesdsp/service/PcmPump.kt" "$HERE/PcmPumpTest.kt" -d "$OUTP"
 java -cp "$OUTP:$KOTLIN_STDLIB" PcmPumpTestKt
+# service silence pause (battery; pure Kotlin)
+OUTG="$HERE/../build/jvm-silence"
+rm -rf "$OUTG"; mkdir -p "$OUTG"
+$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/../../../app/src/main/java/me/timschneeberger/rootlessjamesdsp/service/SilenceGate.kt" "$HERE/SilenceGateTest.kt" -d "$OUTG"
+java -cp "$OUTG:$KOTLIN_STDLIB" SilenceGateTestKt
 # archive and import path checks (pure Kotlin)
 OUTS="$HERE/../build/jvm-safepaths"
 rm -rf "$OUTS"; mkdir -p "$OUTS"
