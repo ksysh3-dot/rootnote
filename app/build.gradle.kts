@@ -45,8 +45,13 @@ val generalPasswords: Pair<String, String>? = generalKeystore?.let { store ->
         for (kp in keyCandidates) {
             val ok = try { ks.getKey(alias, kp.toCharArray()) != null } catch (e: Exception) { false }
             if (ok) {
-                if (kp != System.getenv("GENERAL_KEY_PASSWORD"))
+                if (kp != System.getenv("GENERAL_KEY_PASSWORD")) {
                     logger.warn("PVB: GENERAL_KEY_PASSWORD does not open the key as given; using the password that does")
+                    if (System.getenv("GITHUB_ACTIONS") == "true")
+                        println("::warning title=General signing::GENERAL_KEY_PASSWORD does not open the key as given; a fallback password was used")
+                } else if (System.getenv("GITHUB_ACTIONS") == "true") {
+                    println("::notice title=General signing::GENERAL_KEY_PASSWORD opens the release key as given")
+                }
                 return@let sp to kp
             }
         }
