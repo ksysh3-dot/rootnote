@@ -90,6 +90,35 @@ fun main() {
         g.reset()
         check("reset clears the pause", !g.paused && !g.skip(true, true))
     }
+    // 7. Deep sleep: due only after the chosen rest, counted from the pause; off at 0; rearm() restarts the count.
+    run {
+        val g = SilenceGate.forRate(rate)
+        val deep = SilenceGate.deepFrames("30", rate)
+        check("setting 30 = 30 s of frames", deep == 30L * rate)
+        check("setting 0 / junk / negative = off", SilenceGate.deepFrames("0", rate) == 0L &&
+            SilenceGate.deepFrames("x", rate) == 0L && SilenceGate.deepFrames(null, rate) == 0L &&
+            SilenceGate.deepFrames("-5", rate) == 0L)
+        var dueAt = -1
+        var i = 0
+        while (i < 2000 && dueAt < 0) {
+            if (g.skip(true, true, frames)) { if (g.deepDue(deep)) dueAt = i }
+            else g.afterBlock(true, frames, true)
+            i++
+        }
+        val skippedBlocks = dueAt - (blocksToPause - 1)
+        check("deep sleep due after 30 s of rest", skippedBlocks.toLong() * frames >= deep &&
+            (skippedBlocks - 1).toLong() * frames < deep, "dueAt=$dueAt")
+        check("never due when off", !g.deepDue(0))
+        g.rearm()
+        check("rearm: not due again until the full time", g.paused && !g.deepDue(deep))
+        g.skip(false, true, frames)
+        check("sound resumes and clears the rest count", !g.paused && g.pausedFrames == 0L && !g.deepDue(deep))
+        val g2 = SilenceGate.forRate(rate)
+        repeat(blocksToPause) { g2.afterBlock(true, frames, true) }
+        repeat(10) { g2.skip(true, true, frames) }
+        g2.reset()
+        check("reset clears the rest count", g2.pausedFrames == 0L)
+    }
     if (failed > 0) {
         println("SilenceGateTest: $failed failed")
         exitProcess(1)

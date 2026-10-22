@@ -35,6 +35,15 @@
             app:summaryOff="@string/powersave_suspend_off"
             app:summaryOn="@string/powersave_suspend_on"
             app:iconSpaceReserved="false" />
+        <ListPreference
+            app:key="@string/key_powersave_deep"
+            app:title="@string/powersave_deep"
+            app:summary="@string/powersave_deep_summary"
+            app:entries="@array/powersave_deep_entries"
+            app:entryValues="@array/powersave_deep_values"
+            app:defaultValue="@string/default_powersave_deep"
+            app:dependency="@string/key_powersave_suspend"
+            app:iconSpaceReserved="false" />
     </PreferenceCategory>
 
 
