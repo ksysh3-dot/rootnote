@@ -1,4 +1,5 @@
 // Host JVM test of the service's silence pause (battery): when it pauses, when it resumes, what counts as silence.
+// (The service processes every block; the gate only decides which processed blocks are written.)
 import me.timschneeberger.rootlessjamesdsp.service.SilenceGate
 import kotlin.system.exitProcess
 
@@ -9,7 +10,7 @@ private fun check(name: String, ok: Boolean, info: String = "") {
 }
 
 /** Simulates the loop: one block per entry (true = silent input and output). Returns the block index of each pause
- *  and resume, and which blocks were skipped. */
+ *  and resume, and which blocks were not written. */
 private fun run(gate: SilenceGate, blocks: List<Boolean>, frames: Int, allowed: (Int) -> Boolean = { true }): Triple<List<Int>, List<Int>, List<Int>> {
     val pauses = ArrayList<Int>()
     val resumes = ArrayList<Int>()
@@ -36,7 +37,7 @@ fun main() {
         val (p, r, s) = run(g, blocks, frames)
         check("pauses once after the hold", p == listOf(10 + blocksToPause - 1), "pauses=$p")
         check("no resume while silent", r.isEmpty())
-        check("silent blocks after the pause are skipped", s == (10 + blocksToPause until 70).toList(), "skipped=${s.size}")
+        check("silent blocks after the pause are not written", s == (10 + blocksToPause until 70).toList(), "skipped=${s.size}")
         check("hold is at least 2 s", blocksToPause.toLong() * frames >= hold && (blocksToPause - 1).toLong() * frames < hold)
     }
     // 2. Sound comes back: the first sounding block resumes and is processed; a new silence needs the full hold.
@@ -45,7 +46,7 @@ fun main() {
         val blocks = List(30) { true } + List(3) { false } + List(30) { true }
         val (p, r, s) = run(g, blocks, frames)
         check("pause, resume on the first sound, pause again", p == listOf(blocksToPause - 1, 33 + blocksToPause - 1) && r == listOf(30), "p=$p r=$r")
-        check("the sounding blocks are never skipped", s.none { it in 30..32 })
+        check("the sounding blocks are always written", s.none { it in 30..32 })
     }
     // 3. Gaps shorter than the hold (between songs) never pause.
     run {

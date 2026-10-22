@@ -6,9 +6,10 @@
 //
 // Method: the medium-range reduction of fdlibm / FreeBSD msun (e_rem_pio2.c: x - n pi/2 with pi/2 split in two parts,
 // the reduced argument kept as a head and a tail) and their kernels on [-pi/4, pi/4] (k_sin.c, k_cos.c, minimax
-// polynomials, error < 1 ulp). Within |x| <= 1000 (every caller stays far below) the result is within 0.8 ulp of the
-// correctly rounded value, against 0.52 ulp for glibc (tools/pvb-harness/fastmath_check.cpp); larger arguments lose
-// accuracy gradually (one-step reduction).
+// polynomials, error < 1 ulp). Within |x| <= 1000 (every caller stays far below) a result is within 0.8 ulp of the
+// correctly rounded value, against 0.52 ulp for glibc, except right next to a zero (x near a multiple of pi / 2),
+// where the one-step reduction leaves an absolute error below 1e-23 instead (tools/pvb-harness/fastmath_check.cpp).
+// Larger arguments lose accuracy gradually.
 //
 // fdlibm: Copyright (C) 1993 by Sun Microsystems, Inc. All rights reserved. Developed at SunSoft, a Sun Microsystems,
 // Inc. business. Permission to use, copy, modify, and distribute this software is freely granted, provided that this

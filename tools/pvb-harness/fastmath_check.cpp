@@ -54,8 +54,8 @@ int main() {
     std::printf("next to multiples of pi/2 (|x| < 950): largest absolute error %.2e\n", nearAxis);
     double s0, c0;
     pvb::fastmath::sincos(0.0, s0, c0);
-    check(worst < 1.0, "within 1 ulp for |x| < 1000");
-    check(nearAxis < 1e-20, "accurate next to the zeros (absolute error < 1e-20)");
+    check(worst < 1.0, "within 1 ulp for |x| < 1000 (random arguments)");
+    check(nearAxis < 1e-23, "next to the zeros: absolute error < 1e-23");
     check(s0 == 0.0 && c0 == 1.0, "sin 0 = 0, cos 0 = 1");
     std::printf(failures ? "fastmath_check: %d FAILED\n" : "fastmath_check: all passed\n", failures);
     return failures ? 1 : 0;

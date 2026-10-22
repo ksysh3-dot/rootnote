@@ -388,7 +388,10 @@ public:
     static constexpr int kMaxLookahead = 300;  // 1.5 ms up to 192 kHz
     static constexpr int kDelayLen = kDetectDelay + kMaxLookahead + 1;
 
-    TruePeakLimiter() { initInterpolator(); }
+    TruePeakLimiter() {
+        initInterpolator();
+        reset();  // consistent state (rRing_ / rMin_) even before configure()
+    }
 
     void configure(double fs, double lookaheadMs) {
         fs_ = fs;

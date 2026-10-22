@@ -810,6 +810,32 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
             return true
         }
 
+        /** Restarts the track paused by the silence gate; a track that cannot play is rebuilt. False = stop. */
+        private fun resumeOutput(): Boolean {
+            outputPaused = false
+            if (playTrack()) {
+                Timber.d("Output resumed")
+                return true
+            }
+            if (stopRequested || !replaceTrack()) return false
+            if (playTrack()) return true
+            if (!stopRequested) requestServiceStop()
+            return false
+        }
+
+        private fun playTrack(): Boolean {
+            synchronized(ioLock) {
+                if (stopRequested) return false
+                try {
+                    track.play()
+                } catch (e: Exception) {
+                    Timber.w(e, "Could not start the output track")
+                    return false
+                }
+            }
+            return true
+        }
+
         /** A failed or empty read: retry after a short pause, recreate the recorder after many in a row. */
         private fun onReadProblem(code: Int, failures: Int): Boolean {
             ++readProblems; lastReadCode = code
@@ -909,7 +935,8 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
                     // Wait for a session (onSessionChanged wakes this thread) instead of polling every 50 ms; the
                     // timeout still notices a developer-mode test sound.
                     LockSupport.parkNanos(IDLE_WAIT_NS)
-                    if (stopRequested) return
+                    // parkNanos keeps the interrupt flag (sleep threw): an interrupt ends the loop as before
+                    if (stopRequested || Thread.interrupted()) return
                     continue
                 }
                 historySuspended = false
@@ -961,26 +988,12 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
                 // Whole stereo frames only; an odd trailing sample waits for the next read
                 val total = carry + got
                 val samples = PcmPump.wholeFrames(carry, got)
-                var inputSilent = false
                 if (samples > 0) {
                     // Developer mode (general build): a test sound replaces the captured music, so it takes the same
                     // engine and speaker path. Nothing changes while none plays.
                     if (isShort) me.timschneeberger.rootlessjamesdsp.pvb.DevTestSound.render(shortBuffer, samples / 2, sampleRate)
                     else me.timschneeberger.rootlessjamesdsp.pvb.DevTestSound.render(floatBuffer, samples / 2, sampleRate)
-                    inputSilent = if (isShort) SilenceGate.isSilent(shortBuffer, samples) else SilenceGate.isSilent(floatBuffer, samples)
-                }
-                // Long silence: the output rests and nothing is processed until sound comes back (never in a
-                // research mode or with a test sound; follows the power-save setting like the idle suspension).
-                val pauseAllowed = suspendOnIdle && !research && !me.timschneeberger.rootlessjamesdsp.pvb.DevTestSound.playing
-                if (samples > 0 && !silenceGate.skip(inputSilent, pauseAllowed)) {
-                    if (outputPaused) {
-                        synchronized(ioLock) {
-                            if (stopRequested) return
-                            track.play()
-                        }
-                        outputPaused = false
-                        Timber.d("Output resumed")
-                    }
+                    val inputSilent = if (isShort) SilenceGate.isSilent(shortBuffer, samples) else SilenceGate.isSilent(floatBuffer, samples)
                     val diagnosticRing = buzzDiagnostics.ring
                     val detailed = diagnosticRing?.detailed == true && !diagnosticRing.frozen
                     pvbEngine.setDiagnosticCapture(detailed && pvbActive)
@@ -1004,7 +1017,6 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
                             if (haveDetail) diagnosticLayer else null, if (haveDetail) diagnosticFull else null,
                             if (haveDetail) diagnosticTrace else null, android.os.SystemClock.elapsedRealtimeNanos(),
                             if (harmonicRows >= 0) harmonicTrace else null, harmonicRows)
-                        if (!writeAll(shortOutBuffer, samples)) return
                     } else {
                         when (route) {
                             JdspChain.Route.JDSP_ONLY -> engine.processFloat(floatBuffer, floatOutBuffer, 0, samples)
@@ -1022,19 +1034,28 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
                             if (haveDetail) diagnosticLayer else null, if (haveDetail) diagnosticFull else null,
                             if (haveDetail) diagnosticTrace else null, android.os.SystemClock.elapsedRealtimeNanos(),
                             if (harmonicRows >= 0) harmonicTrace else null, harmonicRows)
-                        if (!writeAll(floatOutBuffer, samples)) return
                     }
+                    // Long silence: the output rests (track paused) while the engines go on processing the silent
+                    // input, so settings, switches and fades still happen in the silence and the sound returns
+                    // exactly as it would have. Never in a research mode or with a test sound; follows the
+                    // power-save setting like the idle suspension.
+                    val pauseAllowed = suspendOnIdle && !research && !me.timschneeberger.rootlessjamesdsp.pvb.DevTestSound.playing
                     val outputSilent = if (isShort) SilenceGate.isSilent(shortOutBuffer, samples)
                         else SilenceGate.isSilent(floatOutBuffer, samples)
-                    if (silenceGate.afterBlock(inputSilent && outputSilent, samples / 2, pauseAllowed)) {
-                        // Pause (not stop): the little silence still queued plays first when it resumes.
-                        synchronized(ioLock) {
-                            if (stopRequested) return
-                            try { track.pause() } catch (ignored: Exception) {}
+                    val silent = inputSilent && outputSilent
+                    if (!silenceGate.skip(silent, pauseAllowed)) {
+                        if (outputPaused && !resumeOutput()) return
+                        if (!(if (isShort) writeAll(shortOutBuffer, samples) else writeAll(floatOutBuffer, samples))) return
+                        if (silenceGate.afterBlock(silent, samples / 2, pauseAllowed)) {
+                            // Pause (not stop): the little silence still queued plays first when it resumes.
+                            synchronized(ioLock) {
+                                if (stopRequested) return
+                                try { track.pause() } catch (ignored: Exception) {}
+                            }
+                            outputPaused = true
+                            buzzDiagnostics.audioDiscontinuity("output_paused_silence")
+                            Timber.d("Output paused: silence")
                         }
-                        outputPaused = true
-                        buzzDiagnostics.audioDiscontinuity("output_paused_silence")
-                        Timber.d("Output paused: silence")
                     }
                 }
                 carry = if (isShort) PcmPump.keepCarry(shortBuffer, total, samples)

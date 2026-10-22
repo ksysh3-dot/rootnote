@@ -5,27 +5,28 @@ package me.timschneeberger.rootlessjamesdsp.service
  * (tools/pvb-harness/jvm/SilenceGateTest.kt).
  *
  * A paused music app usually keeps its audio session, so the service is not "idle" and the loop goes on reading
- * silence, running both engines on it and playing it. That keeps our output track active, so the phone's speaker
- * path (DSP, amplifier) never enters standby. The gate watches the blocks: once the captured input and the processed
- * output have both been silent for [holdFrames] in a row, the loop pauses the output track and stops processing
- * (the capture keeps running, so nothing is missed). The first block that is not silent resumes it: that block is
- * processed and played as usual. The engines simply continue from their quiet state.
+ * silence, processing it and playing it. That keeps our output track active, so the phone's speaker path (DSP,
+ * amplifier) never enters standby. The gate watches the processed blocks: once the captured input and the processed
+ * output have both been silent for [holdFrames] in a row, the loop pauses the output track and stops writing. The
+ * capture and both engines keep running on the silence, so a setting changed meanwhile (a virtual-bass switch, a
+ * volume-link glide, a reset fade) still plays out in the silence, and the first block that is not silent resumes
+ * the track and is played exactly as it would have been.
  *
  * "Silent" means every sample at most one 16-bit step (-90 dBFS) from zero, so a pause never cuts anything audible.
  */
 class SilenceGate(private val holdFrames: Long) {
-    /** True while the output is paused (the loop skips silent blocks). */
+    /** True while the output is paused (silent blocks are processed but not written). */
     var paused = false
         private set
     private var quietFrames = 0L
 
     /**
-     * Before processing a block. True = skip it (paused, and its input is still silent, and pausing is allowed).
-     * Otherwise the gate is open again (if it was paused, the caller restarts its output first).
+     * After processing a block, before writing it. True = do not write it (paused, the block is still silent and
+     * pausing is allowed). Otherwise the gate is open again (if it was paused, the caller restarts its output first).
      */
-    fun skip(inputSilent: Boolean, allowed: Boolean): Boolean {
+    fun skip(silent: Boolean, allowed: Boolean): Boolean {
         if (!paused) return false
-        if (inputSilent && allowed) return true
+        if (silent && allowed) return true
         paused = false
         quietFrames = 0
         return false
