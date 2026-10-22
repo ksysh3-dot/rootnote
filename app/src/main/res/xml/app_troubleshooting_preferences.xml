@@ -36,6 +36,15 @@
             app:summaryOn="@string/powersave_suspend_on"
             app:iconSpaceReserved="false" />
         <ListPreference
+            app:key="@string/key_powersave_hold"
+            app:title="@string/powersave_hold"
+            app:summary="@string/powersave_hold_summary"
+            app:entries="@array/powersave_hold_entries"
+            app:entryValues="@array/powersave_hold_values"
+            app:defaultValue="@string/default_powersave_hold"
+            app:dependency="@string/key_powersave_suspend"
+            app:iconSpaceReserved="false" />
+        <ListPreference
             app:key="@string/key_powersave_deep"
             app:title="@string/powersave_deep"
             app:summary="@string/powersave_deep_summary"

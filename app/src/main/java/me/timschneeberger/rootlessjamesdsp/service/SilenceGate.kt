@@ -18,7 +18,9 @@ package me.timschneeberger.rootlessjamesdsp.service
  * stops the capture too, so nothing keeps the phone awake. That is the only step that can cut sound: playback is
  * noticed (a playback callback, then the capture restarts), so the first ~0.1 s of the next sound may be lost.
  */
-class SilenceGate(private val holdFrames: Long) {
+class SilenceGate(holdFrames: Long) {
+    /** Silent frames before the output pauses (the user's choice; a change applies to the silence counted so far). */
+    var holdFrames = holdFrames
     /** True while the output is paused (silent blocks are processed but not written). */
     var paused = false
         private set
@@ -71,12 +73,18 @@ class SilenceGate(private val holdFrames: Long) {
     }
 
     companion object {
-        /** Seconds of silence (input and output) before the output pauses. */
+        /** Seconds of silence (input and output) before the output pauses, unless the user chose otherwise. */
         const val HOLD_SECONDS = 2.0
         private const val FLOAT_LIMIT = 1f / 32768f
         private const val SHORT_LIMIT = 1
 
         fun forRate(sampleRate: Int) = SilenceGate((HOLD_SECONDS * sampleRate).toLong())
+
+        /** Hold setting (seconds, "2" / "5" / "10") in frames; anything unknown or below 1 s is the default 2 s. */
+        fun holdFrames(setting: String?, sampleRate: Int): Long {
+            val seconds = setting?.trim()?.toLongOrNull()
+            return if (seconds == null || seconds < 1) (HOLD_SECONDS * sampleRate).toLong() else seconds * sampleRate
+        }
 
         /** Deep-sleep setting (seconds of rest, "0" = off) in frames; anything unknown or negative is off. */
         fun deepFrames(setting: String?, sampleRate: Int): Long {

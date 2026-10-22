@@ -6,4 +6,10 @@
     <string name="powersave_deep_30">30초 쉰 뒤</string>
     <string name="powersave_deep_60">1분 쉰 뒤</string>
     <string name="powersave_deep_300">5분 쉰 뒤</string>
+    <string name="powersave_deep_active">깊은 절전 중</string>
+    <string name="powersave_hold">출력 휴식 시작</string>
+    <string name="powersave_hold_summary">지금: %s 무음 뒤. 그 뒤로 소리가 다시 날 때까지 스피커 출력이 쉽니다. 잘리는 소리는 없습니다. 길게 하면 곡 사이에서 덜 쉽니다.</string>
+    <string name="powersave_hold_2">2초</string>
+    <string name="powersave_hold_5">5초</string>
+    <string name="powersave_hold_10">10초</string>
 </resources>

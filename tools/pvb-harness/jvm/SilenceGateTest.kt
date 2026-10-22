@@ -119,6 +119,17 @@ fun main() {
         g2.reset()
         check("reset clears the rest count", g2.pausedFrames == 0L)
     }
+    // 8. The hold is the user's choice (2 / 5 / 10 s); junk falls back to 2 s; a change applies at once.
+    run {
+        check("hold setting 5 = 5 s", SilenceGate.holdFrames("5", rate) == 5L * rate)
+        check("hold junk / 0 / null = 2 s", SilenceGate.holdFrames("x", rate) == hold &&
+            SilenceGate.holdFrames("0", rate) == hold && SilenceGate.holdFrames(null, rate) == hold)
+        val g = SilenceGate.forRate(rate)
+        g.holdFrames = SilenceGate.holdFrames("10", rate)
+        val (p, _, _) = run(g, List(200) { true }, frames)
+        val need = ((10L * rate + frames - 1) / frames).toInt()
+        check("10 s hold pauses after 10 s", p == listOf(need - 1), "p=$p")
+    }
     if (failed > 0) {
         println("SilenceGateTest: $failed failed")
         exitProcess(1)
