@@ -44,6 +44,21 @@ data class PvbSettings(
     val xRise: Boolean = false,         // 급상승 완화
     val xS1m: Boolean = false,          // 배음별 단일 포락선 (P1 only)
     val xDense: Boolean = false,        // 복합음 감응 세기
+    // Developer mode ("개발자 모드", general build only; DevParams). devOn = the user consented and the values below
+    // reach the engine (P_DEV_ON); each value at its default is the model itself. Not part of device profiles.
+    val devOn: Boolean = false,
+    val devBoundaryHz: Float = DevParams.BOUNDARY.default,
+    val devOutLoHz: Float = DevParams.OUT_LO.default,
+    val devOutHiHz: Float = DevParams.OUT_HI.default,
+    val devH2Db: Float = 0f,
+    val devH3Db: Float = 0f,
+    val devH4Db: Float = 0f,
+    val devH5Db: Float = 0f,
+    val devRolloffOffset: Float = 0f,
+    val devSustDb: Float = 0f,
+    val devPercDb: Float = 0f,
+    val devAttackMs: Float = DevParams.ATTACK_DEFAULT,
+    val devReleaseMs: Float = DevParams.RELEASE_DEFAULT,
 ) {
     companion object {
         // Not "dsp_*": upstream presets, backups and device profiles swap those files behind the listeners' back.
@@ -211,6 +226,19 @@ data class PvbSettings(
                 xRise = p.bool(KEY_X_RISE, d.xRise),
                 xS1m = p.bool(KEY_X_S1M, d.xS1m),
                 xDense = p.bool(KEY_X_DENSE, d.xDense),
+                devOn = PvbBuild.general && p.bool(DevParams.KEY_DEV_ON, false),
+                devBoundaryHz = DevParams.clampStored(DevParams.KEY_BOUNDARY, p.float(DevParams.KEY_BOUNDARY, d.devBoundaryHz)),
+                devOutLoHz = DevParams.clampStored(DevParams.KEY_OUT_LO, p.float(DevParams.KEY_OUT_LO, d.devOutLoHz)),
+                devOutHiHz = DevParams.clampStored(DevParams.KEY_OUT_HI, p.float(DevParams.KEY_OUT_HI, d.devOutHiHz)),
+                devH2Db = DevParams.clampStored(DevParams.KEY_H2, p.float(DevParams.KEY_H2, d.devH2Db)),
+                devH3Db = DevParams.clampStored(DevParams.KEY_H3, p.float(DevParams.KEY_H3, d.devH3Db)),
+                devH4Db = DevParams.clampStored(DevParams.KEY_H4, p.float(DevParams.KEY_H4, d.devH4Db)),
+                devH5Db = DevParams.clampStored(DevParams.KEY_H5, p.float(DevParams.KEY_H5, d.devH5Db)),
+                devRolloffOffset = DevParams.clampStored(DevParams.KEY_ROLLOFF, p.float(DevParams.KEY_ROLLOFF, d.devRolloffOffset)),
+                devSustDb = DevParams.clampStored(DevParams.KEY_SUST, p.float(DevParams.KEY_SUST, d.devSustDb)),
+                devPercDb = DevParams.clampStored(DevParams.KEY_PERC, p.float(DevParams.KEY_PERC, d.devPercDb)),
+                devAttackMs = DevParams.clampStored(DevParams.KEY_ATTACK, p.float(DevParams.KEY_ATTACK, d.devAttackMs)),
+                devReleaseMs = DevParams.clampStored(DevParams.KEY_RELEASE, p.float(DevParams.KEY_RELEASE, d.devReleaseMs)),
             ))
         }
 

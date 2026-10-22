@@ -149,6 +149,9 @@ class SettingsAboutFragment : SettingsBaseFragment() {
             isVisible = PvbBuild.researchUnlocked
         }
         screen.addPreference(research)
+        // Developer mode (general build): reachable once the research tools are shown.
+        if (PvbBuild.general) research.addPreference(item(getString(R.string.pvb_dev_mode),
+            getString(R.string.pvb_dev_mode_summary), -1) { PvbGeneral.openDevMode(activity) })
         research.addPreference(item(getString(R.string.about_research_hide_title),
             getString(R.string.about_research_hide_summary), 0) {
             PvbGeneral.setResearchUnlocked(ctx, false)

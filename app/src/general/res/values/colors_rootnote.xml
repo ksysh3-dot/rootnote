@@ -21,6 +21,20 @@
     <color name="rn_slider_inactive">#DCDEE3</color>
     <color name="rn_thumb">#FFFFFF</color>
 
+    <!-- Semantic tokens (docs/DESIGN.md 2.2): warnings, danger, evidence badges; rn_danger_bg: the gauge's "지직 위험" pill (red family only). -->
+    <color name="rn_warn_bg">#FFF1E0</color>
+    <color name="rn_warn_text">#9A4E00</color>
+    <color name="rn_warn_dot">#E07B00</color>
+    <color name="rn_danger">#B3261E</color>
+    <color name="rn_danger_bg">#FBE3E1</color>
+    <color name="rn_badge_research_bg">#E8EEF9</color>
+    <color name="rn_badge_research_text">#2B4C8C</color>
+    <color name="rn_badge_maker_bg">#EFEAF8</color>
+    <color name="rn_badge_maker_text">#5B3E96</color>
+    <color name="rn_badge_measured_bg">#E3F2F1</color>
+    <color name="rn_badge_measured_text">#065555</color>
+    <color name="rn_badge_guess_bg">#F3F4F5</color>
+    <color name="rn_badge_guess_text">#555D6D</color>
     <color name="rn_m3_primary">#0B7A7A</color>
     <color name="rn_m3_onPrimary">#FFFFFF</color>
     <color name="rn_m3_primaryContainer">#E3F2F1</color>

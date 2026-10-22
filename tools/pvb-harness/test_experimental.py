@@ -376,8 +376,8 @@ def main():
     ap.add_argument('--report')
     a = ap.parse_args()
     lib = setup(load_lib(a.lib))
-    assert lib.pvb_param_count() == 33, lib.pvb_param_count()
-    d = np.zeros(33, np.float32)
+    assert lib.pvb_param_count() >= 33, lib.pvb_param_count()   # 47 since developer mode (P_DEV_ON ...)
+    d = np.zeros(lib.pvb_param_count(), np.float32)
     lib.pvb_default_params(d.ctypes.data_as(FP))
     check('defaults: all four options off', all(d[i] == 0 for i in X.values()))
     if a.baseline:

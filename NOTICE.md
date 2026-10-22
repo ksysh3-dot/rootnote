@@ -89,5 +89,5 @@ Removed upstream files:
 - `.github/FUNDING.yml`
 - `.github/workflows/crowdin-contributors.yml`
 
-Files added by this fork (not listed): 181. New source files carry their own GPL-3.0 header or are covered by this notice.
+Files added by this fork (not listed): 195. New source files carry their own GPL-3.0 header or are covered by this notice.
 <!-- END GENERATED -->

@@ -195,4 +195,35 @@ object PvbRuntime {
     }
 
     private const val MAX_LOG = 6
+
+    // ------------------------------------------------------------------------------------- developer mode
+    /** The developer-mode screen is visible: the engine computes its meters (P_DEV_METER). */
+    @Volatile
+    var devMeter: Boolean = false
+        private set
+
+    /**
+     * Settings played instead of the user's while set (developer mode: "누르는 동안 원래 소리" and the share-code
+     * preview). Never stored; a blind comparison always wins over it.
+     */
+    @Volatile
+    var devOverride: PvbSettings? = null
+        private set
+
+    private val devListeners = java.util.concurrent.CopyOnWriteArrayList<() -> Unit>()
+
+    fun addDevListener(l: () -> Unit) { devListeners.add(l) }
+    fun removeDevListener(l: () -> Unit) { devListeners.remove(l) }
+
+    fun setDevMeter(on: Boolean) {
+        if (devMeter == on) return
+        devMeter = on
+        devListeners.forEach { it() }
+    }
+
+    fun setDevOverride(s: PvbSettings?) {
+        if (devOverride == s) return
+        devOverride = s
+        devListeners.forEach { it() }
+    }
 }

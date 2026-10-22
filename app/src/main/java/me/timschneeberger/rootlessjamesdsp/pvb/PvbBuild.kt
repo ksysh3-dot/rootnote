@@ -64,7 +64,9 @@ data class SafeCaps(
         lowQ = s.lowQ.coerceAtMost(lowQMax),
         hpHz = s.hpHz.coerceAtLeast(hpHzMin),
         releaseMs = s.releaseMs.coerceAtLeast(releaseMsMin),
-        vbLevelDb = s.vbLevelDb.coerceIn(PvbSettings.VB_LEVEL_MIN, vbLevelMax),
+        // Developer mode raises the strength cap to +12 (the slider range of DevParams.STRENGTH); the ceiling cap
+        // above stays (and the engine keeps it at or below -1 dBTP while developer mode is on).
+        vbLevelDb = s.vbLevelDb.coerceIn(PvbSettings.VB_LEVEL_MIN, if (s.devOn) DevParams.DEV_VB_LEVEL_MAX else vbLevelMax),
     )
 
     companion object {

@@ -20,6 +20,8 @@ object PvbNative {
     @JvmStatic external fun setDiagnosticCapture(handle: Long, enabled: Boolean)
     @JvmStatic external fun copyDiagnostic(handle: Long, layer: FloatArray, full: FloatArray, trace: FloatArray, samples: Int): Boolean
     @JvmStatic external fun copyHarmonicTrace(handle: Long, out: FloatArray): Int
+    @JvmStatic external fun copyDevMeters(handle: Long, out: FloatArray): Int
+    @JvmStatic external fun devMeterSize(): Int
     @JvmStatic external fun readMeters(handle: Long, out: FloatArray)
     @JvmStatic external fun latency(handle: Long): Int
     @JvmStatic external fun openMs(handle: Long, tag: Int): Int

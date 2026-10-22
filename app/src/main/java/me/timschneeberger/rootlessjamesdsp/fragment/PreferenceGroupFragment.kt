@@ -249,6 +249,8 @@ class PreferenceGroupFragment : PreferenceFragmentCompat(), KoinComponent {
         prefsApp.registerOnSharedPreferenceChangeListener(listenerApp)
     }
 
+    private val KEY_DEV_MODE_ROW = "pvb_dev_mode"
+
     /** Keys shown only with the research tools (general build: after the hidden unlock; s26u: always). */
     private val pvbResearchKeys = setOf(
         PvbSettings.KEY_VB_ALGO, PvbSettings.KEY_LOW_Q, PvbSettings.KEY_HI_Q, PvbSettings.KEY_HS_DB, PvbSettings.KEY_HS_HZ,
@@ -368,6 +370,14 @@ class PreferenceGroupFragment : PreferenceFragmentCompat(), KoinComponent {
             true
         }
         // "실험 기능": feedback goes to GitHub Issues (a browser; nothing is sent by the app).
+        // Developer mode (general build, after the hidden unlock): opens the developer-mode screen.
+        findPreference<Preference>(KEY_DEV_MODE_ROW)?.let { row ->
+            row.isVisible = me.timschneeberger.rootlessjamesdsp.pvb.PvbGeneral.devModeAvailable
+            row.setOnPreferenceClickListener {
+                me.timschneeberger.rootlessjamesdsp.pvb.PvbGeneral.openDevMode(requireContext())
+                true
+            }
+        }
         findPreference<Preference>(PvbSettings.KEY_X_FEEDBACK)?.setOnPreferenceClickListener {
             try {
                 startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(FEEDBACK_URL)))

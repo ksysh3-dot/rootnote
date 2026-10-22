@@ -76,6 +76,25 @@ enum Param : int {
     P_X_RISE,         // "급상승 완화": limit how fast the layer envelope may rise (150 ms), cut only
     P_X_S1M,          // "배음별 단일 포락선" (S1m): P1 only; one envelope per harmonic (GenResearch52) and -2 dB layer
     P_X_DENSE,        // "복합음 감응 세기": up to -6 dB while the dry 500-4000 Hz band is louder than usual
+    // Developer mode ("개발자 모드", general build). P_DEV_ON = 0: every P_D_* value is ignored and the output is
+    // bit-identical to the engine without them. P_DEV_ON = 1 with every P_D_* at its default is bit-identical too: a
+    // value only changes the processing while it differs from the model (DevVoicing in pvb_vb.h). The voicing acts on
+    // the hpv52m-family models (all app models); attack/release on the P1 family (continuity envelope) only.
+    // P_DEV_ON also caps the limiter ceiling at -1 dBTP; the limiter itself can never be bypassed.
+    P_DEV_ON,
+    P_DEV_METER,        // 1 = compute the developer-mode meters (copyDevMeters); display only, never changes the output
+    P_D_BOUNDARY_HZ,    // generator input band, upper edge (LR4 low-pass; model 190 Hz)
+    P_D_OUT_LO_HZ,      // output band, lower edge (4th-order Butterworth high-pass; model 150 Hz)
+    P_D_OUT_HI_HZ,      // output band, upper edge (2nd-order Butterworth low-pass; model 600 Hz; >= 1.5 x lower edge)
+    P_D_H2_DB,          // harmonic weight offsets re the model's table, dB: k = 2, 3, 4 and 5..8
+    P_D_H3_DB,
+    P_D_H4_DB,
+    P_D_H5_DB,
+    P_D_ROLLOFF_DB_OCT, // added to the sustained upper roll-off above 220 Hz (model 24 dB/oct, 12 for gentle12), dB/oct
+    P_D_SUST_DB,        // sustained (vocoder) path gain, dB
+    P_D_PERC_DB,        // percussive (analytic) path gain, dB
+    P_D_ATTACK_MS,      // P1-family track life attack (rounded to 16/3 ms hops; model 2 hops)
+    P_D_RELEASE_MS,     // P1-family track life release (rounded to hops; model 6 hops = 32 ms)
     P_COUNT
 };
 
@@ -112,6 +131,22 @@ enum Meter : int {
 
 void defaultParams(float* out);  // fills P_COUNT values
 
+// Developer-mode meters (Engine::copyDevMeters): kDevFields values, then kDevRing (dry, layer) pairs, oldest first.
+enum DevMeter : int {
+    DM_F0 = 0,          // fundamental of the loudest rendered track, Hz (0 = none)
+    DM_H2_DB,           // k = 2..8 at the output (output band, imposition gain, level and output gain applied), dBFS
+    DM_H8_DB = DM_H2_DB + 6,
+    DM_DRY_BAND_DB,     // processed music without the layer, 150-400 Hz band, sine-equivalent dBFS (50 ms)
+    DM_LAYER_BAND_DB,   // layer alone, same band, dBFS
+    DM_RING_COUNT,      // ring entries written so far (wraps at 1e6)
+    DM_RING_BIN_MS,     // time per ring entry
+    DM_GAIN,            // envelope-imposition gain of the sustained path
+    DM_BOUNDARY_HZ,     // generator input edge in use
+    DM_OUT_LO_HZ,
+    DM_OUT_HI_HZ,
+    DM_FIELDS
+};
+
 class Engine {
 public:
     explicit Engine(int sampleRate);
@@ -130,6 +165,13 @@ public:
     // Returns rows for the last captured callback; -1 unavailable, -2 capacity
     // exhausted (never silently truncated). Offset0 is relative to that callback.
     int copyHarmonicTrace(float* out, int capacity) const;
+    // Developer-mode meters (P_DEV_METER on). Any thread; never blocks the audio thread. Fills
+    // kDevFields values (DevMeter) then 2 x kDevRing ring values (dry low band, layer: 5 ms RMS as sine-equivalent
+    // dBFS, oldest first). Returns the number of floats written, or 0 when out is too small.
+    static constexpr int kDevFields = DM_FIELDS;
+    static constexpr int kDevRing = 512;
+    static constexpr int kDevMeterSize = kDevFields + 2 * kDevRing;
+    int copyDevMeters(float* out, int capacity) const;
     void setModulationResearch(int mode, bool tonalOnly=false) {
         for(VbHpv* m : {&vb52_, &vbGentle_, &vbGentleStrong_, &vbGentleAdaptive_}) m->setModulationResearch(mode,tonalOnly);
     }
@@ -178,6 +220,7 @@ private:
     void updateCondWanted();
     void vbApply(int algo, bool force);
     void updateLatency();
+    void applyDev(const float* v);
     static void storeMax(std::atomic<float>& a, float v);
 
     // Pending updates, guarded by mtx_.
@@ -269,6 +312,18 @@ private:
     std::atomic<float> mDynLevel_{-120.f};
     double loadEma_ = 0.0;
     std::vector<float> scratch_;
+
+    // Developer mode: voicing last pushed to the modules, and the display meters (audio thread writes, any reads).
+    DevVoicing devApplied_;
+    bool devMeterOn_ = false;
+    RampedSvf devLp_, devBp_;
+    SvfState sDevLp_, sDevBpDry_, sDevBpLay_;
+    double devBinDry_ = 0, devBinLay_ = 0, devPowDry_ = 0, devPowLay_ = 0, devPowCoef_ = 0;
+    int devBinLen_ = 240, devBinN_ = 0;
+    uint32_t devRingCount_ = 0;
+    std::atomic<float> devFields_[kDevFields];
+    std::atomic<float> devRingDry_[kDevRing], devRingLay_[kDevRing];
+    std::atomic<uint32_t> devRingPub_{0};
 
     // Meters (written by the audio thread, read anywhere).
     std::atomic<float> mInPeak_{0.f}, mOutPeak_{0.f}, mLimMin_{1.f};

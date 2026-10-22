@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <complex>
 #include <initializer_list>
 
 #include "pvb_dsp.h"
@@ -27,7 +28,101 @@ bool VbHpv::setAlpha2Profile(int algorithm) {
         default:return false;
     }
     modulationMode_=mode;tonalOnly_=false;continuity_=ContinuityParams{};continuity_.enabled=true;
+    applyDevContinuity();
     stageFlags_=flags;reset();return true;
+}
+
+// ------------------------------------------------------------------------------------------------ developer mode
+namespace {
+// RBJ cookbook biquad at the 3 kHz core rate, normalised (a0 = 1): b0 b1 b2 a1 a2. The tables kBandSos/kOutSos are
+// exactly these designs (band: LR4 high-pass 32 Hz + LR4 low-pass 190 Hz; out: Butterworth HP4 150 Hz + LP2 600 Hz),
+// so a developer value equal to the model's uses the table itself and anything else follows the same shape.
+void rbjCore(double f, double q, bool lowpass, double* c) {
+    const double w = 2.0 * kPi * clampv(f, 1.0, 0.45 * VbHpv::kFsd) / VbHpv::kFsd;
+    const double cw = std::cos(w), al = std::sin(w) / (2.0 * q), a0 = 1.0 + al;
+    if (lowpass) { c[0] = (1.0 - cw) / 2.0 / a0; c[1] = (1.0 - cw) / a0; c[2] = c[0]; }
+    else { c[0] = (1.0 + cw) / 2.0 / a0; c[1] = -(1.0 + cw) / a0; c[2] = c[0]; }
+    c[3] = -2.0 * cw / a0;
+    c[4] = (1.0 - al) / a0;
+}
+constexpr double kQ2 = 0.70710678118654752;     // Butterworth 2nd order
+constexpr double kQ4a = 0.54119610014619698;    // Butterworth 4th order, section 1
+constexpr double kQ4b = 1.30656296487637652;    // Butterworth 4th order, section 2
+}  // namespace
+
+void VbHpv::applyDevContinuity() {
+    // Only the P1-family profiles use the continuity envelope; the defaults leave it exactly as the profile set it.
+    if (!continuity_.enabled) return;
+    if (dev_.attackHops != DevVoicing::kAttackHops) continuity_.attack = dev_.attackHops;
+    if (dev_.releaseHops != DevVoicing::kReleaseHops) {
+        // The onset/silence release (model 2 of 6 hops) follows: a third below the model, 4 hops less above it,
+        // so a longer release also lengthens the tail after the music stops (continuous at the model's 6 -> 2).
+        const int r = dev_.releaseHops;
+        continuity_.release = r;
+        continuity_.fastRelease = r < DevVoicing::kReleaseHops ? std::max(1, static_cast<int>(std::lround(r / 3.0)))
+                                                                : r - 4;
+    }
+}
+
+void VbHpv::setDev(const DevVoicing& d) {
+    if (!masked_ || d == dev_) return;
+    const DevVoicing old = dev_;
+    dev_ = d;
+    auto load = [](Biquad& b, const double* c, bool table) {
+        // table rows are b0 b1 b2 a0(=1) a1 a2; designed rows b0 b1 b2 a1 a2
+        b.b0 = c[0]; b.b1 = c[1]; b.b2 = c[2];
+        b.a1 = table ? c[4] : c[3];
+        b.a2 = table ? c[5] : c[4];
+    };
+    if (d.boundaryHz != old.boundaryHz) {
+        if (d.boundaryHz == DevVoicing::kBoundaryHz) {
+            for (int s = 2; s < 4; ++s) load(band_[s], vbt::kBandSos + 6 * s, true);
+        } else {
+            double c[5];
+            rbjCore(d.boundaryHz, kQ2, true, c);
+            for (int s = 2; s < 4; ++s) load(band_[s], c, false);
+        }
+        // Peak search range of the vocoder: up to 200 Hz in the model, 10 Hz above a higher boundary.
+        const double top = std::max(200.0, d.boundaryHz + 10.0);
+        hiBin_ = loBin_;
+        while (hiBin_ * binHz_ < top) ++hiBin_;
+    }
+    if (d.outLoHz != old.outLoHz || d.outHiHz != old.outHiHz) {
+        if (d.outLoHz == DevVoicing::kOutLoHz && d.outHiHz == DevVoicing::kOutHiHz) {
+            for (int s = 0; s < 3; ++s) load(out_[s], vbt::kOutSos + 6 * s, true);
+        } else {
+            double c[5];
+            rbjCore(d.outLoHz, kQ4a, false, c); load(out_[0], c, false);
+            rbjCore(d.outLoHz, kQ4b, false, c); load(out_[1], c, false);
+            rbjCore(d.outHiHz, kQ2, true, c); load(out_[2], c, false);
+        }
+    }
+    devHarm_ = false;
+    for (int k = 0; k < 4; ++k) {
+        devHarmLin_[k] = std::pow(10.0, d.harmDb[k] / 20.0);
+        if (d.harmDb[k] != 0.0) devHarm_ = true;
+    }
+    devRolloff_ = d.rolloffOffset != 0.0;
+    devMix_ = d.sustDb != 0.0 || d.percDb != 0.0;
+    devSustLin_ = std::pow(10.0, d.sustDb / 20.0);
+    devPercLin_ = std::pow(10.0, d.percDb / 20.0);
+    if (continuity_.enabled) {
+        // back to the profile's values first, then the developer values that differ from them
+        if (old.attackHops != DevVoicing::kAttackHops) continuity_.attack = ContinuityParams{}.attack;
+        if (old.releaseHops != DevVoicing::kReleaseHops) {
+            continuity_.release = ContinuityParams{}.release;
+            continuity_.fastRelease = ContinuityParams{}.fastRelease;
+        }
+        applyDevContinuity();
+    }
+}
+
+double VbHpv::devOutResponse(double f) const {
+    const double w = 2.0 * kPi * f / kFsd;
+    const std::complex<double> z1 = std::polar(1.0, -w), z2 = z1 * z1;
+    std::complex<double> h = 1.0;
+    for (const auto& b : out_) h *= (b.b0 + b.b1 * z1 + b.b2 * z2) / (1.0 + b.a1 * z1 + b.a2 * z2);
+    return std::abs(h);
 }
 
 namespace {
@@ -243,6 +338,7 @@ void VbHpv::reset() {
     std::fill(std::begin(detailRing52_),std::end(detailRing52_),0.);detailApplied52_=familyApplied52_=false;
     family52_={};familyCentre52_=0;familyCountdown52_=0;conditionalGain52_=0;
     std::fill(std::begin(oscillatorNominal52_),std::end(oscillatorNominal52_),0.);
+    devGain_=devAttM_=devAttS_=0;
     genGain_=genFastE_=genSlowE_=0; lastFc_=60; lastGk_=0; genLastOnset_=-1000000;
     std::fill(std::begin(genAmpRing_),std::end(genAmpRing_),0.); std::fill(std::begin(genPhaseRing_),std::end(genPhaseRing_),0.);
     std::fill(std::begin(genOnsetRing_),std::end(genOnsetRing_),false);
@@ -305,6 +401,7 @@ double VbHpv::bandLayer(double re, double im) {
     const double fc = clampv(fi, params.fLoHz, params.fHiHz);
     double wk[kKMax - 1], gUnused;
     lookup(fc, wk, gUnused);
+    if (devHarm_) devWeights(wk);
     if (first_) {
         fGain_.z = fc * fGain_.a;
         first_ = false;

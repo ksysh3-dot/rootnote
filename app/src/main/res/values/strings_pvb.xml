@@ -122,4 +122,6 @@
     <string name="pvb_x_dense_summary">Lowers the virtual bass by up to 6 dB while the mids and highs (500–4000 Hz) are busier than usual for the song.</string>
     <string name="pvb_x_feedback">Send feedback (GitHub Issues)</string>
     <string name="pvb_x_feedback_summary">Tell us whether you hear a difference or not. The song, the volume and which options were on help.\ngithub.com/ksysh3-dot/rootnote/issues</string>
+    <string name="pvb_dev_mode">Developer mode</string>
+    <string name="pvb_dev_mode_summary">Change the virtual bass values yourself (no liability)</string>
 </resources>

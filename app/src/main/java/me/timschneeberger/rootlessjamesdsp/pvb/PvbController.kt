@@ -90,7 +90,7 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
     }
 
     private fun effective(b: PvbSettings): PvbSettings {
-        if (!PvbRuntime.abActive) return b
+        if (!PvbRuntime.abActive) return PvbRuntime.devOverride ?: b
         val c = PvbRuntime.abCondition ?: return b    // muted before the first trial, or waiting for the volume
         val t = c.apply(b)
         return t.copy(outDb = t.outDb + c.trimDb)     // loudness trim of the condition
@@ -136,6 +136,17 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
             }
         }
     }
+    // Developer mode: meters on/off and the temporary override ("누르는 동안 원래 소리", share-code preview).
+    private val devListener: () -> Unit = {
+        main.post {
+            if (started) {
+                settings = effective(base)
+                updateActive()
+                push(rampMs = EDIT_RAMP_MS)
+            }
+        }
+    }
+
     private var track: AudioTrack? = null
     private var started = false
     private var lastIndex = Int.MIN_VALUE
@@ -172,6 +183,7 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
         updateActive()
         prefs.registerOnSharedPreferenceChangeListener(prefListener)
         PvbRuntime.addAbListener(abListener)
+        PvbRuntime.addDevListener(devListener)
         try {
             context.contentResolver.registerContentObserver(Settings.System.CONTENT_URI, true, settingsObserver)
         } catch (e: Exception) {
@@ -215,6 +227,7 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
         main.removeCallbacks(poll)
         prefs.unregisterOnSharedPreferenceChangeListener(prefListener)
         PvbRuntime.removeAbListener(abListener)
+        PvbRuntime.removeDevListener(devListener)
         try {
             context.contentResolver.unregisterContentObserver(settingsObserver)
         } catch (ignored: Exception) {
@@ -451,6 +464,22 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
         p[PvbParam.X_RISE] = if (vbIn && s.xRise) 1f else 0f
         p[PvbParam.X_S1M] = if (vbIn && s.xS1m) 1f else 0f
         p[PvbParam.X_DENSE] = if (vbIn && s.xDense) 1f else 0f
+        // Developer mode (general build only: PvbSettings.load keeps devOn false elsewhere). Off = every value ignored.
+        val dev = s.devOn && !PvbRuntime.abActive
+        p[PvbParam.DEV_ON] = if (dev) 1f else 0f
+        p[PvbParam.DEV_METER] = if (PvbRuntime.devMeter) 1f else 0f
+        p[PvbParam.D_BOUNDARY_HZ] = s.devBoundaryHz
+        p[PvbParam.D_OUT_LO_HZ] = s.devOutLoHz
+        p[PvbParam.D_OUT_HI_HZ] = s.devOutHiHz
+        p[PvbParam.D_H2_DB] = s.devH2Db
+        p[PvbParam.D_H3_DB] = s.devH3Db
+        p[PvbParam.D_H4_DB] = s.devH4Db
+        p[PvbParam.D_H5_DB] = s.devH5Db
+        p[PvbParam.D_ROLLOFF_DB_OCT] = s.devRolloffOffset
+        p[PvbParam.D_SUST_DB] = s.devSustDb
+        p[PvbParam.D_PERC_DB] = s.devPercDb
+        p[PvbParam.D_ATTACK_MS] = s.devAttackMs
+        p[PvbParam.D_RELEASE_MS] = s.devReleaseMs
         engine.setParams(p)
         publish(lowDb)
     }

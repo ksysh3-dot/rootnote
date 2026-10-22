@@ -122,4 +122,6 @@
     <string name="pvb_x_dense_summary">중고음(500~4000 Hz)이 그 곡의 평소보다 빽빽할 때 가상 저음을 최대 6 dB 줄입니다.</string>
     <string name="pvb_x_feedback">의견 보내기 (GitHub Issues)</string>
     <string name="pvb_x_feedback_summary">써 보고 달라진 점이 있거나 없으면 알려 주세요. 곡, 볼륨, 켠 기능을 함께 적어 주시면 도움이 됩니다.\ngithub.com/ksysh3-dot/rootnote/issues</string>
+    <string name="pvb_dev_mode">개발자 모드</string>
+    <string name="pvb_dev_mode_summary">가상 저음의 수치를 직접 바꿔요 (책임지지 않음)</string>
 </resources>

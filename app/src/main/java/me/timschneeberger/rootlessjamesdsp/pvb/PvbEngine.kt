@@ -41,7 +41,26 @@ object PvbParam {
     const val X_RISE = 30     // 급상승 완화 (cut only)
     const val X_S1M = 31      // 배음별 단일 포락선 (S1m, P1 only, layer -2 dB)
     const val X_DENSE = 32    // 복합음 감응 세기 (up to -6 dB)
-    const val COUNT = 33
+    /**
+     * Developer mode ("개발자 모드", general build; see pvb_engine.h). DEV_ON = 0: every D_* value is ignored (output
+     * bit-identical to the engine without them); every D_* at its default is bit-identical as well. DEV_ON also caps
+     * the limiter ceiling at -1 dBTP. DEV_METER only switches the display meters ([PvbEngine.copyDevMeters]) on.
+     */
+    const val DEV_ON = 33
+    const val DEV_METER = 34
+    const val D_BOUNDARY_HZ = 35
+    const val D_OUT_LO_HZ = 36
+    const val D_OUT_HI_HZ = 37
+    const val D_H2_DB = 38
+    const val D_H3_DB = 39
+    const val D_H4_DB = 40
+    const val D_H5_DB = 41
+    const val D_ROLLOFF_DB_OCT = 42
+    const val D_SUST_DB = 43
+    const val D_PERC_DB = 44
+    const val D_ATTACK_MS = 45
+    const val D_RELEASE_MS = 46
+    const val COUNT = 47
 }
 
 /** Index of each value in the meter array (same order as pvb::Meter in pvb_engine.h). */
@@ -75,6 +94,23 @@ object PvbMeter {
     const val DIAGNOSTIC_SOLO_BLEND = 24
     const val DIAGNOSTIC_SOLO_EXTRA_GR_DB = 25
     const val COUNT = 26
+}
+
+/** Developer-mode meter layout (same order as pvb::DevMeter in pvb_engine.h), then [RING] (dry, layer) pairs. */
+object PvbDevMeter {
+    const val F0 = 0
+    const val H2_DB = 1          // k = 2..8 at H2_DB + k - 2
+    const val DRY_BAND_DB = 8
+    const val LAYER_BAND_DB = 9
+    const val RING_COUNT = 10
+    const val RING_BIN_MS = 11
+    const val GAIN = 12
+    const val BOUNDARY_HZ = 13
+    const val OUT_LO_HZ = 14
+    const val OUT_HI_HZ = 15
+    const val FIELDS = 16
+    const val RING = 512
+    const val SIZE = FIELDS + 2 * RING
 }
 
 /** Index of each value in the analysis info array (same order as pvb::AnaInfo in pvb_analysis.h). */
@@ -196,6 +232,9 @@ class PvbEngine(sampleRate: Int) : AutoCloseable {
     }
     fun copyHarmonicTrace(out: FloatArray): Int = use(-1) { PvbNative.copyHarmonicTrace(it, out) }
 
+    /** Developer-mode meters into [out] (size [PvbDevMeter.SIZE]); any thread but the audio thread. */
+    fun copyDevMeters(out: FloatArray): Boolean = use(false) { PvbNative.copyDevMeters(it, out) == PvbDevMeter.SIZE }
+
     /** Fills [out] (size [PvbMeter.COUNT]); peak meters restart after each call. */
     fun readMeters(out: FloatArray): Boolean = use(false) {
         PvbNative.readMeters(it, out)
@@ -249,6 +288,12 @@ class PvbEngine(sampleRate: Int) : AutoCloseable {
             0f, 0f, -6f,   // flat bypass off (controller selects it), match running, initial estimate
             0f,           // generated-layer diagnostic monitor off
             0f, 0f, 0f, 0f,   // experimental layer options off: smooth, rise, S1m, dense
+            0f, 0f,           // developer mode off, its meters off
+            190f, 150f, 600f, // generator input edge, output band (the model's own values)
+            0f, 0f, 0f, 0f,   // harmonic offsets k = 2, 3, 4, 5+
+            0f,               // upper roll-off offset, dB/oct
+            0f, 0f,           // sustained / percussive path, dB
+            32f / 3f, 32f,    // attack (2 hops), release (6 hops), ms
         )
     }
 }
