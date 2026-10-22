@@ -1,5 +1,5 @@
-// The P1 modulation fit (pvb_vb_modulation.h) against a frozen copy of the original implementation
-// (ref/pvb_vb_modulation_ref.h), on synthetic 128 ms frames: the speed-up (normal equations with refinement, the
+// The P1 modulation fit (pvb_vb_modulation.h) and the J2 AM-family fit (pvb_vb_am_family.h) against frozen copies of
+// the original implementations (ref/), on synthetic 128 ms frames. Modulation fit: the speed-up (normal equations with refinement, the
 // original Gram-Schmidt only for poorly conditioned solves, vectorised sums, fastmath sine/cosine) must not change
 // any acceptance decision and may change the accepted parameters only far below audibility. On real music the
 // accepted fits agree to about 1e-13 (relative); on these synthetic frames, built to stress the method (strong
@@ -13,7 +13,10 @@
 #include <random>
 #include <vector>
 
+#include "pvb_vb_am_family.h"
 #include "pvb_vb_modulation.h"
+#include "pvb_vb_tables.h"
+#include "ref/pvb_vb_am_family_ref.h"
 #include "ref/pvb_vb_modulation_ref.h"
 
 using namespace pvb;
@@ -164,6 +167,60 @@ int main() {
         modulation::Solver s2(f.x);
         s2.solve(70, 0, close, 1, c);
         check(!s2.usedGram, "a nearly collinear solve falls back to the original method");
+    }
+    // J2 AM-family fit: amplitude-modulated tones, steady tones, one sideband, incoherent triplets, FM, noise. Same
+    // columns, rate grid, Gauss-Newton and line search; only sine/cosine and summation order differ.
+    {
+        std::mt19937_64 h(2026102201);
+        std::uniform_real_distribution<double> U(0, 1);
+        std::normal_distribution<double> G(0, 1);
+        int frames = 0, accepted = 0, differ = 0;
+        double dCarrier = 0, dRate = 0, dAmp = 0, dCos = 0, dCoh = 0, ta = 0, tb = 0;
+        for (int kind = 0; kind < 6; ++kind)
+            for (int i = 0; i < 160; ++i) {
+                double x[N];
+                const double f = 40 + 80 * U(h), rate = 4.5 + 18 * U(h), a = 0.15, ph = 2 * Pi * U(h), mp = 2 * Pi * U(h);
+                const double depth = 0.2 + 0.65 * U(h), seed = f + 2 * (U(h) - 0.5);
+                for (int n = 0; n < N; ++n) {
+                    const double t = (n - N / 2) / Fs;
+                    double v = a * std::cos(2 * Pi * f * t + ph);
+                    if (kind == 0 || kind == 3) v *= 1 + depth * std::sin(2 * Pi * rate * t + mp);
+                    if (kind == 2) v += 0.5 * a * depth * std::cos(2 * Pi * (f + rate) * t + ph + mp);
+                    if (kind == 3) v += 0.3 * a * std::cos(2 * Pi * (f - rate) * t + 1.2);
+                    if (kind == 4) v = a * std::cos(2 * Pi * f * t + ph + 0.4 * std::sin(2 * Pi * rate * t + mp));
+                    if (kind == 5) v = a * G(h);
+                    x[n] = v + 1e-4 * G(h);
+                }
+                const auto s0 = std::chrono::steady_clock::now();
+                const AmFamily52 p = amfamily_ref::fit(x, seed, vbt::kBandSos);
+                const auto s1 = std::chrono::steady_clock::now();
+                const AmFamily52 q = amfamily::fit(x, seed, vbt::kBandSos);
+                const auto s2 = std::chrono::steady_clock::now();
+                ta += std::chrono::duration<double>(s1 - s0).count();
+                tb += std::chrono::duration<double>(s2 - s1).count();
+                ++frames;
+                accepted += p.valid;
+                if (p.valid != q.valid) {
+                    ++differ;
+                    std::printf("  AM decision differs (kind %d): residual %.6f/%.6f coherence %.6f/%.6f\n", kind,
+                                p.residual, q.residual, p.coherence, q.coherence);
+                    continue;
+                }
+                if (!p.valid) continue;
+                dCarrier = std::max(dCarrier, std::fabs(p.carrier - q.carrier));
+                dRate = std::max(dRate, std::fabs(p.rate - q.rate));
+                dAmp = std::max(dAmp, std::fabs(p.meanAmplitude - q.meanAmplitude) / p.meanAmplitude);
+                dCos = std::max(dCos, std::max(std::fabs(p.cosine - q.cosine), std::fabs(p.sine - q.sine)));
+                dCoh = std::max(dCoh, std::fabs(p.coherence - q.coherence));
+            }
+        std::printf("AM family: frames %d, accepted by the original %d, decisions differing %d\n", frames, accepted, differ);
+        std::printf("  largest difference: carrier %.2e Hz, rate %.2e Hz, amplitude %.2e (rel), modulation %.2e, "
+                    "coherence %.2e\n", dCarrier, dRate, dAmp, dCos, dCoh);
+        std::printf("  time per fit: original %.0f us, now %.0f us (%.1fx)\n", 1e6 * ta / frames, 1e6 * tb / frames, ta / tb);
+        check(accepted > 100, "AM family: plenty of accepted fits");
+        check(differ == 0, "AM family: no acceptance decision differs");
+        check(dCarrier < 1e-7 && dRate < 1e-7 && dAmp < 1e-7 && dCos < 1e-7 && dCoh < 1e-7,
+              "AM family: accepted parameters agree far below audibility (< 1e-7)");
     }
     std::printf(failures ? "fit_equivalence: %d FAILED\n" : "fit_equivalence: all passed\n", failures);
     return failures ? 1 : 0;

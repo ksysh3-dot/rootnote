@@ -35,37 +35,63 @@ inline std::complex<double> bandResponse(double frequency,const double* sos) {
     for(int j=0;j<4;++j) {const double* b=sos+6*j;h*=(b[0]+b[1]*z+b[2]*z*z)/(1.+b[4]*z+b[5]*z*z);}
     return h;
 }
+// Up to 54 solves per fit (rate grid, Gauss-Newton steps, line search). Same columns, same modified Gram-Schmidt with
+// two passes; the columns come from fastmath::sincos and the sums use the vectorised fixed-order kernels of the
+// modulation fit, so results agree with the straightforward loops to rounding (tools/pvb-harness/fit_equivalence.cpp).
 struct Solver {
-    double q[Columns][N],r[Columns][Columns],target[N],time[N],weight[N],energy=0;
+    alignas(64) double q[Columns][N];
+    alignas(64) double target[N];
+    double r[Columns][Columns],energy=0;
     explicit Solver(const double* x) {
-        for(int n=0;n<N;++n) {time[n]=(n-N/2)/modulation::Fs;weight[n]=std::sqrt(.5-.5*std::cos(2*modulation::Pi*n/N));target[n]=x[n]*weight[n];energy+=target[n]*target[n];}
+        const modulation::Axes& a=modulation::axes();
+        for(int n=0;n<N;++n) {target[n]=x[n]*a.weight[n];energy+=target[n]*target[n];}
     }
     bool solve(double f,double rate,double* error,std::complex<double>* z,double& ratio) {
+        const modulation::Axes& a=modulation::axes();
         double p[Columns]={},c[Columns]={};
         for(int j=0;j<Columns;++j) for(int k=0;k<Columns;++k) r[j][k]=0;
-        for(int n=0;n<N;++n) for(int j=0;j<3;++j) {
-            const double phase=2*modulation::Pi*(f+(j-1)*rate)*time[n];
-            q[j][n]=std::cos(phase)*weight[n];q[j+3][n]=std::sin(phase)*weight[n];
+        for(int j=0;j<3;++j) {
+            const double hz=f+(j-1)*rate;
+            double* qc=q[j];double* qs=q[j+3];
+            for(int n=0;n<N;++n) {
+                double sn,cs;fastmath::sincos(2*modulation::Pi*hz*a.time[n],sn,cs);
+                qc[n]=cs*a.weight[n];qs[n]=sn*a.weight[n];
+            }
         }
         double low=1e100,high=0;
         for(int j=0;j<Columns;++j) {
-            for(int pass=0;pass<2;++pass) for(int k=0;k<j;++k) {
-                double dot=0;for(int n=0;n<N;++n) dot+=q[k][n]*q[j][n];r[k][j]+=dot;
-                for(int n=0;n<N;++n) q[j][n]-=dot*q[k][n];
+            double* qj=q[j];
+            double norm;
+            if(j==0) norm=modulation::dotN(qj,qj);
+            else {
+                double dot=modulation::dotN(q[0],qj);
+                const int steps=2*j;
+                norm=0;
+                for(int s=0;s<steps;++s) {
+                    const int k=s<j?s:s-j;
+                    r[k][j]+=dot;
+                    if(s+1<steps) { const int next=s+1<j?s+1:s+1-j; dot=modulation::axpyDot(qj,q[k],dot,q[next]); }
+                    else norm=modulation::axpyNorm(qj,q[k],dot);
+                }
             }
-            double norm=0;for(int n=0;n<N;++n) norm+=q[j][n]*q[j][n];norm=std::sqrt(norm);
+            norm=std::sqrt(norm);
             if(!std::isfinite(norm) || norm<1e-10) return false;
             r[j][j]=norm;low=std::min(low,norm);high=std::max(high,norm);
-            for(int n=0;n<N;++n) {q[j][n]/=norm;p[j]+=q[j][n]*target[n];}
+            p[j]=modulation::scaleDot(qj,norm,target);
         }
         for(int j=Columns-1;j>=0;--j) {double v=p[j];for(int k=j+1;k<Columns;++k) v-=r[j][k]*c[k];c[j]=v/r[j][j];}
         for(int j=0;j<3;++j) z[j]={c[j],-c[j+3]};
         ratio=high/low;
-        for(int n=0;n<N;++n) {double v=-target[n];for(int j=0;j<Columns;++j) v+=q[j][n]*p[j];error[n]=v;}
+        using simd::d2;
+        for(int n=0;n<N;n+=2) {
+            d2 v=-simd::load(target+n);
+            for(int j=0;j<Columns;++j) v+=simd::load(q[j]+n)*simd::splat(p[j]);
+            simd::store(error+n,v);
+        }
         return true;
     }
 };
-inline double power(const double* x) {double sum=0;for(int n=0;n<N;++n) sum+=x[n]*x[n];return sum;}
+inline double power(const double* x) {return modulation::dotN(x,x);}
 inline AmFamily52 fit(const double* x,double seed,const double* sos) {
     AmFamily52 m;if(!std::isfinite(seed) || seed<25 || seed>190) return m;
     for(int n=0;n<N;++n) if(!std::isfinite(x[n])) return m;
