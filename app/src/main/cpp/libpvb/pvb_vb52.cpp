@@ -53,6 +53,8 @@ void VbHpv::renderTrack52(Track52& tr,const double src[2][256],const int ns[2],
                         bool observed,bool fast,int traceSlot,double* grain,double& agrain) {
     const double tc=2.*80/48000+(192.+15+191)/3000-7052./48000;
     double w[7],gain; lookup(tr.f,w,gain);
+    if(devHarm_) devWeights(w);   // developer mode: per-harmonic offsets (off: untouched)
+    double devH[7]={};
     // S1 research: the per-harmonic envelope below is the only time gate.
     const double amp=gen_.envelope?tr.a*gain:tr.a*gain*tr.fade*tr.life;
     const double hopMs=1000.*kPvH/kFsd;
@@ -78,10 +80,16 @@ void VbHpv::renderTrack52(Track52& tr,const double src[2][256],const int ns[2],
         // Exact gentle128 reference: sustained partials above 220 Hz lose
         // 12 dB/octave; no redistribution, no percussion or level change.
         if(gentle_ && k*tr.f>220) {
+            if(devRolloff_) {
+                // Developer mode: the module's own slope (12 or 24 dB/oct) plus the offset, 0..48 dB/oct.
+                const double slope=clampv((upperMode_==0?12.:24.)+dev_.rolloffOffset,0.,48.);
+                w[k-2]*=std::pow(10.,-slope*std::log2(k*tr.f/220.)/20);
+            } else {
             const double g12=std::pow(10.,-12*std::log2(k*tr.f/220.)/20);
             // Both budgets share frequency, phase, grid and track history.
             // A convex amplitude blend introduces no second oscillator.
             w[k-2]*=g12+research_.upperBlend*(g12*g12-g12);
+            }
         }
         float* ht=harmonicCapture_ && traceSlot<HarmonicTrace::kTracks ?
             harmonicTrace_.data+HarmonicTrace::kHeader+traceSlot*HarmonicTrace::kTrack+14+6*(k-2) : nullptr;
@@ -124,6 +132,7 @@ void VbHpv::renderTrack52(Track52& tr,const double src[2][256],const int ns[2],
             if(!on) ht[4]=static_cast<float>(static_cast<int>(ht[4])|HarmonicTrace::Grid);
         }
         if(mask<=0) continue;
+        if(devMeter_) devH[k-2]=amp*w[k-2]*mask;
         const double tol=std::max(3.,.02*fk);
         const int b0=std::max(1,static_cast<int>(std::floor((fk-tol)/binHz_)));
         const int b1=std::min(kHalfFft,static_cast<int>(std::ceil((fk+tol)/binHz_))+1);
@@ -188,6 +197,11 @@ void VbHpv::renderTrack52(Track52& tr,const double src[2][256],const int ns[2],
         }
     }
 
+    if(devMeter_) {
+        // Developer-mode display: the loudest rendered track of this frame.
+        double sum=0; for(double v:devH) sum+=v;
+        if(sum>devFrameSum_) { devFrameSum_=sum; devFrame_.f0=tr.f; std::copy(devH,devH+7,devFrame_.amp); }
+    }
     // S1: rendered level relative to the current target sum; nominal and removal use it.
     const double envPeak=refSum>1e-12?envSum/refSum:(envSum>0?1.:0.);
     tr.envPeak=envPeak;
@@ -201,7 +215,7 @@ void VbHpv::missingFrame52(int reason,bool fast) {
     if(harmonicCapture_) { harmonicTrace_.data[13]=static_cast<float>(reason); harmonicTrace_.data[22]=static_cast<float>(nt52_); }
     if(!continuity_.enabled && !(stageFlags_&StageOscillator)) {
         for(int j=0;j<nt52_;++j) traceTrack52(j,tr52_[j],HarmonicTrace::End,reason|HarmonicTrace::Lost);
-        nt52_=0; return;
+        nt52_=0; if(devMeter_) devEndFrame(); return;
     }
     const double src[2][256]={}; const int ns[2]={};
     double grain[32]={},agrain=0; int n=0;
@@ -226,6 +240,7 @@ void VbHpv::missingFrame52(int reason,bool fast) {
     for(int g=0;g<32;++g) energy+=grain[g]*grain[g];
     addGrain52(static_cast<int64_t>(i_)+16,grain,agrain);
     if(harmonicCapture_) { harmonicTrace_.data[12]=static_cast<float>(n); harmonicTrace_.data[20]=static_cast<float>(std::sqrt(energy/32)); }
+    if(devMeter_) devEndFrame();
 }
 
 double VbHpv::phaseDelta52(double f) const {
@@ -250,6 +265,7 @@ void VbHpv::pvFrame52() {
     std::fill(std::begin(oscillatorNominal52_),std::end(oscillatorNominal52_),0.);
     detailApplied52_=familyApplied52_=false;
     beginHarmonic52();
+    if(devMeter_) devBeginFrame();
     const int64_t s0=static_cast<int64_t>(i_)-(kPvN-1);
     spectrum52(bhRing_,s0,xr52_,xi52_);
     double mag[256], mx=0;
@@ -428,6 +444,10 @@ void VbHpv::pvFrame52() {
             std::copy(std::begin(prev.permission),std::end(prev.permission),std::begin(tr.permission));
             if(stageFlags_&StageOscillator) tr.oscillator=prev.oscillator;
             tr.life=continuity_.enabled?std::min(1.,prev.life+1./std::max(1,continuity_.attack)):1.;
+            // Developer release longer than the model: a tracked partial's amplitude falls no faster than the release
+            // (the analysis window alone would end it about as fast as the music).
+            if(dev_.releaseHops>DevVoicing::kReleaseHops)
+                tr.a=std::max(q.a,prev.a*std::exp(-1./std::max(1,dev_.releaseHops)));
             if(stageFlags_&StageGlobalTrack) tr.prediction=prev.prediction;
         } else {
             std::copy(vbt::kPsi,vbt::kPsi+7,tr.off); tr.fade=q.res<=-15 ? 1 : 0;
@@ -507,6 +527,7 @@ void VbHpv::pvFrame52() {
     int n=0; for(int p=0;p<np;++p) if(tr52_[p].strong) hist52_[histCount_][n++]=tr52_[p].f;
     histN52_[histCount_++]=n;
     addGrain52(centre,grain,agrain);
+    if(devMeter_) devEndFrame();
 }
 
 void VbHpv::addGrain52(int64_t centre,const double* grain,double nominalAmplitude) {
@@ -591,11 +612,29 @@ double VbHpv::core52(double d) {
         // S1 research: the envelope-imposition gain may fall no faster than the harmonic release.
         const double c=std::exp(-1./((appliedGain>genGain_?.003:gen_.gainReleaseMs*1e-3)*kFsd));
         genGain_=c*genGain_+(1-c)*appliedGain; appliedGain=genGain_;
+    } else if(dev_.releaseHops!=DevVoicing::kReleaseHops) {
+        // Developer release: the envelope-imposition gain (which follows the music's own low band) may fall no
+        // faster than the release, so the layer can outlast the dry note; rises stay fast (3 ms).
+        const double rel=dev_.releaseHops*static_cast<double>(kPvH)/kFsd;
+        const double c=std::exp(-1./((appliedGain>devGain_?.003:rel)*kFsd));
+        devGain_=c*devGain_+(1-c)*appliedGain; appliedGain=devGain_;
     }
     const double target=polyT52_[slot]; polyT52_[slot]=1;
     a=std::exp(-1./(target<poly52_?60:600)); poly52_=a*poly52_+(1-a)*target;
     const double hp=i>=207?hpRing_[(i-207)&(kRing-1)]*poly52_:0;
-    const double preFilter=out*appliedGain+(tonalOnly_?0:hp);
+    // Developer mode "지속음 / 타격음 비율": path gains, only while one of them differs from 0 dB.
+    double preFilter=devMix_?out*appliedGain*devSustLin_+(tonalOnly_?0:hp)*devPercLin_:out*appliedGain+(tonalOnly_?0:hp);
+    if(dev_.attackHops>DevVoicing::kAttackHops) {
+        // Developer attack longer than the model: the layer's level (40 ms mean square) may rise no faster than the
+        // attack; it follows any fall at once, so a held note is untouched (gain 1) and only onsets are softened.
+        const double e=preFilter*preFilter;
+        devAttM_+=(e-devAttM_)*(1-std::exp(-1./(.040*kFsd)));
+        if(devAttM_<=devAttS_) devAttS_=devAttM_;
+        else devAttS_+=(devAttM_-devAttS_)*(1-std::exp(-1./(dev_.attackHops*static_cast<double>(kPvH))));
+        if(devAttM_>1e-30) preFilter*=std::sqrt(devAttS_/devAttM_);
+        if(devAttM_<1e-30) devAttM_=devAttS_=0;
+    }
+    if(devMeter_) devSnap_.gain=appliedGain;
     double y=preFilter;for(auto& s:out_) y=s.tick(y);
     if(harmonicReady_) {
         harmonicTrace_.data[17]=static_cast<float>(gen_.envelope?appliedGain:gain); harmonicTrace_.data[18]=static_cast<float>(poly52_);

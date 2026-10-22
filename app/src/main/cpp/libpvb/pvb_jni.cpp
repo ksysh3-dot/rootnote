@@ -156,6 +156,23 @@ Java_me_timschneeberger_rootlessjamesdsp_pvb_PvbNative_copyHarmonicTrace(JNIEnv*
     return rows;
 }
 
+// Developer-mode meters (Engine::copyDevMeters); out must hold devMeterSize() floats. Returns the floats written.
+JNIEXPORT jint JNICALL
+Java_me_timschneeberger_rootlessjamesdsp_pvb_PvbNative_copyDevMeters(JNIEnv* env, jclass, jlong handle, jfloatArray out) {
+    Handle* h = fromJ(handle);
+    constexpr int n = pvb::Engine::kDevMeterSize;
+    if (!h || !out || env->GetArrayLength(out) != n) return 0;
+    float buf[n];
+    const int r = h->engine.copyDevMeters(buf, n);
+    if (r > 0) env->SetFloatArrayRegion(out, 0, r, buf);
+    return r;
+}
+
+JNIEXPORT jint JNICALL
+Java_me_timschneeberger_rootlessjamesdsp_pvb_PvbNative_devMeterSize(JNIEnv*, jclass) {
+    return pvb::Engine::kDevMeterSize;
+}
+
 JNIEXPORT jint JNICALL
 Java_me_timschneeberger_rootlessjamesdsp_pvb_PvbNative_latency(JNIEnv*, jclass, jlong handle) {
     Handle* h = fromJ(handle);

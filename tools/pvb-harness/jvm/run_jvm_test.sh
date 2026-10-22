@@ -45,37 +45,37 @@ java -cp "$OUTB:$KOTLIN_STDLIB" HarmonicHistoryTestKt
 # Actual saved-settings migration and the selectable model catalogue (Android-free host stub).
 OUTA="$HERE/../build/jvm-alpha2"
 mkdir -p "$OUTA"
-$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$HERE/Alpha3SettingsTest.kt" -d "$OUTA"
+$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/DevParams.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$HERE/Alpha3SettingsTest.kt" -d "$OUTA"
 java -cp "$OUTA:$KOTLIN_STDLIB" Alpha3SettingsTestKt
 # Alpha 3.1 per-song level memory: key normalisation, LRU store, recall/save decisions (pure Kotlin).
-$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/TrackLevelMemory.kt" "$HERE/TrackLevelMemoryTest.kt" -d "$OUTA"
+$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/DevParams.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/TrackLevelMemory.kt" "$HERE/TrackLevelMemoryTest.kt" -d "$OUTA"
 java -cp "$OUTA:$KOTLIN_STDLIB" TrackLevelMemoryTestKt
 # Alpha 3.2 volume-linked virtual bass strength: volume %, reduction, effective level, settings (pure Kotlin).
-$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$HERE/VolumeLevelLinkTest.kt" -d "$OUTA"
+$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/DevParams.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$HERE/VolumeLevelLinkTest.kt" -d "$OUTA"
 java -cp "$OUTA:$KOTLIN_STDLIB" VolumeLevelLinkTestKt
 # Alpha 3.3 live blind A/B: seeded shuffle, record JSON/CSV, tally, file store, comparison catalogue (pure Kotlin).
-$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/PvbNative.kt" "$APP/PvbEngine.kt" "$APP/PvbRuntime.kt" "$APP/PvbAbConditions.kt" "$APP/LiveAb.kt" "$APP/LiveAbComparisons.kt" "$HERE/LiveAbTest.kt" -d "$OUTA"
+$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/DevParams.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/PvbNative.kt" "$APP/PvbEngine.kt" "$APP/PvbRuntime.kt" "$APP/PvbAbConditions.kt" "$APP/LiveAb.kt" "$APP/LiveAbComparisons.kt" "$HERE/LiveAbTest.kt" -d "$OUTA"
 java -cp "$OUTA:$KOTLIN_STDLIB" LiveAbTestKt
-$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/PvbNative.kt" "$APP/PvbEngine.kt" "$HERE/Alpha2JniTest.kt" -d "$OUTA"
+$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/DevParams.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/PvbNative.kt" "$APP/PvbEngine.kt" "$HERE/Alpha2JniTest.kt" -d "$OUTA"
 java -Djava.library.path="$HERE/../build" -cp "$OUTA:$KOTLIN_STDLIB" Alpha2JniTestKt "$OUTA"
 python3 "$HERE/compare_alpha2_jni.py" "$HERE/../build/libpvbcapi.so" "$OUTA"
 
 # General distribution build: device profiles (shipped assets), safe caps, first-run gate, backup exclusions.
 OUTG="$HERE/../build/jvm-general"
 rm -rf "$OUTG"; mkdir -p "$OUTG"
-$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/DeviceProfiles.kt" "$APP/HomeLogic.kt" "$HERE/GeneralBuildTest.kt" -d "$OUTG"
+$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/DevParams.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/DeviceProfiles.kt" "$APP/HomeLogic.kt" "$HERE/GeneralBuildTest.kt" -d "$OUTG"
 java -cp "$OUTG:$KOTLIN_STDLIB" GeneralBuildTestKt "$HERE/../../.."
 
 # Experimental layer options: keys, defaults off in settings and preference XML, not in device profiles, en/ko strings.
 OUTX="$HERE/../build/jvm-experimental"
 rm -rf "$OUTX"; mkdir -p "$OUTX"
-$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/DeviceProfiles.kt" "$APP/PvbNative.kt" "$APP/PvbEngine.kt" "$HERE/ExperimentalSettingsTest.kt" -d "$OUTX"
+$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/DevParams.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/DeviceProfiles.kt" "$APP/PvbNative.kt" "$APP/PvbEngine.kt" "$HERE/ExperimentalSettingsTest.kt" -d "$OUTX"
 java -cp "$OUTX:$KOTLIN_STDLIB" ExperimentalSettingsTestKt "$HERE/../../.."
 
 # General build home screen: master/headline, preset chips from model + level, caps, volume-link line, en/ko strings.
 OUTH="$HERE/../build/jvm-home"
 rm -rf "$OUTH"; mkdir -p "$OUTH"
-$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/HomeLogic.kt" "$HERE/HomeLogicTest.kt" -d "$OUTH"
+$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/DevParams.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/HomeLogic.kt" "$HERE/HomeLogicTest.kt" -d "$OUTH"
 java -cp "$OUTH:$KOTLIN_STDLIB" HomeLogicTestKt "$HERE/../../.."
 
 # General build, first week: onboarding pages, battery step, kill detection, quick exclusions (= manifest queries),
@@ -89,5 +89,12 @@ java -cp "$OUTF:$KOTLIN_STDLIB" FirstWeekTestKt "$HERE/../../.."
 # PVB engine's own 16-bit path (host libpvbengine.so), en/ko strings of the chain notes.
 OUTC="$HERE/../build/jvm-chain"
 rm -rf "$OUTC"; mkdir -p "$OUTC"
-$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/PvbNative.kt" "$APP/PvbEngine.kt" "$APP/JdspChain.kt" "$HERE/JdspChainTest.kt" -d "$OUTC"
+$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/DevParams.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/PvbNative.kt" "$APP/PvbEngine.kt" "$APP/JdspChain.kt" "$HERE/JdspChainTest.kt" -d "$OUTC"
 java -Djava.library.path="$HERE/../build" -cp "$OUTC:$KOTLIN_STDLIB" JdspChainTestKt "$HERE/../../.." --jni
+
+# Developer mode (general build): value specs and settings, share code, warning rules and counting, evidence badges from
+# the device profile, test sounds, en/ko strings, and the engine's developer-mode meters through JNI.
+OUTV="$HERE/../build/jvm-devmode"
+rm -rf "$OUTV"; mkdir -p "$OUTV"
+$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/DevParams.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/DeviceProfiles.kt" "$APP/PvbNative.kt" "$APP/PvbEngine.kt" "$APP/DevShareCode.kt" "$APP/DevWarnings.kt" "$APP/DevTestSound.kt" "$HERE/DevModeTest.kt" -d "$OUTV"
+java -Djava.library.path="$HERE/../build" -cp "$OUTV:$KOTLIN_STDLIB" DevModeTestKt "$HERE/../../.." --jni

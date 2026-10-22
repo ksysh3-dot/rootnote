@@ -30,5 +30,10 @@
     "pvb_vb_strength_db": 4
   },
   "loudness_weighting": "s26u-speaker",
+  "short_name": "S26U",
+  "_devmode_note": "Developer mode: speaker_floor_hz (graph zone below which the speaker plays practically nothing) and the bass protection threshold line protect_db_at_50 + protect_db_per_pct x (volume % - 50), at our output, 150-400 Hz, sine-equivalent dBFS. Measured on this phone (UMIK-1, 2026-10-21: about -15 dBFS at 50 %, -27 dBFS at 80 %).",
+  "speaker_floor_hz": 150,
+  "protect_db_at_50": -15,
+  "protect_db_per_pct": -0.4,
   "phone_model_curves": true
 }

@@ -874,8 +874,8 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
                     carry = 0
                 }
 
-                // Suspend core while idle
-                if(isProcessorIdle && suspendOnIdle) {
+                // Suspend core while idle (not while a developer-mode test sound plays: it needs the loop running)
+                if(isProcessorIdle && suspendOnIdle && !me.timschneeberger.rootlessjamesdsp.pvb.DevTestSound.playing) {
                     if (!historySuspended) buzzDiagnostics.audioDiscontinuity("capture_suspended_idle")
                     historySuspended = true
                     synchronized(ioLock) {
@@ -945,6 +945,10 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
                 val total = carry + got
                 val samples = PcmPump.wholeFrames(carry, got)
                 if (samples > 0) {
+                    // Developer mode (general build): a test sound replaces the captured music, so it takes the same
+                    // engine and speaker path. Nothing changes while none plays.
+                    if (isShort) me.timschneeberger.rootlessjamesdsp.pvb.DevTestSound.render(shortBuffer, samples / 2, sampleRate)
+                    else me.timschneeberger.rootlessjamesdsp.pvb.DevTestSound.render(floatBuffer, samples / 2, sampleRate)
                     val diagnosticRing = buzzDiagnostics.ring
                     val detailed = diagnosticRing?.detailed == true && !diagnosticRing.frozen
                     pvbEngine.setDiagnosticCapture(detailed && pvbActive)

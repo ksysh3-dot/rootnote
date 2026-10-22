@@ -15,6 +15,14 @@
             android:summary="@string/pvb_speaker_only_summary"
             android:defaultValue="true"
             app:iconSpaceReserved="false" />
+        <!-- Developer mode (general build only, visible after the hidden unlock; PreferenceGroupFragment). -->
+        <Preference
+            android:key="pvb_dev_mode"
+            android:title="@string/pvb_dev_mode"
+            android:summary="@string/pvb_dev_mode_summary"
+            android:persistent="false"
+            app:isPreferenceVisible="false"
+            app:iconSpaceReserved="false" />
         <me.timschneeberger.rootlessjamesdsp.preference.MaterialSeekbarPreference
             android:key="pvb_low_db"
             android:title="@string/pvb_low_db"

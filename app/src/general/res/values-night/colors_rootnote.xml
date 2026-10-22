@@ -20,6 +20,23 @@
     <color name="rn_slider_inactive">#3A3F45</color>
     <color name="rn_thumb">#FFFFFF</color>
 
+
+    <!-- Semantic tokens (docs/DESIGN.md 2.2), dark. -->
+    <color name="rn_warn_bg">#3A2A12</color>
+    <color name="rn_warn_text">#FFB866</color>
+    <color name="rn_warn_dot">#E07B00</color>
+    <color name="rn_danger">#F2B8B5</color>
+    <color name="rn_danger_bg">#3B1513</color>
+    <color name="rn_ok_bg">#12301F</color>
+    <color name="rn_ok_text">#8FD9AE</color>
+    <color name="rn_badge_research_bg">#1E2A44</color>
+    <color name="rn_badge_research_text">#A9C2F2</color>
+    <color name="rn_badge_maker_bg">#2C2340</color>
+    <color name="rn_badge_maker_text">#CDB8F2</color>
+    <color name="rn_badge_measured_bg">#103A3A</color>
+    <color name="rn_badge_measured_text">#7FDCD5</color>
+    <color name="rn_badge_guess_bg">#1C1F22</color>
+    <color name="rn_badge_guess_text">#A3A9B3</color>
     <color name="rn_m3_primary">#7FDCD5</color>
     <color name="rn_m3_onPrimary">#003734</color>
     <color name="rn_m3_primaryContainer">#103A3A</color>

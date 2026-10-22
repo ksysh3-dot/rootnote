@@ -148,6 +148,12 @@ int pvb_copy_diagnostic(void* e, float* layer, float* full, int samples, float* 
 }
 int pvb_harmonic_fields() { return pvb::HarmonicTrace::kFields; }
 int pvb_harmonic_rows() { return pvb::HarmonicTrace::kBlockRows; }
+// Developer-mode meters (Engine::copyDevMeters): DM_FIELDS values, then kDevRing (dry, layer) pairs.
+int pvb_dev_meter_size() { return pvb::Engine::kDevMeterSize; }
+int pvb_dev_meter_fields() { return pvb::Engine::kDevFields; }
+int pvb_copy_dev_meters(void* e, float* out, int capacity) {
+    return static_cast<pvb::Engine*>(e)->copyDevMeters(out, capacity);
+}
 int pvb_copy_harmonic(void* e,float* out,int capacity) {
     return static_cast<pvb::Engine*>(e)->copyHarmonicTrace(out,capacity);
 }

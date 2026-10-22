@@ -145,7 +145,25 @@ object PvbGeneral {
         if (PvbBuild.general) Intent().setClassName(context.packageName, HOME_ACTIVITY)
         else Intent(context, me.timschneeberger.rootlessjamesdsp.activity.MainActivity::class.java)
 
-    private var noticeDialog: WeakReference<androidx.appcompat.app.AlertDialog>? = null
+    /** Developer mode screen of the general build (src/general, Compose); named by string like [HOME_ACTIVITY]. */
+    const val DEVMODE_ACTIVITY = "me.timschneeberger.rootlessjamesdsp.devmode.DevModeActivity"
+    /** pvb_flags: developer-mode consent given, gauge style, warning counts and hidden warnings. */
+    const val KEY_DEV_CONSENT = "dev_consent"
+    const val KEY_DEV_GAUGE_VU = "dev_gauge_vu"
+
+    /** Developer mode is offered: general build, research tools unlocked. */
+    val devModeAvailable: Boolean get() = PvbBuild.general && PvbBuild.researchUnlocked
+
+    fun openDevMode(context: Context) {
+        if (!PvbBuild.general) return
+        try {
+            context.startActivity(Intent().setClassName(context.packageName, DEVMODE_ACTIVITY))
+        } catch (e: Exception) {
+            Timber.e(e)
+        }
+    }
+
+        private var noticeDialog: WeakReference<androidx.appcompat.app.AlertDialog>? = null
 
     /**
      * The first-run notice of the general build. [onConfirmed] runs after the user confirmed it. Only one notice is

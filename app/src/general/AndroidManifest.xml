@@ -52,6 +52,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <!-- Developer mode (Compose): opened from the About screen's research section or the PVB settings row once
+             the research tools are unlocked. Not exported. -->
+        <activity
+            android:name="me.timschneeberger.rootlessjamesdsp.devmode.DevModeActivity"
+            android:exported="false"
+            android:label="@string/dev_title"
+            android:theme="@style/Theme.RootlessJamesDSP" />
         <activity android:name="me.timschneeberger.rootlessjamesdsp.activity.MainActivity">
             <intent-filter tools:node="remove">
                 <action android:name="android.intent.action.MAIN" />

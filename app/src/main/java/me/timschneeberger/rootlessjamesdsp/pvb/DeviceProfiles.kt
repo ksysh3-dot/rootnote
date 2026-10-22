@@ -22,7 +22,30 @@ data class DeviceProfile(
     val settings: Map<String, Any>,
     /** The S26U-specific analysis curves (speaker response, phone limiter estimate) apply to this device. */
     val phoneModelCurves: Boolean,
+    /** Short device name for evidence tags ("실측 S26U"); empty for the neutral profile. */
+    val shortName: String = "",
+    /** Below this the speaker plays practically nothing (developer-mode graph: "이 폰이 못 내는 곳"), Hz. */
+    val speakerFloorHz: Float = DEFAULT_SPEAKER_FLOOR_HZ,
+    /**
+     * The phone's bass protection threshold at our output (150-400 Hz, sine-equivalent dBFS) as a line over the media
+     * volume: [protectDbAt50] at 50 % and [protectDbPerPct] per volume %. Measured on the S26U (UMIK-1, 2026-10-21:
+     * about -15 dBFS at 50 %, -27 dBFS at 80 %); other phones carry the same line as an estimate ([measured] false).
+     */
+    val protectDbAt50: Float = DEFAULT_PROTECT_DB_AT_50,
+    val protectDbPerPct: Float = DEFAULT_PROTECT_DB_PER_PCT,
 ) {
+    /** Protection threshold at [volumePct] (0..100), dBFS, kept within -60..0. */
+    fun protectThresholdDb(volumePct: Float): Float {
+        val v = if (volumePct.isFinite()) volumePct.coerceIn(0f, 100f) else 50f
+        return (protectDbAt50 + protectDbPerPct * (v - 50f)).coerceIn(-60f, 0f)
+    }
+
+    companion object {
+        const val DEFAULT_SPEAKER_FLOOR_HZ = 150f
+        const val DEFAULT_PROTECT_DB_AT_50 = -15f
+        const val DEFAULT_PROTECT_DB_PER_PCT = -0.4f
+    }
+
     fun matches(manufacturer: String?, model: String?): Boolean {
         if (modelPrefixes.isEmpty()) return false
         val man = manufacturer.orEmpty().trim().lowercase(Locale.ROOT)
@@ -71,8 +94,15 @@ object DeviceProfiles {
             modelPrefixes = strings(match["model_prefixes"]),
             settings = settings,
             phoneModelCurves = o["phone_model_curves"] as? Boolean ?: false,
+            shortName = o["short_name"] as? String ?: "",
+            speakerFloorHz = num(o["speaker_floor_hz"], DeviceProfile.DEFAULT_SPEAKER_FLOOR_HZ, 40f, 400f),
+            protectDbAt50 = num(o["protect_db_at_50"], DeviceProfile.DEFAULT_PROTECT_DB_AT_50, -60f, 0f),
+            protectDbPerPct = num(o["protect_db_per_pct"], DeviceProfile.DEFAULT_PROTECT_DB_PER_PCT, -2f, 0f),
         )
     }
+
+    private fun num(v: Any?, def: Float, lo: Float, hi: Float): Float =
+        (v as? Double)?.toFloat()?.takeIf { it.isFinite() }?.coerceIn(lo, hi) ?: def
 
     private fun strings(v: Any?): List<String> = (v as? List<*>)?.filterIsInstance<String>() ?: emptyList()
 

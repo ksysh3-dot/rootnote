@@ -65,6 +65,34 @@ struct GenResearch52 {
     // 1 only when the low band also rises 3 dB above its level 43-300 ms earlier, 2 never.
     int onsetMode = 1;
 };
+// Developer mode voicing (general build, "개발자 모드"). Every field at its default reproduces the model bit for bit;
+// a field only takes a new code path while it differs from the default. Applied by the engine on the audio thread
+// (VbHpv::setDev) to the masked (hpv52m family) modules only. See pvb_engine.h P_D_*.
+struct DevVoicing {
+    static constexpr double kBoundaryHz = 190.0;   // generator input band: LR4 low-pass edge (table kBandSos)
+    static constexpr double kOutLoHz = 150.0;      // output band: 4th-order Butterworth high-pass (table kOutSos)
+    static constexpr double kOutHiHz = 600.0;      // output band: 2nd-order Butterworth low-pass (table kOutSos)
+    static constexpr int kAttackHops = 2, kReleaseHops = 6;   // ContinuityParams defaults (16/3000 s hops)
+    double boundaryHz = kBoundaryHz, outLoHz = kOutLoHz, outHiHz = kOutHiHz;
+    double harmDb[4] = {0, 0, 0, 0};  // k = 2, 3, 4, and 5..8: dB re the model's own weight table
+    double rolloffOffset = 0;         // dB/oct added to the module's sustained upper roll-off above 220 Hz
+    double sustDb = 0, percDb = 0;    // sustained (vocoder) / percussive (analytic) path gains
+    int attackHops = kAttackHops, releaseHops = kReleaseHops;   // P1-family track life (continuity) attack/release
+    bool operator==(const DevVoicing& o) const {
+        for (int i = 0; i < 4; ++i) if (harmDb[i] != o.harmDb[i]) return false;
+        return boundaryHz == o.boundaryHz && outLoHz == o.outLoHz && outHiHz == o.outHiHz &&
+               rolloffOffset == o.rolloffOffset && sustDb == o.sustDb && percDb == o.percDb &&
+               attackHops == o.attackHops && releaseHops == o.releaseHops;
+    }
+    bool operator!=(const DevVoicing& o) const { return !(*this == o); }
+};
+// Developer-mode display snapshot of one module: the loudest rendered track of the last vocoder frame (sustained
+// path, before the output band filter), its k = 2..8 harmonic amplitudes and the envelope-imposition gain.
+struct DevHarmonics {
+    double f0 = 0;          // Hz, 0 = no track
+    double amp[7] = {};     // linear, at layer level 0 dB, before the output filter and the imposition gain
+    double gain = 0;        // envelope-imposition gain applied to the sustained path (last core sample)
+};
 struct VbResearchStats {
     int scene = VB_SCENE_UNKNOWN;
     uint64_t frames[4] = {};
@@ -88,6 +116,12 @@ public:
     virtual VbResearchStats researchStats() const { return {}; } // audio thread only
     virtual void setHarmonicCapture(bool) {}
     virtual const HarmonicTrace* takeHarmonicTrace() { return nullptr; }
+    // Developer mode (audio thread only). Modules without support ignore the voicing and report no harmonics.
+    virtual void setDev(const DevVoicing&) {}
+    virtual void setDevMeter(bool) {}
+    virtual bool devHarmonics(DevHarmonics&) const { return false; }
+    // |output filter| at f Hz (the module's own output band), 1 when it has none.
+    virtual double devOutResponse(double) const { return 1.0; }
 };
 
 // ------------------------------------------------------------------------------------------------ hpv
@@ -146,6 +180,12 @@ public:
     // engine calls it while switching (faded out) and then setAlpha2Profile, which resets the module. Realtime safe.
     void setGenEnvelope(bool on) { gen_=GenResearch52{}; gen_.envelope=on; }
     bool genEnvelope() const { return gen_.envelope; }
+
+    // Developer mode (masked modules only; ignored by the legacy hpv). No allocation; filter memory is kept.
+    void setDev(const DevVoicing& d) override;
+    void setDevMeter(bool on) override { devMeter_ = on; if (!on) devSnap_ = DevHarmonics{}; }
+    bool devHarmonics(DevHarmonics& out) const override { if (!masked_) return false; out = devSnap_; return true; }
+    double devOutResponse(double f) const override;
 
     // Audio-thread-owned EQ, including coefficient glides and dynamic bass. A standalone module uses the
     // reference EQ v1.1 at 48 kHz. The engine binds these objects for phase matching to the actual dry path.
@@ -331,6 +371,20 @@ private:
     double burstSample52(int64_t j);
     double xr52_[kHalfFft+1]={}, xi52_[kHalfFft+1]={};
     double sr52_[kHalfFft+1]={}, si52_[kHalfFft+1]={}, sm52_[kHalfFft+1]={};
+
+    // Developer mode. Each flag is set only while its value differs from the model, so the default path is untouched.
+    DevVoicing dev_;
+    bool devHarm_=false, devRolloff_=false, devMix_=false;
+    double devHarmLin_[4]={1,1,1,1}, devSustLin_=1, devPercLin_=1;
+    void applyDevContinuity();
+    void devWeights(double* w) const { for(int k=0;k<kKMax-1;++k) w[k]*=devHarmLin_[k<3?k:3]; }
+    double devGain_=0;   // developer release: envelope-imposition gain follower
+    double devAttM_=0, devAttS_=0;   // developer attack: layer level and its attack-limited follower
+    bool devMeter_=false;
+    DevHarmonics devFrame_, devSnap_;
+    double devFrameSum_=0;
+    void devBeginFrame() { devFrame_=DevHarmonics{}; devFrameSum_=0; }
+    void devEndFrame() { const double g=devSnap_.gain; devSnap_=devFrame_; devSnap_.gain=g; }
 };
 
 // ------------------------------------------------------------------------------------------------ Bankstown

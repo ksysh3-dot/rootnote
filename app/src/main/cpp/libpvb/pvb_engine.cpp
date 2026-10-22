@@ -85,7 +85,24 @@ void sanitizeParams(float* v) {
     v[P_MATCH_SEED_DB] = clampv(v[P_MATCH_SEED_DB], static_cast<float>(LoudnessMatcher::kMinDb),
                                 static_cast<float>(LoudnessMatcher::kMaxDb));
     for (int i : {P_X_SMOOTH, P_X_RISE, P_X_S1M, P_X_DENSE}) v[i] = v[i] >= 0.5f ? 1.f : 0.f;
+    // Developer mode: hard engine limits (the app's sliders stay inside them).
+    v[P_DEV_ON] = v[P_DEV_ON] >= 0.5f ? 1.f : 0.f;
+    v[P_DEV_METER] = v[P_DEV_METER] >= 0.5f ? 1.f : 0.f;
+    v[P_D_BOUNDARY_HZ] = clampv(v[P_D_BOUNDARY_HZ], 80.f, 220.f);
+    v[P_D_OUT_LO_HZ] = clampv(v[P_D_OUT_LO_HZ], 60.f, 300.f);
+    v[P_D_OUT_HI_HZ] = std::max(clampv(v[P_D_OUT_HI_HZ], 250.f, 1200.f), 1.5f * v[P_D_OUT_LO_HZ]);
+    for (int i : {P_D_H2_DB, P_D_H3_DB, P_D_H4_DB, P_D_H5_DB}) v[i] = clampv(v[i], -24.f, 12.f);
+    v[P_D_ROLLOFF_DB_OCT] = clampv(v[P_D_ROLLOFF_DB_OCT], -24.f, 24.f);
+    v[P_D_SUST_DB] = clampv(v[P_D_SUST_DB], -24.f, 12.f);
+    v[P_D_PERC_DB] = clampv(v[P_D_PERC_DB], -24.f, 12.f);
+    v[P_D_ATTACK_MS] = clampv(v[P_D_ATTACK_MS], 1.f, 200.f);
+    v[P_D_RELEASE_MS] = clampv(v[P_D_RELEASE_MS], 1.f, 1000.f);
+    // The output ceiling stays at or below -1 dBTP while developer values are in use.
+    if (v[P_DEV_ON] >= 0.5f) v[P_CEIL_DB] = std::min(v[P_CEIL_DB], -1.f);
 }
+
+// Developer mode: milliseconds to 16/3000 s continuity hops (at least one).
+int msToHops(float ms) { return std::max(1, static_cast<int>(std::lround(ms * 3.0 / 16.0))); }
 
 void storeMin(std::atomic<float>& a, float v) {
     float cur = a.load(std::memory_order_relaxed);
@@ -133,6 +150,16 @@ void defaultParams(float* v) {
     v[P_X_RISE] = 0.f;
     v[P_X_S1M] = 0.f;
     v[P_X_DENSE] = 0.f;
+    v[P_DEV_ON] = 0.f;           // developer mode: off, and every value at the model's own
+    v[P_DEV_METER] = 0.f;
+    v[P_D_BOUNDARY_HZ] = static_cast<float>(DevVoicing::kBoundaryHz);
+    v[P_D_OUT_LO_HZ] = static_cast<float>(DevVoicing::kOutLoHz);
+    v[P_D_OUT_HI_HZ] = static_cast<float>(DevVoicing::kOutHiHz);
+    v[P_D_H2_DB] = v[P_D_H3_DB] = v[P_D_H4_DB] = v[P_D_H5_DB] = 0.f;
+    v[P_D_ROLLOFF_DB_OCT] = 0.f;
+    v[P_D_SUST_DB] = v[P_D_PERC_DB] = 0.f;
+    v[P_D_ATTACK_MS] = 32.f / 3.f;   // 2 hops
+    v[P_D_RELEASE_MS] = 32.f;        // 6 hops
 }
 
 double estimatePhoneLimiterGr(double levelDb) { return PhoneModel::staticGr(levelDb); }
@@ -147,6 +174,9 @@ Engine::Engine(int sampleRate) {
     for (auto& v : pub_) v.store(0.0, std::memory_order_relaxed);
     for (auto& v : tapIn_) v.store(0.f, std::memory_order_relaxed);
     for (auto& v : tapOut_) v.store(0.f, std::memory_order_relaxed);
+    for (auto& v : devFields_) v.store(0.f, std::memory_order_relaxed);
+    for (auto& v : devRingDry_) v.store(-120.f, std::memory_order_relaxed);
+    for (auto& v : devRingLay_) v.store(-120.f, std::memory_order_relaxed);
     gate_.snap(1.0);
     vbX_.snap(1.0);
     vbGain_.snap(1.0);
@@ -214,8 +244,46 @@ void Engine::vbApply(int algo, bool force) {
     updateLatency();
 }
 
+// Developer mode: voicing to the hpv52m-family modules (only when it changed) and the display meters. Audio thread.
+void Engine::applyDev(const float* v) {
+    DevVoicing d;
+    if (v[P_DEV_ON] >= 0.5f) {
+        d.boundaryHz = v[P_D_BOUNDARY_HZ];
+        d.outLoHz = v[P_D_OUT_LO_HZ];
+        d.outHiHz = v[P_D_OUT_HI_HZ];
+        d.harmDb[0] = v[P_D_H2_DB]; d.harmDb[1] = v[P_D_H3_DB]; d.harmDb[2] = v[P_D_H4_DB]; d.harmDb[3] = v[P_D_H5_DB];
+        d.rolloffOffset = v[P_D_ROLLOFF_DB_OCT];
+        d.sustDb = v[P_D_SUST_DB];
+        d.percDb = v[P_D_PERC_DB];
+        d.attackHops = msToHops(v[P_D_ATTACK_MS]);
+        d.releaseHops = msToHops(v[P_D_RELEASE_MS]);
+    }
+    if (d != devApplied_) {
+        devApplied_ = d;
+        for (VbHpv* m : {&vb52_, &vbGentle_, &vbGentleStrong_, &vbGentleAdaptive_, &vbAlpha2_}) m->setDev(d);
+    }
+    const bool meter = v[P_DEV_METER] >= 0.5f;
+    if (meter != devMeterOn_) {
+        devMeterOn_ = meter;
+        for (VbModule* m : vbMods_) m->setDevMeter(meter);
+        sDevLp_.reset(); sDevBpDry_.reset(); sDevBpLay_.reset();
+        devBinDry_ = devBinLay_ = devPowDry_ = devPowLay_ = 0.0;
+        devBinN_ = 0;
+    }
+    if (meter) {
+        SvfCoef lp;
+        lp.g = prewarp(sr_, d.boundaryHz);
+        lp.k = std::sqrt(2.0);
+        lp.m0 = 0.0; lp.m1 = 0.0; lp.m2 = 1.0;
+        devLp_.snap(lp);
+    }
+}
+
 void Engine::configure(int sampleRate) {
     sr_ = clampv(sampleRate, 8000, 192000);
+    devBinLen_ = std::max(1, static_cast<int>(std::lround(0.005 * sr_)));
+    devPowCoef_ = 1.0 - std::exp(-1.0 / (0.05 * sr_));
+    devBp_.snap(svfBandpass(sr_, 245.0, 0.65));
     lim_.configure(sr_, kLookaheadMs);
     limSolo_.configure(sr_, kLookaheadMs);
     limFlat_.configure(sr_, kLookaheadMs);  // same latency as lim_: the flat path stays aligned with wet and dry
@@ -366,6 +434,7 @@ void Engine::applyParams(const float* v, bool snap) {
     limFlat_.setCeilingDb(v[P_CEIL_DB]);
     limFlat_.setReleaseMs(v[P_REL_MS]);
     for (int i = 0; i < P_COUNT; ++i) active_[i] = v[i];
+    applyDev(v);
     if (snap) vbApply(vbWanted(), false);
 }
 
@@ -549,6 +618,27 @@ void Engine::process(float* io, int frames) {
                 }
             }
         }
+        if (devMeterOn_) {
+            // Developer-mode display only (nothing here reaches the output): dry low band (aligned with the layer),
+            // layer, and both in the 150-400 Hz band where the phone's protection acts.
+            const double low = devLp_.tick(sDevLp_, 0.5 * (xdl + xdr));
+            const double lay = vg * 0.5 * (layL + layR) * og;
+            devBinDry_ += low * low;
+            devBinLay_ += lay * lay;
+            const double bd = devBp_.tick(sDevBpDry_, 0.5 * (wl + wr) * og);
+            const double bl = devBp_.tick(sDevBpLay_, lay);
+            devPowDry_ += (bd * bd - devPowDry_) * devPowCoef_;
+            devPowLay_ += (bl * bl - devPowLay_) * devPowCoef_;
+            if (++devBinN_ >= devBinLen_) {
+                const int slot = static_cast<int>(devRingCount_ % kDevRing);
+                devRingDry_[slot].store(dbOrFloor(std::sqrt(2.0 * devBinDry_ / devBinLen_)), std::memory_order_relaxed);
+                devRingLay_[slot].store(dbOrFloor(std::sqrt(2.0 * devBinLay_ / devBinLen_)), std::memory_order_relaxed);
+                ++devRingCount_;
+                devRingPub_.store(devRingCount_, std::memory_order_release);
+                devBinDry_ = devBinLay_ = 0.0;
+                devBinN_ = 0;
+            }
+        }
         // Keep this small delay warm even when diagnostics are off: exact component alignment on arming.
         const double preL = vg * layL * og, preR = vg * layR * og;
         layerDelayL_[layerPos_] = preL; layerDelayR_[layerPos_] = preR;
@@ -673,6 +763,26 @@ void Engine::process(float* io, int frames) {
     if (dynEnv_ < 1e-24) dynEnv_ = 0.0;
     match_.flushTiny();
     cond_.flushTiny();
+    if (devMeterOn_) {
+        sDevLp_.flushTiny(); sDevBpDry_.flushTiny(); sDevBpLay_.flushTiny();
+        if (devPowDry_ < 1e-24) devPowDry_ = 0.0;
+        if (devPowLay_ < 1e-24) devPowLay_ = 0.0;
+        DevHarmonics h;
+        const bool have = vbCur_ >= 0 && vbMods_[vbCur_]->devHarmonics(h) && h.f0 > 0.0;
+        devFields_[DM_F0].store(have ? static_cast<float>(h.f0) : 0.f, std::memory_order_relaxed);
+        const double level = vbGain_.value() * outGain_.value() * (genCur_ ? s1mTrim : 1.0);
+        for (int k = 2; k <= 8; ++k) {
+            const double a = have ? h.amp[k - 2] * h.gain * vbMods_[vbCur_]->devOutResponse(k * h.f0) * level : 0.0;
+            devFields_[DM_H2_DB + k - 2].store(dbOrFloor(a), std::memory_order_relaxed);
+        }
+        devFields_[DM_DRY_BAND_DB].store(dbOrFloor(std::sqrt(2.0 * devPowDry_)), std::memory_order_relaxed);
+        devFields_[DM_LAYER_BAND_DB].store(dbOrFloor(std::sqrt(2.0 * devPowLay_)), std::memory_order_relaxed);
+        devFields_[DM_RING_BIN_MS].store(static_cast<float>(1000.0 * devBinLen_ / sr_), std::memory_order_relaxed);
+        devFields_[DM_GAIN].store(static_cast<float>(have ? h.gain : 0.0), std::memory_order_relaxed);
+        devFields_[DM_BOUNDARY_HZ].store(static_cast<float>(devApplied_.boundaryHz), std::memory_order_relaxed);
+        devFields_[DM_OUT_LO_HZ].store(static_cast<float>(devApplied_.outLoHz), std::memory_order_relaxed);
+        devFields_[DM_OUT_HI_HZ].store(static_cast<float>(devApplied_.outHiHz), std::memory_order_relaxed);
+    }
 
     // Meters.
     storeMax(mInPeak_, static_cast<float>(inPeak));
@@ -738,6 +848,20 @@ bool Engine::copyDiagnostic(float* generated, float* fullMix, int samples, float
     std::copy_n(diagnosticFull_, samples, fullMix);
     std::copy_n(diagnosticTrace_, fields, trace);
     return true;
+}
+
+int Engine::copyDevMeters(float* out, int capacity) const {
+    if (out == nullptr || capacity < kDevMeterSize) return 0;
+    const uint32_t count = devRingPub_.load(std::memory_order_acquire);
+    for (int i = 0; i < kDevFields; ++i) out[i] = devFields_[i].load(std::memory_order_relaxed);
+    out[DM_RING_COUNT] = static_cast<float>(count % 1000000u);
+    // Oldest first. An entry the audio thread overwrites meanwhile shows a newer value; display only.
+    for (int i = 0; i < kDevRing; ++i) {
+        const int slot = static_cast<int>((count + static_cast<uint32_t>(i)) % kDevRing);
+        out[kDevFields + 2 * i] = devRingDry_[slot].load(std::memory_order_relaxed);
+        out[kDevFields + 2 * i + 1] = devRingLay_[slot].load(std::memory_order_relaxed);
+    }
+    return kDevMeterSize;
 }
 
 int Engine::copyHarmonicTrace(float* out,int capacity) const {
