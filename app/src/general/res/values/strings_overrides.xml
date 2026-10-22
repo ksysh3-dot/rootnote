@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- General build: upstream strings that named RootlessJamesDSP/JamesDSP as if it were this app. The wording avoids
+     the product name, so renaming the app (AndroidConfig.GENERAL_BRAND_NAME) needs no change here. The JamesDSP
+     engine is still credited in the About screen. -->
+<resources>
+    <string name="onboarding_greeting">Welcome!</string>
+    <string name="onboarding_finish_header">Setup is complete!</string>
+    <string name="onboarding_perm_notification_caption">Required to receive important status updates about audio processing.</string>
+    <string name="notification_request_permission_title">User action is required to start audio processing</string>
+    <string name="notification_request_permission">Tap to grant the capture permission and start audio processing</string>
+    <string name="notification_processing_legacy">Tap to open the app</string>
+    <string name="session_control_loss_toast">Audio processing stopped because control of the audio session was lost. Please disable other audio effect apps.</string>
+    <string name="session_control_loss_notification_title">Audio processing stopped. Another app is interfering.</string>
+    <string name="session_control_loss_notification">Please disable all other apps that provide global audio effects before turning processing on again.</string>
+    <string name="session_app_compat_toast">Audio processing stopped because of an incompatible media app. Please check the notification to resolve this problem.</string>
+    <string name="session_app_compat_notification_title">Audio processing stopped. Another app is interfering.</string>
+    <string name="capture_permission_revoked_toast">Audio processing has been stopped because the audio capture permission was revoked.</string>
+</resources>

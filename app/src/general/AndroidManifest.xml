@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- General distribution build: merged over src/main/AndroidManifest.xml.
+     The record-storing features (per-song memory, blind comparison records, buzz diagnostics with microphone
+     recording and audio clips, measurement) do not exist in this build: their screens, service, provider and the
+     microphone foreground-service permission are removed here, and BuildConfig.RECORD_FEATURES = false keeps their
+     code paths from running. RECORD_AUDIO stays: Android requires it for system audio capture itself. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" tools:node="remove" />
+
+    <!-- Only apps signed with the same key may switch processing on or off (release audit S7). -->
+    <permission
+        android:name="${applicationId}.permission.SET_POWER_STATE"
+        android:protectionLevel="signature" />
+
+    <application>
+        <activity android:name="me.timschneeberger.rootlessjamesdsp.activity.BuzzReportsActivity" tools:node="remove" />
+        <service android:name="me.timschneeberger.rootlessjamesdsp.service.BuzzMicrophoneService" tools:node="remove" />
+        <provider android:name="me.timschneeberger.rootlessjamesdsp.activity.BuzzFileProvider" tools:node="remove" />
+        <activity android:name="me.timschneeberger.rootlessjamesdsp.activity.LiveAbActivity" tools:node="remove" />
+        <activity android:name="me.timschneeberger.rootlessjamesdsp.activity.LiveAbResultsActivity" tools:node="remove" />
+        <activity android:name="me.timschneeberger.rootlessjamesdsp.activity.TrackLevelsActivity" tools:node="remove" />
+
+        <!-- Own action name and a signature permission instead of the upstream action open to every app. -->
+        <receiver
+            android:name="me.timschneeberger.rootlessjamesdsp.receiver.PowerStateReceiver"
+            android:enabled="true"
+            android:exported="true"
+            android:permission="${applicationId}.permission.SET_POWER_STATE"
+            tools:node="replace">
+            <intent-filter>
+                <action android:name="${applicationId}.SET_POWER_STATE" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name="me.timschneeberger.rootlessjamesdsp.service.QuickTileService"
+            android:label="@string/app_brand_name"
+            tools:replace="android:label" />
+    </application>
+</manifest>

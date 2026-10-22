@@ -1,0 +1,33 @@
+{
+  "id": "s26u",
+  "name": "Galaxy S26 Ultra",
+  "measured": true,
+  "_note": "EQ v1.1 from the owner's blind tests on a Galaxy S26 Ultra (same values as the s26u build defaults, PvbSettings.kt).",
+  "match": {
+    "manufacturer": ["samsung"],
+    "model_prefixes": ["SM-S948"],
+    "_todo_confirm": "SM-S948N is the model reported by the measured phone. Other regional suffixes of SM-S948 (B, U, U1, W, 0, ...) are assumed to be the same phone and are not confirmed. SM-S938 is the S25 Ultra and is deliberately not matched."
+  },
+  "settings": {
+    "pvb_speaker_only": true,
+    "pvb_hp_hz": 100,
+    "pvb_low_hz": 220,
+    "pvb_low_db": 3,
+    "pvb_low_q": 1,
+    "pvb_hi_hz": 4500,
+    "pvb_hi_db": -3,
+    "pvb_hi_q": 0.6,
+    "pvb_hs_hz": 2500,
+    "pvb_hs_db": 0,
+    "pvb_out_db": -5,
+    "pvb_ceil_db": -1,
+    "pvb_release_ms": 60,
+    "pvb_match_on_disable": true,
+    "pvb_vol_link": false,
+    "pvb_dyn_enable": false,
+    "pvb_vb_enable": false,
+    "pvb_vb_vol_link": false
+  },
+  "loudness_weighting": "s26u-speaker",
+  "phone_model_curves": true
+}

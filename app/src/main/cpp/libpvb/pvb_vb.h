@@ -1,0 +1,341 @@
+// PVB speaker engine - virtual bass (experimental, alpha).
+//
+// A virtual bass module turns the low end the phone speaker cannot play into a layer of harmonics. The engine adds
+// the layer to both channels after the EQ filters, before the output gain and the limiter. Its input is either the
+// engine's pre-EQ input (inputAfterEq() false: hpv, a purely synthesised harmonic layer that needs the bass below the
+// 100 Hz high-pass) or the EQ output itself (true: Bankstown, out = x + layer(x) on the same signal - its layer keeps a
+// copy of 150-300 Hz, which only adds in phase to the very signal it came from). While a module with latency is
+// active, the engine delays its own (dry) path by latencyFrames() so the layer lines up with the music.
+//
+// Interface rules (so a later algorithm, e.g. "hpv 5.1", can be added next to these two):
+//   - all memory is part of the object (no allocation after construction, none in tick());
+//   - configure(sampleRate) only recomputes coefficients; it returns false for a rate the module does not support;
+//   - the latency is fixed for a given rate;
+//   - tick() is called once per frame, from the audio thread only.
+//
+// Algorithms:
+//   VbHpv        'hpv' from tools/pvb-harness/vb5 (frozen reference: tools/pvb-harness/vb_port/hpv_ref.py):
+//                mono input -> 3 kHz (polyphase, exact for 44.1 and 48 kHz) -> band 32-190 Hz -> causal median HPSS
+//                -> percussive part: 1-band analytic generator (u^k, k = 2..8); harmonic part: sinusoidal / phase
+//                vocoder path (128 ms frames, <= 4 peaks, harmonic k at phase k*Phi) with envelope imposition
+//                -> output band 150-600 Hz -> back to the host rate. Latency 146.9 ms (see hpv_ref.py).
+//   VbBankstown  chadmed/bankstown (MIT), per channel, no latency, on the EQ output:
+//                p = LP2(ceil)(HP2(floor)(x)), sat = K [blend tanh(s3 p) + (1 - blend) tanh(s2 p) (p <= 0)],
+//                K = pi / (0.5 + e), layer = LP2(3 ceil)(HP2(final_hp)(amt sat)); RBJ Butterworth biquads.
+//
+// Copyright (C) 2026 PVB project. Licensed under the GNU GPL v3 (same as RootlessJamesDSP).
+#pragma once
+
+#include <cstdint>
+#include "pvb_dsp.h"
+#include "pvb_vb_policy.h"
+#include "pvb_harmonic_trace.h"
+#include "pvb_vb_continuity.h"
+#include "pvb_vb_modulation.h"
+#include "pvb_vb_am_family.h"
+#include "pvb_vb_stage.h"
+#include "pvb_track_prediction.h"
+#include "pvb_harmonic_renderer.h"
+
+namespace pvb {
+
+enum VbAlgo : int { VB_HPV = 0, VB_BANKSTOWN = 1, VB_HPV52M = 2, VB_GENTLE = 3,
+                   VB_GENTLE_STRONG = 4, VB_GENTLE_ADAPTIVE = 5,
+                   VB_ALPHA2_P1 = 6, VB_ALPHA2_D2 = 7, VB_ALPHA2_J2 = 8,
+                   VB_ALPHA2_OSC = 9, VB_ALPHA2_OSC_CORRECT = 10, VB_ALGO_COUNT };
+
+// Scene observations are unvalidated. Only the opt-in adaptive profile uses
+// them to select a harmonic attenuation budget; they are not buzz labels.
+enum VbScene : int { VB_SCENE_UNKNOWN = 0, VB_SCENE_STEADY, VB_SCENE_TRANSIENT, VB_SCENE_COMPLEX };
+struct VbResearchStats {
+    int scene = VB_SCENE_UNKNOWN;
+    uint64_t frames[4] = {};
+    double upperBlend = 0; // 0: gentle12, 1: gentle24, shared oscillator phases
+    int upperTarget = 0;
+    uint64_t transitions = 0;
+};
+
+class VbModule {
+public:
+    virtual ~VbModule() = default;
+    // Recomputes the coefficients for this rate and resets; false = not available at this rate (then unused).
+    virtual bool configure(int sampleRate) = 0;
+    virtual void reset() = 0;
+    // Frames the dry path must be delayed by so the layer lines up with it.
+    virtual int latencyFrames() const = 0;
+    // false: tick() gets the pre-EQ input; true: it gets the EQ output (before the output gain).
+    virtual bool inputAfterEq() const = 0;
+    // One frame of pre-EQ input in, one frame of layer out (layer at the 'faithful' level, level 0 dB).
+    virtual void tick(double inL, double inR, double& outL, double& outR) = 0;
+    virtual VbResearchStats researchStats() const { return {}; } // audio thread only
+    virtual void setHarmonicCapture(bool) {}
+    virtual const HarmonicTrace* takeHarmonicTrace() { return nullptr; }
+};
+
+// ------------------------------------------------------------------------------------------------ hpv
+struct HpvParams {
+    double epsDb = -80.0;          // soft floor of the analytic magnitude (no gate)
+    double ifFloorDb = -52.0;      // below this band magnitude the instantaneous frequency is not trusted
+    double ifDefaultHz = 60.0;
+    double ifSmoothS = 0.005;      // one-pole on the instantaneous frequency
+    double gainSmoothS = 0.020;    // slower frequency estimate for the level table
+    double fLoHz = 32.0, fHiHz = 190.0;   // clamp of the frequency used for the tables
+    int pvMaxPeaks = 4;
+    double pvRelDb = -30.0;        // peaks within this of the strongest
+    double pvAbsDb = -75.0;        // frames below this are skipped (tracks reset)
+    double pvPeakMinSepHz = 12.0;
+    double pvTrackTol = 0.10;      // a peak continues a track within 10 % of its frequency
+    double envCap = 1.0;           // envelope imposition: cut only
+    double envSmoothS = 0.020;
+    double harmonicMinWeight = 1e-4;
+};
+
+class VbHpv final : public VbModule {
+public:
+    // Core rate and frame sizes (fixed: the tables and buffers are sized for them).
+    static constexpr int kFsd = 3000;
+    static constexpr int kHpN = 192, kHpHop = 16, kHpMedT = 11, kHpMedF = 7, kHpBins = kHpN / 2 + 1;
+    static constexpr int kPvN = 384, kPvH = 16, kPvNfft = 2048, kMaxPeaks = 8;
+    static constexpr int kRtShift = kPvH - 1;  // the reference grain placement looks 15 core samples ahead
+    static constexpr int kKMax = 8;
+
+    explicit VbHpv(bool masked = false, bool gentle = false, int upperMode = 0);
+    bool configure(int sampleRate) override;
+    void reset() override;
+    int latencyFrames() const override { return latency_; }
+    bool inputAfterEq() const override { return false; }
+    void tick(double inL, double inR, double& outL, double& outR) override;
+    VbResearchStats researchStats() const override { return research_; }
+    void setHarmonicCapture(bool on) override { harmonicCapture_ = on; if (!on) harmonicReady_ = false; }
+    const HarmonicTrace* takeHarmonicTrace() override {
+        if (!harmonicReady_) return nullptr;
+        harmonicReady_ = false; return &harmonicTrace_;
+    }
+    // Host research only: configure before processing; not a saved app algorithm.
+    void setContinuityResearch(const ContinuityParams& p) { continuity_ = p; reset(); }
+    // Host-only controls, no JNI/UI; bit0=synthesis, bit1=analysis.
+    void setModulationResearch(int mode, bool tonalOnly=false) { modulationMode_=mode&3; tonalOnly_=tonalOnly; reset(); }
+    void setStageResearch(unsigned flags,StageCapture52::Sink sink=nullptr,void* user=nullptr) {
+        stageFlags_=flags&8191;stageSink_=sink;stageUser_=user;reset();
+    }
+    // App listening profiles, applied only by the audio owner while switching.
+    // All use the same gentle24 placement. Legacy research setters remain separate.
+    bool setAlpha2Profile(int algorithm);
+    void setStageCapture(StageCapture52::Sink sink,void* user) {stageSink_=sink;stageUser_=user;}
+
+    // Audio-thread-owned EQ, including coefficient glides and dynamic bass. A standalone module uses the
+    // reference EQ v1.1 at 48 kHz. The engine binds these objects for phase matching to the actual dry path.
+    void bindEq(const RampedSvf* hp, const RampedSvf* lo, const RampedSvf* hi, const RampedSvf* hs, int fs) {
+        eq52_[0]=hp; eq52_[1]=lo; eq52_[2]=hi; eq52_[3]=hs; eqFs52_=fs;
+    }
+
+    HpvParams params;  // read at configure() / reset(); change only while the module is not ticking
+
+private:
+    // Defined only by the host harness; invokes the production grain renderer.
+    friend struct HarmonicRendererTestAccess;
+    struct Biquad {  // direct form II transposed, like scipy.signal.sosfilt
+        double b0 = 1, b1 = 0, b2 = 0, a1 = 0, a2 = 0, z0 = 0, z1 = 0;
+        inline double tick(double x) {
+            const double y = b0 * x + z0;
+            z0 = b1 * x - a1 * y + z1;
+            z1 = b2 * x - a2 * y;
+            return y;
+        }
+        void clear() { z0 = z1 = 0; }
+    };
+    struct Allpass {  // y[n] = c (x[n] + y[n-2]) - x[n-2] as scipy.signal.lfilter([c, 0, -1], [1, 0, -c])
+        double c = 0, z0 = 0, z1 = 0;
+        inline double tick(double x) {
+            const double y = c * x + z0;
+            z0 = 0.0 * x - 0.0 * y + z1;
+            z1 = -1.0 * x - (-c) * y;
+            return y;
+        }
+        void clear() { z0 = z1 = 0; }
+    };
+    struct Hilbert {
+        Allpass i[4], q[4];
+        double qPrev = 0;
+        void clear();
+        void tick(double x, double& re, double& im);
+    };
+    struct OnePole {  // lfilter([1 - a], [1, -a]) with an initial state
+        double b0 = 0, a = 0, z = 0;
+        inline double tick(double x) {
+            const double y = b0 * x + z;
+            z = a * y;  // b1 * x - a1 * y with b1 = 0, a1 = -a
+            return y;
+        }
+    };
+    struct Track { double f, phi; };
+
+    double core(double d);       // one 3 kHz sample in, one out (the reference's output kRtShift samples earlier)
+    double core52(double d);
+    void pvFrame52();
+    void spectrum52(const double* ring, int64_t start, double* re, double* im);
+    bool masked_ = false;
+    bool gentle_ = false;
+    int upperMode_ = 0; // 0 fixed12, 1 fixed24, 2 experimental adaptive12/24
+    UpperHarmonicPolicy upperPolicy_;
+    VbResearchStats research_;
+    void observeScene(int scene) {
+        if (!gentle_) return;
+        research_.scene = scene;
+        ++research_.frames[scene];
+        if(upperMode_==2) {
+            upperPolicy_.step(scene==VB_SCENE_STEADY);
+            research_.upperBlend=upperPolicy_.blend();
+            research_.upperTarget=upperPolicy_.target();
+            research_.transitions=upperPolicy_.switches();
+        }
+    }
+    const RampedSvf* eq52_[4] = {};
+    int eqFs52_ = 48000;
+    double phaseDelta52(double f) const;
+    void hpssFrame();            // a 192-sample HPSS frame is complete
+    void pvFrame();              // a 384-sample vocoder frame is complete
+    void lookup(double f, double* wk, double& gk) const;
+    void fft64(double* re, double* im) const;                   // in place, natural order in and out
+    void dft192(const double* xr, const double* xi, double* yr, double* yi, int nOut);  // forward, first nOut bins
+    double bandLayer(double re, double im);
+
+    // rate conversion (host rate <-> exactly 3 kHz): decimated sample m = input at time m / 3000 s
+    int L_ = 1, M_ = 16, taps_ = 0;
+    const double* fir_ = nullptr;          // FIR at fs * L (unity DC gain)
+    double firDec_[1471] = {};             // fir * L
+    double firInt_[1471] = {};             // fir * M
+    static constexpr int kInRing = 256, kHcRing = 32;
+    double inRing_[kInRing] = {};
+    double hcRing_[kHcRing] = {};
+    uint64_t n_ = 0, m_ = 0, mDue_ = 0;    // next input index, next decimated index and its input index
+    bool supported_ = false;
+    int latency_ = 0;
+
+    // 3 kHz core
+    uint64_t i_ = 0;                       // core sample index
+    Biquad band_[4], out_[3];
+    // HPSS
+    static constexpr int kRing = 512;      // power of two, > every look-back below
+    double bRing_[kRing] = {};
+    double winHp_[kHpN] = {};
+    double wsumHp_[kHpHop] = {};
+    double cosHp_[kHpN] = {}, sinHp_[kHpN] = {};   // exp(-2 pi i n / 192); 192 = 3 x 64 (mixed radix)
+    int bitrev64_[64] = {};
+    double fr3_[3][64] = {}, fi3_[3][64] = {};
+    double sHist_[kHpMedT][kHpBins] = {};  // magnitude spectra of the last 11 frames (ring)
+    int sPos_ = 0;
+    double olaH_[kRing] = {}, olaP_[kRing] = {};
+    Hilbert hilH_, hilP_;
+    // percussive generator state
+    double prevUr_ = 0, prevUi_ = 0;
+    bool first_ = true;
+    OnePole fInst_, fGain_;
+    double hpRing_[kRing] = {};            // percussive layer, delayed by kPvN / 2 at use
+    // vocoder
+    double bhRing_[kRing] = {};            // harmonic stream
+    double aRing_[kRing] = {};             // |analytic harmonic stream|
+    double winPv_[kPvN] = {};
+    double pvWsum_ = 0;
+    double cosPv_[kPvNfft] = {}, sinPv_[kPvNfft] = {};   // exp(-2 pi i n / 2048)
+    static constexpr int kHalfFft = kPvNfft / 2;          // real 2048-point FFT through a complex 1024-point one
+    int bitrev_[kHalfFft] = {};
+    double zr_[kHalfFft] = {}, zi_[kHalfFft] = {};
+    double gw_[2 * kPvH] = {};
+    int loBin_ = 0, hiBin_ = 0;
+    double binHz_ = 0;
+    double pvOut_[kRing] = {}, pvApv_[kRing] = {};
+    Track tracks_[kMaxPeaks] = {};
+    int nTracks_ = 0;
+    OnePole envA_, envP_;
+    double eps_ = 0, ifFloor_ = 0, pvAbs_ = 0, pvRel_ = 0, cPsi_[kKMax - 1] = {}, sPsi_[kKMax - 1] = {};
+
+    // hpv52m: all state is fixed-size and owned by the module; no audio-thread allocations.
+    struct Track52 {
+        double f=0, phi=0, off[7]={}, fade=0, a=0;
+        bool strong=false, fastEnding=false;
+        uint32_t id=0, age=0;
+        double dfdt=0, life=1, residual=-200, rawResidual=-200;
+        int missing=0;
+        double dadt=0;
+        ModulationFit modulation;
+        AmFamily52 family;
+        HarmonicPermission permission[7];
+        prediction52::History prediction;
+        oscillator52::State oscillator;
+    };
+    Track52 tr52_[12];
+    ContinuityParams continuity_;
+    int modulationMode_=0;
+    bool tonalOnly_=false;
+    unsigned stageFlags_=0;
+    StageCapture52::Sink stageSink_=nullptr;
+    void* stageUser_=nullptr;
+    double detailRing52_[kRing]={};
+    bool detailApplied52_=false, familyApplied52_=false;
+    AmFamily52 family52_;
+    int64_t familyCentre52_=0;
+    int familyCountdown52_=0;
+    double conditionalGain52_=0;
+    double oscillatorNominal52_[kPvH]={};
+    uint32_t nextTrackId_=0, harmonicEpoch_=0;
+    bool harmonicCapture_=false, harmonicReady_=false;
+    HarmonicTrace harmonicTrace_;
+    void beginHarmonic52();
+    void traceTrack52(int slot, const Track52& t, int state, int reason);
+    void renderTrack52(Track52& t, const double src[2][256], const int ns[2], bool observed,
+                       bool fast, int traceSlot, double* grain, double& agrain);
+    void addGrain52(int64_t centre, const double* grain, double nominalAmplitude);
+    void takeGrain52(int64_t index, double& sample, double& nominalAmplitude);
+    void missingFrame52(int reason, bool fast);
+    int nt52_=0, apkCount_=0, histCount_=0, holdCount_=0, holdPos_=0, onsetLeft_=0;
+    double apk52_[56]={}, hist52_[11][6]={};
+    int histN52_[11]={};
+    double hold52_[28][190]={};
+    double md52_[kRing]={}, md2_52_[kRing]={}, max52_[kRing]={}, polyT52_[kRing]={};
+    double poly52_=1, percEnv52_=0, harmEnv52_=0;
+    double xr52_[kHalfFft+1]={}, xi52_[kHalfFft+1]={};
+    double sr52_[kHalfFft+1]={}, si52_[kHalfFft+1]={}, sm52_[kHalfFft+1]={};
+};
+
+// ------------------------------------------------------------------------------------------------ Bankstown
+struct BankstownParams {  // defaults: Asahi Linux tuning for the MacBook Pro 14 (to be replaced by phone values)
+    double amt = 1.45;
+    double s2 = 1.35;
+    double s3 = 2.25;
+    double blend = 0.67;
+    double floorHz = 20.0;
+    double ceilHz = 200.0;
+    double finalHpHz = 200.0;
+};
+
+class VbBankstown final : public VbModule {
+public:
+    bool configure(int sampleRate) override;
+    void reset() override;
+    int latencyFrames() const override { return 0; }
+    bool inputAfterEq() const override { return true; }
+    void tick(double inL, double inR, double& outL, double& outR) override;
+
+    BankstownParams params;  // read at configure()
+
+private:
+    struct Biquad {
+        double b0 = 1, b1 = 0, b2 = 0, a1 = 0, a2 = 0, z0 = 0, z1 = 0;
+        inline double tick(double x) {
+            const double y = b0 * x + z0;
+            z0 = b1 * x - a1 * y + z1;
+            z1 = b2 * x - a2 * y;
+            return y;
+        }
+    };
+    static Biquad rbj(double fs, double f, bool lowpass);
+    double chan(int c, double x);
+    Biquad hp_[2], lp_[2], hpOut_[2], lpOut_[2];
+    double k_ = 0;
+    int sr_ = 0;
+};
+
+}  // namespace pvb
+
+

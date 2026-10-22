@@ -1,0 +1,251 @@
+name: Rootnote build
+
+# Every push to a branch and every pull request builds both flavors and uploads them as artifacts only.
+# A GitHub release is made only for tags general-v* (general build, signed with the GENERAL_* secrets; see
+# RELEASE_GENERAL.md). The s26u flavor (personal channel) is built for testing but never released from this repository.
+on:
+  push:
+    branches: [ '**', '!ci-log*' ]
+    tags: [ 'general-v*' ]
+    # Documentation-only pushes do not build. (Path filters are not applied to tag pushes.)
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  engine-tests:
+    name: Engine tests (host)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Prepare pinned Kotlin compiler
+        run: tools/pvb-harness/jvm/bootstrap_kotlin.sh
+
+      - name: Install test dependencies
+        run: pip install numpy scipy soundfile
+
+      - name: Build engine for the host and run the test suite
+        run: |
+          set -o pipefail
+          {
+            tools/pvb-harness/build_host.sh &&
+            python3 tools/pvb-harness/test_engine.py --report engine-report.json &&
+            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_alpha2_profiles.py --lib tools/pvb-harness/build/libpvbcapi.so --report alpha2-profiles-ci.json &&
+            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_diagnostic_solo.py &&
+            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_harmonic_continuity.py --report harmonic-continuity-report.json &&
+            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_native_renderer.py --report native-renderer-q0.json &&
+            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_native_stream.py --report native-stream-q0.json &&
+            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_oscillator_research.py --lib tools/pvb-harness/build/libpvbcapi.so --report oscillator-ci.json &&
+            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_q0_native_mutation.py --report native-mutation-q0.json &&
+            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_modulation_research.py --report modulation-p1-report.json &&
+            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_detail_research.py --report detail-research-ci.json &&
+            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_am_family_research.py --lib tools/pvb-harness/build/libpvbcapi.so --report am-family-ci.json &&
+            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_track_assignment_research.py --lib tools/pvb-harness/build/libpvbcapi.so --report track-assignment-ci.json &&
+            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_track_prediction_research.py --lib tools/pvb-harness/build/libpvbcapi.so --report track-prediction-ci.json &&
+            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_track_prediction_mutation.py --report track-prediction-mutation-ci.json &&
+            g++ -std=c++17 -O2 -Wall -Wextra -Werror -Iapp/src/main/cpp/libpvb tools/pvb-harness/vb_quality/test_track_prediction.cpp -o /tmp/pvb-track-prediction && /tmp/pvb-track-prediction &&
+            g++ -std=c++17 -O2 -Wall -Wextra -Werror -Iapp/src/main/cpp/libpvb tools/pvb-harness/vb_quality/test_continuity_policy.cpp -o /tmp/pvb-continuity-policy && /tmp/pvb-continuity-policy &&
+            python3 tools/pvb-harness/vb51/test_port52.py port52-report.json &&
+            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/vb_quality/test_gentle_port.py --report gentle-port-report.json &&
+            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/vb_quality/test_adaptive_port.py --report adaptive-port-report.json &&
+            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/vb_quality/test_quality.py --report quality-report.json &&
+            python3 tools/pvb-harness/match/test_match.py &&
+            tools/pvb-harness/jvm/run_jvm_test.sh
+          } 2>&1 | tee ci-build.log
+
+      - name: Save log to the ci-log branch (so it can be read without the web UI)
+        if: failure()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./.github/save-ci-log.sh engine-tests
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: engine-report
+          path: |
+            harmonic-continuity-report.json
+            modulation-p1-report.json
+            native-renderer-q0.json
+            native-stream-q0.json
+            oscillator-ci.json
+            native-mutation-q0.json
+            engine-report.json
+            alpha2-profiles-ci.json
+            detail-research-ci.json
+            am-family-ci.json
+            track-assignment-ci.json
+            track-prediction-ci.json
+            track-prediction-mutation-ci.json
+            port52-report.json
+            gentle-port-report.json
+            adaptive-port-report.json
+            quality-report.json
+            ci-build.log
+
+  apk:
+    name: Build APKs (s26u + general)
+    needs: engine-tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # General build signing key: only from repository secrets, never from the repository.
+      - name: Prepare the general signing key (if the secrets exist)
+        id: key
+        env:
+          GENERAL_KEYSTORE_B64: ${{ secrets.GENERAL_KEYSTORE_B64 }}
+          GENERAL_KEYSTORE_PASSWORD: ${{ secrets.GENERAL_KEYSTORE_PASSWORD }}
+          GENERAL_KEY_ALIAS: ${{ secrets.GENERAL_KEY_ALIAS }}
+          GENERAL_KEY_PASSWORD: ${{ secrets.GENERAL_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -n "$GENERAL_KEYSTORE_B64" ] && [ -n "$GENERAL_KEYSTORE_PASSWORD" ] && [ -n "$GENERAL_KEY_ALIAS" ] && [ -n "$GENERAL_KEY_PASSWORD" ]; then
+            printf '%s' "$GENERAL_KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/general.jks"
+            echo "GENERAL_KEYSTORE_PATH=$RUNNER_TEMP/general.jks" >> "$GITHUB_ENV"
+            echo "signed=true" >> "$GITHUB_OUTPUT"
+            echo "General build: signed with the distribution key from secrets"
+          else
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+            echo "General build: no GENERAL_* secrets -> debug-signed test build (-UNSIGNED-TEST)"
+          fi
+
+      - name: Refuse to publish an unsigned general build
+        if: startsWith(github.ref, 'refs/tags/general-v') && steps.key.outputs.signed != 'true'
+        run: |
+          echo "Tag ${GITHUB_REF_NAME}: the GENERAL_* secrets are missing; a release must be signed with the distribution key." >&2
+          exit 1
+
+      - name: Source archive with submodules (GPL-3.0 corresponding source)
+        run: |
+          set -euo pipefail
+          mkdir -p dist-general
+          git ls-files -z --recurse-submodules | tar --null -T - -czf "dist-general/source-${GITHUB_SHA::7}.tar.gz"
+          ls -l dist-general
+
+      - name: Build rootless F-Droid release (s26u with the debug key, general with the environment key)
+        env:
+          GENERAL_KEYSTORE_PASSWORD: ${{ secrets.GENERAL_KEYSTORE_PASSWORD }}
+          GENERAL_KEY_ALIAS: ${{ secrets.GENERAL_KEY_ALIAS }}
+          GENERAL_KEY_PASSWORD: ${{ secrets.GENERAL_KEY_PASSWORD }}
+        run: |
+          set -o pipefail
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleRootlessFdroidS26uRelease assembleRootlessFdroidGeneralRelease 2>&1 | tee ci-build.log
+
+      - name: Save log to the ci-log branch (so it can be read without the web UI)
+        if: failure()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./.github/save-ci-log.sh apk
+
+      - name: Collect s26u APK (test build, not released)
+        id: collect
+        run: |
+          set -e
+          out=app/build/outputs/apk/rootlessFdroidS26u/release
+          ls -l "$out/"
+          apk=$(ls $out/*universal*.apk 2>/dev/null | head -1)
+          [ -n "$apk" ] || apk=$(ls $out/*.apk | head -1)
+          mkdir -p dist
+          name="PVB-S26U-test${{ github.run_number }}.apk"
+          cp "$apk" "dist/$name"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+
+      - name: Verify s26u APK signature and record checksum
+        run: |
+          set -euo pipefail
+          tools=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          "$tools/apksigner" verify --verbose "dist/${{ steps.collect.outputs.name }}"
+          "$tools/aapt" dump badging "dist/${{ steps.collect.outputs.name }}" > dist/apk-info.txt
+          head -1 dist/apk-info.txt
+          # The personal channel must keep its package (flavor change guard).
+          grep -q "^package: name='kr.ksysh3.pvb.s26u'" dist/apk-info.txt || { echo "s26u package changed" >&2; exit 1; }
+          echo "::notice title=s26u APK::$(head -1 dist/apk-info.txt) $(grep "^application-label:" dist/apk-info.txt)"
+          cd dist
+          sha256sum "${{ steps.collect.outputs.name }}" > "${{ steps.collect.outputs.name }}.sha256"
+          cat "${{ steps.collect.outputs.name }}.sha256"
+
+      - name: Collect, verify and name the general APK
+        id: general
+        run: |
+          set -euo pipefail
+          out=app/build/outputs/apk/rootlessFdroidGeneral/release
+          ls -l "$out/"
+          apk=$(ls $out/*universal*.apk 2>/dev/null | head -1)
+          [ -n "$apk" ] || apk=$(ls $out/*.apk | head -1)
+          tools=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          "$tools/aapt" dump badging "$apk" > dist-general/apk-info.txt
+          head -1 dist-general/apk-info.txt
+          brand=$(sed -n "s/^application-label:'\(.*\)'$/\1/p" dist-general/apk-info.txt | head -1)
+          version=$(sed -n "s/.*versionName='\([^']*\)'.*/\1/p" dist-general/apk-info.txt | head -1)
+          package=$(sed -n "s/^package: name='\([^']*\)'.*/\1/p" dist-general/apk-info.txt | head -1)
+          expected=$(sed -n 's/.*GENERAL_APPLICATION_ID = "\(.*\)".*/\1/p' buildSrc/src/main/kotlin/AndroidConfig.kt)
+          test -n "$expected" && test "$package" = "$expected" || { echo "unexpected general package $package (expected $expected)" >&2; exit 1; }
+          # Records stay out of the general build: no microphone foreground service, no buzz/live A/B screens.
+          if grep -q "FOREGROUND_SERVICE_MICROPHONE" dist-general/apk-info.txt; then echo "general APK requests the microphone FGS permission" >&2; exit 1; fi
+          "$tools/apksigner" verify --verbose --print-certs "$apk" | tee dist-general/signature.txt
+          echo "::notice title=general APK::$(head -1 dist-general/apk-info.txt) label=$brand signer=$(grep -m1 'certificate SHA-256' dist-general/signature.txt | sed 's/.*: //')"
+          if [ "${{ steps.key.outputs.signed }}" = "true" ]; then suffix=""; else suffix="-UNSIGNED-TEST"; fi
+          base="${brand:-general}-${version}${suffix}"
+          cp "$apk" "dist-general/$base.apk"
+          (cd dist-general && sha256sum "$base.apk" > "$base.apk.sha256" && cat "$base.apk.sha256")
+          echo "base=$base" >> "$GITHUB_OUTPUT"
+          echo "brand=$brand" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Upload s26u APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PVB-S26U-test-apk
+          path: dist/*
+
+      - name: Upload general APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.general.outputs.base }}
+          path: dist-general/*
+
+      # General: only from a general-v* tag, only signed (checked above), with the corresponding source archive.
+      - name: Publish the general build as a GitHub release
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/general-v') && steps.key.outputs.signed == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ steps.general.outputs.brand }} ${{ steps.general.outputs.version }}
+          prerelease: ${{ contains(steps.general.outputs.version, '-') }}
+          make_latest: 'false'
+          body_path: RELEASE_NOTES_GENERAL.md
+          files: |
+            dist-general/*.apk
+            dist-general/*.sha256
+            dist-general/source-*.tar.gz

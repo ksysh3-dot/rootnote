@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 일반 빌드: 내부 알파 이름과 모델 표현을 뺀 PVB 문자열. -->
+<resources>
+    <string name="pvb_enable">스피커 보정 (켜면 JamesDSP 대신 사용)</string>
+    <string name="pvb_vb_enable">가상 저음 (실험)</string>
+    <string name="pvb_vb_enable_summary">저음의 풍성함과 무게를 더합니다. 약 0.15초 지연</string>
+    <string name="pvb_vb_warning_title">가상 저음 (실험)</string>
+    <string name="pvb_vb_warning">가상 저음은 실험 기능입니다.\n\n• 곡과 기기에 따라 효과와 거슬림이 다릅니다.\n• 윙윙거림이나 기계음(버즈음)이 느껴지면 크기를 줄이거나 \"풍성함 증가\" 모드를 쓰세요. \"초저역 강조\" 모드는 저음이 빽빽한 곡에서 버즈음이 생길 수 있습니다.\n• 약 0.15초 지연이 있어 영상의 입 모양이 조금 어긋날 수 있습니다.\n• 최대 볼륨으로 오래 듣지 마세요. 작은 스피커가 과열될 수 있습니다.</string>
+</resources>

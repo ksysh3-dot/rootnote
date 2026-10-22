@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- General build: PVB strings without the internal alpha names and model wording. -->
+<resources>
+    <string name="pvb_enable">Speaker correction (replaces JamesDSP processing when on)</string>
+    <string name="pvb_vb_enable">Virtual bass (experimental)</string>
+    <string name="pvb_vb_enable_summary">Adds fullness and weight to the bass. About 0.15 s of delay</string>
+    <string name="pvb_vb_warning_title">Virtual bass (experimental)</string>
+    <string name="pvb_vb_warning">Virtual bass is experimental.\n\n• The effect and any harshness depend on the song and on the phone.\n• If you hear buzzing or a mechanical sound, lower the strength or use the \"More fullness\" mode. The \"Deep bass\" mode can buzz on songs with dense bass.\n• It adds about 0.15 s of delay, so video may look slightly out of sync.\n• Avoid long listening at maximum volume: small speakers can overheat.</string>
+</resources>

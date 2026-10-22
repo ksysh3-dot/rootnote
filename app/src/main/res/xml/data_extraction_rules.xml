@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+   Data extraction rules (Android 12+): cloud backup and device-to-device transfer.
+   See https://developer.android.com/about/versions/12/backup-restore#xml-changes
+-->
+<data-extraction-rules>
+    <cloud-backup disableIfNoEncryptionCapabilities="false">
+        <include domain="sharedpref" path="."/>
+        <exclude domain="sharedpref" path="variable.xml" />
+        <!-- PVB data stays on the device (PRIVACY.md): settings, per-song memory (track titles), blind comparison
+             records, measurement, diagnostics and app flags. Only shared preferences are included at all, so the files/
+             directory (live_ab/, buzz_reports/) is never backed up or transferred either. -->
+        <exclude domain="sharedpref" path="pvb_settings.xml" />
+        <exclude domain="sharedpref" path="pvb_track_levels.xml" />
+        <exclude domain="sharedpref" path="pvb_ab.xml" />
+        <exclude domain="sharedpref" path="pvb_measure.xml" />
+        <exclude domain="sharedpref" path="pvb_buzz.xml" />
+        <exclude domain="sharedpref" path="pvb_match_cache.xml" />
+        <exclude domain="sharedpref" path="pvb_ui.xml" />
+        <exclude domain="sharedpref" path="pvb_flags.xml" />
+    </cloud-backup>
+    <device-transfer disableIfNoEncryptionCapabilities="false">
+        <include domain="sharedpref" path="."/>
+        <exclude domain="sharedpref" path="variable.xml" />
+        <!-- PVB data stays on the device (PRIVACY.md): settings, per-song memory (track titles), blind comparison
+             records, measurement, diagnostics and app flags. Only shared preferences are included at all, so the files/
+             directory (live_ab/, buzz_reports/) is never backed up or transferred either. -->
+        <exclude domain="sharedpref" path="pvb_settings.xml" />
+        <exclude domain="sharedpref" path="pvb_track_levels.xml" />
+        <exclude domain="sharedpref" path="pvb_ab.xml" />
+        <exclude domain="sharedpref" path="pvb_measure.xml" />
+        <exclude domain="sharedpref" path="pvb_buzz.xml" />
+        <exclude domain="sharedpref" path="pvb_match_cache.xml" />
+        <exclude domain="sharedpref" path="pvb_ui.xml" />
+        <exclude domain="sharedpref" path="pvb_flags.xml" />
+    </device-transfer>
+</data-extraction-rules>

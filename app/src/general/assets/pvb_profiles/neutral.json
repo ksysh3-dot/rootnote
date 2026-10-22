@@ -1,0 +1,32 @@
+{
+  "id": "neutral",
+  "name": "Neutral (not measured)",
+  "measured": false,
+  "_note": "Conservative defaults for any phone that has not been measured: protective high-pass only, flat EQ, 3 dB of output headroom. Match-on-disable is off, so the S26U-tuned loudness weighting of the matcher is never used; the S26U speaker and limiter curves are not shown.",
+  "match": {
+    "manufacturer": [],
+    "model_prefixes": []
+  },
+  "settings": {
+    "pvb_speaker_only": true,
+    "pvb_hp_hz": 100,
+    "pvb_low_hz": 220,
+    "pvb_low_db": 0,
+    "pvb_low_q": 1,
+    "pvb_hi_hz": 4500,
+    "pvb_hi_db": 0,
+    "pvb_hi_q": 0.6,
+    "pvb_hs_hz": 2500,
+    "pvb_hs_db": 0,
+    "pvb_out_db": -3,
+    "pvb_ceil_db": -1,
+    "pvb_release_ms": 60,
+    "pvb_match_on_disable": false,
+    "pvb_vol_link": false,
+    "pvb_dyn_enable": false,
+    "pvb_vb_enable": false,
+    "pvb_vb_vol_link": false
+  },
+  "loudness_weighting": "none",
+  "phone_model_curves": false
+}

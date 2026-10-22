@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 일반 배포 빌드용 문자열 (한국어). 기본(영어)은 values/strings_general.xml. -->
+<resources>
+    <string name="app_subtitle">폰 스피커 가상 저음 · RootlessJamesDSP 기반 비공식 포크</string>
+
+    <string name="first_run_title">켜기 전에</string>
+    <string name="first_run_message">%1$s은(는) 폰 내장 스피커에 가상 저음과 가벼운 보정을 더합니다. RootlessJamesDSP의 비공식 포크이며, RootlessJamesDSP나 JamesDSP 개발자가 만들거나 지원하는 앱이 아닙니다. 보증은 없습니다(GPL-3.0).\n\n설정(루트 불필요): 패키지 %2$s에 셸 권한 두 가지를 한 번 줘야 합니다.\n• Shizuku(권장, PC 불필요): Shizuku를 설치하고 무선 디버깅으로 시작한 뒤, 이 앱의 설정 화면에서 접근을 허용합니다.\n• ADB(PC 필요): USB 디버깅을 켜고 다음을 실행합니다.\n%3$s\n(마지막 줄은 선택: 재부팅 뒤 자동 시작)\n\nAndroid 15 이상: 개발자 옵션에서 \"화면 공유 보호 사용 중지\"를 켜세요. 켜지 않으면 캡처 중에 알림이 가려집니다.\n\n오디오 캡처를 막는 앱(예: Spotify, Chrome, SoundCloud)의 소리는 처리되지 않습니다. 내장 스피커에서만 적용됩니다. 가상 저음은 약 0.15초 지연이 있습니다.\n\n개인정보: 이 앱의 설정만 폰에 저장합니다. 곡 제목, 녹음, 사용 기록은 저장하지 않습니다. 어디에도 보내지 않으며, 네트워크는 선택 기능인 AutoEQ 검색(원본 프로젝트의 AutoEQ 서버)에만 씁니다.</string>
+    <string name="first_run_confirm">확인하고 켜기</string>
+    <string name="first_run_later">나중에</string>
+
+    <string name="unmeasured_title">이 기기는 측정되지 않았습니다</string>
+    <string name="unmeasured_message">%1$s은(는) 갤럭시 S26 Ultra에서만 측정한 설정이 있습니다. 이 기기(%2$s)에서는 보수적인 중립 설정으로 시작합니다: 보호용 저역 차단 100 Hz, 평탄한 EQ, 출력 −3 dB, 리미터 −1 dBTP. 들으면서 조정해 주세요.</string>
+    <string name="unmeasured_status">이 기기는 측정되지 않았습니다. 기본값은 보수적으로 설정됩니다.</string>
+
+    <string name="research_section_header">개발자/연구. 이 도구와 값은 갤럭시 S26 Ultra에서 만든 것이라 이 기기와 맞지 않을 수 있습니다. 설정 › 정보에서 다시 숨길 수 있습니다.</string>
+    <string name="research_unlocked">개발자/연구 도구를 표시합니다</string>
+    <string name="research_already_shown">개발자/연구 도구가 이미 표시되어 있습니다</string>
+    <string name="research_taps_left">%1$d번 더 누르면 개발자/연구 도구가 표시됩니다</string>
+
+    <string name="about_category_app">이 앱에 대해</string>
+    <string name="about_based_on_title">RootlessJamesDSP %1$s 기반</string>
+    <string name="about_based_on_summary">원본 앱 Tim Schneeberger, JamesDSP 엔진 James Fung. 2026년에 폰 스피커 가상 저음용으로 수정했습니다. 바뀐 파일 목록은 소스의 NOTICE.md에 있습니다.</string>
+    <string name="about_license_title">라이선스: GPL-3.0</string>
+    <string name="about_license_summary">보증 없는 자유 소프트웨어입니다. 눌러서 라이선스 전문을 봅니다.</string>
+    <string name="about_source_title">소스 코드</string>
+    <string name="about_privacy_title">개인정보</string>
+    <string name="about_privacy_summary">이 앱이 저장하고 보내는 것</string>
+    <string name="about_third_party_title">오픈소스 라이선스</string>
+    <string name="about_third_party_summary">이 앱에 쓰인 오픈소스 구성요소</string>
+    <string name="about_upstream_title">원본 프로젝트 (RootlessJamesDSP)</string>
+    <string name="about_research_category">개발자/연구</string>
+    <string name="about_research_hide_title">개발자/연구 도구 숨기기</string>
+    <string name="about_research_hide_summary">버전을 7번 누르면 다시 표시됩니다</string>
+
+    <string name="privacy_summary">%1$s이(가) 이 폰에 저장하는 것은 다음뿐입니다.\n• 설정(스피커 보정, 가상 저음, 앱 옵션)\n• 마지막 음량 맞춤 값(숫자 하나)\n• 앱 캐시의 기술 로그(앱을 시작할 때마다 새로 씀, 문제 해결에서 직접 공유할 때만 밖으로 나감)\n\n곡 제목·아티스트·오디오는 저장하지 않고, 마이크로 녹음하지도 않습니다. 시스템 오디오는 서비스가 도는 동안 메모리에서만 처리하고 저장하지 않습니다.\n\n어디에도 보내지 않습니다. 네트워크는 JamesDSP 이퀄라이저의 선택 기능인 AutoEQ 검색을 쓸 때만 원본 프로젝트의 AutoEQ 서버(aeq.timschneeberger.me)에 접속합니다.\n\n가상 저음 설정은 Android 클라우드 백업과 기기 간 전송에서 제외됩니다.</string>
+    <string name="privacy_full_text">전문 보기(온라인)</string>
+
+    <string name="pvb_jamesdsp_note">%1$s 처리가 켜져 있어 아래 JamesDSP 설정은 지금 소리에 적용되지 않습니다. 보정과 \"%2$s\"를 모두 꺼야 JamesDSP 처리가 적용됩니다.</string>
+
+    <string name="vb_preset_fullness_title">풍성함 증가 (권장)</string>
+    <string name="vb_preset_fullness_desc">악기의 몸통감과 풍성함, 잔향을 키웁니다. 보수적으로 동작해 버즈음이 생길 가능성이 낮습니다.</string>
+    <string name="vb_preset_deep_title">초저역 강조 (실험)</string>
+    <string name="vb_preset_deep_desc">스피커 한계보다 낮은 저음을 재현하려 합니다. 곡에 따라 차이가 크고 버즈음이 생길 수 있습니다.</string>
+    <string name="vb_preset_custom_title">사용자 지정</string>
+    <string name="vb_preset_custom_desc">크기를 직접 바꾼 상태입니다.</string>
+    <string name="vb_mode_note">모드는 가상 저음의 방식과 크기만 정합니다. EQ·출력 등 다른 설정은 그대로입니다.</string>
+</resources>
