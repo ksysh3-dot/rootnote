@@ -20,15 +20,12 @@
     <color name="rn_slider_inactive">#3A3F45</color>
     <color name="rn_thumb">#FFFFFF</color>
 
-
     <!-- Semantic tokens (docs/DESIGN.md 2.2), dark. -->
     <color name="rn_warn_bg">#3A2A12</color>
     <color name="rn_warn_text">#FFB866</color>
     <color name="rn_warn_dot">#E07B00</color>
     <color name="rn_danger">#F2B8B5</color>
     <color name="rn_danger_bg">#3B1513</color>
-    <color name="rn_ok_bg">#12301F</color>
-    <color name="rn_ok_text">#8FD9AE</color>
     <color name="rn_badge_research_bg">#1E2A44</color>
     <color name="rn_badge_research_text">#A9C2F2</color>
     <color name="rn_badge_maker_bg">#2C2340</color>

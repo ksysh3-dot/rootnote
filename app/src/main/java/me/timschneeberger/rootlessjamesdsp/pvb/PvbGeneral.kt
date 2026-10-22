@@ -163,7 +163,7 @@ object PvbGeneral {
         }
     }
 
-        private var noticeDialog: WeakReference<androidx.appcompat.app.AlertDialog>? = null
+    private var noticeDialog: WeakReference<androidx.appcompat.app.AlertDialog>? = null
 
     /**
      * The first-run notice of the general build. [onConfirmed] runs after the user confirmed it. Only one notice is

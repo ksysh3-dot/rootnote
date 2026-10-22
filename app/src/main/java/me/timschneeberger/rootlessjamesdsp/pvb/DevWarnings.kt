@@ -1,5 +1,6 @@
 package me.timschneeberger.rootlessjamesdsp.pvb
 
+import kotlin.math.ln
 import kotlin.math.log10
 import kotlin.math.max
 import kotlin.math.pow
@@ -121,6 +122,39 @@ object DevMath {
     const val GAUGE_MAX_DB = 6f
     fun gaugeFraction(relDb: Float): Float = ((relDb - GAUGE_MIN_DB) / (GAUGE_MAX_DB - GAUGE_MIN_DB)).coerceIn(0f, 1f)
     val thresholdFraction: Float get() = gaugeFraction(0f)
+
+    /**
+     * Gauge gradient (docs/DESIGN.md 2.3): green 0, yellow 0.45, orange 0.72, red 1, as 0xRRGGBB. The filled part of
+     * the track uses the same gradient over the whole track (not stretched to the level), so the colour at the level
+     * ([gaugeColorAt]) is the colour of the track there; the level dot's ring uses it.
+     */
+    val GAUGE_STOP_POS = floatArrayOf(0f, 0.45f, 0.72f, 1f)
+    val GAUGE_STOP_RGB = intArrayOf(0x2E9E5B, 0xE8C547, 0xE8892F, 0xD64545)
+
+    fun gaugeColorAt(f: Float): Int {
+        val x = if (f.isFinite()) f.coerceIn(0f, 1f) else 0f
+        var i = 0
+        while (i < GAUGE_STOP_POS.size - 2 && x > GAUGE_STOP_POS[i + 1]) i++
+        val t = (x - GAUGE_STOP_POS[i]) / (GAUGE_STOP_POS[i + 1] - GAUGE_STOP_POS[i])
+        fun ch(c: Int, s: Int) = (c shr s) and 0xFF
+        fun mix(s: Int) = Math.round(ch(GAUGE_STOP_RGB[i], s) + (ch(GAUGE_STOP_RGB[i + 1], s) - ch(GAUGE_STOP_RGB[i], s)) * t)
+        return (mix(16) shl 16) or (mix(8) shl 8) or mix(0)
+    }
+
+    /** Share of the threshold's power, in whole percent for the gauge caption (0..999). */
+    fun sharePct(db: Float, thresholdDb: Float): Int =
+        if (!db.isFinite() || db <= -100f) 0 else Math.round(100f * shareOfThreshold(db, thresholdDb)).coerceIn(0, 999)
+
+    /** Harmonic-bar graph: logarithmic frequency axis [GRAPH_LO_HZ]..[GRAPH_HI_HZ] -> 0..1. */
+    const val GRAPH_LO_HZ = 35f
+    const val GRAPH_HI_HZ = 700f
+    fun graphX(hz: Float): Float =
+        (ln(hz.coerceIn(GRAPH_LO_HZ, GRAPH_HI_HZ) / GRAPH_LO_HZ) / ln(GRAPH_HI_HZ / GRAPH_LO_HZ))
+
+    /** Bar height 0..1 from dBFS ([BAR_LO_DB]..[BAR_HI_DB]). */
+    const val BAR_LO_DB = -66f
+    const val BAR_HI_DB = -6f
+    fun barHeight(db: Float): Float = if (!db.isFinite()) 0f else ((db - BAR_LO_DB) / (BAR_HI_DB - BAR_LO_DB)).coerceIn(0f, 1f)
 
     /** VU-style meter (option): -12..+2 dB re the threshold, positions on an amplitude scale like a VU meter. */
     const val VU_MIN_DB = -12f

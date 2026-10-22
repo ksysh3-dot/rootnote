@@ -28,6 +28,8 @@
     <string name="dev_zone_good">잘 들림</string>
     <string name="dev_zone_buzz">쿠훙 위험</string>
     <string name="dev_time_tail">꼬리</string>
+    <string name="dev_time_axis_now">지금</string>
+    <string name="dev_time_axis_s">−%1$d초</string>
     <string name="dev_threshold_measured">문턱: 실측값</string>
     <string name="dev_threshold_estimate">문턱: 추정값 (%1$s 실측 기준)</string>
     <string name="dev_gauge_unit">dB 여유</string>

@@ -28,6 +28,8 @@
     <string name="dev_zone_good">Heard well</string>
     <string name="dev_zone_buzz">Buzz risk</string>
     <string name="dev_time_tail">Tail</string>
+    <string name="dev_time_axis_now">now</string>
+    <string name="dev_time_axis_s">−%1$d s</string>
     <string name="dev_threshold_measured">Threshold: measured</string>
     <string name="dev_threshold_estimate">Threshold: estimate (measured on %1$s)</string>
     <string name="dev_gauge_unit">dB headroom</string>

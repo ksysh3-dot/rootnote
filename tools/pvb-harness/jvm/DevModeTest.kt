@@ -62,6 +62,91 @@ private fun snapshot(
     ringLayer: FloatArray = FloatArray(512) { -120f },
 ) = DevSnapshot(f0, harm, dry, layer, ringDry, ringLayer, 5f, outPeak, gr, -1f, vol, link, 0f, threshold)
 
+// ------------------------------------------------------------------------------------------------ design tokens
+private fun colors(f: File): Map<String, Int> {
+    val nl = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(f).getElementsByTagName("color")
+    return (0 until nl.length).map { nl.item(it) as org.w3c.dom.Element }
+        .associate { it.getAttribute("name") to it.textContent.trim().removePrefix("#").takeLast(6).toInt(16) }
+}
+
+private fun lum(rgb: Int): Double {
+    fun ch(s: Int): Double {
+        val v = ((rgb shr s) and 0xFF) / 255.0
+        return if (v <= 0.03928) v / 12.92 else Math.pow((v + 0.055) / 1.055, 2.4)
+    }
+    return 0.2126 * ch(16) + 0.7152 * ch(8) + 0.0722 * ch(0)
+}
+
+fun contrast(a: Int, b: Int): Double {
+    val la = lum(a); val lb = lum(b)
+    return (maxOf(la, lb) + 0.05) / (minOf(la, lb) + 0.05)
+}
+
+/** [fg] at [alpha] over [bg]. */
+private fun over(fg: Int, alpha: Double, bg: Int): Int {
+    fun m(s: Int) = Math.round(((fg shr s) and 0xFF) * alpha + ((bg shr s) and 0xFF) * (1 - alpha)).toInt()
+    return (m(16) shl 16) or (m(8) shl 8) or m(0)
+}
+
+/**
+ * docs/DESIGN.md 2.1/2.2 tokens exist in colors_rootnote.xml with the documented light and night values, and every text
+ * colour the developer-mode screen puts on a surface reaches 4.5:1 in both themes (docs/DESIGN.md 2.4).
+ */
+private fun designTokens(root: File) {
+    val light = colors(File(root, "app/src/general/res/values/colors_rootnote.xml"))
+    val night = colors(File(root, "app/src/general/res/values-night/colors_rootnote.xml"))
+    val doc = File(root, "docs/DESIGN.md").readLines().filter { it.startsWith("| rn_") }
+    var n = 0
+    for (row in doc) {
+        val cells = row.trim('|').split('|').map { it.trim() }
+        val names = cells[0].split('/').map { it.trim() }.let { parts ->
+            listOf(parts[0]) + parts.drop(1).map { s -> parts[0].substringBeforeLast('_') + s }
+        }
+        val l = cells[2].split('/').map { it.trim().removePrefix("#").toInt(16) }
+        val d = cells[3].split('/').map { it.trim().removePrefix("#").toInt(16) }
+        for (i in names.indices) {
+            check(light[names[i]] == l[i] && night[names[i]] == d[i], "token ${names[i]}: light %06X night %06X as in DESIGN.md"
+                .format(l[i], d[i]))
+            n++
+        }
+    }
+    check(n >= 28 && listOf("rn_warn_bg", "rn_warn_text", "rn_warn_dot", "rn_danger", "rn_badge_research_bg",
+        "rn_badge_maker_text", "rn_badge_measured_bg", "rn_badge_guess_text").all { it in light && it in night },
+        "DESIGN.md tokens incl. rn_warn_*, rn_danger, rn_badge_* in light and night ($n)")
+    for ((theme, c) in listOf("light" to light, "night" to night)) {
+        val band = c.getValue("rn_band")
+        val pairs = listOf(
+            "text_primary on bg" to (c.getValue("rn_text_primary") to c.getValue("rn_bg")),
+            "text_secondary on bg" to (c.getValue("rn_text_secondary") to c.getValue("rn_bg")),
+            "text_secondary on band (graph labels)" to (c.getValue("rn_text_secondary") to band),
+            "text_primary on band" to (c.getValue("rn_text_primary") to band),
+            "accent_text on bg" to (c.getValue("rn_accent_text") to c.getValue("rn_bg")),
+            "accent_text on chip_selected_bg (selected chip, 여유 있음)" to (c.getValue("rn_accent_text") to c.getValue("rn_chip_selected_bg")),
+            "accent_text on the teal zone" to (c.getValue("rn_accent_text") to over(c.getValue("rn_fill"), 0.12, band)),
+            "warn_text on the orange zone" to (c.getValue("rn_warn_text") to over(0xE8892F, 0.16, band)),
+            "text_secondary on the grey zone" to (c.getValue("rn_text_secondary") to over(c.getValue("rn_chevron"), 0.18, band)),
+            "warn_text on warn_bg (inline note, 빠듯함)" to (c.getValue("rn_warn_text") to c.getValue("rn_warn_bg")),
+            "warn_text on bg" to (c.getValue("rn_warn_text") to c.getValue("rn_bg")),
+            "danger on danger_bg (지직 위험)" to (c.getValue("rn_danger") to c.getValue("rn_danger_bg")),
+            "danger on bg" to (c.getValue("rn_danger") to c.getValue("rn_bg")),
+            "chip_text on bg" to (c.getValue("rn_chip_text") to c.getValue("rn_bg")),
+            "badge research" to (c.getValue("rn_badge_research_text") to c.getValue("rn_badge_research_bg")),
+            "badge maker" to (c.getValue("rn_badge_maker_text") to c.getValue("rn_badge_maker_bg")),
+            "badge measured" to (c.getValue("rn_badge_measured_text") to c.getValue("rn_badge_measured_bg")),
+            "badge guess" to (c.getValue("rn_badge_guess_text") to c.getValue("rn_badge_guess_bg")),
+            "button text on fill" to ((if (theme == "light") 0xFFFFFF else 0x003734) to c.getValue("rn_fill")),
+        )
+        for ((what, p) in pairs) {
+            val r = contrast(p.first, p.second)
+            check(r >= 4.5, "$theme: $what contrast %.2f:1 >= 4.5".format(r))
+        }
+    }
+    // level meter (fixed colours, both themes): ink and red on the ivory face
+    for (face in listOf(0xFBF1D6, 0xEBD9A8)) {
+        check(contrast(0x2A2622, face) >= 4.5 && contrast(0xB3261E, face) >= 4.5, "level meter text on %06X".format(face))
+    }
+}
+
 fun main(args: Array<String>) {
     val root = File(args.getOrElse(0) { "." })
     val jni = "--jni" in args
@@ -305,6 +390,34 @@ fun main(args: Array<String>) {
     for (spec in specs) check("dev_p_${spec.id}_name" in ko && "dev_p_${spec.id}_line" in ko, "${spec.id}: name and one line")
     check(ko["dev_warn_tail_body"]!!.contains("릴리즈를 줄여 보세요") && ko["dev_warn_ceiling_body"] ==
         "소리가 갑자기 커질 수 있어요. 귀를 보호하려고 출력을 제한하고 있어요.", "warning texts from the copy source")
+
+    // ---------------------------------------------------------------------------------------- design tokens, contrast
+    designTokens(root)
+
+    // ---------------------------------------------------------------------------------------- graph arithmetic
+    check(DevMath.gaugeColorAt(0f) == 0x2E9E5B && DevMath.gaugeColorAt(0.45f) == 0xE8C547 &&
+        DevMath.gaugeColorAt(0.72f) == 0xE8892F && DevMath.gaugeColorAt(1f) == 0xD64545 &&
+        DevMath.gaugeColorAt(-1f) == 0x2E9E5B && DevMath.gaugeColorAt(Float.NaN) == 0x2E9E5B,
+        "gauge gradient stops green 0 / yellow 0.45 / orange 0.72 / red 1")
+    run {
+        // the fill's end colour is the track colour at the level: the same gradient over the whole track, so the colour
+        // at the level depends only on the level (a fill re-stretched to the level would end red at every level)
+        val mid = DevMath.gaugeColorAt(0.585f)
+        check(mid != DevMath.gaugeColorAt(1f) && ((mid shr 16) and 0xFF) == 0xE8 && ((mid shr 8) and 0xFF) in 0x89..0xC5,
+            "gauge colour at a level between yellow and orange: %06X".format(mid))
+    }
+    check(DevMath.thresholdFraction == 0.8f && DevMath.gaugeFraction(-24f) == 0f && DevMath.gaugeFraction(6f) == 1f,
+        "gauge scale -24..+6 dB re the threshold, threshold notch at 0.8")
+    check(DevMath.sharePct(-30f, -27f) == 50 && DevMath.sharePct(-120f, -27f) == 0 && DevMath.sharePct(Float.NaN, -27f) == 0,
+        "gauge caption: share of the threshold in percent")
+    check(DevMath.graphX(35f) == 0f && abs(DevMath.graphX(700f) - 1f) < 1e-6f && DevMath.graphX(220f) < DevMath.graphX(400f),
+        "harmonic graph: logarithmic axis 35..700 Hz")
+    check(DevMath.barHeight(-6f) == 1f && DevMath.barHeight(-66f) == 0f && DevMath.barHeight(Float.NaN) == 0f,
+        "harmonic bar height -66..-6 dBFS")
+    check(DevMath.vuFraction(DevMath.VU_MIN_DB) == 0f && abs(DevMath.vuFraction(DevMath.VU_MAX_DB) - 1f) < 1e-6f &&
+        DevMath.vuFraction(0f) > 0.7f, "level meter: -12..+2 dB on an amplitude scale, 0 dB right of centre")
+    check(DevMath.gaugeStatus(6f) == DevMath.GaugeStatus.ROOM && DevMath.gaugeStatus(1.5f) == DevMath.GaugeStatus.TIGHT &&
+        DevMath.gaugeStatus(-0.1f) == DevMath.GaugeStatus.DANGER, "gauge status words: 여유 있음 / 빠듯함 / 지직 위험")
 
     // ---------------------------------------------------------------------------------------- test sounds
     for (kind in DevTestKind.values()) {

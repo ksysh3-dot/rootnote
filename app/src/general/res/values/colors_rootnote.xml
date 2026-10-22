@@ -21,15 +21,12 @@
     <color name="rn_slider_inactive">#DCDEE3</color>
     <color name="rn_thumb">#FFFFFF</color>
 
-
-    <!-- Semantic tokens (docs/DESIGN.md 2.2): warnings, danger, evidence badges; rn_ok_* / rn_danger_bg: gauge status pills. -->
+    <!-- Semantic tokens (docs/DESIGN.md 2.2): warnings, danger, evidence badges; rn_danger_bg: the gauge's "지직 위험" pill (red family only). -->
     <color name="rn_warn_bg">#FFF1E0</color>
     <color name="rn_warn_text">#9A4E00</color>
     <color name="rn_warn_dot">#E07B00</color>
     <color name="rn_danger">#B3261E</color>
     <color name="rn_danger_bg">#FBE3E1</color>
-    <color name="rn_ok_bg">#E3F4EA</color>
-    <color name="rn_ok_text">#1E6B3F</color>
     <color name="rn_badge_research_bg">#E8EEF9</color>
     <color name="rn_badge_research_text">#2B4C8C</color>
     <color name="rn_badge_maker_bg">#EFEAF8</color>
