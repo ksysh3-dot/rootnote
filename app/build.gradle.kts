@@ -1,3 +1,4 @@
+import java.security.KeyStore
 import java.util.Base64
 
 plugins {
@@ -27,6 +28,29 @@ val generalKeystore: File? = run {
     out
 }
 if (generalKeystore == null) logger.warn("PVB: no general signing key in the environment; general release = debug-signed test build")
+
+// The passwords that actually open the general key. A PKCS12 store (as made by RELEASE_GENERAL.md) has a single
+// password, so the keystore password is also tried for the key, and surrounding whitespace (for example a newline
+// pasted into a secret) is ignored. Nothing that opens the key -> the build stops with a clear message.
+val generalPasswords: Pair<String, String>? = generalKeystore?.let { store ->
+    val alias = System.getenv("GENERAL_KEY_ALIAS").trim()
+    val storeCandidates = listOf(System.getenv("GENERAL_KEYSTORE_PASSWORD")).flatMap { listOf(it, it.trim()) }.distinct()
+    val keyCandidates = listOf(System.getenv("GENERAL_KEY_PASSWORD"), System.getenv("GENERAL_KEYSTORE_PASSWORD"))
+        .flatMap { listOf(it, it.trim()) }.distinct()
+    for (sp in storeCandidates) {
+        val ks = try { KeyStore.getInstance(store, sp.toCharArray()) } catch (e: Exception) { continue }
+        for (kp in keyCandidates) {
+            val ok = try { ks.getKey(alias, kp.toCharArray()) != null } catch (e: Exception) { false }
+            if (ok) {
+                if (kp != System.getenv("GENERAL_KEY_PASSWORD"))
+                    logger.warn("PVB: GENERAL_KEY_PASSWORD does not open the key as given; using the password that does")
+                return@let sp to kp
+            }
+        }
+    }
+    throw GradleException("General signing key: no GENERAL_KEYSTORE_PASSWORD/GENERAL_KEY_PASSWORD combination opens " +
+        "alias '$alias' in the keystore from GENERAL_KEYSTORE_*; check the four GENERAL_* secrets (RELEASE_GENERAL.md)")
+}
 
 android {
 
@@ -81,9 +105,9 @@ android {
         if (generalKeystore != null) {
             create("general") {
                 storeFile = generalKeystore
-                storePassword = System.getenv("GENERAL_KEYSTORE_PASSWORD")
-                keyAlias = System.getenv("GENERAL_KEY_ALIAS")
-                keyPassword = System.getenv("GENERAL_KEY_PASSWORD")
+                storePassword = generalPasswords!!.first
+                keyAlias = System.getenv("GENERAL_KEY_ALIAS").trim()
+                keyPassword = generalPasswords!!.second
             }
         }
     }
