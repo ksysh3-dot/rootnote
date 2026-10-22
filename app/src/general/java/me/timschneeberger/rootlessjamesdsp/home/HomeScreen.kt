@@ -51,6 +51,7 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -133,6 +134,8 @@ data class HomeUiState(
     val chip: HomeLogic.Chip,
     val linkOn: Boolean,
     val linkLine: HomeLogic.LinkLine,
+    /** The capture service was killed by the system (KillWatch): the dismissible battery banner. */
+    val killBanner: Boolean = false,
 )
 
 class HomeActions(
@@ -142,6 +145,11 @@ class HomeActions(
     val onLink: (Boolean) -> Unit,
     val onAdvanced: () -> Unit,
     val onAbout: () -> Unit,
+    /** "Exclude apps (video, games)": the upstream exclusion list. */
+    val onExclusions: () -> Unit = {},
+    /** Kill banner: open the battery step / dismiss it. */
+    val onKillBattery: () -> Unit = {},
+    val onKillDismiss: () -> Unit = {},
 )
 
 /** The "심해 틸" palette (res/values[-night]/colors_rootnote.xml of the general flavor). */
@@ -235,6 +243,7 @@ private fun HomeContent(state: HomeUiState, actions: HomeActions) {
             .verticalScroll(rememberScrollState())
     ) {
         TopBar()
+        if (state.killBanner) KillBanner(actions)
         MasterRow(state, actions)
         Band()
 
@@ -271,6 +280,10 @@ private fun HomeContent(state: HomeUiState, actions: HomeActions) {
         }
 
         Band()
+        NavRow(
+            stringResource(R.string.home_exclude_title), "", actions.onExclusions,
+            description = stringResource(R.string.home_exclude_summary, stringResource(R.string.app_brand_name)),
+        )
         NavRow(stringResource(R.string.home_advanced_title), stringResource(R.string.home_advanced_summary), actions.onAdvanced)
         NavRow(stringResource(R.string.home_about_title), stringResource(R.string.home_about_summary), actions.onAbout)
         Spacer(Modifier.height(24.dp))
@@ -677,9 +690,67 @@ private fun StepSlider(
     }
 }
 
-/** Navigation row: title, short summary, chevron. */
+/**
+ * "The system stopped the app" banner (general build, KillWatch): the teal tint of the selected chip, a title, one
+ * explanation and two text actions with 48 dp touch targets. Only shown while no service runs.
+ */
 @Composable
-private fun NavRow(title: String, summary: String, onClick: () -> Unit) {
+private fun KillBanner(actions: HomeActions) {
+    val c = LocalPalette.current
+    val brand = stringResource(R.string.app_brand_name)
+    Column(
+        Modifier
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .fillMaxWidth()
+            .background(c.chipSelectedBg, RoundedCornerShape(12.dp))
+            .border(1.dp, c.chipSelectedBorder, RoundedCornerShape(12.dp))
+            .padding(start = 16.dp, end = 8.dp, top = 12.dp, bottom = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(
+            stringResource(R.string.home_killed_title, brand),
+            modifier = Modifier.padding(end = 8.dp).semantics { heading() },
+            color = c.textPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold, lineHeight = 22.sp,
+        )
+        Text(
+            stringResource(R.string.home_killed_body, brand),
+            modifier = Modifier.padding(end = 8.dp),
+            color = c.textSecondary, fontSize = 13.sp, lineHeight = 18.sp,
+        )
+        FlowRowActions {
+            BannerAction(stringResource(R.string.home_killed_battery), bold = true, onClick = actions.onKillBattery)
+            BannerAction(stringResource(R.string.home_killed_dismiss), bold = false, onClick = actions.onKillDismiss)
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun FlowRowActions(content: @Composable () -> Unit) {
+    FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) { content() }
+}
+
+@Composable
+private fun BannerAction(label: String, bold: Boolean, onClick: () -> Unit) {
+    val c = LocalPalette.current
+    Box(
+        Modifier
+            .heightIn(min = 48.dp)
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(horizontal = 12.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            label,
+            color = c.accentText, fontSize = 14.sp, lineHeight = 20.sp,
+            fontWeight = if (bold) FontWeight.Bold else FontWeight.Medium,
+        )
+    }
+}
+
+/** Navigation row: title (with an optional line below it), short summary, chevron. */
+@Composable
+private fun NavRow(title: String, summary: String, onClick: () -> Unit, description: String? = null) {
     val c = LocalPalette.current
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val interaction = remember { MutableInteractionSource() }
@@ -699,8 +770,15 @@ private fun NavRow(title: String, summary: String, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Text(title, modifier = Modifier.weight(1f), color = c.textPrimary, fontSize = 16.sp, lineHeight = 22.sp)
-        Text(
+        if (description == null) {
+            Text(title, modifier = Modifier.weight(1f), color = c.textPrimary, fontSize = 16.sp, lineHeight = 22.sp)
+        } else {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                Text(title, color = c.textPrimary, fontSize = 16.sp, lineHeight = 22.sp)
+                Text(description, color = c.textSecondary, fontSize = 13.sp, lineHeight = 18.sp)
+            }
+        }
+        if (summary.isNotEmpty()) Text(
             summary, modifier = Modifier.weight(1f, fill = false),
             color = c.textSecondary, fontSize = 13.sp, lineHeight = 18.sp, textAlign = TextAlign.End,
         )
@@ -771,4 +849,17 @@ private fun HomePreviewOff() {
 @Composable
 private fun HomePreviewLargeFont() {
     HomeScreen(previewOn, previewActions)
+}
+
+@Preview(name = "Light · killed banner", locale = "ko", widthDp = 390, heightDp = 900, showBackground = true)
+@Preview(
+    name = "Dark · killed banner", locale = "ko", widthDp = 390, heightDp = 900, showBackground = true,
+    uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL,
+)
+@Composable
+private fun HomePreviewKilled() {
+    HomeScreen(
+        previewOn.copy(headline = HomeLogic.Headline.ORIGINAL, masterOn = false, killBanner = true),
+        previewActions,
+    )
 }

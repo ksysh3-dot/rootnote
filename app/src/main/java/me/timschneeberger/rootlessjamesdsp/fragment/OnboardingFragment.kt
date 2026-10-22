@@ -24,10 +24,14 @@ import me.timschneeberger.hiddenapi_impl.UserHandle
 import me.timschneeberger.rootlessjamesdsp.BuildConfig
 import me.timschneeberger.rootlessjamesdsp.R
 import me.timschneeberger.rootlessjamesdsp.activity.MainActivity
+import me.timschneeberger.rootlessjamesdsp.activity.OnboardingActivity.Companion.EXTRA_BATTERY_SETUP
 import me.timschneeberger.rootlessjamesdsp.activity.OnboardingActivity.Companion.EXTRA_ROOTLESS_REDO_ADB_SETUP
 import me.timschneeberger.rootlessjamesdsp.activity.OnboardingActivity.Companion.EXTRA_ROOT_SETUP_DUMP_PERM
 import me.timschneeberger.rootlessjamesdsp.databinding.OnboardingFragmentBinding
 import me.timschneeberger.rootlessjamesdsp.flavor.RootShellImpl
+import me.timschneeberger.rootlessjamesdsp.pvb.FirstWeek
+import me.timschneeberger.rootlessjamesdsp.pvb.FirstWeekStore
+import me.timschneeberger.rootlessjamesdsp.pvb.PvbGeneral
 import me.timschneeberger.rootlessjamesdsp.service.RootAudioProcessorService
 import me.timschneeberger.rootlessjamesdsp.utils.SdkCheck
 import me.timschneeberger.rootlessjamesdsp.utils.extensions.ContextExtensions.isPackageInstalled
@@ -58,7 +62,8 @@ class OnboardingFragment : Fragment() {
         PAGE_METHOD_SELECT          to R.id.onboarding_page3,
         PAGE_ADB_SETUP              to R.id.onboarding_page4,
         PAGE_RUNTIME_PERMISSIONS    to R.id.onboarding_page5,
-        PAGE_READY                  to R.id.onboarding_page6,
+        PAGE_BATTERY                to R.id.onboarding_page6,
+        PAGE_READY                  to R.id.onboarding_page7,
     )
 
     private enum class SetupMethods {
@@ -78,6 +83,13 @@ class OnboardingFragment : Fragment() {
     private var useRoot: Boolean = false
     private var redoAdbSetup: Boolean = false
     private var shizukuAlive = false
+
+    /** General build (Rootnote): fewer pages, the Shizuku help and the battery step (FirstWeek). */
+    private val general = BuildConfig.GENERAL_BUILD
+    /** Opened from the home screen's "stopped by the system" banner: only the battery page. */
+    private var batteryOnly: Boolean = false
+    /** The page the wizard opened on (the general build starts after the welcome and limitation pages). */
+    private var startPage = PAGE_WELCOME
 
     private val prefsApp: Preferences.App by inject()
     private val prefsVar: Preferences.Var by inject()
@@ -122,6 +134,7 @@ class OnboardingFragment : Fragment() {
     ): View {
         useRoot = requireActivity().intent.getBooleanExtra(EXTRA_ROOT_SETUP_DUMP_PERM, false)
         redoAdbSetup = requireActivity().intent.getBooleanExtra(EXTRA_ROOTLESS_REDO_ADB_SETUP, false)
+        batteryOnly = general && requireActivity().intent.getBooleanExtra(EXTRA_BATTERY_SETUP, false)
         binding = OnboardingFragmentBinding.inflate(layoutInflater, viewGroup, false)
         return binding.root
     }
@@ -136,8 +149,22 @@ class OnboardingFragment : Fragment() {
 
         if(useRoot || redoAdbSetup) {
             pageMap.remove(PAGE_RUNTIME_PERMISSIONS)
+            pageMap.remove(PAGE_BATTERY)
             pageMap.remove(PAGE_READY)
             goToPage(PAGE_METHOD_SELECT)
+        }
+        else if(batteryOnly) {
+            startPage = PAGE_BATTERY
+            goToPage(PAGE_BATTERY)
+        }
+        else if(general && bundle == null) {
+            // General build: the first-run notice was the welcome; open on the first step that is still needed.
+            startPage = requestNextPage(PAGE_WELCOME, true)
+            if(startPage > pageMap.size) {
+                finishSetup()
+                return
+            }
+            goToPage(startPage)
         }
 
         // Method selection page
@@ -170,6 +197,33 @@ class OnboardingFragment : Fragment() {
             methodPage.methodsShizukuCard.setCardBackgroundColor(
                 requireContext().resolveColorAttribute(com.google.android.material.R.attr.colorSecondaryContainer)
             )
+        }
+
+        // General build: what Shizuku is, and a button that opens it or shows where to get it (no download here).
+        if(general && !useRoot && SdkCheck.isQ) {
+            methodPage.methodsShizukuExplain.isVisible = true
+            methodPage.methodsShizukuButton.isVisible = true
+            methodPage.methodsShizukuButton.setOnClickListener {
+                if(!requireContext().launchApp(SHIZUKU_PKG))
+                    showShizukuSources()
+            }
+            updateShizukuButton()
+        }
+
+        // General build: why the capture consent appears again (Android 14+ per-session consent).
+        if(general) {
+            binding.onboardingPage5.findViewById<Card>(R.id.onboarding_cast_permission)?.bodyText =
+                getString(R.string.firstweek_capture_consent)
+        }
+
+        // Battery page (general build only)
+        val batteryPage = binding.batterySetup
+        batteryPage.batteryRequest.setOnButtonClickListener {
+            activity?.let { FirstWeekStore.requestIgnoreBatteryOptimizations(it) }
+        }
+        batteryPage.batteryOneui.bodyText = getString(R.string.firstweek_battery_oneui_body).replace("\n", "<br/>")
+        batteryPage.batteryOneui.setOnButtonClickListener {
+            activity?.let { FirstWeekStore.openAppBatterySettings(it) }
         }
 
         methodPage.methodsRootCard.setOnClickListener {
@@ -258,7 +312,10 @@ class OnboardingFragment : Fragment() {
             }
         }
 
-        bundle?.let { goToPage(it.getInt("currentPage")) }
+        bundle?.let {
+            startPage = it.getInt("startPage", startPage)
+            goToPage(it.getInt("currentPage"))
+        }
 
         Shizuku.addBinderReceivedListenerSticky(binderReceivedListener)
         Shizuku.addBinderDeadListener(binderDeadListener)
@@ -267,10 +324,52 @@ class OnboardingFragment : Fragment() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putInt("currentPage", currentPage)
+        outState.putInt("startPage", startPage)
         super.onSaveInstanceState(outState)
     }
 
+    override fun onResume() {
+        super.onResume()
+        // Back from Shizuku, the store or the battery settings
+        if(general) {
+            updateShizukuButton()
+            updateBatteryPage()
+        }
+    }
+
+    private fun updateShizukuButton() {
+        val ctx = context ?: return
+        binding.methodSelect.methodsShizukuButton.text = getString(
+            if(ctx.isPackageInstalled(SHIZUKU_PKG)) R.string.firstweek_shizuku_open else R.string.firstweek_shizuku_get
+        )
+    }
+
+    private fun updateBatteryPage() {
+        val ctx = context ?: return
+        val card = binding.batterySetup.batteryRequest
+        val exempt = FirstWeekStore.isIgnoringBatteryOptimizations(ctx)
+        card.buttonEnabled = !exempt
+        card.buttonText = getString(if(exempt) R.string.firstweek_battery_request_done else R.string.firstweek_battery_request_button)
+        card.iconSrc = if(exempt) R.drawable.ic_twotone_check_circle_24dp else R.drawable.ic_numeric_1_circle_outline
+    }
+
+    /** Where to get Shizuku: the user picks Play Store or the GitHub releases page; nothing is downloaded here. */
+    private fun showShizukuSources() {
+        val ctx = context ?: return
+        MaterialAlertDialogBuilder(ctx)
+            .setTitle(R.string.firstweek_shizuku_sources_title)
+            .setMessage(R.string.firstweek_shizuku_sources)
+            .setPositiveButton(R.string.firstweek_shizuku_play) { _, _ -> ctx.openPlayStoreApp(SHIZUKU_PKG) }
+            .setNeutralButton(R.string.firstweek_shizuku_github) { _, _ -> PvbGeneral.openUrl(ctx, SHIZUKU_RELEASES_URL) }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
     private fun requestShizukuInstallation(){
+        if(general) {
+            showShizukuSources()
+            return
+        }
         val alert = MaterialAlertDialogBuilder(requireContext())
         alert.setMessage(getString(R.string.onboarding_adb_shizuku_not_installed))
         alert.setTitle(getString(R.string.onboarding_adb_shizuku_not_installed_title))
@@ -288,11 +387,18 @@ class OnboardingFragment : Fragment() {
     }
 
     fun onBackPressed(): Boolean {
-        if (!isFirstPage) {
+        if (canGoBack()) {
             changePage(false)
             return true
         }
         return false
+    }
+
+    /** Back stays inside the wizard only when there is a page to go back to (or the root/redo cut-off finishes it). */
+    private fun canGoBack(): Boolean = when {
+        batteryOnly || isFirstPage -> false
+        useRoot || redoAdbSetup -> true
+        else -> requestNextPage(currentPage - 1, false) >= 1
     }
 
     private fun checkPermission(code: Int): Boolean {
@@ -323,6 +429,10 @@ class OnboardingFragment : Fragment() {
     }
 
     private fun viewShizukuInMarket(){
+        if(general) {
+            showShizukuSources()
+            return
+        }
         requireContext().openPlayStoreApp(SHIZUKU_PKG)
     }
 
@@ -379,6 +489,9 @@ class OnboardingFragment : Fragment() {
         if(number == PAGE_ADB_SETUP) {
             updateSetupInstructions()
         }
+        else if(number == PAGE_BATTERY) {
+            updateBatteryPage()
+        }
         else if(number == PAGE_RUNTIME_PERMISSIONS) {
             val pageBinding = binding.onboardingPage5
             if(!SdkCheck.isTiramisu) {
@@ -420,11 +533,16 @@ class OnboardingFragment : Fragment() {
 
         currentPage = number
 
-        backButton.isEnabled = !isFirstPage
+        backButton.isEnabled = canGoBack()
         nextButton.text = getString(if (isLastPage) R.string.onboarding_finish else R.string.onboarding_next)
     }
 
     private fun changePage(forward: Boolean, ignoreConditions: Boolean = false) {
+        // Battery page opened from the home screen: done (or back) returns there.
+        if(batteryOnly) {
+            requireActivity().finish()
+            return
+        }
         val nextIndex = if (forward) requestNextPage(currentPage + 1, forward) else requestNextPage(currentPage - 1, forward)
         if(nextIndex < 1) {
             Timber.w("Page index out of range ($nextIndex)")
@@ -453,13 +571,18 @@ class OnboardingFragment : Fragment() {
 
     private fun requestNextPage(nextPage: Int, forward: Boolean): Int
     {
-        val shouldSkip = when (nextPage) {
+        val shouldSkip = when {
+            // Pages the build never shows in the normal flow (FirstWeek: general skips welcome, limitations and
+            // the ready page; the s26u build has no battery page). Root/redo setups keep their own page set.
+            !useRoot && !redoAdbSetup && pageOf(nextPage)?.let { it in FirstWeek.skippedAlways(general) } == true -> true
             // Don't skip ADB setup if redoAdbSetup is set
-            PAGE_METHOD_SELECT -> areAdbPermissionsGranted() && !redoAdbSetup
-            PAGE_ADB_SETUP -> areAdbPermissionsGranted() && !redoAdbSetup
-            PAGE_RUNTIME_PERMISSIONS -> {
+            nextPage == PAGE_METHOD_SELECT -> areAdbPermissionsGranted() && !redoAdbSetup
+            nextPage == PAGE_ADB_SETUP -> areAdbPermissionsGranted() && !redoAdbSetup
+            nextPage == PAGE_RUNTIME_PERMISSIONS -> {
                requireContext().hasNotificationPermission() && requireContext().hasRecordPermission()
             }
+            nextPage == PAGE_BATTERY -> !batteryOnly &&
+                !FirstWeek.batteryStepNeeded(general, FirstWeekStore.isIgnoringBatteryOptimizations(requireContext()))
             else -> false
         }
 
@@ -661,15 +784,28 @@ class OnboardingFragment : Fragment() {
     }
 
     private val isFirstPage: Boolean
-        get() = currentPage == 1
+        get() = currentPage == startPage
+    /** The next button finishes the wizard: no further page would be shown. */
     private val isLastPage: Boolean
-        get() = currentPage == pageMap.size
+        get() = batteryOnly || requestNextPage(currentPage + 1, true) > pageMap.size
+
+    private fun pageOf(number: Int): FirstWeek.Page? = when (number) {
+        PAGE_WELCOME -> FirstWeek.Page.WELCOME
+        PAGE_LIMITATIONS -> FirstWeek.Page.LIMITATIONS
+        PAGE_METHOD_SELECT -> FirstWeek.Page.METHOD_SELECT
+        PAGE_ADB_SETUP -> FirstWeek.Page.ADB_SETUP
+        PAGE_RUNTIME_PERMISSIONS -> FirstWeek.Page.RUNTIME_PERMISSIONS
+        PAGE_BATTERY -> FirstWeek.Page.BATTERY
+        PAGE_READY -> FirstWeek.Page.READY
+        else -> null
+    }
 
     companion object
     {
         fun newInstance() = OnboardingFragment()
 
         const val SHIZUKU_PKG = "moe.shizuku.privileged.api"
+        const val SHIZUKU_RELEASES_URL = "https://github.com/RikkaApps/Shizuku/releases"
 
         const val REQUEST_CODE_SHIZUKU_GRANT = 1
 
@@ -678,6 +814,7 @@ class OnboardingFragment : Fragment() {
         const val PAGE_METHOD_SELECT = 3
         const val PAGE_ADB_SETUP = 4
         const val PAGE_RUNTIME_PERMISSIONS = 5
-        const val PAGE_READY = 6
+        const val PAGE_BATTERY = 6
+        const val PAGE_READY = 7
     }
 }

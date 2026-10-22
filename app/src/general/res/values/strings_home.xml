@@ -25,4 +25,10 @@
     <string name="home_advanced_summary">EQ · Output · JamesDSP</string>
     <string name="home_about_title">About</string>
     <string name="home_about_summary">Unofficial fork · GPL-3.0</string>
+    <string name="home_exclude_title">Exclude apps (video, games)</string>
+    <string name="home_exclude_summary">Processed sound is about 0.15 s late or more. Excluded apps play without %1$s and without delay.</string>
+    <string name="home_killed_title">The system stopped %1$s</string>
+    <string name="home_killed_body">Battery saving seems to have closed the app in the background, so the sound went back to the original. Exempt %1$s from battery limits to keep it running.</string>
+    <string name="home_killed_battery">Battery settings</string>
+    <string name="home_killed_dismiss">Dismiss</string>
 </resources>

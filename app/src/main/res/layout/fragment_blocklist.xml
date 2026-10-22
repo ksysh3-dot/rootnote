@@ -8,6 +8,36 @@
     tools:context=".fragment.BlocklistFragment"
     android:orientation="vertical">
 
+    <!-- General build: why to exclude apps (delay) and the quick-add list of video, game and call apps. -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/quick_exclude"
+        android:visibility="gone"
+        style="?attr/materialCardViewOutlinedStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:layout_marginHorizontal="24dp">
+        <LinearLayout
+            android:layout_margin="16dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/quick_exclude_note"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/firstweek_exclude_note"
+                android:textAppearance="?attr/textAppearanceBody2" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/quick_exclude_button"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/firstweek_exclude_quick_button" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/notice"
         android:visibility="visible"

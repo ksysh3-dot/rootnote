@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 일반 빌드: 지역 없는 한국어(ko) 기기용. ko-KR 기기는 values-ko-rKR/strings_overrides.xml을 씁니다(같은 내용). -->
+<resources>
+    <!-- 설정 방법 화면: Shizuku 먼저(권장, PC 불필요), ADB 둘째(PC 필요). -->
+    <string name="onboarding_methods_shizuku_title">Shizuku (권장)</string>
+    <string name="onboarding_methods_adb_title">ADB (PC 필요)</string>
+    <string name="onboarding_methods_rootless_shizuku">\u25CF PC 필요 없음\n\u25CF Android 11 이상: 이 폰의 무선 디버깅으로 Shizuku 시작\n\u25CF Android 10: Shizuku를 시작할 때 PC가 한 번 필요</string>
+    <string name="onboarding_methods_rootless_adb">\u25CF PC와 USB 케이블 필요\n\u25CF 고급 사용자용\n\u25CF Android 10 이상</string>
+</resources>

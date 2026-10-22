@@ -74,5 +74,7 @@ class OnboardingActivity : BaseActivity(){
         const val EXTRA_FIX_PERMS = "FixPermissions"
         const val EXTRA_ROOT_SETUP_DUMP_PERM = "RootSetupDumpPerm"
         const val EXTRA_ROOTLESS_REDO_ADB_SETUP = "RootlessRedoAdbSetup"
+        /** General build: only the battery page (from the home screen's "stopped by the system" banner). */
+        const val EXTRA_BATTERY_SETUP = "BatterySetup"
     }
 }

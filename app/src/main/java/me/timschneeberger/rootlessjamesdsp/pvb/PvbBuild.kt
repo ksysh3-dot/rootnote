@@ -89,8 +89,12 @@ object FirstRun {
     /** The notice is shown on launch and instead of starting the service until it was confirmed. */
     fun mustShowNotice(general: Boolean, confirmed: Boolean): Boolean = general && !confirmed
 
-    /** What confirming writes into the PVB settings: processing on, with the device profile already applied. */
-    fun valuesOnConfirm(): Map<String, Any> = mapOf(PvbSettings.KEY_ENABLE to true)
+    /**
+     * What confirming writes into the PVB settings: processing and virtual bass on, at the strength the device
+     * profile already wrote. The notice carries the virtual-bass warning, so confirming it is the one consent; the
+     * home switch does not ask again.
+     */
+    fun valuesOnConfirm(): Map<String, Any> = mapOf(PvbSettings.KEY_ENABLE to true, PvbSettings.KEY_VB_ON to true)
 
     /** Shell commands granting the capture permissions to [applicationId] (ADB setup, shown in the notice). */
     fun adbCommands(applicationId: String): List<String> = listOf(

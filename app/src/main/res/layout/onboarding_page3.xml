@@ -93,6 +93,23 @@
                         android:layout_height="wrap_content"
                         android:text="@string/onboarding_methods_rootless_shizuku"
                         android:textAppearance="?attr/textAppearanceBody1" />
+                    <!-- General build only: what Shizuku is, and a button to open or get it. -->
+                    <TextView
+                        android:id="@+id/methods_shizuku_explain"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:visibility="gone"
+                        android:text="@string/firstweek_shizuku_explain"
+                        android:textAppearance="?attr/textAppearanceBody2" />
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/methods_shizuku_button"
+                        style="@style/Widget.Material3.Button.TonalButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:visibility="gone"
+                        android:text="@string/firstweek_shizuku_open" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 

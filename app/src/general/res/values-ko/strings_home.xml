@@ -25,4 +25,10 @@
     <string name="home_advanced_summary">EQ · 출력 · JamesDSP</string>
     <string name="home_about_title">앱 정보</string>
     <string name="home_about_summary">비공식 포크 · GPL-3.0</string>
+    <string name="home_exclude_title">앱별 제외 (영상·게임)</string>
+    <string name="home_exclude_summary">처리된 소리는 약 0.15초 이상 늦어요. 제외한 앱은 %1$s를 거치지 않아 지연 없이 재생돼요.</string>
+    <string name="home_killed_title">시스템이 %1$s를 종료했습니다</string>
+    <string name="home_killed_body">배터리 절약 기능이 백그라운드에서 앱을 닫은 것으로 보입니다. 그래서 소리가 원래대로 돌아갔습니다. 배터리 제한에서 %1$s를 빼 두면 계속 실행됩니다.</string>
+    <string name="home_killed_battery">배터리 설정</string>
+    <string name="home_killed_dismiss">닫기</string>
 </resources>

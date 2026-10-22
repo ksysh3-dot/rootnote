@@ -379,6 +379,8 @@ class PreferenceGroupFragment : PreferenceFragmentCompat(), KoinComponent {
         val sw = findPreference<SwitchPreferenceCompat>(PvbSettings.KEY_VB_ON) ?: return
         sw.setOnPreferenceChangeListener { _, newValue ->
             if (newValue != true) return@setOnPreferenceChangeListener true
+            // General build: the confirmed first-run notice already carries this warning (one consent, FirstRun).
+            if (PvbBuild.general && PvbBuild.firstRunConfirmed) return@setOnPreferenceChangeListener true
             AlertDialog.Builder(requireContext())
                 .setTitle(R.string.pvb_vb_warning_title)
                 .setMessage(R.string.pvb_vb_warning)

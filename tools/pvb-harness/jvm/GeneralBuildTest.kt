@@ -150,7 +150,9 @@ fun main(args: Array<String>) {
     check(!PvbBuild.processingAllowed, "PvbBuild.processingAllowed follows the gate")
     PvbBuild.firstRunConfirmed = true
     check(PvbSettings.load(extreme).enabled && PvbBuild.processingAllowed, "confirmed: settings as stored")
-    check(FirstRun.valuesOnConfirm() == mapOf(PvbSettings.KEY_ENABLE to true), "confirm turns processing on")
+    check(FirstRun.valuesOnConfirm() == mapOf(PvbSettings.KEY_ENABLE to true, PvbSettings.KEY_VB_ON to true),
+        "confirm turns processing and virtual bass on (one consent)")
+    check(FirstRun.valuesOnConfirm().keys.none { it == PvbSettings.KEY_VB_STRENGTH_DB }, "confirm keeps the profile's strength")
     val cmds = FirstRun.adbCommands("kr.ksysh3.rootnote")
     check(cmds.size == 3 && cmds.all { "kr.ksysh3.rootnote" in it } &&
         cmds[0] == "adb shell pm grant kr.ksysh3.rootnote android.permission.DUMP" &&

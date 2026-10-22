@@ -81,6 +81,7 @@
                 app:cardMargin="8dp" />
 
             <me.timschneeberger.rootlessjamesdsp.view.Card
+                android:id="@+id/onboarding_cast_permission"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:titleText="@string/onboarding_perm_cast_title"

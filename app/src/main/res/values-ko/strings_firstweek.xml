@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 일반 빌드 첫 주 화면(설정 방법, 배터리 단계, 빠른 앱 제외). 공용 화면이 참조해서 main에 있으며, 일반 빌드에서만
+     보입니다. 영어 기본: values/strings_firstweek.xml. -->
+<resources>
+    <string name="firstweek_shizuku_explain">Shizuku는 셸 권한을 다른 앱에 전달해 주는 무료 오픈소스 앱입니다. 이 앱은 캡처 권한 두 가지를 받을 때 한 번만 씁니다. Android 11 이상은 폰 자체의 무선 디버깅으로 Shizuku를 시작할 수 있어 PC가 필요 없습니다. 재부팅 뒤에는 설정을 다시 할 때만 Shizuku를 다시 시작하면 됩니다.</string>
+    <string name="firstweek_shizuku_open">Shizuku 열기</string>
+    <string name="firstweek_shizuku_get">Shizuku 받기</string>
+    <string name="firstweek_shizuku_sources_title">Shizuku 받기</string>
+    <string name="firstweek_shizuku_sources">Shizuku가 설치되어 있지 않습니다. 받을 곳을 고르세요. 자동으로 내려받지는 않습니다.</string>
+    <string name="firstweek_shizuku_play">Play 스토어</string>
+    <string name="firstweek_shizuku_github">GitHub</string>
+
+    <string name="firstweek_battery_title">백그라운드에서 계속 실행</string>
+    <string name="firstweek_battery_caption">삼성 One UI 등은 배터리를 아끼려고 백그라운드 앱을 종료합니다. 그러면 소리가 갑자기 원래대로 돌아갑니다. 아래 두 가지를 설정해 두세요.</string>
+    <string name="firstweek_battery_request_title">1. 배터리 최적화에서 제외</string>
+    <string name="firstweek_battery_request_body">버튼을 누르고 시스템 창에서 \"허용\"을 고르세요.</string>
+    <string name="firstweek_battery_request_button">허용하기</string>
+    <string name="firstweek_battery_request_done">이미 제외되어 있습니다</string>
+    <string name="firstweek_battery_oneui_title">2. 삼성(One UI)</string>
+    <string name="firstweek_battery_oneui_body">• 앱 정보 › 배터리 › \"제한 없음\"\n• 설정 › 배터리 › 백그라운드 사용 제한: 이 앱을 \"절전 앱\"과 \"딥 절전 앱\"에서 빼거나 \"절전 예외 앱\"에 넣으세요. 자주 쓰지 않는다면 \"사용하지 않는 앱 절전\"도 꺼 두세요.</string>
+    <string name="firstweek_battery_oneui_button">앱 정보 열기</string>
+
+    <string name="firstweek_capture_consent">Android 14 이상은 캡처 동의가 한 번의 실행에만 유효합니다. 그래서 처리를 시작할 때마다(보통 스위치를 켠 직후) 시스템의 \"녹화 또는 전송 시작\" 동의 창이 다시 뜹니다.</string>
+
+    <string name="firstweek_exclude_note">처리된 소리는 약 0.15초 이상 늦게 나옵니다. 제외한 앱은 이 앱을 거치지 않아 지연 없이 재생되고, 영상과 게임의 싱크가 맞습니다.</string>
+    <string name="firstweek_exclude_quick_button">영상·게임·통화 앱 추가</string>
+    <string name="firstweek_exclude_quick_title">이 앱들을 제외할까요?</string>
+    <string name="firstweek_exclude_quick_none">목록의 영상·통화 앱이 설치되어 있지 않거나 모두 제외되어 있습니다. 게임 같은 다른 앱은 + 버튼으로 추가하세요.</string>
+    <string name="firstweek_exclude_quick_add">제외하기</string>
+</resources>
