@@ -113,4 +113,33 @@ object HomeLogic {
     }
 
     private fun round1(v: Float): Float = (v * 10f).roundToInt() / 10f
+
+    // ------------------------------------------------------------------ spatial (crosstalk cancellation, pvb_xtc.h)
+
+    /** Spatial presets on the home screen: mode + strength only (distance and head size are the listener's). */
+    enum class XtcPreset(val mode: Int, val strengthDb: Float) {
+        SUBTLE(PvbSettings.XTC_CENTRE, -6f),
+        BALANCED(PvbSettings.XTC_FULL, -4.5f),
+        CLEAR(PvbSettings.XTC_FULL, -3f),
+        CUSTOM(-1, 0f),
+    }
+
+    /** Presets offered as chips (CUSTOM only appears while the settings match none of them). */
+    val xtcChips = listOf(XtcPreset.SUBTLE, XtcPreset.BALANCED, XtcPreset.CLEAR)
+
+    /** The preset the stored mode + strength amount to; CUSTOM for any other pair (also while off). */
+    fun xtcPreset(mode: Int, strengthDb: Float): XtcPreset =
+        xtcChips.firstOrNull { it.mode == mode && it.strengthDb == strengthDb } ?: XtcPreset.CUSTOM
+
+    /** Turning spatial on from the home switch: the balanced preset, unless the stored strength already is one. */
+    fun xtcOnWrite(strengthDb: Float): XtcPreset =
+        xtcChips.firstOrNull { it.mode == PvbSettings.XTC_FULL && it.strengthDb == strengthDb } ?: XtcPreset.BALANCED
+
+    /** Distance slider: 25..60 cm in 5 cm steps (step index 0..7). */
+    const val XTC_DIST_STEP_CM = 5
+    fun xtcDistanceStep(cm: Float): Int =
+        Math.round((cm.coerceIn(PvbSettings.XTC_DISTANCE_MIN, PvbSettings.XTC_DISTANCE_MAX) - PvbSettings.XTC_DISTANCE_MIN) / XTC_DIST_STEP_CM)
+    fun xtcDistanceSteps(): Int =
+        Math.round((PvbSettings.XTC_DISTANCE_MAX - PvbSettings.XTC_DISTANCE_MIN) / XTC_DIST_STEP_CM)
+    fun xtcDistanceCm(step: Int): Int = (PvbSettings.XTC_DISTANCE_MIN + step * XTC_DIST_STEP_CM).toInt()
 }

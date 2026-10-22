@@ -66,6 +66,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -112,8 +113,9 @@ import kotlin.math.roundToInt
 /*
  * Home screen of the general build (Rootnote, approved design "E안", palette "심해 틸").
  *
- * One column: top bar, master row (headline + device + switch), strength slider with preset chips, volume link row,
- * and the two navigation rows. No fixed heights on anything holding text (rows only have minimum heights), and the
+ * One column: top bar, master row (headline + device + switch), the two feature tabs (virtual bass in teal, spatial
+ * in purple), the selected tab's controls (strength slider with preset chips and volume link row / spatial switch,
+ * presets, distance and head size), and the navigation rows. No fixed heights on anything holding text (rows only have minimum heights), and the
  * column scrolls, so font scaling up to 200 % grows the rows instead of clipping them.
  *
  * Motion follows the design: iOS-like easing for the switches (350 ms thumb, 300 ms track), chips scale to 0.94 on
@@ -136,6 +138,12 @@ data class HomeUiState(
     val linkLine: HomeLogic.LinkLine,
     /** The capture service was killed by the system (KillWatch): the dismissible battery banner. */
     val killBanner: Boolean = false,
+    /** Spatial (crosstalk cancellation, pvb_xtc.h): on/off, preset, distance step, hat size. */
+    val xtcOn: Boolean = false,
+    val xtcPreset: HomeLogic.XtcPreset = HomeLogic.XtcPreset.CUSTOM,
+    val xtcDistanceStep: Int = 3,
+    val xtcDistanceSteps: Int = 7,
+    val xtcHatCm: Int = 57,
 )
 
 class HomeActions(
@@ -150,6 +158,12 @@ class HomeActions(
     /** Kill banner: open the battery step / dismiss it. */
     val onKillBattery: () -> Unit = {},
     val onKillDismiss: () -> Unit = {},
+    val onXtc: (Boolean) -> Unit = {},
+    val onXtcPreset: (HomeLogic.XtcPreset) -> Unit = {},
+    /** Distance slider step (HomeLogic.xtcDistanceCm). */
+    val onXtcDistance: (Int) -> Unit = {},
+    /** Hat size, cm: 54 / 57 / 60. */
+    val onXtcHead: (Int) -> Unit = {},
 )
 
 /** The "심해 틸" palette (res/values[-night]/colors_rootnote.xml of the general flavor). */
@@ -173,7 +187,18 @@ data class RootnotePalette(
     val switchOff: Color,
     val sliderInactive: Color,
     val thumb: Color,
-)
+    val xtcFill: Color,
+    val xtcAccentText: Color,
+    val xtcChipSelectedBg: Color,
+    val xtcChipSelectedBorder: Color,
+    val xtcChipSelectedText: Color,
+) {
+    /** The same palette with the spatial purple in the accent roles (fill, accent text, selected chip). */
+    fun spatial(): RootnotePalette = copy(
+        fill = xtcFill, accentText = xtcAccentText, chipSelectedBg = xtcChipSelectedBg,
+        chipSelectedBorder = xtcChipSelectedBorder, chipSelectedText = xtcChipSelectedText,
+    )
+}
 
 @Composable
 fun rootnotePalette(): RootnotePalette = RootnotePalette(
@@ -195,6 +220,11 @@ fun rootnotePalette(): RootnotePalette = RootnotePalette(
     switchOff = colorResource(R.color.rn_switch_off),
     sliderInactive = colorResource(R.color.rn_slider_inactive),
     thumb = colorResource(R.color.rn_thumb),
+    xtcFill = colorResource(R.color.rn_xtc_fill),
+    xtcAccentText = colorResource(R.color.rn_xtc_accent_text),
+    xtcChipSelectedBg = colorResource(R.color.rn_xtc_chip_selected_bg),
+    xtcChipSelectedBorder = colorResource(R.color.rn_xtc_chip_selected_border),
+    xtcChipSelectedText = colorResource(R.color.rn_xtc_chip_selected_text),
 )
 
 private val LocalPalette = staticCompositionLocalOf<RootnotePalette> { error("RootnotePalette not provided") }
@@ -218,7 +248,7 @@ private fun <T> motion(spec: FiniteAnimationSpec<T>): FiniteAnimationSpec<T> =
     if (LocalReduceMotion.current) snap() else spec
 
 @Composable
-fun HomeScreen(state: HomeUiState, actions: HomeActions, reduceMotion: Boolean = false) {
+fun HomeScreen(state: HomeUiState, actions: HomeActions, reduceMotion: Boolean = false, initialTab: Int = 0) {
     val palette = rootnotePalette()
     val dark = (androidx.compose.ui.platform.LocalConfiguration.current.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
         Configuration.UI_MODE_NIGHT_YES
@@ -228,13 +258,13 @@ fun HomeScreen(state: HomeUiState, actions: HomeActions, reduceMotion: Boolean =
         onBackground = palette.textPrimary, onSurface = palette.textPrimary)
     CompositionLocalProvider(LocalPalette provides palette, LocalReduceMotion provides reduceMotion) {
         MaterialTheme(colorScheme = scheme) {
-            HomeContent(state, actions)
+            HomeContent(state, actions, initialTab)
         }
     }
 }
 
 @Composable
-private fun HomeContent(state: HomeUiState, actions: HomeActions) {
+private fun HomeContent(state: HomeUiState, actions: HomeActions, initialTab: Int) {
     val c = LocalPalette.current
     Column(
         Modifier
@@ -247,35 +277,31 @@ private fun HomeContent(state: HomeUiState, actions: HomeActions) {
         MasterRow(state, actions)
         Band()
 
-        // Everything that only matters while the bass is filled: dimmed to 40 % and disabled when off.
+        // Everything that only matters while processing is on: dimmed to 40 % and disabled when off.
         val dim by animateFloatAsState(
             targetValue = if (state.masterOn) 1f else 0.4f,
             animationSpec = motion(tween(300, easing = IosEase)),
             label = "dim",
         )
-        Column(Modifier.alpha(dim)) {
-            StrengthSection(state, actions)
-            Box(
-                Modifier
-                    .padding(start = 16.dp, end = 16.dp, top = 12.dp)
-                    .fillMaxWidth()
-                    .height(1.dp)
-                    .background(c.divider)
-            )
-            SwitchRow(
-                checked = state.linkOn,
-                enabled = state.masterOn,
-                onCheckedChange = actions.onLink,
-                minHeight = 72.dp,
-                padding = PaddingValues(horizontal = 16.dp, vertical = 14.dp),
-            ) {
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                    Text(
-                        stringResource(R.string.home_link_title),
-                        color = c.textPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold, lineHeight = 22.sp,
-                    )
-                    Text(linkText(state.linkLine), color = c.textSecondary, fontSize = 13.sp, lineHeight = 18.sp)
+        var tab by rememberSaveable { mutableIntStateOf(initialTab) }
+        FeatureTabs(tab, onSelect = { tab = it }, bassOn = state.masterOn, spatialOn = state.masterOn && state.xtcOn)
+        val reduce = LocalReduceMotion.current
+        AnimatedContent(
+            targetState = tab,
+            transitionSpec = {
+                if (reduce) EnterTransition.None togetherWith ExitTransition.None
+                else fadeIn(tween(200, delayMillis = 100, easing = LinearEasing)) togetherWith
+                    fadeOut(tween(100, easing = LinearEasing)) using SizeTransform(clip = false)
+            },
+            contentAlignment = Alignment.TopStart,
+            label = "tab",
+        ) { selected ->
+            if (selected == TAB_SPATIAL) {
+                CompositionLocalProvider(LocalPalette provides c.spatial()) {
+                    SpatialSection(state, actions, Modifier.alpha(dim))
                 }
+            } else {
+                BassSection(state, actions, Modifier.alpha(dim))
             }
         }
 
@@ -287,6 +313,227 @@ private fun HomeContent(state: HomeUiState, actions: HomeActions) {
         NavRow(stringResource(R.string.home_advanced_title), stringResource(R.string.home_advanced_summary), actions.onAdvanced)
         NavRow(stringResource(R.string.home_about_title), stringResource(R.string.home_about_summary), actions.onAbout)
         Spacer(Modifier.height(24.dp))
+    }
+}
+
+private const val TAB_BASS = 0
+private const val TAB_SPATIAL = 1
+
+/**
+ * The two features as a segmented control: a rounded band-coloured track with two equal segments, the selected one
+ * raised on the page colour in its feature's accent (teal for virtual bass, purple for spatial). A small dot after
+ * each label shows whether that feature is playing. Role tab, 48 dp targets, text grows with the font size.
+ */
+@Composable
+private fun FeatureTabs(selected: Int, onSelect: (Int) -> Unit, bassOn: Boolean, spatialOn: Boolean) {
+    val c = LocalPalette.current
+    Row(
+        Modifier
+            .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 4.dp)
+            .fillMaxWidth()
+            .background(c.band, RoundedCornerShape(14.dp))
+            .padding(4.dp)
+            .selectableGroup(),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        FeatureTab(stringResource(R.string.home_tab_bass), selected == TAB_BASS, bassOn, c.accentText, c.fill) { onSelect(TAB_BASS) }
+        FeatureTab(stringResource(R.string.home_tab_spatial), selected == TAB_SPATIAL, spatialOn, c.xtcAccentText, c.xtcFill) {
+            onSelect(TAB_SPATIAL)
+        }
+    }
+}
+
+@Composable
+private fun RowScope.FeatureTab(label: String, selected: Boolean, on: Boolean, accent: Color, dot: Color, onClick: () -> Unit) {
+    val c = LocalPalette.current
+    val colorSpec = motion(tween<Color>(300, easing = IosEase))
+    val bg by animateColorAsState(if (selected) c.bg else c.band, colorSpec, label = "tabBg")
+    val fg by animateColorAsState(if (selected) accent else c.textSecondary, colorSpec, label = "tabText")
+    val dotColor by animateColorAsState(if (on) dot else c.chevron, colorSpec, label = "tabDot")
+    val elevation by animateDpAsState(if (selected) 1.dp else 0.dp, motion(tween(300, easing = IosEase)), label = "tabLift")
+    val state = stringResource(if (on) R.string.home_tab_on else R.string.home_tab_off)
+    Row(
+        Modifier
+            .weight(1f)
+            .heightIn(min = 48.dp)
+            .shadow(elevation, RoundedCornerShape(10.dp))
+            .background(bg, RoundedCornerShape(10.dp))
+            .selectable(selected = selected, role = Role.Tab, onClick = onClick)
+            .semantics { stateDescription = state }
+            .padding(horizontal = 8.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center,
+    ) {
+        Text(
+            label, color = fg, fontSize = 15.sp, lineHeight = 20.sp, textAlign = TextAlign.Center,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+            modifier = Modifier.weight(1f, fill = false),
+        )
+        Spacer(Modifier.size(6.dp))
+        Box(Modifier.size(6.dp).background(dotColor, CircleShape))
+    }
+}
+
+/** Virtual bass tab: strength slider with preset chips, then the volume link row. */
+@Composable
+private fun BassSection(state: HomeUiState, actions: HomeActions, modifier: Modifier) {
+    val c = LocalPalette.current
+    Column(modifier) {
+        StrengthSection(state, actions)
+        Box(
+            Modifier
+                .padding(start = 16.dp, end = 16.dp, top = 12.dp)
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(c.divider)
+        )
+        SwitchRow(
+            checked = state.linkOn,
+            enabled = state.masterOn,
+            onCheckedChange = actions.onLink,
+            minHeight = 72.dp,
+            padding = PaddingValues(horizontal = 16.dp, vertical = 14.dp),
+        ) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                Text(
+                    stringResource(R.string.home_link_title),
+                    color = c.textPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold, lineHeight = 22.sp,
+                )
+                Text(linkText(state.linkLine), color = c.textSecondary, fontSize = 13.sp, lineHeight = 18.sp)
+            }
+        }
+    }
+}
+
+@Composable
+private fun xtcChipLabel(p: HomeLogic.XtcPreset): String = stringResource(
+    when (p) {
+        HomeLogic.XtcPreset.SUBTLE -> R.string.home_xtc_chip_subtle
+        HomeLogic.XtcPreset.BALANCED -> R.string.home_xtc_chip_balanced
+        HomeLogic.XtcPreset.CLEAR -> R.string.home_xtc_chip_clear
+        HomeLogic.XtcPreset.CUSTOM -> R.string.home_xtc_chip_custom
+    }
+)
+
+@Composable
+private fun xtcChipHint(p: HomeLogic.XtcPreset): String = stringResource(
+    when (p) {
+        HomeLogic.XtcPreset.SUBTLE -> R.string.home_xtc_hint_subtle
+        HomeLogic.XtcPreset.BALANCED -> R.string.home_xtc_hint_balanced
+        HomeLogic.XtcPreset.CLEAR -> R.string.home_xtc_hint_clear
+        HomeLogic.XtcPreset.CUSTOM -> R.string.home_xtc_hint_custom
+    }
+)
+
+/**
+ * Spatial tab (drawn with the purple palette): the on/off row, then presets, listening distance and head size, which
+ * dim to 40 % and stop taking input while spatial is off. Head size is chosen by hat size, never measured.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun SpatialSection(state: HomeUiState, actions: HomeActions, modifier: Modifier) {
+    val c = LocalPalette.current
+    val reduce = LocalReduceMotion.current
+    val active = state.masterOn && state.xtcOn
+    val innerDim by animateFloatAsState(
+        targetValue = if (state.xtcOn) 1f else 0.4f,
+        animationSpec = motion(tween(300, easing = IosEase)),
+        label = "xtcDim",
+    )
+    Column(modifier) {
+        SwitchRow(
+            checked = state.xtcOn,
+            enabled = state.masterOn,
+            onCheckedChange = actions.onXtc,
+            minHeight = 72.dp,
+            padding = PaddingValues(horizontal = 16.dp, vertical = 14.dp),
+        ) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                Text(
+                    stringResource(R.string.home_xtc_title),
+                    color = c.textPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold, lineHeight = 22.sp,
+                )
+                Text(
+                    stringResource(if (state.xtcOn) R.string.home_xtc_line_on else R.string.home_xtc_line_off),
+                    color = c.textSecondary, fontSize = 13.sp, lineHeight = 18.sp,
+                )
+            }
+        }
+        Column(Modifier.alpha(innerDim).fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 8.dp)) {
+            FlowRow(
+                modifier = Modifier.fillMaxWidth().selectableGroup(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                val chips = HomeLogic.xtcChips +
+                    (if (state.xtcPreset == HomeLogic.XtcPreset.CUSTOM && state.xtcOn) listOf(HomeLogic.XtcPreset.CUSTOM) else emptyList())
+                for (p in chips) {
+                    PresetChip(
+                        label = xtcChipLabel(p),
+                        selected = state.xtcOn && state.xtcPreset == p,
+                        enabled = active && p != HomeLogic.XtcPreset.CUSTOM,
+                        onClick = { actions.onXtcPreset(p) },
+                    )
+                }
+            }
+            AnimatedContent(
+                targetState = state.xtcPreset,
+                transitionSpec = {
+                    if (reduce) EnterTransition.None togetherWith ExitTransition.None
+                    else sequentialFade()
+                },
+                contentAlignment = Alignment.TopStart,
+                label = "xtcHint",
+            ) { p ->
+                Text(
+                    xtcChipHint(p),
+                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                    color = c.textSecondary, fontSize = 13.sp, lineHeight = 19.sp,
+                )
+            }
+            Box(Modifier.padding(top = 16.dp).fillMaxWidth().height(1.dp).background(c.divider))
+            val distTitle = stringResource(R.string.home_xtc_distance)
+            val distText = stringResource(R.string.home_xtc_distance_value, HomeLogic.xtcDistanceCm(state.xtcDistanceStep))
+            Row(Modifier.fillMaxWidth().padding(top = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    distTitle, modifier = Modifier.weight(1f),
+                    color = c.textPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold, lineHeight = 22.sp,
+                )
+                Crossfade(targetState = distText, animationSpec = motion(tween(120)), label = "xtcDist") { t ->
+                    Text(t, color = c.accentText, fontSize = 16.sp, fontWeight = FontWeight.Bold, lineHeight = 22.sp)
+                }
+            }
+            StepSlider(
+                value = state.xtcDistanceStep,
+                max = state.xtcDistanceSteps,
+                enabled = active,
+                label = distTitle,
+                valueText = distText,
+                onChange = actions.onXtcDistance,
+            )
+            Text(
+                stringResource(R.string.home_xtc_head),
+                modifier = Modifier.padding(top = 8.dp),
+                color = c.textPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold, lineHeight = 22.sp,
+            )
+            FlowRow(
+                modifier = Modifier.fillMaxWidth().selectableGroup(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                for ((hat, label) in listOf(54 to R.string.home_xtc_head_s, 57 to R.string.home_xtc_head_m, 60 to R.string.home_xtc_head_l)) {
+                    PresetChip(
+                        label = stringResource(label),
+                        selected = state.xtcHatCm == hat,
+                        enabled = active,
+                        onClick = { actions.onXtcHead(hat) },
+                    )
+                }
+            }
+            Text(
+                stringResource(R.string.home_xtc_head_hint),
+                modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                color = c.textSecondary, fontSize = 13.sp, lineHeight = 19.sp,
+            )
+        }
     }
 }
 
@@ -862,4 +1109,14 @@ private fun HomePreviewKilled() {
         previewOn.copy(headline = HomeLogic.Headline.ORIGINAL, masterOn = false, killBanner = true),
         previewActions,
     )
+}
+
+@Preview(name = "Light · spatial tab", locale = "ko", widthDp = 390, heightDp = 1000, showBackground = true)
+@Preview(
+    name = "Dark · spatial tab", locale = "ko", widthDp = 390, heightDp = 1000, showBackground = true,
+    uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL,
+)
+@Composable
+private fun HomePreviewSpatial() {
+    HomeScreen(previewOn.copy(xtcOn = true, xtcPreset = HomeLogic.XtcPreset.CLEAR), previewActions, initialTab = 1)
 }

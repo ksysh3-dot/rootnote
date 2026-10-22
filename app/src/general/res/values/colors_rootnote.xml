@@ -17,6 +17,12 @@
     <color name="rn_chip_selected_bg">#E3F2F1</color>
     <color name="rn_chip_selected_border">#74BDBA</color>
     <color name="rn_chip_selected_text">#065555</color>
+    <!-- Spatial (crosstalk cancellation) tab: the purple of the maker badge family; same roles as fill/accent/chip. -->
+    <color name="rn_xtc_fill">#6B4FB5</color>
+    <color name="rn_xtc_accent_text">#5B3E96</color>
+    <color name="rn_xtc_chip_selected_bg">#EFEAF8</color>
+    <color name="rn_xtc_chip_selected_border">#B9A6E0</color>
+    <color name="rn_xtc_chip_selected_text">#5B3E96</color>
     <color name="rn_switch_off">#E9E9EA</color>
     <color name="rn_slider_inactive">#DCDEE3</color>
     <color name="rn_thumb">#FFFFFF</color>

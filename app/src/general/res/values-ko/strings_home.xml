@@ -31,4 +31,26 @@
     <string name="home_killed_body">배터리 절약 기능이 백그라운드에서 앱을 닫은 것으로 보입니다. 그래서 소리가 원래대로 돌아갔습니다. 배터리 제한에서 %1$s를 빼 두면 계속 실행됩니다.</string>
     <string name="home_killed_battery">배터리 설정</string>
     <string name="home_killed_dismiss">닫기</string>
+    <string name="home_tab_bass">가상 저음</string>
+    <string name="home_tab_spatial">공간감</string>
+    <string name="home_tab_on">켜짐</string>
+    <string name="home_tab_off">꺼짐</string>
+    <string name="home_xtc_title">공간감</string>
+    <string name="home_xtc_line_on">좌우 스피커 소리가 서로 덜 섞여서 넓게 들려요</string>
+    <string name="home_xtc_line_off">폰을 가로로 들고 들을 때 좌우를 넓혀요</string>
+    <string name="home_xtc_chip_subtle">은은하게</string>
+    <string name="home_xtc_chip_balanced">균형</string>
+    <string name="home_xtc_chip_clear">확실하게</string>
+    <string name="home_xtc_chip_custom">사용자 지정</string>
+    <string name="home_xtc_hint_subtle">보컬 음색은 그대로 두고 좌우만 넓혀요.</string>
+    <string name="home_xtc_hint_balanced">넓게 들리고, 보컬 음색은 조금 바뀌어요.</string>
+    <string name="home_xtc_hint_clear">가장 넓게 들려요. 머리 위치가 맞을 때 가장 좋아요.</string>
+    <string name="home_xtc_hint_custom">고급 설정에서 고른 조합이에요.</string>
+    <string name="home_xtc_distance">듣는 거리</string>
+    <string name="home_xtc_distance_value">%1$d cm</string>
+    <string name="home_xtc_head">머리 크기</string>
+    <string name="home_xtc_head_s">작음</string>
+    <string name="home_xtc_head_m">보통</string>
+    <string name="home_xtc_head_l">큼</string>
+    <string name="home_xtc_head_hint">모자 크기로 고르면 돼요: 작음 약 54 cm, 보통 약 57 cm, 큼 약 60 cm.</string>
 </resources>

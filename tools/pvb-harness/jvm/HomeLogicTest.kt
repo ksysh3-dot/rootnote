@@ -160,6 +160,19 @@ fun main(args: Array<String>) {
     expect(ko["home_headline_original"] == "원래 소리로 듣고 있어요", "Korean headline (off)")
     expect(ko["home_chip_fullness"] == "풍성함 증가" && ko["home_chip_deep"] == "초저역 강조" && ko["home_chip_custom"] == "사용자 지정", "chip names")
 
+    // spatial (crosstalk cancellation): presets are mode + strength only; turning on picks balanced unless stored
+    expect(HomeLogic.xtcPreset(PvbSettings.XTC_CENTRE, -6f) == HomeLogic.XtcPreset.SUBTLE, "spatial subtle")
+    expect(HomeLogic.xtcPreset(PvbSettings.XTC_FULL, -4.5f) == HomeLogic.XtcPreset.BALANCED, "spatial balanced")
+    expect(HomeLogic.xtcPreset(PvbSettings.XTC_FULL, -3f) == HomeLogic.XtcPreset.CLEAR, "spatial clear")
+    expect(HomeLogic.xtcPreset(PvbSettings.XTC_FULL, -6f) == HomeLogic.XtcPreset.CUSTOM, "spatial full + gentle = custom")
+    expect(HomeLogic.xtcPreset(PvbSettings.XTC_OFF, -6f) == HomeLogic.XtcPreset.CUSTOM, "spatial off = no preset")
+    expect(HomeLogic.xtcOnWrite(-6f) == HomeLogic.XtcPreset.BALANCED && HomeLogic.xtcOnWrite(-3f) == HomeLogic.XtcPreset.CLEAR,
+        "spatial on: balanced, or the stored full-mode strength")
+    expect(HomeLogic.xtcDistanceSteps() == 7 && HomeLogic.xtcDistanceStep(40f) == 3 && HomeLogic.xtcDistanceCm(3) == 40 &&
+        HomeLogic.xtcDistanceStep(99f) == 7 && HomeLogic.xtcDistanceCm(0) == 25, "distance slider 25..60 cm in 5 cm steps")
+    expect(PvbSettings().xtcMode == PvbSettings.XTC_OFF, "spatial off by default")
+    expect(ko["home_tab_bass"] == "가상 저음" && ko["home_tab_spatial"] == "공간감", "tab names")
+
     println("Home screen: caps 0..9, chips derived from model + level (custom pinned), preset writes within caps, " +
         "master/headline with the first-run gate, volume-link line (60 % -> −4 dB, applied +2 dB), strings en/ko: OK")
 }

@@ -110,7 +110,26 @@ class HomeActivity : BaseActivity() {
             FirstWeekStore.onBannerDismissed(this)
             refresh()
         },
+        onXtc = { on ->
+            if (on) writeXtcPreset(HomeLogic.xtcOnWrite(PvbSettings.load(prefs).xtcStrengthDb))
+            else prefs.edit().putString(PvbSettings.KEY_XTC_MODE, PvbSettings.XTC_OFF.toString()).apply()
+        },
+        onXtcPreset = { preset -> if (preset != HomeLogic.XtcPreset.CUSTOM) writeXtcPreset(preset) },
+        onXtcDistance = { step ->
+            prefs.edit().putFloat(PvbSettings.KEY_XTC_DISTANCE, HomeLogic.xtcDistanceCm(step).toFloat()).apply()
+        },
+        onXtcHead = { hat -> prefs.edit().putString(PvbSettings.KEY_XTC_HEAD, hat.toString()).apply() },
     )
+
+    /** Spatial preset: mode + strength, as the list values of the advanced settings ("-6", "-4.5", "-3"). */
+    private fun writeXtcPreset(preset: HomeLogic.XtcPreset) {
+        val db = preset.strengthDb
+        val text = if (db == Math.round(db).toFloat()) Math.round(db).toString() else db.toString()
+        prefs.edit()
+            .putString(PvbSettings.KEY_XTC_MODE, preset.mode.toString())
+            .putString(PvbSettings.KEY_XTC_STRENGTH, text)
+            .apply()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -243,6 +262,11 @@ class HomeActivity : BaseActivity() {
             linkOn = s.vbVolLink,
             linkLine = HomeLogic.linkLine(s, index, max),
             killBanner = KillWatch.showBanner(PvbBuild.general, kill, shownRunning, s.enabled),
+            xtcOn = s.xtcMode != PvbSettings.XTC_OFF,
+            xtcPreset = HomeLogic.xtcPreset(s.xtcMode, s.xtcStrengthDb),
+            xtcDistanceStep = HomeLogic.xtcDistanceStep(s.xtcDistanceCm),
+            xtcDistanceSteps = HomeLogic.xtcDistanceSteps(),
+            xtcHatCm = s.xtcHatCm.toInt(),
         )
     }
 

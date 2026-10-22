@@ -31,4 +31,26 @@
     <string name="home_killed_body">Battery saving seems to have closed the app in the background, so the sound went back to the original. Exempt %1$s from battery limits to keep it running.</string>
     <string name="home_killed_battery">Battery settings</string>
     <string name="home_killed_dismiss">Dismiss</string>
+    <string name="home_tab_bass">Virtual bass</string>
+    <string name="home_tab_spatial">Spatial</string>
+    <string name="home_tab_on">On</string>
+    <string name="home_tab_off">Off</string>
+    <string name="home_xtc_title">Spatial</string>
+    <string name="home_xtc_line_on">Left and right speakers blend less, so the sound spreads wider</string>
+    <string name="home_xtc_line_off">Widens left and right while you hold the phone sideways</string>
+    <string name="home_xtc_chip_subtle">Subtle</string>
+    <string name="home_xtc_chip_balanced">Balanced</string>
+    <string name="home_xtc_chip_clear">Clear</string>
+    <string name="home_xtc_chip_custom">Custom</string>
+    <string name="home_xtc_hint_subtle">Widens left and right and leaves the vocals as they are.</string>
+    <string name="home_xtc_hint_balanced">Wider; the vocals change a little.</string>
+    <string name="home_xtc_hint_clear">The widest. Best when your head is where it is set for.</string>
+    <string name="home_xtc_hint_custom">A combination chosen in the advanced settings.</string>
+    <string name="home_xtc_distance">Listening distance</string>
+    <string name="home_xtc_distance_value">%1$d cm</string>
+    <string name="home_xtc_head">Head size</string>
+    <string name="home_xtc_head_s">Small</string>
+    <string name="home_xtc_head_m">Medium</string>
+    <string name="home_xtc_head_l">Large</string>
+    <string name="home_xtc_head_hint">Go by hat size: small about 54 cm, medium about 57 cm, large about 60 cm.</string>
 </resources>
