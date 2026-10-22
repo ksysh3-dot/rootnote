@@ -25,7 +25,13 @@
             app:iconSpaceReserved="false" />
         <!-- Crosstalk cancellation ("공간감", pvb_xtc.h): off by default (must match PvbSettings); the phone's own
              speakers only, never during a comparison or a measurement (PvbController). Head size is a hat-size preset,
-             nothing is measured. -->
+             nothing is measured. The preset row is derived from mode + strength and not stored. -->
+        <ListPreference
+            android:key="pvb_xtc_preset"
+            android:title="@string/pvb_xtc_preset"
+            android:dialogTitle="@string/pvb_xtc_preset"
+            android:persistent="false"
+            app:iconSpaceReserved="false" />
         <ListPreference
             android:key="pvb_xtc_mode"
             android:title="@string/pvb_xtc_mode"

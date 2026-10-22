@@ -67,6 +67,7 @@ class PreferenceGroupFragment : PreferenceFragmentCompat(), KoinComponent {
     private var convolverStatusUpdater: (() -> Unit)? = null
     // Held strongly: SharedPreferences keeps its listeners in a weak map.
     private var pvbModeListener: SharedPreferences.OnSharedPreferenceChangeListener? = null
+    private var pvbXtcListener: SharedPreferences.OnSharedPreferenceChangeListener? = null
     // Alpha 3.1: keeps the slider/model in step with a recalled song and shows the per-song indicator.
     private var pvbTrackListener: SharedPreferences.OnSharedPreferenceChangeListener? = null
     private var pvbTrackIndicator: (() -> Unit)? = null
@@ -292,6 +293,51 @@ class PreferenceGroupFragment : PreferenceFragmentCompat(), KoinComponent {
         }
     }
 
+    /**
+     * Crosstalk cancellation ("공간감"): the preset row is derived from mode + strength and never stored (like the
+     * virtual bass mode); strength, distance and head size are shown only while it is on.
+     */
+    private fun setupPvbXtc() {
+        val mode = findPreference<ListPreference>(PvbSettings.KEY_XTC_MODE) ?: return
+        val strength = findPreference<ListPreference>(PvbSettings.KEY_XTC_STRENGTH)
+        val details = listOfNotNull(strength, findPreference<Preference>(PvbSettings.KEY_XTC_DISTANCE),
+            findPreference<Preference>(PvbSettings.KEY_XTC_HEAD))
+        val preset = findPreference<ListPreference>(PvbSettings.KEY_XTC_PRESET)
+        // preset key -> (mode, strength); "custom" writes nothing
+        val presets = linkedMapOf(
+            "off" to (PvbSettings.XTC_OFF to "-6"),
+            "subtle" to (PvbSettings.XTC_CENTRE to "-6"),
+            "balanced" to (PvbSettings.XTC_FULL to "-4.5"),
+            "clear" to (PvbSettings.XTC_FULL to "-3"),
+        )
+        preset?.apply {
+            entries = arrayOf(getString(R.string.pvb_xtc_off), getString(R.string.pvb_xtc_preset_subtle),
+                getString(R.string.pvb_xtc_preset_balanced), getString(R.string.pvb_xtc_preset_clear),
+                getString(R.string.pvb_xtc_preset_custom))
+            entryValues = arrayOf("off", "subtle", "balanced", "clear", "custom")
+            summaryProvider = SummaryProvider<ListPreference> { it.entry ?: "" }
+        }
+        fun refresh() {
+            val prefs = preferenceManager.sharedPreferences ?: return
+            val s = PvbSettings.load(prefs)
+            details.forEach { it.isVisible = s.xtcMode != PvbSettings.XTC_OFF }
+            preset?.value = presets.entries.firstOrNull { (_, v) ->
+                v.first == s.xtcMode && (s.xtcMode == PvbSettings.XTC_OFF || v.second.toFloat() == s.xtcStrengthDb)
+            }?.key ?: "custom"
+        }
+        refresh()
+        preset?.setOnPreferenceChangeListener { _, newValue ->
+            val v = presets[newValue] ?: return@setOnPreferenceChangeListener false
+            mode.value = v.first.toString()
+            if (v.first != PvbSettings.XTC_OFF) strength?.value = v.second
+            refresh()
+            false  // derived, never stored
+        }
+        pvbXtcListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key == PvbSettings.KEY_XTC_MODE || key == PvbSettings.KEY_XTC_STRENGTH) refresh()
+        }.also { preferenceManager.sharedPreferences?.registerOnSharedPreferenceChangeListener(it) }
+    }
+
     /** Virtual bass is experimental: turning it on only takes effect after the warning is confirmed. */
     private fun setupPvbVirtualBass() {
         adaptPvbForBuild()
@@ -363,6 +409,7 @@ class PreferenceGroupFragment : PreferenceFragmentCompat(), KoinComponent {
                 if (key == PvbSettings.KEY_VB_ALGO || key == PvbSettings.KEY_VB_STRENGTH_DB) refresh()
             }.also { preferenceManager.sharedPreferences?.registerOnSharedPreferenceChangeListener(it) }
         }
+        setupPvbXtc()
         if (PvbBuild.recordFeatures) setupPvbTrackMemory(algo, level)  // general: per-song memory does not exist
         setupPvbVolumeLink()
         findPreference<Preference>(PvbSettings.KEY_VB_LIVE_AB)?.setOnPreferenceClickListener {
@@ -682,6 +729,8 @@ class PreferenceGroupFragment : PreferenceFragmentCompat(), KoinComponent {
         preferenceManager.sharedPreferences?.unregisterOnSharedPreferenceChangeListener(listener)
         pvbModeListener?.let { preferenceManager.sharedPreferences?.unregisterOnSharedPreferenceChangeListener(it) }
         pvbModeListener = null
+        pvbXtcListener?.let { preferenceManager.sharedPreferences?.unregisterOnSharedPreferenceChangeListener(it) }
+        pvbXtcListener = null
         pvbTrackListener?.let { preferenceManager.sharedPreferences?.unregisterOnSharedPreferenceChangeListener(it) }
         pvbTrackListener = null
         pvbTrackIndicator?.let { TrackLevels.removeListener(it) }

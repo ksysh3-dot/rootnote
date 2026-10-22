@@ -122,6 +122,8 @@ data class PvbSettings(
         const val KEY_XTC_STRENGTH = "pvb_xtc_strength"
         const val KEY_XTC_DISTANCE = "pvb_xtc_distance_cm"
         const val KEY_XTC_HEAD = "pvb_xtc_head"
+        /** Not persisted: the preset row, derived from mode + strength (PreferenceGroupFragment). */
+        const val KEY_XTC_PRESET = "pvb_xtc_preset"
         const val XTC_OFF = 0
         const val XTC_CENTRE = 1
         const val XTC_FULL = 2

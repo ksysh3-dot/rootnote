@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Crosstalk cancellation ("공간감"), pvb_xtc.h / docs/XTC_PLAN.md. -->
 <resources>
+    <string name="pvb_xtc_preset">Spatial preset</string>
+    <string name="pvb_xtc_preset_subtle">Subtle (keep centre, gentle)</string>
+    <string name="pvb_xtc_preset_balanced">Balanced (full, medium)</string>
+    <string name="pvb_xtc_preset_clear">Clear (full, strong)</string>
+    <string name="pvb_xtc_preset_custom">Custom</string>
     <string name="pvb_xtc_mode">Spatial (crosstalk cancellation)</string>
     <string name="pvb_xtc_off">Off</string>
     <string name="pvb_xtc_centre">Keep centre (vocals keep their tone)</string>

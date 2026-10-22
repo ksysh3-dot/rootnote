@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="pvb_xtc_preset">공간감 프리셋</string>
+    <string name="pvb_xtc_preset_subtle">은은하게 (중앙 보존 · 약하게)</string>
+    <string name="pvb_xtc_preset_balanced">균형 (완전 · 중간)</string>
+    <string name="pvb_xtc_preset_clear">확실하게 (완전 · 강하게)</string>
+    <string name="pvb_xtc_preset_custom">사용자 지정</string>
     <string name="pvb_xtc_mode">공간감 (크로스토크 제거)</string>
     <string name="pvb_xtc_off">꺼짐</string>
     <string name="pvb_xtc_centre">중앙 보존 (보컬 음색 그대로)</string>
