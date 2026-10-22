@@ -172,6 +172,15 @@ class MainActivity : BaseActivity() {
         actionBar?.setDisplayHomeAsUpEnabled(true)
         actionBar?.setHomeButtonEnabled(true)
         actionBar?.setDisplayShowTitleEnabled(true)
+        if (PvbBuild.general) {
+            // General build: this screen is "Advanced settings" under the home screen, so it gets an up arrow,
+            // and back (arrow or gesture) returns to the home screen even when this screen was opened on its
+            // own (audio effect panel, notification of an older version, app compatibility restart).
+            supportActionBar?.setDisplayHomeAsUpEnabled(true)
+            onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() = returnToHome()
+            })
+        }
         binding.appBarLayout.statusBarForeground = MaterialShapeDrawable.createWithElevationOverlay(this)
 
         if(firstBoot) {
@@ -414,6 +423,19 @@ class MainActivity : BaseActivity() {
         if(intent?.action == Intent.ACTION_VIEW) {
             intent.data?.let { handleFileIntent(it) }
         }
+    }
+
+    override fun onSupportNavigateUp(): Boolean {
+        if (!PvbBuild.general) return super.onSupportNavigateUp()
+        returnToHome()
+        return true
+    }
+
+    /** General build: leave Advanced settings for the home screen, opening it first if it is not underneath. */
+    private fun returnToHome() {
+        if (isTaskRoot)
+            startActivity(PvbGeneral.homeIntent(this))
+        finish()
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
