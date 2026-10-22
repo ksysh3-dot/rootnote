@@ -53,10 +53,15 @@ Modified upstream files:
 - `app/src/main/java/me/timschneeberger/rootlessjamesdsp/MainApplication.kt`
 - `app/src/main/java/me/timschneeberger/rootlessjamesdsp/activity/EngineLauncherActivity.kt`
 - `app/src/main/java/me/timschneeberger/rootlessjamesdsp/activity/MainActivity.kt`
+- `app/src/main/java/me/timschneeberger/rootlessjamesdsp/activity/OnboardingActivity.kt`
+- `app/src/main/java/me/timschneeberger/rootlessjamesdsp/activity/SettingsActivity.kt`
 - `app/src/main/java/me/timschneeberger/rootlessjamesdsp/backup/BackupManager.kt`
+- `app/src/main/java/me/timschneeberger/rootlessjamesdsp/fragment/BlocklistFragment.kt`
 - `app/src/main/java/me/timschneeberger/rootlessjamesdsp/fragment/DspFragment.kt`
+- `app/src/main/java/me/timschneeberger/rootlessjamesdsp/fragment/OnboardingFragment.kt`
 - `app/src/main/java/me/timschneeberger/rootlessjamesdsp/fragment/PreferenceGroupFragment.kt`
 - `app/src/main/java/me/timschneeberger/rootlessjamesdsp/fragment/settings/SettingsAboutFragment.kt`
+- `app/src/main/java/me/timschneeberger/rootlessjamesdsp/interop/JamesDspBaseEngine.kt`
 - `app/src/main/java/me/timschneeberger/rootlessjamesdsp/model/preset/Preset.kt`
 - `app/src/main/java/me/timschneeberger/rootlessjamesdsp/preference/MaterialSeekbarPreference.kt`
 - `app/src/main/java/me/timschneeberger/rootlessjamesdsp/preference/SwitchPreferenceGroup.kt`
@@ -67,7 +72,11 @@ Modified upstream files:
 - `app/src/main/java/me/timschneeberger/rootlessjamesdsp/utils/notifications/ServiceNotificationHelper.kt`
 - `app/src/main/java/me/timschneeberger/rootlessjamesdsp/utils/storage/StorageUtils.kt`
 - `app/src/main/java/me/timschneeberger/rootlessjamesdsp/utils/storage/Tar.kt`
+- `app/src/main/res/layout/fragment_blocklist.xml`
 - `app/src/main/res/layout/fragment_dsp.xml`
+- `app/src/main/res/layout/onboarding_fragment.xml`
+- `app/src/main/res/layout/onboarding_page3.xml`
+- `app/src/main/res/layout/onboarding_page5.xml`
 - `app/src/main/res/layout/preference_materialslider.xml`
 - `app/src/main/res/xml/app_about_preferences.xml`
 - `app/src/main/res/xml/backup_rules.xml`
@@ -80,5 +89,5 @@ Removed upstream files:
 - `.github/FUNDING.yml`
 - `.github/workflows/crowdin-contributors.yml`
 
-Files added by this fork (not listed): 153. New source files carry their own GPL-3.0 header or are covered by this notice.
+Files added by this fork (not listed): 181. New source files carry their own GPL-3.0 header or are covered by this notice.
 <!-- END GENERATED -->
