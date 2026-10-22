@@ -53,6 +53,9 @@ jobs:
             python3 tools/pvb-harness/test_engine.py --report engine-report.json &&
             OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_alpha2_profiles.py --lib tools/pvb-harness/build/libpvbcapi.so --report alpha2-profiles-ci.json &&
             OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_diagnostic_solo.py &&
+            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_xtc.py &&
+            python3 tools/xtc/check_eel_port.py &&
+            python3 tools/xtc/xtc_native_check.py &&
             OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_experimental.py --baseline-ref 9978f145317183527b15f83d91fe9c6de748ae14 --report experimental-report.json &&
             OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_devmode.py --baseline-ref 65c0086f01caaeffc8fdea1614560076f9a860cd --report devmode-report.json &&
             OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_harmonic_continuity.py --report harmonic-continuity-report.json &&

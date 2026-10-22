@@ -23,6 +23,49 @@
             android:persistent="false"
             app:isPreferenceVisible="false"
             app:iconSpaceReserved="false" />
+        <!-- Crosstalk cancellation ("공간감", pvb_xtc.h): off by default (must match PvbSettings); the phone's own
+             speakers only, never during a comparison or a measurement (PvbController). Head size is a hat-size preset,
+             nothing is measured. -->
+        <ListPreference
+            android:key="pvb_xtc_mode"
+            android:title="@string/pvb_xtc_mode"
+            android:dialogTitle="@string/pvb_xtc_mode"
+            android:entries="@array/pvb_xtc_mode_entries"
+            android:entryValues="@array/pvb_xtc_mode_values"
+            android:defaultValue="0"
+            app:useSimpleSummaryProvider="true"
+            app:iconSpaceReserved="false" />
+        <ListPreference
+            android:key="pvb_xtc_strength"
+            android:title="@string/pvb_xtc_strength"
+            android:dialogTitle="@string/pvb_xtc_strength"
+            android:entries="@array/pvb_xtc_strength_entries"
+            android:entryValues="@array/pvb_xtc_strength_values"
+            android:defaultValue="-6"
+            app:useSimpleSummaryProvider="true"
+            app:iconSpaceReserved="false" />
+        <me.timschneeberger.rootlessjamesdsp.preference.MaterialSeekbarPreference
+            android:key="pvb_xtc_distance_cm"
+            android:title="@string/pvb_xtc_distance"
+            android:defaultValue="40"
+            app:minValue="25"
+            app:maxValue="60"
+            app:seekBarIncrement="1"
+            app:precision="0"
+            app:unit="cm"
+            app:allowDividerAbove="false"
+            app:updatesContinuously="true"
+            app:showSeekBarValue="true"
+            app:iconSpaceReserved="false" />
+        <ListPreference
+            android:key="pvb_xtc_head"
+            android:title="@string/pvb_xtc_head"
+            android:dialogTitle="@string/pvb_xtc_head"
+            android:entries="@array/pvb_xtc_head_entries"
+            android:entryValues="@array/pvb_xtc_head_values"
+            android:defaultValue="57"
+            app:useSimpleSummaryProvider="true"
+            app:iconSpaceReserved="false" />
         <me.timschneeberger.rootlessjamesdsp.preference.MaterialSeekbarPreference
             android:key="pvb_low_db"
             android:title="@string/pvb_low_db"

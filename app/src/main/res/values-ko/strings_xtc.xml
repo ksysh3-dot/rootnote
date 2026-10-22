@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pvb_xtc_mode">공간감 (크로스토크 제거)</string>
+    <string name="pvb_xtc_off">꺼짐</string>
+    <string name="pvb_xtc_centre">중앙 보존 (보컬 음색 그대로)</string>
+    <string name="pvb_xtc_full">완전 (더 넓게, 보컬 음색 조금 바뀜)</string>
+    <string name="pvb_xtc_strength">공간감 세기</string>
+    <string name="pvb_xtc_gentle">약하게</string>
+    <string name="pvb_xtc_medium">중간</string>
+    <string name="pvb_xtc_strong">강하게</string>
+    <string name="pvb_xtc_distance">듣는 거리</string>
+    <string name="pvb_xtc_head">머리 크기</string>
+    <string name="pvb_xtc_head_s">작음 (모자 약 54 cm)</string>
+    <string name="pvb_xtc_head_m">보통 (모자 약 57 cm)</string>
+    <string name="pvb_xtc_head_l">큼 (모자 약 60 cm)</string>
+</resources>

@@ -6,6 +6,7 @@ add_library(pvbengine SHARED
         ${CMAKE_CURRENT_LIST_DIR}/pvb_analysis.h
         ${CMAKE_CURRENT_LIST_DIR}/pvb_dsp.h
         ${CMAKE_CURRENT_LIST_DIR}/pvb_fastmath.h
+        ${CMAKE_CURRENT_LIST_DIR}/pvb_xtc.h
         ${CMAKE_CURRENT_LIST_DIR}/pvb_simd.h
         ${CMAKE_CURRENT_LIST_DIR}/pvb_vb52.cpp
         ${CMAKE_CURRENT_LIST_DIR}/pvb_vb.cpp

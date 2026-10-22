@@ -97,6 +97,13 @@ void sanitizeParams(float* v) {
     v[P_D_PERC_DB] = clampv(v[P_D_PERC_DB], -24.f, 12.f);
     v[P_D_ATTACK_MS] = clampv(v[P_D_ATTACK_MS], 1.f, 200.f);
     v[P_D_RELEASE_MS] = clampv(v[P_D_RELEASE_MS], 1.f, 1000.f);
+    v[P_XTC_MODE] = clampv(std::nearbyint(v[P_XTC_MODE]), 0.f, 2.f);
+    v[P_XTC_STRENGTH_DB] = clampv(v[P_XTC_STRENGTH_DB], -12.f, -1.f);
+    v[P_XTC_DIST_CM] = clampv(v[P_XTC_DIST_CM], 20.f, 80.f);
+    v[P_XTC_HAT_CM] = clampv(v[P_XTC_HAT_CM], 50.f, 64.f);
+    v[P_XTC_SPACING_CM] = clampv(v[P_XTC_SPACING_CM], 8.f, 22.f);
+    v[P_XTC_LO_HZ] = clampv(v[P_XTC_LO_HZ], 150.f, 1500.f);
+    v[P_XTC_HI_HZ] = clampv(v[P_XTC_HI_HZ], 3000.f, 16000.f);
     // The output ceiling stays at or below -1 dBTP while developer values are in use.
     if (v[P_DEV_ON] >= 0.5f) v[P_CEIL_DB] = std::min(v[P_CEIL_DB], -1.f);
 }
@@ -160,6 +167,13 @@ void defaultParams(float* v) {
     v[P_D_SUST_DB] = v[P_D_PERC_DB] = 0.f;
     v[P_D_ATTACK_MS] = 32.f / 3.f;   // 2 hops
     v[P_D_RELEASE_MS] = 32.f;        // 6 hops
+    v[P_XTC_MODE] = 0.f;             // crosstalk cancellation: off
+    v[P_XTC_STRENGTH_DB] = -6.f;
+    v[P_XTC_DIST_CM] = 40.f;
+    v[P_XTC_HAT_CM] = 57.f;
+    v[P_XTC_SPACING_CM] = 15.5f;
+    v[P_XTC_LO_HZ] = 400.f;
+    v[P_XTC_HI_HZ] = 8000.f;
 }
 
 double estimatePhoneLimiterGr(double levelDb) { return PhoneModel::staticGr(levelDb); }
@@ -289,6 +303,7 @@ void Engine::configure(int sampleRate) {
     limFlat_.configure(sr_, kLookaheadMs);  // same latency as lim_: the flat path stays aligned with wet and dry
     match_.configure(sr_);
     cond_.configure(sr_);
+    xtc_.setSampleRate(sr_);
     for (int a = 0; a < VB_ALGO_COUNT; ++a)
         vbOk_[a] = a > VB_ALPHA2_P1 ? vbOk_[VB_ALPHA2_P1] : vbMods_[a]->configure(sr_);
     vb52_.bindEq(&hp_, &lo_, &hi_, &hs_, sr_);
@@ -374,6 +389,7 @@ void Engine::resetState() {
     vbX_.snap(1.0);
     if (vbCur_ >= 0) vbMods_[vbCur_]->reset();
     cond_.clearDetectors();
+    xtc_.hardReset();
 }
 
 void Engine::applyParams(const float* v, bool snap) {
@@ -434,6 +450,16 @@ void Engine::applyParams(const float* v, bool snap) {
     limFlat_.setCeilingDb(v[P_CEIL_DB]);
     limFlat_.setReleaseMs(v[P_REL_MS]);
     for (int i = 0; i < P_COUNT; ++i) active_[i] = v[i];
+    Xtc::Config xc;
+    xc.mode = static_cast<int>(v[P_XTC_MODE]);
+    xc.strengthDb = v[P_XTC_STRENGTH_DB];
+    xc.distanceCm = v[P_XTC_DIST_CM];
+    xc.hatCm = v[P_XTC_HAT_CM];
+    xc.spacingCm = v[P_XTC_SPACING_CM];
+    xc.loHz = v[P_XTC_LO_HZ];
+    xc.hiHz = v[P_XTC_HI_HZ];
+    xtc_.setWanted(xc);
+    if (snap) xtc_.hardReset();
     applyDev(v);
     if (snap) vbApply(vbWanted(), false);
 }
@@ -598,8 +624,11 @@ void Engine::process(float* io, int frames) {
         lowDbNow_.next();
         if (gate == gateTarget_ && gateTarget_ >= kOpenMinLin && mix == 1.0 && fade == 1.0 && vbx == 1.0) ++openBlock;
 
-        double wl = hp_.tick(sHp2_[0], hp_.tick(sHp1_[0], xdl));
-        double wr = hp_.tick(sHp2_[1], hp_.tick(sHp1_[1], xdr));
+        // Crosstalk cancellation first in the processed path (off: not run at all, bit-identical).
+        double cl = xdl, cr = xdr;
+        if (!xtc_.idle()) xtc_.tick(xdl, xdr, cl, cr);
+        double wl = hp_.tick(sHp2_[0], hp_.tick(sHp1_[0], cl));
+        double wr = hp_.tick(sHp2_[1], hp_.tick(sHp1_[1], cr));
         wl = hs_.tick(sHs_[0], hi_.tick(sHi_[0], lo_.tick(sLo_[0], wl)));
         wr = hs_.tick(sHs_[1], hi_.tick(sHi_[1], lo_.tick(sLo_[1], wr)));
         // virtual bass layer after the EQ filters, before the output gain and the limiter; generated from the

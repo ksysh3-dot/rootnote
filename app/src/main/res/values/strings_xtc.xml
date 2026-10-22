@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Crosstalk cancellation ("공간감"), pvb_xtc.h / docs/XTC_PLAN.md. -->
+<resources>
+    <string name="pvb_xtc_mode">Spatial (crosstalk cancellation)</string>
+    <string name="pvb_xtc_off">Off</string>
+    <string name="pvb_xtc_centre">Keep centre (vocals keep their tone)</string>
+    <string name="pvb_xtc_full">Full (wider, vocals change a little)</string>
+    <string name="pvb_xtc_strength">Spatial strength</string>
+    <string name="pvb_xtc_gentle">Gentle</string>
+    <string name="pvb_xtc_medium">Medium</string>
+    <string name="pvb_xtc_strong">Strong</string>
+    <string name="pvb_xtc_distance">Listening distance</string>
+    <string name="pvb_xtc_head">Head size</string>
+    <string name="pvb_xtc_head_s">Small (hat about 54 cm)</string>
+    <string name="pvb_xtc_head_m">Medium (hat about 57 cm)</string>
+    <string name="pvb_xtc_head_l">Large (hat about 60 cm)</string>
+    <string-array name="pvb_xtc_mode_entries" translatable="false">
+        <item>@string/pvb_xtc_off</item>
+        <item>@string/pvb_xtc_centre</item>
+        <item>@string/pvb_xtc_full</item>
+    </string-array>
+    <string-array name="pvb_xtc_mode_values" translatable="false">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+    <string-array name="pvb_xtc_strength_entries" translatable="false">
+        <item>@string/pvb_xtc_gentle</item>
+        <item>@string/pvb_xtc_medium</item>
+        <item>@string/pvb_xtc_strong</item>
+    </string-array>
+    <string-array name="pvb_xtc_strength_values" translatable="false">
+        <item>-6</item>
+        <item>-4.5</item>
+        <item>-3</item>
+    </string-array>
+    <string-array name="pvb_xtc_head_entries" translatable="false">
+        <item>@string/pvb_xtc_head_s</item>
+        <item>@string/pvb_xtc_head_m</item>
+        <item>@string/pvb_xtc_head_l</item>
+    </string-array>
+    <string-array name="pvb_xtc_head_values" translatable="false">
+        <item>54</item>
+        <item>57</item>
+        <item>60</item>
+    </string-array>
+</resources>

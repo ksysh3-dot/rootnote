@@ -32,6 +32,7 @@
 #include "pvb_dsp.h"
 #include "pvb_layer_condition.h"
 #include "pvb_vb.h"
+#include "pvb_xtc.h"
 
 namespace pvb {
 
@@ -95,6 +96,15 @@ enum Param : int {
     P_D_PERC_DB,        // percussive (analytic) path gain, dB
     P_D_ATTACK_MS,      // P1-family track life attack (rounded to 16/3 ms hops; model 2 hops)
     P_D_RELEASE_MS,     // P1-family track life release (rounded to hops; model 6 hops = 32 ms)
+    // Crosstalk cancellation ("공간감", pvb_xtc.h). P_XTC_MODE = 0: off and bit-identical to the engine without it.
+    // It acts on the processed path only (the plain and the matched bypass stay unprocessed), first in the chain.
+    P_XTC_MODE,         // 0 off, 1 centre safe (side only), 2 full
+    P_XTC_STRENGTH_DB,  // loop gain g, dB (-6 gentle, -4.5 medium, -3 strong)
+    P_XTC_DIST_CM,      // listening distance
+    P_XTC_HAT_CM,       // head size as hat size (circumference), 57 = standard head
+    P_XTC_SPACING_CM,   // speaker spacing in landscape (device value)
+    P_XTC_LO_HZ,        // feedback band, first-order high-pass
+    P_XTC_HI_HZ,        // feedback band, first-order low-pass
     P_COUNT
 };
 
@@ -281,6 +291,7 @@ private:
     int vbCur_ = -1;                  // algorithm in the signal path, -1 = none
     bool genCur_ = false;             // S1m running in vbAlpha2_ (P1 only); switched like an algorithm (faded)
     bool genHost_ = false;            // host research hook set (setGenResearch): leave vbAlpha2_'s GenResearch52 alone
+    Xtc xtc_;                         // crosstalk cancellation (P_XTC_*), first in the processed path
     LayerConditioner cond_;           // experimental layer options (P_X_SMOOTH, P_X_RISE, P_X_DENSE)
     int vbDelay_ = 0;                 // frames the chain's input is delayed by while vbCur_ >= 0
     VbPhase vbPhase_ = VB_STEADY;

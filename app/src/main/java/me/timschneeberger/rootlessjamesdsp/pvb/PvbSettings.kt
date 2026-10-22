@@ -59,6 +59,12 @@ data class PvbSettings(
     val devPercDb: Float = 0f,
     val devAttackMs: Float = DevParams.ATTACK_DEFAULT,
     val devReleaseMs: Float = DevParams.RELEASE_DEFAULT,
+    // Crosstalk cancellation ("공간감", pvb_xtc.h): off by default; applied on the speaker in landscape only
+    // (PvbController). Head size is a hat-size preset, never measured. Not part of device profiles or comparisons.
+    val xtcMode: Int = XTC_OFF,
+    val xtcStrengthDb: Float = XTC_STRENGTH_DEFAULT,
+    val xtcDistanceCm: Float = XTC_DISTANCE_DEFAULT,
+    val xtcHatCm: Float = XTC_HAT_DEFAULT,
 ) {
     companion object {
         // Not "dsp_*": upstream presets, backups and device profiles swap those files behind the listeners' back.
@@ -111,6 +117,26 @@ data class PvbSettings(
         const val KEY_X_RISE = "pvb_x_rise"
         const val KEY_X_S1M = "pvb_x_s1m"
         const val KEY_X_DENSE = "pvb_x_dense"
+        /** Crosstalk cancellation ("공간감"): list values as strings, distance as a slider float. */
+        const val KEY_XTC_MODE = "pvb_xtc_mode"
+        const val KEY_XTC_STRENGTH = "pvb_xtc_strength"
+        const val KEY_XTC_DISTANCE = "pvb_xtc_distance_cm"
+        const val KEY_XTC_HEAD = "pvb_xtc_head"
+        const val XTC_OFF = 0
+        const val XTC_CENTRE = 1
+        const val XTC_FULL = 2
+        const val XTC_STRENGTH_DEFAULT = -6f
+        const val XTC_DISTANCE_DEFAULT = 40f
+        const val XTC_DISTANCE_MIN = 25f
+        const val XTC_DISTANCE_MAX = 60f
+        const val XTC_HAT_DEFAULT = 57f
+        /** Speaker spacing in landscape and the feedback band: device and design values, not user settings. */
+        const val XTC_SPACING_CM = 15.5f
+        const val XTC_LO_HZ = 400f
+        const val XTC_HI_HZ = 8000f
+        private val XTC_STRENGTHS = listOf(-6f, -4.5f, -3f)
+        private val XTC_HATS = listOf(54f, 57f, 60f)
+
         /** Not persisted: the "실험 기능" header and the feedback link (opens GitHub Issues). */
         const val KEY_X_HEADER = "pvb_x_header"
         const val KEY_X_FEEDBACK = "pvb_x_feedback"
@@ -239,6 +265,12 @@ data class PvbSettings(
                 devPercDb = DevParams.clampStored(DevParams.KEY_PERC, p.float(DevParams.KEY_PERC, d.devPercDb)),
                 devAttackMs = DevParams.clampStored(DevParams.KEY_ATTACK, p.float(DevParams.KEY_ATTACK, d.devAttackMs)),
                 devReleaseMs = DevParams.clampStored(DevParams.KEY_RELEASE, p.float(DevParams.KEY_RELEASE, d.devReleaseMs)),
+                xtcMode = p.str(KEY_XTC_MODE, "0").trim().toIntOrNull()?.takeIf { it in XTC_OFF..XTC_FULL } ?: d.xtcMode,
+                xtcStrengthDb = p.str(KEY_XTC_STRENGTH, "-6").trim().toFloatOrNull()?.takeIf { it in XTC_STRENGTHS }
+                    ?: d.xtcStrengthDb,
+                xtcDistanceCm = Math.round(p.float(KEY_XTC_DISTANCE, d.xtcDistanceCm)).toFloat()
+                    .coerceIn(XTC_DISTANCE_MIN, XTC_DISTANCE_MAX),
+                xtcHatCm = p.str(KEY_XTC_HEAD, "57").trim().toFloatOrNull()?.takeIf { it in XTC_HATS } ?: d.xtcHatCm,
             ))
         }
 

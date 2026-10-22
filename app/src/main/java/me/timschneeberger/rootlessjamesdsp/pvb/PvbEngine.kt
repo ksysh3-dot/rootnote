@@ -60,7 +60,15 @@ object PvbParam {
     const val D_PERC_DB = 44
     const val D_ATTACK_MS = 45
     const val D_RELEASE_MS = 46
-    const val COUNT = 47
+    /** Crosstalk cancellation ("공간감", pvb_xtc.h): XTC_MODE 0 = off (bit-identical), 1 = centre safe, 2 = full. */
+    const val XTC_MODE = 47
+    const val XTC_STRENGTH_DB = 48
+    const val XTC_DIST_CM = 49
+    const val XTC_HAT_CM = 50
+    const val XTC_SPACING_CM = 51
+    const val XTC_LO_HZ = 52
+    const val XTC_HI_HZ = 53
+    const val COUNT = 54
 }
 
 /** Index of each value in the meter array (same order as pvb::Meter in pvb_engine.h). */

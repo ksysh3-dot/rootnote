@@ -205,7 +205,7 @@ class BuzzRing(val sampleRate: Int, val preSeconds: Int = 5, val postSeconds: In
     }
 
     companion object {
-        const val DETAIL_FIELDS = 79 // 32 observed fields + 47 applied native parameters (PvbParam.COUNT)
+        const val DETAIL_FIELDS = 86 // 32 observed fields + 54 applied native parameters (PvbParam.COUNT; DiagnosticJniTest)
         private const val ACTIVE = 0
         private const val WRITING = 1
         private const val FROZEN = 2

@@ -480,6 +480,17 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
         p[PvbParam.D_PERC_DB] = s.devPercDb
         p[PvbParam.D_ATTACK_MS] = s.devAttackMs
         p[PvbParam.D_RELEASE_MS] = s.devReleaseMs
+        // Crosstalk cancellation: the phone's own speakers only (designed for landscape, the two speakers left and
+        // right of the listener; not tied to the screen rotation, which a locked rotation would misreport); never
+        // during a comparison or a measurement.
+        val xtcOn = s.xtcMode != PvbSettings.XTC_OFF && speaker && !PvbRuntime.abActive && !PvbRuntime.measuring
+        p[PvbParam.XTC_MODE] = if (xtcOn) s.xtcMode.toFloat() else 0f
+        p[PvbParam.XTC_STRENGTH_DB] = s.xtcStrengthDb
+        p[PvbParam.XTC_DIST_CM] = s.xtcDistanceCm
+        p[PvbParam.XTC_HAT_CM] = s.xtcHatCm
+        p[PvbParam.XTC_SPACING_CM] = PvbSettings.XTC_SPACING_CM
+        p[PvbParam.XTC_LO_HZ] = PvbSettings.XTC_LO_HZ
+        p[PvbParam.XTC_HI_HZ] = PvbSettings.XTC_HI_HZ
         engine.setParams(p)
         publish(lowDb)
     }

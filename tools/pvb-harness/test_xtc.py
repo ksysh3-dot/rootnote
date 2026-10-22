@@ -1,0 +1,124 @@
+#!/usr/bin/env python3
+"""Crosstalk cancellation in the engine (P_XTC_*, pvb_xtc.h).
+
+- off (mode 0) is bit-identical whatever the other XTC values are;
+- on, after the 30 ms fade-in, the engine equals the plain engine fed with the prototype's output
+  (tools/xtc/check_eel_port.py, the LiveProg version judged by ear), both modes, 44.1 and 48 kHz;
+- switching on and off while playing is click-free and finite; silence stays silence; strong setting stays stable;
+- cost on the host.
+
+    tools/pvb-harness/build_host.sh && python3 tools/pvb-harness/test_xtc.py
+"""
+import os
+import sys
+import time
+
+import numpy as np
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+sys.path.insert(0, os.path.join(HERE, '..', 'xtc'))
+import test_engine as te  # noqa: E402
+import check_eel_port as port  # noqa: E402
+
+XTC = dict(XTC_MODE=47, XTC_STRENGTH_DB=48, XTC_DIST_CM=49, XTC_HAT_CM=50, XTC_SPACING_CM=51, XTC_LO_HZ=52,
+           XTC_HI_HZ=53)
+te.P.update(XTC)
+failures = 0
+
+
+def check(name, ok, info=''):
+    global failures
+    print(f"[{'PASS' if ok else 'FAIL'}] {name} {info}")
+    if not ok:
+        failures += 1
+
+
+def noise(sr, seconds, level_db, seed=1):
+    rng = np.random.default_rng(seed)
+    x = rng.standard_normal((int(sr * seconds), 2)) * 10 ** (level_db / 20)
+    # partly correlated, like music: a centre part and a side part
+    c = rng.standard_normal(x.shape[0]) * 10 ** (level_db / 20)
+    return (0.6 * x + 0.8 * c[:, None]).astype(np.float32)
+
+
+# Neutral chain (EQ flat, no output gain), so the comparison with the prototype is linear and below the limiter.
+NEUTRAL = dict(low_db=0, hi_db=0, hs_db=0, hp_hz=20, out_db=0, ceil_db=0)
+
+
+def main():
+    lib = te.load_lib(os.path.join(HERE, 'build/libpvbcapi.so'))
+    check('parameter count 54 (47 + 7 crosstalk-cancellation values)', lib.pvb_param_count() == 54)
+    d = np.zeros(lib.pvb_param_count(), np.float32)
+    lib.pvb_default_params(d.ctypes.data_as(te.FP))
+    check('defaults: off, gentle, 40 cm, hat 57, 15.5 cm, 400-8000 Hz',
+          list(d[47:54]) == [0, -6, 40, 57, 15.5, 400, 8000], str(list(d[47:54])))
+
+    sr = 48000
+    x = noise(sr, 3, -30)
+    a = te.Engine(lib, sr).process(x)
+    b = te.Engine(lib, sr, xtc_mode=0, xtc_strength_db=-3, xtc_dist_cm=30, xtc_hat_cm=60, xtc_lo_hz=300,
+                  xtc_hi_hz=6000).process(x)
+    check('off: bit-identical whatever the other XTC values are', np.array_equal(a, b))
+
+    for sr in (48000, 44100):
+        x = noise(sr, 2, -30, seed=2)
+        port.FS = float(sr)
+        for mode in (1, 2):
+            for gdb, dist, hat in ((-6, 40, 57), (-3, 30, 54), (-4.5, 50, 60)):
+                e = te.Engine(lib, sr, **NEUTRAL, xtc_mode=mode, xtc_strength_db=gdb, xtc_dist_cm=dist, xtc_hat_cm=hat)
+                y = e.process(x)
+                radius = 0.0875 * hat / 57
+                theta = np.arctan((15.5 * 0.005) / (dist * 0.01))
+                tau = radius / 343 * (theta + np.sin(theta))
+                pl, pr = port.run(mode == 2, 10 ** (gdb / 20), x[:, 0].astype(np.float64), x[:, 1].astype(np.float64),
+                                  theta, tau, radius, 400, 8000)
+                ref = te.Engine(lib, sr, **NEUTRAL).process(np.stack([pl, pr], 1).astype(np.float32))
+                k = int(0.1 * sr)
+                err = np.max(np.abs(y[k:] - ref[k:])) / np.max(np.abs(ref[k:]))
+                check(f'{sr} Hz mode {mode} g {gdb} {dist} cm hat {hat}: engine = prototype (after the fade-in)',
+                      err < 1e-4, f'max_rel_err={err:.2e}')
+
+    sr = 48000
+    x = noise(sr, 4, -20, seed=3)
+    e = te.Engine(lib, sr, xtc_mode=0)
+    out = []
+    for i, blk in enumerate(np.array_split(x, 40)):
+        if i == 10:
+            e.set(xtc_mode=2, xtc_strength_db=-3)
+        if i == 20:
+            e.set(xtc_mode=1)
+        if i == 30:
+            e.set(xtc_mode=0)
+        out.append(e.process(blk))
+    y = np.concatenate(out)
+    from scipy.signal import butter, sosfilt
+    hp = butter(4, 12000, 'hp', fs=sr, output='sos')
+    hf_in = np.max(np.abs(sosfilt(hp, x, axis=0)))
+    hf_out = np.max(np.abs(sosfilt(hp, y, axis=0)))
+    check('switching on, mode change, off while playing: finite, no click (HF > 12 kHz not above the input + 1 dB)',
+          np.all(np.isfinite(y)) and hf_out <= hf_in * 10 ** (1 / 20), f'hf_out={hf_out:.4g} hf_in={hf_in:.4g}')
+
+    z = te.Engine(lib, sr, xtc_mode=2, xtc_strength_db=-3).process(np.zeros((sr, 2), np.float32))
+    check('silence in, silence out (no self-oscillation)', np.max(np.abs(z)) == 0.0)
+    loud = noise(sr, 5, -3, seed=4)
+    y = te.Engine(lib, sr, xtc_mode=2, xtc_strength_db=-3, xtc_dist_cm=25).process(loud)
+    check('strong, 25 cm, loud noise: finite and limited', np.all(np.isfinite(y)) and np.max(np.abs(y)) <= 1.0,
+          f'peak={np.max(np.abs(y)):.3f}')
+
+    x = noise(sr, 60, -20, seed=5)
+    t0 = time.perf_counter()
+    te.Engine(lib, sr).process(x)
+    t_off = time.perf_counter() - t0
+    t0 = time.perf_counter()
+    te.Engine(lib, sr, xtc_mode=2).process(x)
+    t_on = time.perf_counter() - t0
+    check('cost on the host (60 s at 48 kHz)', True, f'off_s={t_off:.3f} full_xtc_s={t_on:.3f} '
+          f'added_pct_of_realtime={(t_on - t_off) / 60 * 100:.3f}')
+
+    print('test_xtc: all passed' if not failures else f'test_xtc: {failures} FAILED')
+    sys.exit(1 if failures else 0)
+
+
+if __name__ == '__main__':
+    main()

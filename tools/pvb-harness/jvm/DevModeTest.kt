@@ -173,7 +173,7 @@ fun main(args: Array<String>) {
         "roll-off offset range keeps the absolute slope within 0..48 dB/oct")
     // engine indices and defaults
     check(PvbParam.DEV_ON == 33 && PvbParam.DEV_METER == 34 && PvbParam.D_BOUNDARY_HZ == 35 && PvbParam.D_RELEASE_MS == 46 &&
-        PvbParam.COUNT == 47, "parameter indices follow pvb_engine.h")
+        PvbParam.COUNT == 54, "parameter indices follow pvb_engine.h")
     val dp = PvbEngine.defaultParams()
     check(dp.size == PvbParam.COUNT && dp[PvbParam.DEV_ON] == 0f && dp[PvbParam.DEV_METER] == 0f &&
         dp[PvbParam.D_BOUNDARY_HZ] == 190f && dp[PvbParam.D_OUT_LO_HZ] == 150f && dp[PvbParam.D_OUT_HI_HZ] == 600f &&
