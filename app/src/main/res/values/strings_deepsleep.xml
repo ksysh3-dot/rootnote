@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Battery: when the output rests in silence, and deep sleep (stop capturing after a long rest; off by default). -->
+<resources>
+    <string name="powersave_deep">Deep sleep</string>
+    <string name="powersave_deep_summary">Now: %s. When the output has rested this long and nothing plays, capture stops too, so the phone can sleep. Playback restarts by itself, but about the first 0.1 s of it may be cut.</string>
+    <string name="powersave_deep_off">Off</string>
+    <string name="powersave_deep_30">After 30 s of rest</string>
+    <string name="powersave_deep_60">After 1 min of rest</string>
+    <string name="powersave_deep_300">After 5 min of rest</string>
+    <string-array name="powersave_deep_entries" translatable="false">
+        <item>@string/powersave_deep_off</item>
+        <item>@string/powersave_deep_30</item>
+        <item>@string/powersave_deep_60</item>
+        <item>@string/powersave_deep_300</item>
+    </string-array>
+    <string-array name="powersave_deep_values" translatable="false">
+        <item>0</item>
+        <item>30</item>
+        <item>60</item>
+        <item>300</item>
+    </string-array>
+    <string name="powersave_deep_active">Deep sleep</string>
+    <string name="powersave_hold">Rest the output after</string>
+    <string name="powersave_hold_summary">Now: %s of silence. Then the speaker output rests until sound returns; nothing is cut. Longer = fewer rests between songs.</string>
+    <string name="powersave_hold_2">2 s</string>
+    <string name="powersave_hold_5">5 s</string>
+    <string name="powersave_hold_10">10 s</string>
+    <string-array name="powersave_hold_entries" translatable="false">
+        <item>@string/powersave_hold_2</item>
+        <item>@string/powersave_hold_5</item>
+        <item>@string/powersave_hold_10</item>
+    </string-array>
+    <string-array name="powersave_hold_values" translatable="false">
+        <item>2</item>
+        <item>5</item>
+        <item>10</item>
+    </string-array>
+</resources>

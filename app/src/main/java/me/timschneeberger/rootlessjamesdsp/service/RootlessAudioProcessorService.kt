@@ -13,6 +13,7 @@ import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioPlaybackCaptureConfiguration
+import android.media.AudioPlaybackConfiguration
 import android.media.AudioRecord
 import android.media.AudioTrack
 import android.media.AudioTimestamp
@@ -122,6 +123,31 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
     private var isProcessorIdle = false
     @Volatile
     private var suspendOnIdle = false
+    // Deep sleep (battery, off by default): seconds of paused output before the capture stops too ("0" = off)
+    @Volatile
+    private var deepSleepSetting = "0"
+    // Silence before the output rests, in seconds ("2" / "5" / "10")
+    @Volatile
+    private var holdSetting = "2"
+    // Set by a playback change: the audio thread looks for music often for a short while (see AudioWorker.run)
+    @Volatile
+    private var playbackChanged = false
+
+    // Deep sleep: any playback change (a player starting) wakes the audio thread to check for music
+    private val playbackCallback = object : AudioManager.AudioPlaybackCallback() {
+        override fun onPlaybackConfigChanged(configs: MutableList<AudioPlaybackConfiguration>?) {
+            playbackChanged = true
+            worker?.wake()
+        }
+    }
+
+    /** Shows or clears "deep sleep" in the status notification (called from the audio thread). */
+    private fun showDeepSleep(on: Boolean) {
+        mainHandler.post {
+            ServiceNotificationHelper.powerState = if (on) getString(R.string.powersave_deep_active) else ""
+            if (!isServiceDisposing) ServiceNotificationHelper.pushServiceNotification(this, notificationSessions)
+        }
+    }
 
     // Exclude restricted apps flag
     private var excludeRestrictedSessions = false
@@ -195,6 +221,9 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
         // Setup shared preferences
         preferences.registerOnSharedPreferenceChangeListener(preferencesListener)
         loadFromPreferences(getString(R.string.key_powersave_suspend))
+        loadFromPreferences(getString(R.string.key_powersave_deep))
+        loadFromPreferences(getString(R.string.key_powersave_hold))
+        audioManager.registerAudioPlaybackCallback(playbackCallback, Handler(Looper.getMainLooper()))
         loadFromPreferences(getString(R.string.key_session_exclude_restricted))
 
         // Setup database observer
@@ -326,6 +355,7 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
         sessionManager.destroy()
 
         preferences.unregisterOnSharedPreferenceChangeListener(preferencesListener)
+        try { audioManager.unregisterAudioPlaybackCallback(playbackCallback) } catch (_: Exception) {}
         notificationManager.cancel(Notifications.ID_SERVICE_STATUS)
 
         stopSelf()
@@ -473,6 +503,15 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
                 suspendOnIdle = preferences.get<Boolean>(R.string.key_powersave_suspend)
                 Timber.d("Suspend on idle set to $suspendOnIdle")
                 worker?.wake()
+            }
+            getString(R.string.key_powersave_deep) -> {
+                deepSleepSetting = preferences.get<String>(R.string.key_powersave_deep)
+                Timber.d("Deep sleep set to $deepSleepSetting")
+                worker?.wake()
+            }
+            getString(R.string.key_powersave_hold) -> {
+                holdSetting = preferences.get<String>(R.string.key_powersave_hold)
+                Timber.d("Output rest after ${holdSetting}s of silence")
             }
             getString(R.string.key_session_exclude_restricted) -> {
                 excludeRestrictedSessions = preferences.get<Boolean>(R.string.key_session_exclude_restricted)
@@ -675,6 +714,14 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
         // Battery: output paused after a long silence (audio thread only; see SilenceGate)
         private val silenceGate = SilenceGate.forRate(sampleRate)
         private var outputPaused = false
+        /** Deep sleep: the capture is stopped too (the output was already paused by the silence gate). */
+        private var deepSleeping = false
+        /** Set when deep sleep ends: run the engines over a little silence first (see [run]). */
+        private var flushPending = false
+        /** Deep sleep: short waits left after a playback change (a starting player is counted as music a little later). */
+        private var deepFastPolls = 0
+        /** Last time (elapsedRealtimeNanos) the paused loop asked whether music plays: at most once a second. */
+        private var lastMusicCheckNs = 0L
 
         /** Any thread: ends an idle wait early (sessions or the power-save setting changed). */
         fun wake() = LockSupport.unpark(thread)
@@ -743,6 +790,7 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
                 }
             } finally {
                 buzzDiagnostics.audioDiscontinuity("audio_worker_ended")
+                if (deepSleeping) { deepSleeping = false; showDeepSleep(false) }
                 synchronized(ioLock) { stopRequested = true }
                 try { recorder.stop() } catch (ignored: Exception) {}
                 try { track.stop() } catch (ignored: Exception) {}
@@ -903,6 +951,39 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
             var pvbWasActive = false
             var lastRoute: JdspChain.Route? = null
             var historySuspended = false
+
+            /** Runs the engines of [route] over [frames] frames of silence and drops the output (deep sleep). */
+            fun processSilence(route: JdspChain.Route, frames: Int) {
+                var left = frames * 2
+                while (left > 0) {
+                    val n = minOf(left, bufferSize and 1.inv())
+                    if (n <= 0) return
+                    if (isShort) {
+                        java.util.Arrays.fill(shortBuffer, 0, n, 0.toShort())
+                        when (route) {
+                            JdspChain.Route.JDSP_ONLY -> engine.processInt16(shortBuffer, shortOutBuffer, 0, n)
+                            JdspChain.Route.PVB_ONLY -> pvbEngine.processShort(shortBuffer, shortOutBuffer, n)
+                            JdspChain.Route.JDSP_THEN_PVB -> {
+                                JdspChain.shortToFloat(shortBuffer, chainB, n)
+                                engine.processFloat(chainB, chainA, 0, n)
+                                pvbEngine.processFloat(chainA, chainB, n)
+                            }
+                        }
+                    } else {
+                        java.util.Arrays.fill(floatBuffer, 0, n, 0f)
+                        when (route) {
+                            JdspChain.Route.JDSP_ONLY -> engine.processFloat(floatBuffer, floatOutBuffer, 0, n)
+                            JdspChain.Route.PVB_ONLY -> pvbEngine.processFloat(floatBuffer, floatOutBuffer, n)
+                            JdspChain.Route.JDSP_THEN_PVB -> {
+                                engine.processFloat(floatBuffer, chainA, 0, n)
+                                pvbEngine.processFloat(chainA, floatOutBuffer, n)
+                            }
+                        }
+                    }
+                    left -= n
+                }
+            }
+
             while (!stopRequested) {
                 if(recreateRecorderRequested) {
                     recreateRecorderRequested = false
@@ -932,6 +1013,9 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
                     carry = 0
                     silenceGate.reset()
                     outputPaused = false
+                    if (deepSleeping) showDeepSleep(false)
+                    deepSleeping = false
+                    flushPending = false
                     // Wait for a session (onSessionChanged wakes this thread) instead of polling every 50 ms; the
                     // timeout still notices a developer-mode test sound.
                     LockSupport.parkNanos(IDLE_WAIT_NS)
@@ -940,6 +1024,41 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
                     continue
                 }
                 historySuspended = false
+
+                // Deep sleep: the capture stays stopped while nothing plays music (a playback change wakes this
+                // thread at once; the timeout notices a research mode or a test sound). It ends when music plays,
+                // or when deep sleep stops being allowed; then the capture restarts below and the output resumes on
+                // the first sound, as after a normal pause.
+                if (deepSleeping) {
+                    val researchNow = PvbRuntime.abActive || PvbRuntime.measuring || buzzDiagnostics.armed
+                    val stay = suspendOnIdle && SilenceGate.deepFrames(deepSleepSetting, sampleRate) > 0 && !researchNow &&
+                        !me.timschneeberger.rootlessjamesdsp.pvb.DevTestSound.playing && !audioManager.isMusicActive
+                    if (stay) {
+                        synchronized(ioLock) {
+                            if (stopRequested) return
+                            // a recorder rebuilt meanwhile is not started; one started elsewhere is stopped again
+                            if (recorder.recordingState == AudioRecord.RECORDSTATE_RECORDING)
+                                try { recorder.stop() } catch (ignored: Exception) {}
+                        }
+                        // A playback change may come before the player counts as active: look again every 50 ms
+                        // for half a second, so a starting song loses only about 0.1 s; otherwise wait long.
+                        if (playbackChanged) {
+                            playbackChanged = false
+                            deepFastPolls = DEEP_FAST_POLLS
+                        }
+                        val wait = if (deepFastPolls > 0) { deepFastPolls--; DEEP_FAST_WAIT_NS } else DEEP_WAIT_NS
+                        LockSupport.parkNanos(wait)
+                        if (stopRequested || Thread.interrupted()) return
+                        continue
+                    }
+                    deepFastPolls = 0
+                    showDeepSleep(false)
+                    deepSleeping = false
+                    silenceGate.rearm()
+                    flushPending = true
+                    buzzDiagnostics.audioDiscontinuity("capture_resumed_deep_sleep")
+                    Timber.d("Deep sleep ended: capture restarts")
+                }
 
                 // Resume recorder and track if suspended (never after a stop request: requestStop stopped them)
                 synchronized(ioLock) {
@@ -966,6 +1085,13 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
                 if (route != lastRoute) Timber.d("Processing route: ${JdspChain.label(route)}")
                 pvbWasActive = pvbActive
                 lastRoute = route
+                // Back from deep sleep: the engines did not run while the capture was stopped, so a setting changed
+                // meanwhile (a switch, a glide, a reset fade) would land on the next sound. Let it finish on half a
+                // second of silence now; the output is still paused, so nothing of this is played.
+                if (flushPending) {
+                    flushPending = false
+                    processSilence(route, sampleRate / 2)
+                }
 
                 // Read; only the samples actually read are processed and played (never the rest of an old block)
                 val got = if (isShort)
@@ -1043,7 +1169,30 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
                     val outputSilent = if (isShort) SilenceGate.isSilent(shortOutBuffer, samples)
                         else SilenceGate.isSilent(floatOutBuffer, samples)
                     val silent = inputSilent && outputSilent
-                    if (!silenceGate.skip(silent, pauseAllowed)) {
+                    silenceGate.holdFrames = SilenceGate.holdFrames(holdSetting, sampleRate)
+                    if (silenceGate.skip(silent, pauseAllowed, samples / 2)) {
+                        // Paused long enough (deep sleep on, no music playing anywhere): stop the capture as well.
+                        // Music that is not captured (an excluded app) keeps it awake; ask at most once a second.
+                        var goDeep = false
+                        if (silenceGate.deepDue(SilenceGate.deepFrames(deepSleepSetting, sampleRate))) {
+                            val now = android.os.SystemClock.elapsedRealtimeNanos()
+                            if (now - lastMusicCheckNs >= MUSIC_CHECK_NS) {
+                                lastMusicCheckNs = now
+                                goDeep = !audioManager.isMusicActive
+                            }
+                        }
+                        if (goDeep) {
+                            synchronized(ioLock) {
+                                if (stopRequested) return
+                                try { recorder.stop() } catch (ignored: Exception) {}
+                            }
+                            deepSleeping = true
+                            playbackChanged = false
+                            showDeepSleep(true)
+                            buzzDiagnostics.audioDiscontinuity("capture_stopped_deep_sleep")
+                            Timber.d("Deep sleep: capture stopped")
+                        }
+                    } else {
                         if (outputPaused && !resumeOutput()) return
                         if (!(if (isShort) writeAll(shortOutBuffer, samples) else writeAll(floatOutBuffer, samples))) return
                         if (silenceGate.afterBlock(silent, samples / 2, pauseAllowed)) {
@@ -1060,6 +1209,7 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
                 }
                 carry = if (isShort) PcmPump.keepCarry(shortBuffer, total, samples)
                 else PcmPump.keepCarry(floatBuffer, total, samples)
+                if (deepSleeping) carry = 0   // the capture restarts later: a kept half frame would not fit
             }
         }
     }
@@ -1169,6 +1319,13 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
         private const val IO_RETRY_MS = 10L
         /** Longest idle wait (no session) before the loop looks again; session changes wake it at once. */
         private const val IDLE_WAIT_NS = 250_000_000L
+        /** Deep sleep: longest wait between checks (a playback change wakes the thread at once). */
+        private const val DEEP_WAIT_NS = 2_000_000_000L
+        /** Deep sleep: after a playback change, 10 checks 50 ms apart before the long wait again. */
+        private const val DEEP_FAST_POLLS = 10
+        private const val DEEP_FAST_WAIT_NS = 50_000_000L
+        /** While paused: how often to ask whether music plays (a binder call) once deep sleep is due. */
+        private const val MUSIC_CHECK_NS = 1_000_000_000L
         /** Zero-length blocking writes (track paused or interrupted) before the rest of a block is dropped. */
         private const val MAX_EMPTY_WRITES = 3
 

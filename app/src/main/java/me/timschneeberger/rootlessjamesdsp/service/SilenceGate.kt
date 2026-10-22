@@ -13,23 +13,44 @@ package me.timschneeberger.rootlessjamesdsp.service
  * the track and is played exactly as it would have been.
  *
  * "Silent" means every sample at most one 16-bit step (-90 dBFS) from zero, so a pause never cuts anything audible.
+ *
+ * Deep sleep (optional, off by default): once the output has been paused for the chosen time ([deepDue]), the loop
+ * stops the capture too, so nothing keeps the phone awake. That is the only step that can cut sound: playback is
+ * noticed (a playback callback, then the capture restarts), so the first ~0.1 s of the next sound may be lost.
  */
-class SilenceGate(private val holdFrames: Long) {
+class SilenceGate(holdFrames: Long) {
+    /** Silent frames before the output pauses (the user's choice; a change applies to the silence counted so far). */
+    var holdFrames = holdFrames
     /** True while the output is paused (silent blocks are processed but not written). */
     var paused = false
         private set
     private var quietFrames = 0L
+    /** Frames skipped since the pause (or since the capture came back from deep sleep). */
+    var pausedFrames = 0L
+        private set
 
     /**
      * After processing a block, before writing it. True = do not write it (paused, the block is still silent and
      * pausing is allowed). Otherwise the gate is open again (if it was paused, the caller restarts its output first).
      */
-    fun skip(silent: Boolean, allowed: Boolean): Boolean {
+    fun skip(silent: Boolean, allowed: Boolean, frames: Int = 0): Boolean {
         if (!paused) return false
-        if (silent && allowed) return true
+        if (silent && allowed) {
+            pausedFrames += frames
+            return true
+        }
         paused = false
         quietFrames = 0
+        pausedFrames = 0
         return false
+    }
+
+    /** True = the output has rested for [deepFrames] (> 0): stop the capture too. 0 = deep sleep off. */
+    fun deepDue(deepFrames: Long) = paused && deepFrames > 0 && pausedFrames >= deepFrames
+
+    /** The capture came back from deep sleep: still paused, and a new deep sleep needs the full time again. */
+    fun rearm() {
+        pausedFrames = 0
     }
 
     /** After a processed block of [frames] frames: true = pause the output now. */
@@ -48,15 +69,28 @@ class SilenceGate(private val holdFrames: Long) {
     fun reset() {
         paused = false
         quietFrames = 0
+        pausedFrames = 0
     }
 
     companion object {
-        /** Seconds of silence (input and output) before the output pauses. */
+        /** Seconds of silence (input and output) before the output pauses, unless the user chose otherwise. */
         const val HOLD_SECONDS = 2.0
         private const val FLOAT_LIMIT = 1f / 32768f
         private const val SHORT_LIMIT = 1
 
         fun forRate(sampleRate: Int) = SilenceGate((HOLD_SECONDS * sampleRate).toLong())
+
+        /** Hold setting (seconds, "2" / "5" / "10") in frames; anything unknown or below 1 s is the default 2 s. */
+        fun holdFrames(setting: String?, sampleRate: Int): Long {
+            val seconds = setting?.trim()?.toLongOrNull()
+            return if (seconds == null || seconds < 1) (HOLD_SECONDS * sampleRate).toLong() else seconds * sampleRate
+        }
+
+        /** Deep-sleep setting (seconds of rest, "0" = off) in frames; anything unknown or negative is off. */
+        fun deepFrames(setting: String?, sampleRate: Int): Long {
+            val seconds = setting?.trim()?.toLongOrNull() ?: return 0
+            return if (seconds <= 0) 0 else seconds * sampleRate
+        }
 
         /** True if the first [n] samples are all within one 16-bit step of zero (NaN is not silent). */
         fun isSilent(buf: FloatArray, n: Int): Boolean {
