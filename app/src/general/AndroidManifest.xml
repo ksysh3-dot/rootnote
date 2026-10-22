@@ -52,6 +52,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <!-- Spatial "좌우 맞추기" (speaker balance by microphones or by ear), landscape like listening. -->
+        <activity
+            android:name="me.timschneeberger.rootlessjamesdsp.home.SpatialBalanceActivity"
+            android:exported="false"
+            android:label="@string/balance_title"
+            android:screenOrientation="sensorLandscape"
+            android:theme="@style/Theme.RootlessJamesDSP" />
         <!-- Spatial explanation as a landscape motion story (home screen (i)). Landscape only while it is open. -->
         <activity
             android:name="me.timschneeberger.rootlessjamesdsp.home.SpatialStoryActivity"

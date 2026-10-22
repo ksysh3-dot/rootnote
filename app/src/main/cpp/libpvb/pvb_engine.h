@@ -105,6 +105,8 @@ enum Param : int {
     P_XTC_SPACING_CM,   // speaker spacing in landscape (device value)
     P_XTC_LO_HZ,        // feedback band, first-order high-pass
     P_XTC_HI_HZ,        // feedback band, first-order low-pass
+    P_XTC_BAL_LO_DB,    // speaker balance after the canceller: left louder by this, 400-1500 Hz (pvb_xtc.h)
+    P_XTC_BAL_HI_DB,    // the same, 1.5-8 kHz
     P_COUNT
 };
 

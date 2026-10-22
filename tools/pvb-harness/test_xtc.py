@@ -22,7 +22,7 @@ import test_engine as te  # noqa: E402
 import check_eel_port as port  # noqa: E402
 
 XTC = dict(XTC_MODE=47, XTC_STRENGTH_DB=48, XTC_DIST_CM=49, XTC_HAT_CM=50, XTC_SPACING_CM=51, XTC_LO_HZ=52,
-           XTC_HI_HZ=53)
+           XTC_HI_HZ=53, XTC_BAL_LO_DB=54, XTC_BAL_HI_DB=55)
 te.P.update(XTC)
 failures = 0
 
@@ -48,11 +48,11 @@ NEUTRAL = dict(low_db=0, hi_db=0, hs_db=0, hp_hz=20, out_db=0, ceil_db=0)
 
 def main():
     lib = te.load_lib(os.path.join(HERE, 'build/libpvbcapi.so'))
-    check('parameter count 54 (47 + 7 crosstalk-cancellation values)', lib.pvb_param_count() == 54)
+    check('parameter count 56 (47 + 9 crosstalk-cancellation values)', lib.pvb_param_count() == 56)
     d = np.zeros(lib.pvb_param_count(), np.float32)
     lib.pvb_default_params(d.ctypes.data_as(te.FP))
-    check('defaults: off, gentle, 40 cm, hat 57, 15.5 cm, 400-8000 Hz',
-          list(d[47:54]) == [0, -6, 40, 57, 15.5, 400, 8000], str(list(d[47:54])))
+    check('defaults: off, gentle, 40 cm, hat 57, 15.5 cm, 400-8000 Hz, balance 0 / 0',
+          list(d[47:56]) == [0, -6, 40, 57, 15.5, 400, 8000, 0, 0], str(list(d[47:56])))
 
     sr = 48000
     x = noise(sr, 3, -30)
@@ -98,6 +98,37 @@ def main():
     hf_out = np.max(np.abs(sosfilt(hp, y, axis=0)))
     check('switching on, mode change, off while playing: finite, no click (HF > 12 kHz not above the input + 1 dB)',
           np.all(np.isfinite(y)) and hf_out <= hf_in * 10 ** (1 / 20), f'hf_out={hf_out:.4g} hf_in={hf_in:.4g}')
+
+    # Speaker balance: after the canceller, left -b/2 and right +b/2 in its band; the other band untouched.
+    from scipy.signal import butter, sosfilt
+    def band_db(y, lo, hi):
+        sos = butter(4, [lo, hi], 'bp', fs=sr, output='sos')
+        return 10 * np.log10(np.mean(sosfilt(sos, y, axis=0)[sr // 2:] ** 2, axis=0))
+    x = noise(sr, 3, -30, seed=6)
+    y0 = te.Engine(lib, sr, **NEUTRAL, xtc_mode=2).process(x)
+    for key, lo_b, hi_b, other in (('xtc_bal_lo_db', 700, 860, (3100, 3800)), ('xtc_bal_hi_db', 3100, 3800, (700, 860))):
+        y1 = te.Engine(lib, sr, **NEUTRAL, xtc_mode=2, **{key: 4}).process(x)
+        dc = band_db(y1, lo_b, hi_b) - band_db(y0, lo_b, hi_b)
+        do = band_db(y1, *other) - band_db(y0, *other)
+        check(f'balance {key} +4 dB: left -2, right +2 in its band; the other band within 0.6 dB',
+              abs(dc[0] + 2) < 0.4 and abs(dc[1] - 2) < 0.4 and np.all(np.abs(do) < 0.6),
+              f'band L/R={dc[0]:+.2f}/{dc[1]:+.2f} other={do[0]:+.2f}/{do[1]:+.2f}')
+    ya = te.Engine(lib, sr, **NEUTRAL, xtc_mode=0, xtc_bal_lo_db=5, xtc_bal_hi_db=-5).process(x)
+    yb = te.Engine(lib, sr, **NEUTRAL).process(x)
+    check('balance does nothing while spatial is off (bit-identical)', np.array_equal(ya, yb))
+    # moving the balance while playing (calibrating by ear): no fade, no gap
+    e = te.Engine(lib, sr, **NEUTRAL, xtc_mode=2)
+    out = []
+    for i, blk in enumerate(np.array_split(x, 30)):
+        if i >= 10:
+            e.set(xtc_bal_lo_db=(i - 10) * 0.5)
+        out.append(e.process(blk))
+    y = np.concatenate(out)
+    w = int(0.01 * sr)
+    rms = np.sqrt(np.mean(y[: (len(y) // w) * w, 0].reshape(-1, w) ** 2, axis=1))
+    k = len(rms) // 3
+    check('moving the balance while playing: no dip (10 ms RMS stays above half the median)',
+          np.min(rms[k:]) > 0.5 * np.median(rms[k:]), f'min/median={np.min(rms[k:]) / np.median(rms[k:]):.2f}')
 
     z = te.Engine(lib, sr, xtc_mode=2, xtc_strength_db=-3).process(np.zeros((sr, 2), np.float32))
     check('silence in, silence out (no self-oscillation)', np.max(np.abs(z)) == 0.0)

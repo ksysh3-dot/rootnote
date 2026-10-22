@@ -48,7 +48,7 @@ fun main(args: Array<String>) {
 
     // 3. Parameter indices follow DIAGNOSTIC_SOLO in the order of pvb_engine.h.
     check(PvbParam.X_SMOOTH == 29 && PvbParam.X_RISE == 30 && PvbParam.X_S1M == 31 && PvbParam.X_DENSE == 32 &&
-        PvbParam.COUNT == 54)   // 33 + 14 developer-mode values (DevModeTest) + 7 crosstalk cancellation
+        PvbParam.COUNT == 56)   // 33 + 14 developer-mode values (DevModeTest) + 9 crosstalk cancellation
     val dp = me.timschneeberger.rootlessjamesdsp.pvb.PvbEngine.defaultParams()
     check(dp.size == PvbParam.COUNT && (PvbParam.X_SMOOTH..PvbParam.X_DENSE).all { dp[it] == 0f }) { "defaultParams" }
 

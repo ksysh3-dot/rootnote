@@ -65,6 +65,12 @@ data class PvbSettings(
     val xtcStrengthDb: Float = XTC_STRENGTH_DEFAULT,
     val xtcDistanceCm: Float = XTC_DISTANCE_DEFAULT,
     val xtcHatCm: Float = XTC_HAT_DEFAULT,
+    // Speaker balance for spatial (left louder by this many dB; 400-1500 Hz and 1.5-8 kHz), set by "좌우 맞추기"
+    // (by ear or measured with the phone's own microphones). [xtcBalRotation] is the screen rotation it was set in
+    // (Surface.ROTATION_90 / _270; 0 = unknown): turned the other way round, the speakers swap and so does the sign.
+    val xtcBalLoDb: Float = 0f,
+    val xtcBalHiDb: Float = 0f,
+    val xtcBalRotation: Int = 0,
 ) {
     companion object {
         // Not "dsp_*": upstream presets, backups and device profiles swap those files behind the listeners' back.
@@ -124,6 +130,17 @@ data class PvbSettings(
         const val KEY_XTC_HEAD = "pvb_xtc_head"
         /** The mode before the home switch turned spatial off (restored when it is turned on again). */
         const val KEY_XTC_LAST_MODE = "pvb_xtc_last_mode"
+        /** Speaker balance (floats, dB; left louder), its rotation (int) and how it was set ("ear" / "mic"). */
+        const val KEY_XTC_BAL_LO = "pvb_xtc_bal_lo_db"
+        const val KEY_XTC_BAL_HI = "pvb_xtc_bal_hi_db"
+        const val KEY_XTC_BAL_ROT = "pvb_xtc_bal_rotation"
+        const val KEY_XTC_BAL_SOURCE = "pvb_xtc_bal_source"
+        const val XTC_BAL_MAX = 6f
+
+        /** A balance value as stored: half-dB steps within +-[XTC_BAL_MAX]; non-finite = 0. */
+        fun clampBalance(v: Float): Float =
+            if (v.isFinite()) (Math.round(v * 2f) / 2f).coerceIn(-XTC_BAL_MAX, XTC_BAL_MAX) else 0f
+
         /** Not persisted: the preset row, derived from mode + strength (PreferenceGroupFragment). */
         const val KEY_XTC_PRESET = "pvb_xtc_preset"
         const val XTC_OFF = 0
@@ -275,6 +292,9 @@ data class PvbSettings(
                 xtcDistanceCm = Math.round(p.float(KEY_XTC_DISTANCE, d.xtcDistanceCm)).toFloat()
                     .coerceIn(XTC_DISTANCE_MIN, XTC_DISTANCE_MAX),
                 xtcHatCm = p.str(KEY_XTC_HEAD, "57").trim().toFloatOrNull()?.takeIf { it in XTC_HATS } ?: d.xtcHatCm,
+                xtcBalLoDb = clampBalance(p.float(KEY_XTC_BAL_LO, 0f)),
+                xtcBalHiDb = clampBalance(p.float(KEY_XTC_BAL_HI, 0f)),
+                xtcBalRotation = p.int(KEY_XTC_BAL_ROT, 0).takeIf { it == 1 || it == 3 } ?: 0,
             ))
         }
 
@@ -290,6 +310,13 @@ data class PvbSettings(
         private fun SharedPreferences.float(key: String, def: Float): Float =
             try {
                 getFloat(key, def).takeIf { it.isFinite() } ?: def
+            } catch (ignored: ClassCastException) {
+                def
+            }
+
+        private fun SharedPreferences.int(key: String, def: Int): Int =
+            try {
+                getInt(key, def)
             } catch (ignored: ClassCastException) {
                 def
             }

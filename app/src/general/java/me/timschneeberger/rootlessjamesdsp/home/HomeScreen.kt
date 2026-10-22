@@ -148,6 +148,9 @@ data class HomeUiState(
     val xtcDistanceStep: Int = 3,
     val xtcDistanceSteps: Int = 7,
     val xtcHatCm: Int = 57,
+    /** Speaker balance (left louder, dB), 400-1500 Hz and 1.5-8 kHz; both 0 = not set. */
+    val xtcBalLoDb: Float = 0f,
+    val xtcBalHiDb: Float = 0f,
 )
 
 class HomeActions(
@@ -170,6 +173,8 @@ class HomeActions(
     val onXtcHead: (Int) -> Unit = {},
     /** (i) next to the tabs: the spatial motion story (SpatialStoryActivity). */
     val onSpatialInfo: () -> Unit = {},
+    /** "좌우 맞추기" (SpatialBalanceActivity). */
+    val onXtcBalance: () -> Unit = {},
 )
 
 /** The "심해 틸" palette (res/values[-night]/colors_rootnote.xml of the general flavor). */
@@ -572,7 +577,20 @@ private fun SpatialSection(state: HomeUiState, actions: HomeActions, modifier: M
                 color = c.textSecondary, fontSize = 13.sp, lineHeight = 19.sp,
             )
         }
+        Box(Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp).fillMaxWidth().height(1.dp).background(c.divider))
+        val balanceLine = if (state.xtcBalLoDb == 0f && state.xtcBalHiDb == 0f) stringResource(R.string.home_xtc_balance_none)
+            else stringResource(R.string.home_xtc_balance_set, balanceSide(state.xtcBalLoDb), balanceSide(state.xtcBalHiDb))
+        Box(Modifier.alpha(innerDim)) {
+            NavRow(stringResource(R.string.home_xtc_balance), "", if (active) actions.onXtcBalance else ({}), description = balanceLine)
+        }
     }
+}
+
+@Composable
+private fun balanceSide(db: Float): String = when {
+    db > 0f -> stringResource(R.string.balance_side_left, "%.1f".format(db))
+    db < 0f -> stringResource(R.string.balance_side_right, "%.1f".format(-db))
+    else -> stringResource(R.string.balance_side_even)
 }
 
 @Composable

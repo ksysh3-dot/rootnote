@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.SharedPreferences
 import android.database.ContentObserver
+import android.hardware.display.DisplayManager
 import android.media.AudioDeviceCallback
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
@@ -17,6 +18,8 @@ import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
 import android.util.Log
+import android.view.Display
+import android.view.Surface
 import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.roundToInt
@@ -33,6 +36,23 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
     private val prefs: SharedPreferences =
         context.getSharedPreferences(PvbSettings.PREFS_NAME, Context.MODE_PRIVATE)
     private val audioManager: AudioManager = requireNotNull(context.getSystemService(AudioManager::class.java))
+    private val displayManager: DisplayManager? = context.getSystemService(DisplayManager::class.java)
+    /** Screen rotation now (spatial balance follows the speakers when the phone is turned round). */
+    private var rotation = Surface.ROTATION_0
+    private val displayListener = object : DisplayManager.DisplayListener {
+        override fun onDisplayAdded(displayId: Int) {}
+        override fun onDisplayRemoved(displayId: Int) {}
+        override fun onDisplayChanged(displayId: Int) {
+            if (displayId == Display.DEFAULT_DISPLAY && updateRotation() && started) push(rampMs = EDIT_RAMP_MS)
+        }
+    }
+
+    private fun updateRotation(): Boolean {
+        val r = try { displayManager?.getDisplay(Display.DEFAULT_DISPLAY)?.rotation } catch (_: Exception) { null } ?: return false
+        if (r == rotation) return false
+        rotation = r
+        return true
+    }
 
     /**
      * Read by the audio thread: true = the PVB engine is in the path (last, after any JamesDSP effects: [JdspChain]),
@@ -200,6 +220,8 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
             Log.w(TAG, "volume receiver not available", e)
         }
         audioManager.registerAudioDeviceCallback(deviceCallback, main)
+        updateRotation()
+        try { displayManager?.registerDisplayListener(displayListener, main) } catch (e: Exception) { Log.w(TAG, "display listener", e) }
         main.postDelayed(poll, POLL_MS)
 
         PvbRuntime.engine = engine
@@ -237,6 +259,7 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
         } catch (ignored: Exception) {
         }
         audioManager.unregisterAudioDeviceCallback(deviceCallback)
+        try { displayManager?.unregisterDisplayListener(displayListener) } catch (_: Exception) {}
         track?.removeOnRoutingChangedListener(routingListener)
         track = null
         if (PvbRuntime.engine === engine) PvbRuntime.engine = null
@@ -491,6 +514,12 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
         p[PvbParam.XTC_SPACING_CM] = PvbSettings.XTC_SPACING_CM
         p[PvbParam.XTC_LO_HZ] = PvbSettings.XTC_LO_HZ
         p[PvbParam.XTC_HI_HZ] = PvbSettings.XTC_HI_HZ
+        // Speaker balance: set in one landscape rotation; turned round, the phone swaps its channels with the
+        // speakers, so the correction swaps sides too. Portrait and unknown rotations keep it as set.
+        val landscape = rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270
+        val sign = if (s.xtcBalRotation != 0 && landscape && rotation != s.xtcBalRotation) -1f else 1f
+        p[PvbParam.XTC_BAL_LO_DB] = sign * s.xtcBalLoDb
+        p[PvbParam.XTC_BAL_HI_DB] = sign * s.xtcBalHiDb
         engine.setParams(p)
         publish(lowDb)
     }

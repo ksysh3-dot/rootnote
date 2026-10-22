@@ -365,7 +365,7 @@ class BuzzDiagnostics(
             "flat", "match_hold", "match_seed_db", "diagnostic_solo", "x_smooth", "x_rise", "x_s1m", "x_dense",
             "dev_on", "dev_meter", "d_boundary_hz", "d_out_lo_hz", "d_out_hi_hz", "d_h2_db", "d_h3_db", "d_h4_db",
             "d_h5_db", "d_rolloff_db_oct", "d_sust_db", "d_perc_db", "d_attack_ms", "d_release_ms",
-            "xtc_mode", "xtc_strength_db", "xtc_dist_cm", "xtc_hat_cm", "xtc_spacing_cm", "xtc_lo_hz", "xtc_hi_hz")
+            "xtc_mode", "xtc_strength_db", "xtc_dist_cm", "xtc_hat_cm", "xtc_spacing_cm", "xtc_lo_hz", "xtc_hi_hz", "xtc_bal_lo_db", "xtc_bal_hi_db")
         private fun paramsJson(params: FloatArray?): Any {
             if (params == null) return JSONObject.NULL
             val obj = JSONObject()

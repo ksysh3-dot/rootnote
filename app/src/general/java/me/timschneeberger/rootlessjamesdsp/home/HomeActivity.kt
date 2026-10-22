@@ -129,6 +129,7 @@ class HomeActivity : BaseActivity() {
         },
         onXtcHead = { hat -> prefs.edit().putString(PvbSettings.KEY_XTC_HEAD, hat.toString()).apply() },
         onSpatialInfo = { startActivity(Intent(this, SpatialStoryActivity::class.java)) },
+        onXtcBalance = { startActivity(Intent(this, SpatialBalanceActivity::class.java)) },
     )
 
     /** Spatial preset: mode + strength, as the list values of the advanced settings ("-6", "-4.5", "-3"). */
@@ -279,6 +280,8 @@ class HomeActivity : BaseActivity() {
             xtcDistanceStep = HomeLogic.xtcDistanceStep(s.xtcDistanceCm),
             xtcDistanceSteps = HomeLogic.xtcDistanceSteps(),
             xtcHatCm = s.xtcHatCm.toInt(),
+            xtcBalLoDb = s.xtcBalLoDb,
+            xtcBalHiDb = s.xtcBalHiDb,
         )
     }
 

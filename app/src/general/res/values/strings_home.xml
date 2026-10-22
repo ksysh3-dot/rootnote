@@ -94,4 +94,42 @@
         <item>Choosing a preset changes how far the centre dot (vocals) and the side dots (instruments) spread.</item>
         <item>Spatial turns on and off, and the side dots spread and close.</item>
     </string-array>
+    <string name="balance_title">Even out the speakers</string>
+    <string name="home_xtc_balance">Even out the speakers</string>
+    <string name="home_xtc_balance_none">Not set yet. If the sound leans to one ear, even them out.</string>
+    <string name="home_xtc_balance_set">Low-mid %1$s · high %2$s</string>
+    <string name="balance_side_left">left louder by %1$s dB</string>
+    <string name="balance_side_right">right louder by %1$s dB</string>
+    <string name="balance_side_even">even</string>
+    <string name="balance_intro_title">Make the two speakers even</string>
+    <string name="balance_intro_body">The phone\'s top and bottom speakers differ in size and sound. Spatial assumes they are the same, so a big difference pulls the sound to one ear. Evened out here, spatial keeps the centre.</string>
+    <string name="balance_current">Now: low-mid %1$s, high %2$s</string>
+    <string name="balance_not_ready">Available while Rootnote is on and playing on the phone speakers.</string>
+    <string name="balance_auto">Measure automatically</string>
+    <string name="balance_ear">Set by ear</string>
+    <string name="balance_auto_note">Measuring listens to each speaker with the phone\'s top and bottom microphones (about 30 s; nothing is recorded or kept). Pause the music, find a quiet place and hold the phone sideways as usual. Setting by ear starts from the measurement and fine-tunes it.</string>
+    <string name="balance_reset">Clear</string>
+    <string name="balance_measuring_title">Measuring</string>
+    <string name="balance_measuring_quiet">Listening to the room. Please keep quiet.</string>
+    <string name="balance_measuring_left">Sound from the left speaker.</string>
+    <string name="balance_measuring_right">Sound from the right speaker.</string>
+    <string name="balance_measuring_note">Keep the phone still and the microphone holes free.</string>
+    <string name="balance_result_title">Result</string>
+    <string name="balance_result_body">Low-mid (400-1500 Hz): %1$s. High (1.5-8 kHz): %2$s. The louder side is lowered by that much.</string>
+    <string name="balance_result_one_mic">This phone gives only one microphone for recording, so the result is rough. Fine-tuning by ear is recommended.</string>
+    <string name="balance_apply">Save this</string>
+    <string name="balance_refine">Fine-tune by ear</string>
+    <string name="balance_ear_lo_title">1/2 · Low-mid</string>
+    <string name="balance_ear_hi_title">2/2 · High</string>
+    <string name="balance_ear_body">You will hear a hiss. Hold the phone sideways as usual and move the bar until the sound is right in front of you, in the middle.</string>
+    <string name="balance_slider_label">Sound position</string>
+    <string name="balance_slider_left">← to the left</string>
+    <string name="balance_slider_right">to the right →</string>
+    <string name="balance_next">Next</string>
+    <string name="balance_save">Save</string>
+    <string name="balance_done_title">Done</string>
+    <string name="balance_done_body">Set to low-mid %1$s, high %2$s. Turn the phone round and it swaps them by itself.</string>
+    <string name="balance_failed_title">Could not measure</string>
+    <string name="balance_failed_mic">The microphones could not be used on this phone. Please set it by ear.</string>
+    <string name="balance_failed_quiet">The microphones did not hear the speakers well enough. Turn the volume up a little and try again, or set it by ear.</string>
 </resources>

@@ -20,6 +20,11 @@ OUTP="$HERE/../build/jvm-pump"
 rm -rf "$OUTP"; mkdir -p "$OUTP"
 $KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/../../../app/src/main/java/me/timschneeberger/rootlessjamesdsp/service/PcmPump.kt" "$HERE/PcmPumpTest.kt" -d "$OUTP"
 java -cp "$OUTP:$KOTLIN_STDLIB" PcmPumpTestKt
+# spatial speaker balance, cross method with the phone's microphones (pure Kotlin)
+OUTSB="$HERE/../build/jvm-spatial-balance"
+rm -rf "$OUTSB"; mkdir -p "$OUTSB"
+$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/DevParams.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/DevTestSound.kt" "$APP/SpatialBalance.kt" "$HERE/SpatialBalanceTest.kt" -d "$OUTSB"
+java -cp "$OUTSB:$KOTLIN_STDLIB" SpatialBalanceTestKt
 # service silence pause (battery; pure Kotlin)
 OUTG="$HERE/../build/jvm-silence"
 rm -rf "$OUTG"; mkdir -p "$OUTG"

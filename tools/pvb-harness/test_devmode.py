@@ -330,8 +330,8 @@ def main():
     ap.add_argument('--report')
     a = ap.parse_args()
     lib = setup(load_lib(a.lib))
-    assert lib.pvb_param_count() == 54, lib.pvb_param_count()  # + 7 crosstalk-cancellation values
-    d = np.zeros(54, np.float32)
+    assert lib.pvb_param_count() == 56, lib.pvb_param_count()  # + 9 crosstalk-cancellation values
+    d = np.zeros(56, np.float32)
     lib.pvb_default_params(d.ctypes.data_as(FP))
     exp = [0, 0, 190, 150, 600, 0, 0, 0, 0, 0, 0, 0, 32 / 3, 32]
     check('defaults: developer mode off, meters off, model values', np.allclose(d[33:47], exp, atol=1e-6))

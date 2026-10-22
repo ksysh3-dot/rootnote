@@ -173,7 +173,7 @@ fun main(args: Array<String>) {
         "roll-off offset range keeps the absolute slope within 0..48 dB/oct")
     // engine indices and defaults
     check(PvbParam.DEV_ON == 33 && PvbParam.DEV_METER == 34 && PvbParam.D_BOUNDARY_HZ == 35 && PvbParam.D_RELEASE_MS == 46 &&
-        PvbParam.COUNT == 54, "parameter indices follow pvb_engine.h")
+        PvbParam.COUNT == 56, "parameter indices follow pvb_engine.h")
     val dp = PvbEngine.defaultParams()
     check(dp.size == PvbParam.COUNT && dp[PvbParam.DEV_ON] == 0f && dp[PvbParam.DEV_METER] == 0f &&
         dp[PvbParam.D_BOUNDARY_HZ] == 190f && dp[PvbParam.D_OUT_LO_HZ] == 150f && dp[PvbParam.D_OUT_HI_HZ] == 600f &&
@@ -426,8 +426,13 @@ fun main(args: Array<String>) {
         val buf = FloatArray(2 * 48000 * 4)
         g.render(buf, 48000 * 4, 48000)
         val peak = buf.maxOf { abs(it) }
-        check(buf.all { it.isFinite() } && peak in 0.1f..0.4f && (0 until buf.size step 2).all { buf[it] == buf[it + 1] },
-            "$kind: finite, peak ${"%.2f".format(peak)} (-8..-20 dBFS), same on both channels")
+        val channels = when (kind) {
+            DevTestKind.XTC_SWEEP_L -> (0 until buf.size step 2).all { buf[it + 1] == 0f }
+            DevTestKind.XTC_SWEEP_R -> (0 until buf.size step 2).all { buf[it] == 0f }
+            else -> (0 until buf.size step 2).all { buf[it] == buf[it + 1] }
+        }
+        check(buf.all { it.isFinite() } && peak in 0.1f..0.4f && channels,
+            "$kind: finite, peak ${"%.2f".format(peak)} (-8..-20 dBFS), channels as intended")
         val g2 = DevTestSignal(); g2.set(kind, 55.0)
         val buf2 = FloatArray(buf.size); g2.render(buf2, 48000 * 4, 48000)
         check(buf.contentEquals(buf2), "$kind: deterministic")

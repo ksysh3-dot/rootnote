@@ -68,7 +68,10 @@ object PvbParam {
     const val XTC_SPACING_CM = 51
     const val XTC_LO_HZ = 52
     const val XTC_HI_HZ = 53
-    const val COUNT = 54
+    /** Speaker balance after the canceller (left louder by this, dB): 400-1500 Hz and 1.5-8 kHz. */
+    const val XTC_BAL_LO_DB = 54
+    const val XTC_BAL_HI_DB = 55
+    const val COUNT = 56
 }
 
 /** Index of each value in the meter array (same order as pvb::Meter in pvb_engine.h). */
@@ -304,6 +307,7 @@ class PvbEngine(sampleRate: Int) : AutoCloseable {
             32f / 3f, 32f,    // attack (2 hops), release (6 hops), ms
             0f, -6f, 40f, 57f, // crosstalk cancellation off; gentle, 40 cm, standard head (hat 57 cm)
             15.5f, 400f, 8000f, // speaker spacing, feedback band
+            0f, 0f,             // speaker balance (speakers taken as equal)
         )
     }
 }

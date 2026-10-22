@@ -104,6 +104,8 @@ void sanitizeParams(float* v) {
     v[P_XTC_SPACING_CM] = clampv(v[P_XTC_SPACING_CM], 8.f, 22.f);
     v[P_XTC_LO_HZ] = clampv(v[P_XTC_LO_HZ], 150.f, 1500.f);
     v[P_XTC_HI_HZ] = clampv(v[P_XTC_HI_HZ], 3000.f, 16000.f);
+    v[P_XTC_BAL_LO_DB] = clampv(v[P_XTC_BAL_LO_DB], -9.f, 9.f);
+    v[P_XTC_BAL_HI_DB] = clampv(v[P_XTC_BAL_HI_DB], -9.f, 9.f);
     // The output ceiling stays at or below -1 dBTP while developer values are in use.
     if (v[P_DEV_ON] >= 0.5f) v[P_CEIL_DB] = std::min(v[P_CEIL_DB], -1.f);
 }
@@ -174,6 +176,8 @@ void defaultParams(float* v) {
     v[P_XTC_SPACING_CM] = 15.5f;
     v[P_XTC_LO_HZ] = 400.f;
     v[P_XTC_HI_HZ] = 8000.f;
+    v[P_XTC_BAL_LO_DB] = 0.f;        // speakers taken as equal
+    v[P_XTC_BAL_HI_DB] = 0.f;
 }
 
 double estimatePhoneLimiterGr(double levelDb) { return PhoneModel::staticGr(levelDb); }
@@ -458,6 +462,8 @@ void Engine::applyParams(const float* v, bool snap) {
     xc.spacingCm = v[P_XTC_SPACING_CM];
     xc.loHz = v[P_XTC_LO_HZ];
     xc.hiHz = v[P_XTC_HI_HZ];
+    xc.balLoDb = v[P_XTC_BAL_LO_DB];
+    xc.balHiDb = v[P_XTC_BAL_HI_DB];
     xtc_.setWanted(xc);
     if (snap) xtc_.hardReset();
     applyDev(v);

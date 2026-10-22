@@ -13,7 +13,13 @@ import kotlin.math.sin
  *
  * Levels: peaks about -10 dBFS (tone and sweep -12 dBFS), so the engine's limiter is not what the user hears.
  */
-enum class DevTestKind { TONE, SWEEP, KICK, BASS_CHORD }
+enum class DevTestKind {
+    TONE, SWEEP, KICK, BASS_CHORD,
+    /** Spatial "좌우 맞추기" (SpatialBalance): band noise in both channels, 400-1500 Hz / 1.5-8 kHz, -24 dBFS RMS. */
+    XTC_BAND_LO, XTC_BAND_HI,
+    /** Spatial self-measurement: a log sweep 300 Hz-10 kHz in one channel only (3 s, then 1.5 s silence), -18 dBFS. */
+    XTC_SWEEP_L, XTC_SWEEP_R,
+}
 
 class DevTestSignal {
     private var kind: DevTestKind? = null
@@ -28,25 +34,92 @@ class DevTestSignal {
         this.toneHz = toneHz
         t = 0
         phase.fill(0.0)
+        rng = 0x2545F4914F6CDD1DL
+        designBand()
     }
+
+    private val left get() = kind != DevTestKind.XTC_SWEEP_R
+    private val right get() = kind != DevTestKind.XTC_SWEEP_L
 
     /** Fills [frames] stereo frames of [out] (interleaved, from index 0) at [sampleRate]. */
     fun render(out: FloatArray, frames: Int, sampleRate: Int) {
-        if (sampleRate != sr) { sr = sampleRate.coerceIn(8000, 192000); t = 0 }
+        if (sampleRate != sr) { sr = sampleRate.coerceIn(8000, 192000); t = 0; designBand() }
+        val l = left
+        val r = right
         for (n in 0 until frames) {
             val v = next().toFloat()
-            out[2 * n] = v
-            out[2 * n + 1] = v
+            out[2 * n] = if (l) v else 0f
+            out[2 * n + 1] = if (r) v else 0f
         }
     }
 
     fun renderShort(out: ShortArray, frames: Int, sampleRate: Int) {
-        if (sampleRate != sr) { sr = sampleRate.coerceIn(8000, 192000); t = 0 }
+        if (sampleRate != sr) { sr = sampleRate.coerceIn(8000, 192000); t = 0; designBand() }
+        val l = left
+        val r = right
         for (n in 0 until frames) {
             val v = (next() * 32767.0).coerceIn(-32768.0, 32767.0).toInt().toShort()
-            out[2 * n] = v
-            out[2 * n + 1] = v
+            out[2 * n] = if (l) v else 0
+            out[2 * n + 1] = if (r) v else 0
         }
+    }
+
+    // ---- spatial calibration signals: band noise (xorshift white noise through a 4-pole band-pass) and sweeps
+    private var rng = 0x2545F4914F6CDD1DL
+    private val bq = DoubleArray(4 * 5)      // two high-pass + two low-pass biquads: b0 b1 b2 a1 a2
+    private val bz = DoubleArray(4 * 2)
+    private var bandGain = 1.0
+
+    private fun designBand() {
+        val (lo, hi) = when (kind) {
+            DevTestKind.XTC_BAND_LO -> 400.0 to 1500.0
+            DevTestKind.XTC_BAND_HI -> 1500.0 to 8000.0
+            else -> return
+        }
+        for (i in 0 until 4) {
+            val hp = i < 2
+            val f0 = if (hp) lo else hi
+            val w = 2 * PI * f0 / sr
+            val al = sin(w) / (2 * 0.7071067811865476)
+            val cw = cos(w)
+            val a0 = 1 + al
+            val o = 5 * i
+            if (hp) { bq[o] = (1 + cw) / 2 / a0; bq[o + 1] = -(1 + cw) / a0; bq[o + 2] = (1 + cw) / 2 / a0 }
+            else { bq[o] = (1 - cw) / 2 / a0; bq[o + 1] = (1 - cw) / a0; bq[o + 2] = (1 - cw) / 2 / a0 }
+            bq[o + 3] = -2 * cw / a0
+            bq[o + 4] = (1 - al) / a0
+        }
+        bz.fill(0.0)
+        // white noise of RMS 1 keeps sqrt(band / (sr / 2)) of its power in the band
+        bandGain = BAND_RMS / kotlin.math.sqrt((hi - lo) / (sr / 2.0))
+    }
+
+    private fun white(): Double {
+        rng = rng xor (rng shl 13); rng = rng xor (rng ushr 7); rng = rng xor (rng shl 17)
+        // uniform in [-1, 1): RMS 1/sqrt(3)
+        return ((rng ushr 11).toDouble() / (1L shl 53).toDouble() * 2.0 - 1.0) * 1.7320508075688772
+    }
+
+    private fun band(): Double {
+        var x = white()
+        for (i in 0 until 4) {
+            val o = 5 * i
+            val z = 2 * i
+            val y = bq[o] * x + bz[z]
+            bz[z] = bq[o + 1] * x - bq[o + 3] * y + bz[z + 1]
+            bz[z + 1] = bq[o + 2] * x - bq[o + 4] * y
+            x = y
+        }
+        return x * bandGain
+    }
+
+    private fun xtcSweep(time: Double): Double {
+        val x = time % XTC_SWEEP_PERIOD
+        if (x >= XTC_SWEEP_S) return 0.0
+        val k = ln(XTC_SWEEP_HI / XTC_SWEEP_LO)
+        val ph = 2 * PI * XTC_SWEEP_LO * XTC_SWEEP_S / k * (exp(k * x / XTC_SWEEP_S) - 1)
+        val fade = minOf(1.0, x / 0.02, (XTC_SWEEP_S - x) / 0.02)
+        return XTC_SWEEP_AMP * fade * sin(ph)
     }
 
     /** One mono sample. */
@@ -59,6 +132,8 @@ class DevTestSignal {
             DevTestKind.SWEEP -> sweep(time)
             DevTestKind.KICK -> kick(time)
             DevTestKind.BASS_CHORD -> bassChord(time)
+            DevTestKind.XTC_BAND_LO, DevTestKind.XTC_BAND_HI -> band()
+            DevTestKind.XTC_SWEEP_L, DevTestKind.XTC_SWEEP_R -> xtcSweep(time)
         }
     }
 
@@ -116,6 +191,12 @@ class DevTestSignal {
 
     companion object {
         const val TONE_AMP = 0.25          // -12 dBFS
+        const val BAND_RMS = 0.063         // -24 dBFS RMS band noise
+        const val XTC_SWEEP_AMP = 0.125    // -18 dBFS
+        const val XTC_SWEEP_LO = 300.0
+        const val XTC_SWEEP_HI = 10000.0
+        const val XTC_SWEEP_S = 3.0
+        const val XTC_SWEEP_PERIOD = 4.5
         const val KICK_AMP = 0.32
         const val BASS_AMP = 0.24
         const val CHORD_AMP = 0.035

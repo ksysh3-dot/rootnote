@@ -94,4 +94,42 @@
         <item>프리셋을 고르면 가운데 점(보컬)과 양옆 점(악기)이 퍼지는 정도가 달라져요.</item>
         <item>공간감이 켜졌다 꺼졌다 하며 양옆 점이 넓어졌다 좁아져요.</item>
     </string-array>
+    <string name="balance_title">좌우 맞추기</string>
+    <string name="home_xtc_balance">좌우 맞추기</string>
+    <string name="home_xtc_balance_none">아직 맞추지 않았어요. 한쪽 귀로 쏠리면 맞춰 보세요.</string>
+    <string name="home_xtc_balance_set">중저역 %1$s · 고역 %2$s</string>
+    <string name="balance_side_left">왼쪽이 %1$s dB 큼</string>
+    <string name="balance_side_right">오른쪽이 %1$s dB 큼</string>
+    <string name="balance_side_even">같음</string>
+    <string name="balance_intro_title">두 스피커 크기 맞추기</string>
+    <string name="balance_intro_body">폰의 위아래 스피커는 크기와 소리가 달라요. 공간감은 두 스피커가 같다고 보고 계산해서, 차이가 크면 소리가 한쪽 귀로 쏠려요. 여기서 두 스피커를 맞춰 두면 공간감이 가운데를 잡아요.</string>
+    <string name="balance_current">지금 값: 중저역 %1$s, 고역 %2$s</string>
+    <string name="balance_not_ready">Rootnote가 켜져 있고 폰 스피커로 나올 때 맞출 수 있어요.</string>
+    <string name="balance_auto">자동 측정</string>
+    <string name="balance_ear">귀로 맞추기</string>
+    <string name="balance_auto_note">자동 측정은 폰의 위아래 마이크로 두 스피커를 각각 들어 봐요(30초쯤, 녹음은 저장하지 않아요). 음악을 멈추고 조용한 곳에서 폰을 평소처럼 가로로 들어 주세요. 귀로 맞추기는 측정 결과에서 시작해 마지막을 다듬어요.</string>
+    <string name="balance_reset">값 지우기</string>
+    <string name="balance_measuring_title">재는 중</string>
+    <string name="balance_measuring_quiet">주변 소리를 듣고 있어요. 조용히 있어 주세요.</string>
+    <string name="balance_measuring_left">왼쪽 스피커에서 소리가 나요.</string>
+    <string name="balance_measuring_right">오른쪽 스피커에서 소리가 나요.</string>
+    <string name="balance_measuring_note">폰을 움직이지 말고, 마이크 구멍을 막지 마세요.</string>
+    <string name="balance_result_title">측정 결과</string>
+    <string name="balance_result_body">중저역(400~1500 Hz): %1$s. 고역(1.5~8 kHz): %2$s. 큰 쪽을 그만큼 줄여 맞춰요.</string>
+    <string name="balance_result_one_mic">이 폰은 녹음에 마이크 하나만 내줘서 결과가 대략적이에요. 귀로 다듬는 걸 권해요.</string>
+    <string name="balance_apply">이대로 저장</string>
+    <string name="balance_refine">귀로 다듬기</string>
+    <string name="balance_ear_lo_title">1/2 · 중저역</string>
+    <string name="balance_ear_hi_title">2/2 · 고역</string>
+    <string name="balance_ear_body">쉬익 하는 소리가 나요. 폰을 평소처럼 가로로 들고, 소리가 얼굴 정면 가운데에서 들릴 때까지 막대를 옮겨 주세요.</string>
+    <string name="balance_slider_label">소리 위치</string>
+    <string name="balance_slider_left">← 왼쪽으로</string>
+    <string name="balance_slider_right">오른쪽으로 →</string>
+    <string name="balance_next">다음</string>
+    <string name="balance_save">저장</string>
+    <string name="balance_done_title">맞췄어요</string>
+    <string name="balance_done_body">중저역 %1$s, 고역 %2$s으로 맞췄어요. 폰을 반대로 돌려 들어도 알아서 바꿔 적용해요.</string>
+    <string name="balance_failed_title">자동 측정을 못 했어요</string>
+    <string name="balance_failed_mic">이 폰에서는 마이크로 잴 수 없었어요. 귀로 맞춰 주세요.</string>
+    <string name="balance_failed_quiet">스피커 소리가 마이크에 충분히 들리지 않았어요. 볼륨을 조금 올리고 다시 해 보거나, 귀로 맞춰 주세요.</string>
 </resources>
