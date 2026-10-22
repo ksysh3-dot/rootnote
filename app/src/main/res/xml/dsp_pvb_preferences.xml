@@ -63,6 +63,12 @@
             app:updatesContinuously="true"
             app:showSeekBarValue="true"
             app:iconSpaceReserved="false" />
+        <me.timschneeberger.rootlessjamesdsp.preference.MaterialSwitchPreference
+            android:key="pvb_xtc_portrait_off"
+            android:title="@string/pvb_xtc_portrait_off"
+            android:summary="@string/pvb_xtc_portrait_off_summary"
+            android:defaultValue="true"
+            app:iconSpaceReserved="false" />
         <ListPreference
             android:key="pvb_xtc_head"
             android:title="@string/pvb_xtc_head"

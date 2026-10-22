@@ -6,6 +6,10 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.SharedPreferences
 import android.database.ContentObserver
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.hardware.display.DisplayManager
 import android.media.AudioDeviceCallback
 import android.media.AudioDeviceInfo
@@ -44,6 +48,50 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
         override fun onDisplayRemoved(displayId: Int) {}
         override fun onDisplayChanged(displayId: Int) {
             if (displayId == Display.DEFAULT_DISPLAY && updateRotation() && started) push(rampMs = EDIT_RAMP_MS)
+        }
+    }
+
+    // Physical posture from the accelerometer (works with the screen rotation locked or the screen off). Only listened
+    // to while spatial is on; a posture must hold for [POSTURE_HOLD_MS] before it counts; lying flat keeps the last one.
+    private val sensorManager: SensorManager? = context.getSystemService(SensorManager::class.java)
+    private var upright = false
+    private var postureListening = false
+    private var pendingUpright: Boolean? = null
+    private var pendingSince = 0L
+    private val postureListener = object : SensorEventListener {
+        override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+        override fun onSensorChanged(e: SensorEvent) {
+            val x = abs(e.values[0]); val y = abs(e.values[1]); val z = abs(e.values[2])
+            if (z > 0.8f * SensorManager.GRAVITY_EARTH) return          // flat on a table: keep the last posture
+            val now = when {
+                y > 1.5f * x -> true      // the long side is vertical: upright (portrait)
+                x > 1.5f * y -> false     // sideways (landscape)
+                else -> return            // in between: keep
+            }
+            if (now == upright) { pendingUpright = null; return }
+            val t = android.os.SystemClock.elapsedRealtime()
+            if (pendingUpright != now) { pendingUpright = now; pendingSince = t; return }
+            if (t - pendingSince >= POSTURE_HOLD_MS) {
+                upright = now
+                pendingUpright = null
+                if (started) push(rampMs = EDIT_RAMP_MS)
+            }
+        }
+    }
+
+    /** Listen to the posture only while it can change something (spatial on, portrait switch on). */
+    private fun updatePostureListening() {
+        val want = started && settings.xtcMode != PvbSettings.XTC_OFF && settings.xtcPortraitOff
+        if (want == postureListening) return
+        postureListening = want
+        val sm = sensorManager ?: return
+        if (want) {
+            val acc = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) ?: return
+            sm.registerListener(postureListener, acc, SensorManager.SENSOR_DELAY_NORMAL, main)
+        } else {
+            sm.unregisterListener(postureListener)
+            upright = false
+            pendingUpright = null
         }
     }
 
@@ -260,6 +308,7 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
         }
         audioManager.unregisterAudioDeviceCallback(deviceCallback)
         try { displayManager?.unregisterDisplayListener(displayListener) } catch (_: Exception) {}
+        if (postureListening) { sensorManager?.unregisterListener(postureListener); postureListening = false; upright = false }
         track?.removeOnRoutingChangedListener(routingListener)
         track = null
         if (PvbRuntime.engine === engine) PvbRuntime.engine = null
@@ -506,7 +555,9 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
         // Crosstalk cancellation: the phone's own speakers only (designed for landscape, the two speakers left and
         // right of the listener; not tied to the screen rotation, which a locked rotation would misreport); never
         // during a comparison or a measurement.
-        val xtcOn = s.xtcMode != PvbSettings.XTC_OFF && speaker && !PvbRuntime.abActive && !PvbRuntime.measuring
+        updatePostureListening()
+        val xtcOn = s.xtcMode != PvbSettings.XTC_OFF && speaker && !PvbRuntime.abActive && !PvbRuntime.measuring &&
+            !(s.xtcPortraitOff && upright)
         p[PvbParam.XTC_MODE] = if (xtcOn) s.xtcMode.toFloat() else 0f
         p[PvbParam.XTC_STRENGTH_DB] = s.xtcStrengthDb
         p[PvbParam.XTC_DIST_CM] = s.xtcDistanceCm
@@ -561,6 +612,8 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
         private const val ACTION_VOLUME_CHANGED = "android.media.VOLUME_CHANGED_ACTION"
         private const val POLL_MS = 1000L
         private const val EDIT_RAMP_MS = 20f
+        /** A new posture (upright / sideways) must hold this long before spatial follows it. */
+        private const val POSTURE_HOLD_MS = 1000L
         private const val VOLUME_RAMP_MS = 300f
 
         private val EXTERNAL_TYPES = setOf(

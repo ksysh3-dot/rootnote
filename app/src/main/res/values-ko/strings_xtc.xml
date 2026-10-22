@@ -5,6 +5,8 @@
     <string name="pvb_xtc_preset_balanced">균형 (완전 · 중간)</string>
     <string name="pvb_xtc_preset_clear">확실하게 (완전 · 강하게)</string>
     <string name="pvb_xtc_preset_custom">사용자 지정</string>
+    <string name="pvb_xtc_portrait_off">세로로 들면 끄기</string>
+    <string name="pvb_xtc_portrait_off_summary">세로로 들면 두 스피커가 좌우가 아니라 위아래에 놓여서 공간감이 작동할 수 없어요. 세로로 1초 들고 있으면 꺼지고, 가로로 돌리면 다시 켜져요. 공간감이 켜져 있을 때만 움직임 센서를 써요.</string>
     <string name="pvb_xtc_mode">공간감 (크로스토크 제거)</string>
     <string name="pvb_xtc_off">꺼짐</string>
     <string name="pvb_xtc_centre">중앙 보존 (보컬 음색 그대로)</string>

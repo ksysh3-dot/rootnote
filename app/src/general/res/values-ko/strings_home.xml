@@ -107,7 +107,7 @@
     <string name="balance_not_ready">Rootnote가 켜져 있고 폰 스피커로 나올 때 맞출 수 있어요.</string>
     <string name="balance_auto">자동 측정</string>
     <string name="balance_ear">귀로 맞추기</string>
-    <string name="balance_auto_note">자동 측정은 폰의 위아래 마이크로 두 스피커를 각각 들어 봐요(30초쯤, 녹음은 저장하지 않아요). 음악을 멈추고 조용한 곳에서 폰을 평소처럼 가로로 들어 주세요. 귀로 맞추기는 측정 결과에서 시작해 마지막을 다듬어요.</string>
+    <string name="balance_auto_note">자동 측정은 폰의 위아래 마이크로 두 스피커를 각각 들어 봐요(20~45초쯤, 녹음은 저장하지 않아요). 음악을 멈추고 조용한 곳에서 폰을 평소처럼 가로로 들어 주세요. 귀로 맞추기는 측정 결과에서 시작해 마지막을 다듬어요.</string>
     <string name="balance_reset">값 지우기</string>
     <string name="balance_measuring_title">재는 중</string>
     <string name="balance_measuring_quiet">주변 소리를 듣고 있어요. 조용히 있어 주세요.</string>

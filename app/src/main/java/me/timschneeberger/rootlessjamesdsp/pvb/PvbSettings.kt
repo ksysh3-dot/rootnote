@@ -71,6 +71,8 @@ data class PvbSettings(
     val xtcBalLoDb: Float = 0f,
     val xtcBalHiDb: Float = 0f,
     val xtcBalRotation: Int = 0,
+    /** Spatial off while the phone is held upright (its speakers then sit above each other, not left and right). */
+    val xtcPortraitOff: Boolean = true,
 ) {
     companion object {
         // Not "dsp_*": upstream presets, backups and device profiles swap those files behind the listeners' back.
@@ -135,6 +137,7 @@ data class PvbSettings(
         const val KEY_XTC_BAL_HI = "pvb_xtc_bal_hi_db"
         const val KEY_XTC_BAL_ROT = "pvb_xtc_bal_rotation"
         const val KEY_XTC_BAL_SOURCE = "pvb_xtc_bal_source"
+        const val KEY_XTC_PORTRAIT_OFF = "pvb_xtc_portrait_off"
         const val XTC_BAL_MAX = 6f
 
         /** A balance value as stored: half-dB steps within +-[XTC_BAL_MAX]; non-finite = 0. */
@@ -295,6 +298,7 @@ data class PvbSettings(
                 xtcBalLoDb = clampBalance(p.float(KEY_XTC_BAL_LO, 0f)),
                 xtcBalHiDb = clampBalance(p.float(KEY_XTC_BAL_HI, 0f)),
                 xtcBalRotation = p.int(KEY_XTC_BAL_ROT, 0).takeIf { it == 1 || it == 3 } ?: 0,
+                xtcPortraitOff = p.bool(KEY_XTC_PORTRAIT_OFF, d.xtcPortraitOff),
             ))
         }
 

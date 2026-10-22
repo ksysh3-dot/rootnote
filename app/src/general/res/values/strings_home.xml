@@ -107,7 +107,7 @@
     <string name="balance_not_ready">Available while Rootnote is on and playing on the phone speakers.</string>
     <string name="balance_auto">Measure automatically</string>
     <string name="balance_ear">Set by ear</string>
-    <string name="balance_auto_note">Measuring listens to each speaker with the phone\'s top and bottom microphones (about 30 s; nothing is recorded or kept). Pause the music, find a quiet place and hold the phone sideways as usual. Setting by ear starts from the measurement and fine-tunes it.</string>
+    <string name="balance_auto_note">Measuring listens to each speaker with the phone\'s top and bottom microphones (about 20-45 s; nothing is recorded or kept). Pause the music, find a quiet place and hold the phone sideways as usual. Setting by ear starts from the measurement and fine-tunes it.</string>
     <string name="balance_reset">Clear</string>
     <string name="balance_measuring_title">Measuring</string>
     <string name="balance_measuring_quiet">Listening to the room. Please keep quiet.</string>

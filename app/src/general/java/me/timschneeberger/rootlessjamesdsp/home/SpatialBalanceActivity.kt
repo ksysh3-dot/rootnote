@@ -3,6 +3,7 @@ package me.timschneeberger.rootlessjamesdsp.home
 import android.Manifest
 import android.content.Context
 import android.content.SharedPreferences
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.drawable.ColorDrawable
@@ -25,6 +26,7 @@ import androidx.core.view.WindowCompat
 import me.timschneeberger.rootlessjamesdsp.R
 import me.timschneeberger.rootlessjamesdsp.activity.BaseActivity
 import me.timschneeberger.rootlessjamesdsp.pvb.DevTestKind
+import me.timschneeberger.rootlessjamesdsp.pvb.DevTestSignal
 import me.timschneeberger.rootlessjamesdsp.pvb.DevTestSound
 import me.timschneeberger.rootlessjamesdsp.pvb.HomeLogic
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbRuntime
@@ -49,8 +51,12 @@ class SpatialBalanceActivity : BaseActivity() {
     private lateinit var prefs: SharedPreferences
     private val main = Handler(Looper.getMainLooper())
     private var ui by mutableStateOf(BalanceUi())
-    @Volatile private var cancelled = false
+    /** The measuring run now; a run whose token is no longer current stops at its next short read. */
+    @Volatile private var run = 0
     private var worker: Thread? = null
+    @Volatile private var recorder: AudioRecord? = null
+    /** The rotation the values are being set in: the screen is held in it from the first step until saved. */
+    private var calRotation = Surface.ROTATION_90
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -99,11 +105,22 @@ class SpatialBalanceActivity : BaseActivity() {
         BaseAudioProcessorService.activeServices > 0 && PvbRuntime.status.processing && !PvbRuntime.abActive
 
     private fun stopAll() {
-        cancelled = true
-        worker?.interrupt()
+        run++
         worker = null
+        try { recorder?.stop() } catch (_: Exception) {}   // unblocks a read in progress
         DevTestSound.stop()
         PvbRuntime.setDevOverride(null)
+        unlockRotation()
+    }
+
+    /** Hold the screen in the rotation calibration started in (a 180-degree turn would swap the speakers). */
+    private fun lockRotation() {
+        calRotation = currentRotation()
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LOCKED
+    }
+
+    private fun unlockRotation() {
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
     }
 
     private fun override(xtcOn: Boolean, lo: Float, hi: Float) {
@@ -116,7 +133,7 @@ class SpatialBalanceActivity : BaseActivity() {
         val strength = if (xtcOn && s.xtcMode == PvbSettings.XTC_OFF) HomeLogic.XtcPreset.BALANCED.strengthDb else s.xtcStrengthDb
         // set in the rotation the screen is in now, so no swap applies while calibrating
         PvbRuntime.setDevOverride(s.copy(xtcMode = mode, xtcStrengthDb = strength, xtcBalLoDb = lo, xtcBalHiDb = hi,
-            xtcBalRotation = currentRotation()))
+            xtcBalRotation = calRotation))
     }
 
     @Suppress("DEPRECATION")
@@ -135,17 +152,48 @@ class SpatialBalanceActivity : BaseActivity() {
             ui = ui.copy(step = BalanceStep.FAILED, failure = BalanceFailure.NO_MIC)
             return
         }
-        cancelled = false
+        stopAll()
+        lockRotation()
+        val token = ++run
         override(xtcOn = false, lo = 0f, hi = 0f)
         ui = ui.copy(step = BalanceStep.MEASURING, progress = 0f, measuring = MeasurePhase.QUIET)
-        worker = Thread({ measure() }, "spatial-balance").also { it.start() }
+        worker = Thread({ measureAll(token) }, "spatial-balance").also { it.start() }
     }
 
-    private fun measure() {
-        val sr = 48000
+    /**
+     * Microphone sources in order of preference: UNPROCESSED (no noise suppression or gain control) where offered,
+     * then CAMCORDER (usually a real stereo pair), then VOICE_RECOGNITION. A run whose two channels turn out to be one
+     * microphone is repeated with the next source; the first result with two microphones wins.
+     */
+    private fun measureAll(token: Int) {
         val am = getSystemService(AudioManager::class.java)
-        val unprocessed = am?.getProperty(AudioManager.PROPERTY_SUPPORT_AUDIO_SOURCE_UNPROCESSED) == "true"
-        val source = if (unprocessed) MediaRecorder.AudioSource.UNPROCESSED else MediaRecorder.AudioSource.VOICE_RECOGNITION
+        val sources = buildList {
+            if (am?.getProperty(AudioManager.PROPERTY_SUPPORT_AUDIO_SOURCE_UNPROCESSED) == "true") add(MediaRecorder.AudioSource.UNPROCESSED)
+            add(MediaRecorder.AudioSource.CAMCORDER)
+            add(MediaRecorder.AudioSource.VOICE_RECOGNITION)
+        }
+        var best: SpatialBalance.Result? = null
+        for ((i, source) in sources.withIndex()) {
+            if (token != run) return
+            val r = measure(token, source, i, sources.size) ?: continue
+            if (r.usable && (best == null || (!best.distinctMics && r.distinctMics))) best = r
+            if (r.usable && r.distinctMics) break
+        }
+        post {
+            if (token != run) return@post
+            DevTestSound.stop()
+            PvbRuntime.setDevOverride(null)
+            val b = best
+            ui = when {
+                b != null -> ui.copy(step = BalanceStep.RESULT, result = b)
+                else -> ui.copy(step = BalanceStep.FAILED, failure = BalanceFailure.TOO_QUIET)
+            }
+        }
+    }
+
+    /** One measurement with [source]; null when the recorder could not run or the run was cancelled. */
+    private fun measure(token: Int, source: Int, attempt: Int, attempts: Int): SpatialBalance.Result? {
+        val sr = 48000
         val minBuf = AudioRecord.getMinBufferSize(sr, AudioFormat.CHANNEL_IN_STEREO, AudioFormat.ENCODING_PCM_FLOAT)
         val rec = try {
             @Suppress("MissingPermission")
@@ -153,53 +201,54 @@ class SpatialBalanceActivity : BaseActivity() {
         } catch (e: Exception) { null }
         if (rec == null || rec.state != AudioRecord.STATE_INITIALIZED) {
             rec?.release()
-            post { ui = ui.copy(step = BalanceStep.FAILED, failure = BalanceFailure.NO_MIC); stopAll() }
-            return
+            return null
         }
+        recorder = rec
+        val period = DevTestSignal.XTC_SWEEP_PERIOD
+        val total = 1.3 + 4 * (period + 0.3)
+        var done = 0.0
         try {
             rec.startRecording()
-            val total = 1.0 + 4 * (DevTestKind_SWEEP_PERIOD + 0.3)
-            var done = 0.0
+            // short reads: a cancelled run notices within 0.1 s, and the progress moves smoothly
             fun take(seconds: Double): SpatialBalance.Recording? {
                 val frames = (seconds * sr).toInt()
                 val buf = FloatArray(2 * frames)
                 var got = 0
+                val chunk = 2 * (sr / 10)
                 while (got < buf.size) {
-                    if (cancelled) return null
-                    val n = rec.read(buf, got, buf.size - got, AudioRecord.READ_BLOCKING)
+                    if (token != run) return null
+                    val n = rec.read(buf, got, minOf(chunk, buf.size - got), AudioRecord.READ_BLOCKING)
                     if (n <= 0) return null
                     got += n
-                    post { ui = ui.copy(progress = ((done + got / 2.0 / sr) / total).toFloat().coerceIn(0f, 1f)) }
+                    val f = ((attempt + (done + got / 2.0 / sr) / total) / attempts).toFloat().coerceIn(0f, 1f)
+                    post { if (token == run) ui = ui.copy(progress = f) }
                 }
                 done += seconds
                 return SpatialBalance.Recording(buf, frames)
             }
-            take(0.3) ?: return                       // settle
-            done = 0.0
-            val noise = take(1.0) ?: return
+            take(0.3) ?: return null                      // settle
+            post { if (token == run) ui = ui.copy(measuring = MeasurePhase.QUIET) }
+            val noise = take(1.0) ?: return null
             val left = ArrayList<SpatialBalance.Recording>()
             val right = ArrayList<SpatialBalance.Recording>()
             for (k in listOf(DevTestKind.XTC_SWEEP_L, DevTestKind.XTC_SWEEP_R, DevTestKind.XTC_SWEEP_L, DevTestKind.XTC_SWEEP_R)) {
-                post { ui = ui.copy(measuring = if (k == DevTestKind.XTC_SWEEP_L) MeasurePhase.LEFT else MeasurePhase.RIGHT) }
+                if (token != run) return null
+                post { if (token == run) ui = ui.copy(measuring = if (k == DevTestKind.XTC_SWEEP_L) MeasurePhase.LEFT else MeasurePhase.RIGHT) }
                 DevTestSound.start(k)
-                val r = take(DevTestKind_SWEEP_PERIOD) ?: return
+                val r = take(period)
                 DevTestSound.stop()
-                take(0.3) ?: return
+                r ?: return null
+                take(0.3) ?: return null
                 if (k == DevTestKind.XTC_SWEEP_L) left.add(r) else right.add(r)
             }
-            val result = SpatialBalance.analyze(noise, left, right, sr)
-            post {
-                DevTestSound.stop()
-                PvbRuntime.setDevOverride(null)
-                ui = if (result.usable) ui.copy(step = BalanceStep.RESULT, result = result)
-                else ui.copy(step = BalanceStep.FAILED, failure = BalanceFailure.TOO_QUIET)
-            }
+            return SpatialBalance.analyze(noise, left, right, sr)
         } catch (e: Exception) {
-            post { ui = ui.copy(step = BalanceStep.FAILED, failure = BalanceFailure.NO_MIC); stopAll() }
+            return null
         } finally {
-            DevTestSound.stop()
+            if (token == run) DevTestSound.stop()
             try { rec.stop() } catch (_: Exception) {}
             rec.release()
+            if (recorder === rec) recorder = null
         }
     }
 
@@ -214,7 +263,7 @@ class SpatialBalanceActivity : BaseActivity() {
 
     private fun startEar() {
         if (!engineReady()) { ui = ui.copy(ready = false); return }
-        cancelled = false
+        if (ui.step != BalanceStep.RESULT) lockRotation()   // after a measurement the screen is already held
         ui = ui.copy(step = BalanceStep.EAR_LO, source = if (ui.source == "mic") "mic+ear" else "ear")
         override(xtcOn = true, lo = ui.loDb, hi = ui.hiDb)
         DevTestSound.start(DevTestKind.XTC_BAND_LO)
@@ -243,7 +292,7 @@ class SpatialBalanceActivity : BaseActivity() {
         prefs.edit()
             .putFloat(PvbSettings.KEY_XTC_BAL_LO, ui.loDb)
             .putFloat(PvbSettings.KEY_XTC_BAL_HI, ui.hiDb)
-            .putInt(PvbSettings.KEY_XTC_BAL_ROT, currentRotation())
+            .putInt(PvbSettings.KEY_XTC_BAL_ROT, calRotation)
             .putString(PvbSettings.KEY_XTC_BAL_SOURCE, ui.source)
             .apply()
         ui = ui.copy(step = BalanceStep.DONE)
@@ -260,7 +309,4 @@ class SpatialBalanceActivity : BaseActivity() {
         ui = ui.copy(step = BalanceStep.INTRO, loDb = 0f, hiDb = 0f, result = null, source = "")
     }
 
-    private companion object {
-        const val DevTestKind_SWEEP_PERIOD = 4.5   // DevTestSignal.XTC_SWEEP_PERIOD: sweep 3 s + 1.5 s silence
-    }
 }

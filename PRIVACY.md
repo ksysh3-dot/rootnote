@@ -28,7 +28,7 @@ This document covers the general distribution build **Rootnote** (package `kr.ks
 | 프리셋·스크립트·IR 파일(원본 기능) | 앱 파일 영역 | 사용자가 직접 만들거나 가져온 파일 |
 | 진단 로그(원본 기능) | 캐시 `application.log` | 기술 메시지(최대 2 MB, 앱을 시작할 때마다 새로 씀). 처리 중인 앱 이름이 들어갈 수 있습니다. 설정 › 문제 해결에서 직접 공유하지 않는 한 폰 밖으로 나가지 않습니다. |
 
-시스템 오디오는 서비스가 켜져 있는 동안 메모리에서만 처리하고 저장하지 않습니다. 오디오 캡처에는 Android 규정상 `RECORD_AUDIO` 권한이 필요합니다. 마이크는 단 한 경우에만 씁니다. 공간감의 '좌우 맞추기'에서 사용자가 **자동 측정**을 직접 누르면, 약 30초 동안 폰의 위아래 마이크로 두 스피커 소리를 듣고 메모리에서 대역별 크기만 계산한 뒤 버립니다. 녹음은 저장하지도, 어디로 보내지도 않습니다.
+시스템 오디오는 서비스가 켜져 있는 동안 메모리에서만 처리하고 저장하지 않습니다. 오디오 캡처에는 Android 규정상 `RECORD_AUDIO` 권한이 필요합니다. 마이크는 단 한 경우에만 씁니다. 공간감의 '좌우 맞추기'에서 사용자가 **자동 측정**을 직접 누르면, 20~45초 동안 폰의 위아래 마이크로 두 스피커 소리를 듣고 메모리에서 대역별 크기만 계산한 뒤 버립니다. 녹음은 저장하지도, 어디로 보내지도 않습니다.
 
 ### 백업
 
@@ -38,7 +38,7 @@ This document covers the general distribution build **Rootnote** (package `kr.ks
 
 | 권한 | 용도 |
 |---|---|
-| 오디오 녹음(RECORD_AUDIO) | 다른 앱의 소리를 캡처하는 데 필요. '좌우 맞추기' 자동 측정 때만 마이크를 약 30초 씀(저장 안 함) |
+| 오디오 녹음(RECORD_AUDIO) | 다른 앱의 소리를 캡처하는 데 필요. '좌우 맞추기' 자동 측정 때만 마이크를 20~45초 씀(저장 안 함) |
 | 화면/오디오 캡처(PROJECT_MEDIA, 셸에서 한 번 부여) | 캡처 시작 시 동의 창 생략 |
 | DUMP(셸에서 한 번 부여) | 재생 중인 오디오 세션 감지 |
 | 알림 | 처리 상태 표시 |
@@ -73,7 +73,7 @@ This document covers the general distribution build **Rootnote** (package `kr.ks
 | Presets, scripts, impulse responses (upstream) | app files | files you created or imported |
 | Diagnostic log (upstream) | cache `application.log` | technical messages (at most 2 MB, rewritten at every start); may contain names of processed apps. It leaves the phone only if you share it yourself under Settings, Troubleshooting. |
 
-System audio is processed in memory while the service runs and is never saved. Android requires the `RECORD_AUDIO` permission for audio capture itself. The microphone is used in one case only: when you tap **Measure automatically** in spatial "Even out the speakers", the phone listens to its two speakers with its top and bottom microphones for about 30 s, computes the level per band in memory and discards the audio. Nothing is saved or sent.
+System audio is processed in memory while the service runs and is never saved. Android requires the `RECORD_AUDIO` permission for audio capture itself. The microphone is used in one case only: when you tap **Measure automatically** in spatial "Even out the speakers", the phone listens to its two speakers with its top and bottom microphones for about 20-45 s, computes the level per band in memory and discards the audio. Nothing is saved or sent.
 
 ### Backup
 
@@ -83,7 +83,7 @@ The `pvb_*` files (first four rows above) are **excluded** from Android cloud ba
 
 | Permission | Purpose |
 |---|---|
-| Record audio (RECORD_AUDIO) | required to capture the audio of other apps; the microphone only during "Even out the speakers" automatic measuring (about 30 s, not saved) |
+| Record audio (RECORD_AUDIO) | required to capture the audio of other apps; the microphone only during "Even out the speakers" automatic measuring (about 20-45 s, not saved) |
 | Screen/audio capture (PROJECT_MEDIA, granted once from a shell) | starting capture without the consent dialog |
 | DUMP (granted once from a shell) | detecting active audio sessions |
 | Notifications | processing status |

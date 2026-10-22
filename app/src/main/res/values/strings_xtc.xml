@@ -6,6 +6,8 @@
     <string name="pvb_xtc_preset_balanced">Balanced (full, medium)</string>
     <string name="pvb_xtc_preset_clear">Clear (full, strong)</string>
     <string name="pvb_xtc_preset_custom">Custom</string>
+    <string name="pvb_xtc_portrait_off">Off while held upright</string>
+    <string name="pvb_xtc_portrait_off_summary">Upright, the two speakers sit above each other instead of left and right, so spatial cannot work; it switches off after a second upright and back on when you turn the phone sideways. Uses the motion sensor only while spatial is on.</string>
     <string name="pvb_xtc_mode">Spatial (crosstalk cancellation)</string>
     <string name="pvb_xtc_off">Off</string>
     <string name="pvb_xtc_centre">Keep centre (vocals keep their tone)</string>

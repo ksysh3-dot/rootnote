@@ -301,7 +301,7 @@ class PreferenceGroupFragment : PreferenceFragmentCompat(), KoinComponent {
         val mode = findPreference<ListPreference>(PvbSettings.KEY_XTC_MODE) ?: return
         val strength = findPreference<ListPreference>(PvbSettings.KEY_XTC_STRENGTH)
         val details = listOfNotNull(strength, findPreference<Preference>(PvbSettings.KEY_XTC_DISTANCE),
-            findPreference<Preference>(PvbSettings.KEY_XTC_HEAD))
+            findPreference<Preference>(PvbSettings.KEY_XTC_HEAD), findPreference<Preference>(PvbSettings.KEY_XTC_PORTRAIT_OFF))
         val preset = findPreference<ListPreference>(PvbSettings.KEY_XTC_PRESET)
         // preset key -> (mode, strength); "custom" writes nothing
         val presets = linkedMapOf(
