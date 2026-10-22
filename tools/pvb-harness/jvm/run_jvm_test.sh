@@ -56,7 +56,7 @@ java -cp "$OUTA:$KOTLIN_STDLIB" VolumeLevelLinkTestKt
 # Alpha 3.3 live blind A/B: seeded shuffle, record JSON/CSV, tally, file store, comparison catalogue (pure Kotlin).
 $KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/PvbNative.kt" "$APP/PvbEngine.kt" "$APP/PvbRuntime.kt" "$APP/PvbAbConditions.kt" "$APP/LiveAb.kt" "$APP/LiveAbComparisons.kt" "$HERE/LiveAbTest.kt" -d "$OUTA"
 java -cp "$OUTA:$KOTLIN_STDLIB" LiveAbTestKt
-$KOTLINC -classpath "$KOTLIN_STDLIB" "$APP/PvbModels.kt" "$APP/PvbNative.kt" "$APP/PvbEngine.kt" "$HERE/Alpha2JniTest.kt" -d "$OUTA"
+$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/PvbNative.kt" "$APP/PvbEngine.kt" "$HERE/Alpha2JniTest.kt" -d "$OUTA"
 java -Djava.library.path="$HERE/../build" -cp "$OUTA:$KOTLIN_STDLIB" Alpha2JniTestKt "$OUTA"
 python3 "$HERE/compare_alpha2_jni.py" "$HERE/../build/libpvbcapi.so" "$OUTA"
 
