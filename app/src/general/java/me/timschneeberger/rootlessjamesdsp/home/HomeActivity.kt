@@ -10,13 +10,10 @@ import android.content.res.Configuration
 import android.graphics.drawable.ColorDrawable
 import android.media.AudioManager
 import android.media.projection.MediaProjectionManager
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.HapticFeedbackConstants
-import android.widget.CheckBox
-import android.widget.LinearLayout
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -29,11 +26,14 @@ import androidx.core.view.WindowCompat
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import me.timschneeberger.rootlessjamesdsp.R
 import me.timschneeberger.rootlessjamesdsp.activity.BaseActivity
+import me.timschneeberger.rootlessjamesdsp.activity.BlocklistActivity
 import me.timschneeberger.rootlessjamesdsp.activity.MainActivity
 import me.timschneeberger.rootlessjamesdsp.activity.OnboardingActivity
 import me.timschneeberger.rootlessjamesdsp.activity.SettingsActivity
 import me.timschneeberger.rootlessjamesdsp.pvb.FirstRun
+import me.timschneeberger.rootlessjamesdsp.pvb.FirstWeekStore
 import me.timschneeberger.rootlessjamesdsp.pvb.HomeLogic
+import me.timschneeberger.rootlessjamesdsp.pvb.KillWatch
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbBuild
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbGeneral
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbRuntime
@@ -57,8 +57,11 @@ import timber.log.Timber
  *
  * The master row is the general build's processing switch: on = PVB processing (pvb_enable) and virtual bass
  * (pvb_vb_enable) on, with the audio service running; off = pvb_enable off (the service keeps running, so turning
- * it back on is instant). The first-run notice gates it exactly as it gates the service (FirstRun / PvbBuild), and
- * turning virtual bass on from here shows the same experimental-feature warning as the advanced screen.
+ * it back on is instant). The first-run notice gates it exactly as it gates the service (FirstRun / PvbBuild); the
+ * notice carries the virtual-bass warning and confirming it turns virtual bass on, so the switch never asks again.
+ *
+ * First week (FirstWeek): a row to the app exclusion list (video and games play without the delay), and a banner when
+ * the system killed the capture service (KillWatch) that leads to the battery step.
  *
  * Start-up mirrors MainActivity for the rootless build: private assets, onboarding when permissions are missing,
  * first-run and unmeasured-phone notices, the Android 15 notice, and the capture prompt when processing is
@@ -98,6 +101,14 @@ class HomeActivity : BaseActivity() {
         onAdvanced = { startActivity(Intent(this, MainActivity::class.java)) },
         onAbout = {
             startActivity(Intent(this, SettingsActivity::class.java).putExtra(SettingsActivity.EXTRA_ABOUT, true))
+        },
+        onExclusions = { startActivity(Intent(this, BlocklistActivity::class.java)) },
+        onKillBattery = {
+            startActivity(Intent(this, OnboardingActivity::class.java).putExtra(OnboardingActivity.EXTRA_BATTERY_SETUP, true))
+        },
+        onKillDismiss = {
+            FirstWeekStore.onBannerDismissed(this)
+            refresh()
         },
     )
 
@@ -220,6 +231,8 @@ class HomeActivity : BaseActivity() {
         val caps = PvbBuild.caps
         val profile = PvbGeneral.profile(this)
         val shownRunning = running || startPending
+        // A capture service that died without stopping (One UI battery management): banner until dismissed/recovered.
+        val kill = FirstWeekStore.check(this, running)
         uiState = HomeUiState(
             headline = HomeLogic.headline(s, shownRunning),
             masterOn = HomeLogic.masterOn(s, shownRunning),
@@ -229,6 +242,7 @@ class HomeActivity : BaseActivity() {
             chip = HomeLogic.selectedChip(HomeLogic.modelKey(s.vbAlgo), s.vbLevelDb, customPinned),
             linkOn = s.vbVolLink,
             linkLine = HomeLogic.linkLine(s, index, max),
+            killBanner = KillWatch.showBanner(PvbBuild.general, kill, shownRunning, s.enabled),
         )
     }
 
@@ -257,23 +271,11 @@ class HomeActivity : BaseActivity() {
             })
             return
         }
-        if (!PvbSettings.load(prefs).vbOn) {
-            // Same warning as the virtual bass switch of the advanced screen; stays off unless confirmed.
-            MaterialAlertDialogBuilder(this)
-                .setTitle(R.string.pvb_vb_warning_title)
-                .setMessage(R.string.pvb_vb_warning)
-                .setPositiveButton(R.string.pvb_vb_warning_ok) { _, _ ->
-                    prefs.edit()
-                        .putBoolean(PvbSettings.KEY_VB_ON, true)
-                        .putBoolean(PvbSettings.KEY_ENABLE, true)
-                        .apply()
-                    ensureRunning()
-                }
-                .setNegativeButton(android.R.string.cancel, null)
-                .show()
-            return
-        }
-        prefs.edit().putBoolean(PvbSettings.KEY_ENABLE, true).apply()
+        // The confirmed first-run notice is the virtual-bass consent (it carries the warning): no second dialog.
+        prefs.edit()
+            .putBoolean(PvbSettings.KEY_VB_ON, true)
+            .putBoolean(PvbSettings.KEY_ENABLE, true)
+            .apply()
         ensureRunning()
     }
 
@@ -281,6 +283,7 @@ class HomeActivity : BaseActivity() {
         // The service keeps running (no new capture prompt when turning back on); PVB passes the sound through.
         startPending = false
         prefs.edit().putBoolean(PvbSettings.KEY_ENABLE, false).apply()
+        FirstWeekStore.onUserTurnedOff(this)
         refresh()
     }
 
@@ -343,7 +346,7 @@ class HomeActivity : BaseActivity() {
         window.decorView.postDelayed(clearPending, 5000L)
     }
 
-    /** MainActivity's Android 15 notices. Returns true when it sent the user to the setup screens. */
+    /** MainActivity's Android 15 keyguard notice. Returns true when it sent the user to the setup screens. */
     private fun showAndroid15Alert(): Boolean {
         if (!SdkCheck.isVanillaIceCream) return false
 
@@ -362,31 +365,8 @@ class HomeActivity : BaseActivity() {
             return true
         }
 
-        if (prefsVar.get<Boolean>(R.string.key_android15_screenrecord_restriction_seen)) return false
-
-        val checkBox = CheckBox(this).apply {
-            text = getString(R.string.never_show_warning_again)
-            isChecked = false
-        }
-        MaterialAlertDialogBuilder(this)
-            .setTitle(R.string.android_15_screenshare_warning_title)
-            .setMessage(R.string.android_15_screenshare_warning)
-            .setView(
-                LinearLayout(this).apply {
-                    orientation = LinearLayout.VERTICAL
-                    setPadding(48, 32, 48, 16)
-                    addView(checkBox)
-                }
-            )
-            .setPositiveButton(R.string.tutorial) { _, _ ->
-                prefsVar.set(R.string.key_android15_screenrecord_restriction_seen, checkBox.isChecked)
-                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://youtu.be/rVM13aY2rwU?t=31")))
-            }
-            .setNegativeButton(R.string.close) { dialog, _ ->
-                prefsVar.set(R.string.key_android15_screenrecord_restriction_seen, checkBox.isChecked)
-                dialog.dismiss()
-            }
-            .show()
+        // The information part (notifications hidden while capturing, "Disable screen share protections") is in
+        // the first-run notice, so the home screen does not show it as a second dialog.
         return false
     }
 }

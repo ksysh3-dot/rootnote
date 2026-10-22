@@ -13,4 +13,9 @@
     <string name="session_app_compat_toast">호환되지 않는 미디어 앱 때문에 오디오 처리가 중지되었습니다. 알림을 확인해 주세요.</string>
     <string name="session_app_compat_notification_title">오디오 처리가 중지되었습니다. 다른 앱이 방해하고 있습니다.</string>
     <string name="capture_permission_revoked_toast">오디오 캡처 권한이 취소되어 오디오 처리가 중지되었습니다.</string>
+    <!-- 설정 방법 화면: Shizuku 먼저(권장, PC 불필요), ADB 둘째(PC 필요). -->
+    <string name="onboarding_methods_shizuku_title">Shizuku (권장)</string>
+    <string name="onboarding_methods_adb_title">ADB (PC 필요)</string>
+    <string name="onboarding_methods_rootless_shizuku">\u25CF PC 필요 없음\n\u25CF Android 11 이상: 이 폰의 무선 디버깅으로 Shizuku 시작\n\u25CF Android 10: Shizuku를 시작할 때 PC가 한 번 필요</string>
+    <string name="onboarding_methods_rootless_adb">\u25CF PC와 USB 케이블 필요\n\u25CF 고급 사용자용\n\u25CF Android 10 이상</string>
 </resources>

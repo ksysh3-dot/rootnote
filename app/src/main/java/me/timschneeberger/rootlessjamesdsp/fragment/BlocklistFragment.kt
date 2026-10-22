@@ -12,6 +12,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import me.timschneeberger.rootlessjamesdsp.BuildConfig
 import me.timschneeberger.rootlessjamesdsp.MainApplication
 import me.timschneeberger.rootlessjamesdsp.R
 import me.timschneeberger.rootlessjamesdsp.adapter.AppBlocklistAdapter
@@ -21,8 +23,10 @@ import me.timschneeberger.rootlessjamesdsp.model.ItemViewModel
 import me.timschneeberger.rootlessjamesdsp.model.room.AppBlocklistViewModel
 import me.timschneeberger.rootlessjamesdsp.model.room.AppBlocklistViewModelFactory
 import me.timschneeberger.rootlessjamesdsp.model.room.BlockedApp
+import me.timschneeberger.rootlessjamesdsp.pvb.QuickExclude
 import me.timschneeberger.rootlessjamesdsp.session.dump.DumpManager
 import me.timschneeberger.rootlessjamesdsp.session.rootless.SessionRecordingPolicyManager
+import me.timschneeberger.rootlessjamesdsp.utils.extensions.CompatExtensions.getApplicationInfoCompat
 import me.timschneeberger.rootlessjamesdsp.utils.extensions.ContextExtensions.getAppIcon
 import me.timschneeberger.rootlessjamesdsp.utils.extensions.ContextExtensions.getAppNameFromUidSafe
 import me.timschneeberger.rootlessjamesdsp.utils.extensions.ContextExtensions.showAlert
@@ -87,6 +91,10 @@ class BlocklistFragment : Fragment() {
         }
         updateUnsupportedApps()
 
+        // General build: the delay note and the quick-add list (QuickExclude), unchecked; the user chooses.
+        binding.quickExclude.isVisible = BuildConfig.GENERAL_BUILD
+        binding.quickExcludeButton.setOnClickListener { showQuickExclude() }
+
         viewModel.blockedApps.observe(requireActivity()) { apps ->
             val isEmpty = apps == null || apps.isEmpty()
 
@@ -122,6 +130,37 @@ class BlocklistFragment : Fragment() {
     override fun onResume() {
         updateUnsupportedApps()
         super.onResume()
+    }
+
+    /** Installed video, live-streaming and call apps that are not excluded yet, as an unchecked multi-choice list. */
+    private fun showQuickExclude() {
+        val ctx = context ?: return
+        val pm = ctx.packageManager
+        // Package visibility: these packages are listed in the general manifest's <queries>.
+        val installed = QuickExclude.APPS.mapNotNull { c ->
+            try { c.packageName to pm.getApplicationInfoCompat(c.packageName, 0) } catch (e: Exception) { null }
+        }.toMap()
+        val excluded = viewModel.blockedApps.value.orEmpty().mapNotNull { it.packageName }.toSet()
+        val candidates = QuickExclude.candidates(installed.keys, excluded)
+        if (candidates.isEmpty()) {
+            ctx.showAlert(getString(R.string.firstweek_exclude_quick_button), getString(R.string.firstweek_exclude_quick_none))
+            return
+        }
+        val labels = candidates.map { c ->
+            installed[c.packageName]?.let { pm.getApplicationLabel(it).toString() }?.takeIf { it.isNotBlank() } ?: c.label
+        }
+        val checked = BooleanArray(candidates.size)  // nothing preselected
+        MaterialAlertDialogBuilder(ctx)
+            .setTitle(R.string.firstweek_exclude_quick_title)
+            .setMultiChoiceItems(labels.toTypedArray<CharSequence>(), checked) { _, which, isChecked -> checked[which] = isChecked }
+            .setPositiveButton(R.string.firstweek_exclude_quick_add) { _, _ ->
+                candidates.forEachIndexed { i, c ->
+                    val info = installed[c.packageName]
+                    if (checked[i] && info != null) viewModel.insert(BlockedApp(info.uid, c.packageName, labels[i]))
+                }
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
     }
 
     fun showAppSelector() {

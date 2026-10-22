@@ -9,6 +9,29 @@
 
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" tools:node="remove" />
 
+    <!-- Battery step of the first run (FirstWeek): the system dialog that exempts this app from battery
+         optimisation, so One UI does not stop the capture service in the background. -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
+    <!-- Quick exclusions (QuickExclude in pvb/FirstWeek.kt): the app only checks whether these video, live-streaming
+         and call apps are installed. Keep this list equal to QuickExclude.APPS. -->
+    <queries>
+        <package android:name="com.google.android.youtube" />
+        <package android:name="com.netflix.mediaclient" />
+        <package android:name="com.disney.disneyplus" />
+        <package android:name="net.cj.cjhv.gs.tving" />
+        <package android:name="kr.co.captv.pooqV2" />
+        <package android:name="com.coupang.mobile.play" />
+        <package android:name="tv.twitch.android.app" />
+        <package android:name="com.navercorp.game.android.community" />
+        <package android:name="kr.co.nowcom.mobile.afreeca" />
+        <package android:name="us.zoom.videomeetings" />
+        <package android:name="com.google.android.apps.tachyon" />
+        <package android:name="com.kakao.talk" />
+        <package android:name="com.discord" />
+        <package android:name="com.microsoft.teams" />
+    </queries>
+
     <!-- Only apps signed with the same key may switch processing on or off (release audit S7). -->
     <permission
         android:name="${applicationId}.permission.SET_POWER_STATE"

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- First-week screens of the general build (onboarding method page, battery step, quick exclusions). They live in
+     main because the shared onboarding and exclusion screens reference them; only the general build shows them.
+     Korean: values-ko/strings_firstweek.xml. -->
+<resources>
+    <!-- Method page: Shizuku explanation and button -->
+    <string name="firstweek_shizuku_explain">Shizuku is a free open-source app that passes shell permissions to other apps. This app uses it once, to grant two capture permissions. On Android 11 and later Shizuku starts with wireless debugging on the phone itself, so no PC is needed. After a reboot, start Shizuku again only if you want to redo the setup.</string>
+    <string name="firstweek_shizuku_open">Open Shizuku</string>
+    <string name="firstweek_shizuku_get">Get Shizuku</string>
+    <string name="firstweek_shizuku_sources_title">Get Shizuku</string>
+    <string name="firstweek_shizuku_sources">Shizuku is not installed. Choose where to get it. Nothing is downloaded automatically.</string>
+    <string name="firstweek_shizuku_play">Play Store</string>
+    <string name="firstweek_shizuku_github">GitHub</string>
+
+    <!-- Battery step -->
+    <string name="firstweek_battery_title">Keep running in the background</string>
+    <string name="firstweek_battery_caption">Samsung One UI and some other systems stop apps in the background to save battery. The sound then suddenly returns to the original. Two settings prevent this.</string>
+    <string name="firstweek_battery_request_title">1. Exclude from battery optimisation</string>
+    <string name="firstweek_battery_request_body">Tap the button and choose \"Allow\" in the system dialog.</string>
+    <string name="firstweek_battery_request_button">Allow</string>
+    <string name="firstweek_battery_request_done">Already excluded</string>
+    <string name="firstweek_battery_oneui_title">2. Samsung (One UI)</string>
+    <string name="firstweek_battery_oneui_body">• App info › Battery › \"Unrestricted\"\n• Settings › Battery › Background usage limits: keep this app out of \"Sleeping apps\" and \"Deep sleeping apps\", or add it to \"Never sleeping apps\", and turn off \"Put unused apps to sleep\" if you use it rarely.</string>
+    <string name="firstweek_battery_oneui_button">Open app info</string>
+
+    <!-- Screen/audio capture consent (runtime permissions page) -->
+    <string name="firstweek_capture_consent">On Android 14 and later a capture consent is valid for one session only. The system dialog \"Start recording or casting\" therefore appears each time processing starts, usually right after you turn the switch on.</string>
+
+    <!-- Quick exclusions (exclusion screen) -->
+    <string name="firstweek_exclude_note">Processed sound is delayed by about 0.15 s or more. Excluded apps play without this app and without delay; video and games stay in sync.</string>
+    <string name="firstweek_exclude_quick_button">Add video, game and call apps</string>
+    <string name="firstweek_exclude_quick_title">Exclude these apps?</string>
+    <string name="firstweek_exclude_quick_none">None of the listed video and call apps is installed, or all are already excluded. Add other apps, such as games, with the + button.</string>
+    <string name="firstweek_exclude_quick_add">Exclude</string>
+</resources>

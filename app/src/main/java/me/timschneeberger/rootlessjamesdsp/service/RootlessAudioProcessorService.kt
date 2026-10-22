@@ -146,6 +146,8 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
 
     override fun onCreate() {
         super.onCreate()
+        // General build: a previous instance that never stopped was killed (FirstWeek / KillWatch).
+        me.timschneeberger.rootlessjamesdsp.pvb.FirstWeekStore.onServiceCreated(this)
 
         // Get reference to system services
         audioManager = getSystemService<AudioManager>()!!
@@ -228,6 +230,7 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
             }
             ACTION_STOP -> {
                 Timber.d("Stopping service")
+                me.timschneeberger.rootlessjamesdsp.pvb.FirstWeekStore.onUserStopped(this)
                 stopSelf()
                 return START_NOT_STICKY
             }
@@ -281,6 +284,7 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
 
         if (mediaProjection != null) {
             startRecording()
+            me.timschneeberger.rootlessjamesdsp.pvb.FirstWeekStore.onCaptureStarted(this)
             sendLocalBroadcast(Intent(Constants.ACTION_SERVICE_STARTED))
         } else {
             Timber.w("Failed to capture audio")
@@ -292,6 +296,7 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
 
     override fun onDestroy() {
         isServiceDisposing = true
+        me.timschneeberger.rootlessjamesdsp.pvb.FirstWeekStore.onServiceDestroyed(this)
         startWhenStopped = false
         buzzDiagnostics.close()
 

@@ -72,6 +72,13 @@ rm -rf "$OUTH"; mkdir -p "$OUTH"
 $KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/HomeLogic.kt" "$HERE/HomeLogicTest.kt" -d "$OUTH"
 java -cp "$OUTH:$KOTLIN_STDLIB" HomeLogicTestKt "$HERE/../../.."
 
+# General build, first week: onboarding pages, battery step, kill detection, quick exclusions (= manifest queries),
+# en/ko strings of these screens and of the first-run notice (pure Kotlin).
+OUTF="$HERE/../build/jvm-firstweek"
+rm -rf "$OUTF"; mkdir -p "$OUTF"
+$KOTLINC -classpath "$KOTLIN_STDLIB" "$APP/FirstWeek.kt" "$HERE/FirstWeekTest.kt" -d "$OUTF"
+java -cp "$OUTF:$KOTLIN_STDLIB" FirstWeekTestKt "$HERE/../../.."
+
 # JamesDSP -> PVB chain: route table, module sealing and restore of the user's values, 16-bit conversion against the
 # PVB engine's own 16-bit path (host libpvbengine.so), en/ko strings of the chain notes.
 OUTC="$HERE/../build/jvm-chain"

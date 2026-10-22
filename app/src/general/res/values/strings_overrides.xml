@@ -15,4 +15,9 @@
     <string name="session_app_compat_toast">Audio processing stopped because of an incompatible media app. Please check the notification to resolve this problem.</string>
     <string name="session_app_compat_notification_title">Audio processing stopped. Another app is interfering.</string>
     <string name="capture_permission_revoked_toast">Audio processing has been stopped because the audio capture permission was revoked.</string>
+    <!-- Onboarding method page: Shizuku first (recommended, no PC), ADB second (needs a PC). -->
+    <string name="onboarding_methods_shizuku_title">Shizuku (recommended)</string>
+    <string name="onboarding_methods_adb_title">ADB (needs a PC)</string>
+    <string name="onboarding_methods_rootless_shizuku">\u25CF No PC needed\n\u25CF Android 11 and later: start Shizuku with wireless debugging on this phone\n\u25CF Android 10: starting Shizuku needs a PC once</string>
+    <string name="onboarding_methods_rootless_adb">\u25CF Needs a PC and a USB cable\n\u25CF For advanced users\n\u25CF Android 10 and later</string>
 </resources>
