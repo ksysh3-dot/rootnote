@@ -21,3 +21,10 @@ local.properties
 # Signing keys never belong in this repository (the general build is signed from CI secrets)
 *.jks
 *.keystore
+
+# Local test outputs (CI uploads its own)
+__pycache__/
+/*-report.json
+/*-ci.json
+/*-q0.json
+/ci-build.log
