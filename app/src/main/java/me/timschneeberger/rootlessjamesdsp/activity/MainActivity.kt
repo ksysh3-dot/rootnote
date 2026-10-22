@@ -395,10 +395,12 @@ class MainActivity : BaseActivity() {
 
         sendLocalBroadcast(Intent(Constants.ACTION_PREFERENCES_UPDATED))
 
-        // General build: first-run notice until confirmed, then (once) the "not measured" notice on other phones.
-        if (FirstRun.mustShowNotice(PvbBuild.general, PvbBuild.firstRunConfirmed))
-            PvbGeneral.showFirstRunNotice(this, onConfirmed = { PvbGeneral.maybeShowUnmeasuredNotice(this) })
-        else
+        // General build: the welcome (first-run notice) until confirmed, unless it was put off in this process, then
+        // (once) the "not measured" notice on other phones.
+        if (FirstRun.mustShowNotice(PvbBuild.general, PvbBuild.firstRunConfirmed)) {
+            if (!PvbGeneral.welcomeLater)
+                PvbGeneral.showFirstRunNotice(this, onConfirmed = { PvbGeneral.maybeShowUnmeasuredNotice(this) })
+        } else
             PvbGeneral.maybeShowUnmeasuredNotice(this)
 
         if(isRoot() && app.isEnhancedProcessing) {

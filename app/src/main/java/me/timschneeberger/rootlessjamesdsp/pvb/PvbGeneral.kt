@@ -7,11 +7,13 @@ import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Build
 import android.widget.Toast
+import androidx.activity.ComponentActivity
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import me.timschneeberger.rootlessjamesdsp.BuildConfig
 import me.timschneeberger.rootlessjamesdsp.R
 import timber.log.Timber
-import java.lang.ref.WeakReference
 
 /**
  * Android side of the general distribution build: build flags, device profile, first-run notice, the hidden
@@ -98,6 +100,11 @@ object PvbGeneral {
         edit.apply()
     }
 
+    /** The welcome screen already said what an unmeasured phone starts with: no second notice afterwards. */
+    fun markUnmeasuredNoticeShown(context: Context) {
+        flags(context).edit().putBoolean(KEY_UNMEASURED_NOTICE_SHOWN, true).apply()
+    }
+
     fun setResearchUnlocked(context: Context, unlocked: Boolean) {
         flags(context).edit().putBoolean(KEY_RESEARCH_UNLOCKED, unlocked).apply()
         PvbBuild.researchUnlocked = unlocked
@@ -163,30 +170,50 @@ object PvbGeneral {
         }
     }
 
-    private var noticeDialog: WeakReference<androidx.appcompat.app.AlertDialog>? = null
+    /**
+     * The welcome screen of the general build (src/general, Compose): the first-run notice, three short pages that end
+     * with "확인하고 시작하기" or "다음에". Named by string like [HOME_ACTIVITY].
+     */
+    const val WELCOME_ACTIVITY = "me.timschneeberger.rootlessjamesdsp.home.WelcomeActivity"
+
+    /** A welcome screen is open (set when it is launched, cleared when it closes for good): one at a time. */
+    @Volatile var welcomeOpen = false
 
     /**
-     * The first-run notice of the general build. [onConfirmed] runs after the user confirmed it. Only one notice is
-     * shown at a time (the first caller's continuation wins).
+     * "다음에" was chosen in this process: the home screen stops opening the welcome by itself, and the next welcome
+     * (when processing is switched on) opens on its last page, the consent.
+     */
+    @Volatile var welcomeLater = false
+
+    /** WelcomeActivity extra: open on the last page (the consent). */
+    const val EXTRA_WELCOME_AT_CONSENT = "welcome_at_consent"
+
+    /**
+     * The first-run notice of the general build: opens the welcome screen ([WELCOME_ACTIVITY]). [onConfirmed] runs
+     * after the user confirmed it, [onLater] after "다음에" or back. Only one is open at a time (the first caller's
+     * continuation wins). The answer comes back through [activity]'s result registry; if the activity is recreated
+     * meanwhile, the continuation is dropped and the user simply taps again.
      */
     fun showFirstRunNotice(activity: Activity, onConfirmed: () -> Unit, onLater: () -> Unit = {}) {
-        if (noticeDialog?.get()?.isShowing == true) return
-        val ctx = activity
-        val commands = FirstRun.adbCommands(BuildConfig.APPLICATION_ID).joinToString("\n")
-        MaterialAlertDialogBuilder(ctx)
-            .setTitle(R.string.first_run_title)
-            .setMessage(ctx.getString(R.string.first_run_message, brand(ctx), BuildConfig.APPLICATION_ID, commands))
-            .setCancelable(false)
-            .setPositiveButton(R.string.first_run_confirm) { _, _ ->
-                confirmFirstRun(ctx)
-                onConfirmed()
-            }
-            .setNegativeButton(R.string.first_run_later) { _, _ -> onLater() }
-            .setNeutralButton(R.string.about_privacy_title) { _, _ ->
-                showPrivacy(activity) { showFirstRunNotice(activity, onConfirmed, onLater) }
-            }
-            .show()
-            .also { noticeDialog = WeakReference(it) }
+        if (welcomeOpen) return
+        val host = activity as? ComponentActivity ?: return
+        lateinit var launcher: ActivityResultLauncher<Intent>
+        launcher = host.activityResultRegistry.register(
+            "rootnote_welcome_${System.nanoTime()}", ActivityResultContracts.StartActivityForResult(),
+        ) { result ->
+            launcher.unregister()
+            if (result.resultCode == Activity.RESULT_OK) onConfirmed() else onLater()
+        }
+        try {
+            welcomeOpen = true
+            launcher.launch(
+                Intent().setClassName(activity.packageName, WELCOME_ACTIVITY).putExtra(EXTRA_WELCOME_AT_CONSENT, welcomeLater)
+            )
+        } catch (e: Exception) {
+            welcomeOpen = false
+            launcher.unregister()
+            Timber.e(e)
+        }
     }
 
     /** One-time notice for a phone without a measured profile (general build). */

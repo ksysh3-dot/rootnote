@@ -117,14 +117,25 @@ fun main(args: Array<String>) {
     for ((key, text) in strings(root, "app/src/general/res/values-ko/strings_overrides.xml"))
         expect(koR[key] == text, "values-ko and values-ko-rKR differ in $key")
 
-    // first-run notice: one consent (virtual bass), the delay line, the per-session capture consent
-    val noticeEn = strings(root, "app/src/main/res/values/strings_general.xml")["first_run_message"]!!
-    val noticeKo = strings(root, "app/src/main/res/values-ko/strings_general.xml")["first_run_message"]!!
-    expect("0.15 s" in noticeEn && "0.15초" in noticeKo, "notice: 0.15 s delay line")
-    expect("Exclude apps" in noticeEn && "앱별 제외" in noticeKo, "notice: points to the exclusion row")
-    expect("Android 14" in noticeEn && "Android 14" in noticeKo, "notice: Android 14 capture consent")
-    expect(args(noticeEn) == listOf("%1\$s", "%2\$s", "%3\$s") && args(noticeKo) == args(noticeEn), "notice arguments")
-    val home = strings(root, "app/src/general/res/values-ko/strings_home.xml")
+    // first-run notice (the welcome screen, WelcomeActivity): one consent (virtual bass), the delay line, the
+    // per-session capture consent, the labels it points to
+    val welEn = strings(root, "app/src/general/res/values/strings_home.xml")
+    val welKo = strings(root, "app/src/general/res/values-ko/strings_home.xml")
+    expect("0.15 s" in welEn["welcome_know_delay_body"]!! && "0.15초" in welKo["welcome_know_delay_body"]!!, "welcome: 0.15 s delay line")
+    expect("Exclude apps" in welEn["welcome_know_delay_body"]!! && "앱별 제외" in welKo["welcome_know_delay_body"]!!,
+        "welcome: points to the exclusion row")
+    expect(welEn["home_exclude_title"]!!.startsWith("Exclude apps") && welKo["home_exclude_title"]!!.startsWith("앱별 제외"),
+        "welcome: the exclusion row is still called that")
+    expect(welEn["home_chip_fullness"]!! in welEn["welcome_know_experimental_body"]!! &&
+        welKo["home_chip_fullness"]!! in welKo["welcome_know_experimental_body"]!!, "welcome: names the fullness preset")
+    expect("Android 14" in welEn["welcome_ready_capture_body_14"]!! && "Android 14" in welKo["welcome_ready_capture_body_14"]!!,
+        "welcome: Android 14 capture consent")
+    expect(welEn["welcome_start"]!! in welEn["welcome_consent"]!! && welKo["welcome_start"]!! in welKo["welcome_consent"]!!,
+        "welcome: the consent line names its button")
+    expect("GPL-3.0" in welEn["welcome_ready_legal"]!! && "GPL-3.0" in welKo["welcome_ready_legal"]!!, "welcome: licence line")
+    expect("AutoEQ" in welEn["welcome_ready_privacy_body"]!! && "AutoEQ" in welKo["welcome_ready_privacy_body"]!!,
+        "welcome: the only network use is named")
+    val home = welKo
     expect(home["home_exclude_title"] == "앱별 제외 (영상·게임)", "home exclusion row title")
     expect(home["home_killed_title"]!!.startsWith("시스템이 %1\$s를 종료했습니다"), "kill banner title")
 

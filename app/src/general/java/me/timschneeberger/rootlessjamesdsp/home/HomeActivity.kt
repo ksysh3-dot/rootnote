@@ -57,8 +57,9 @@ import timber.log.Timber
  *
  * The master row is the general build's processing switch: on = PVB processing (pvb_enable) and virtual bass
  * (pvb_vb_enable) on, with the audio service running; off = pvb_enable off (the service keeps running, so turning
- * it back on is instant). The first-run notice gates it exactly as it gates the service (FirstRun / PvbBuild); the
- * notice carries the virtual-bass warning and confirming it turns virtual bass on, so the switch never asks again.
+ * it back on is instant). The first-run notice (the welcome screen, WelcomeActivity) gates it exactly as it gates the
+ * service (FirstRun / PvbBuild); the welcome carries the virtual-bass warning and confirming it turns virtual bass on,
+ * so the switch never asks again.
  *
  * First week (FirstWeek): a row to the app exclusion list (video and games play without the delay), and a banner when
  * the system killed the capture service (KillWatch) that leads to the battery step.
@@ -169,19 +170,17 @@ class HomeActivity : BaseActivity() {
             refresh()
         }
 
-        // Permissions missing: the setup screens first (after the first-run notice), like MainActivity.
+        // Permissions missing: the setup screens first, like MainActivity. On the first launch the welcome
+        // (WelcomeActivity) comes before them and starts them itself after the answer.
         if (!hasDumpPermission() || !hasRecordPermission()) {
             Timber.i("Launching onboarding (first boot: $firstBoot)")
-            val onboarding = {
+            if (FirstRun.mustShowNotice(PvbBuild.general, PvbBuild.firstRunConfirmed))
+                startActivity(WelcomeActivity.thenSetup(this, fixPerms = !firstBoot))
+            else
                 startActivity(Intent(this, OnboardingActivity::class.java).apply {
                     putExtra(OnboardingActivity.EXTRA_FIX_PERMS, !firstBoot)
                 })
-                finish()
-            }
-            if (FirstRun.mustShowNotice(PvbBuild.general, PvbBuild.firstRunConfirmed))
-                PvbGeneral.showFirstRunNotice(this, onConfirmed = onboarding, onLater = onboarding)
-            else
-                onboarding()
+            finish()
             return
         }
 
@@ -191,12 +190,16 @@ class HomeActivity : BaseActivity() {
             uiState?.let { HomeScreen(it, actions, reduceMotion) }
         }
 
-        if (FirstRun.mustShowNotice(PvbBuild.general, PvbBuild.firstRunConfirmed))
-            PvbGeneral.showFirstRunNotice(this, onConfirmed = {
-                PvbGeneral.maybeShowUnmeasuredNotice(this)
-                refresh()
-            })
-        else
+        // Not confirmed yet: the welcome over the home screen ("확인하고 시작하기" starts processing right away), unless
+        // it was put off in this process; then it comes when processing is switched on.
+        if (FirstRun.mustShowNotice(PvbBuild.general, PvbBuild.firstRunConfirmed)) {
+            if (!PvbGeneral.welcomeLater)
+                PvbGeneral.showFirstRunNotice(this, onConfirmed = {
+                    PvbGeneral.maybeShowUnmeasuredNotice(this)
+                    refresh()
+                    ensureRunning()
+                })
+        } else
             PvbGeneral.maybeShowUnmeasuredNotice(this)
 
         if (showAndroid15Alert()) return

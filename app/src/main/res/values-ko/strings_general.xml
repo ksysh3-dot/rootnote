@@ -3,11 +3,6 @@
 <resources>
     <string name="app_subtitle">폰 스피커 가상 저음 · RootlessJamesDSP 기반 비공식 포크</string>
 
-    <string name="first_run_title">켜기 전에</string>
-    <string name="first_run_message">%1$s은(는) 폰 내장 스피커에 가상 저음과 가벼운 보정을 더합니다. RootlessJamesDSP의 비공식 포크이며, RootlessJamesDSP나 JamesDSP 개발자가 만들거나 지원하는 앱이 아닙니다. 보증은 없습니다(GPL-3.0).\n\n\"확인하고 켜기\"를 누르면 가상 저음(실험 기능)이 이 기기의 기본 세기로 켜집니다. 따로 다시 묻지 않습니다.\n• 효과와 거슬림은 곡과 기기에 따라 다릅니다. 윙윙거리는 소리(버즈음)가 들리면 세기를 줄이거나 \"풍성함 증가\"를 쓰세요.\n• 처리된 소리는 약 0.15초 이상 늦게 나옵니다. 영상 입 모양이나 게임 소리가 어긋나면 홈 화면의 \"앱별 제외\"에 그 앱을 넣으세요. 제외한 앱은 지연 없이 원래 소리로 나옵니다.\n• 최대 볼륨으로 오래 듣지 마세요. 작은 스피커가 과열될 수 있습니다.\n\n설정(루트 불필요): 패키지 %2$s에 셸 권한을 한 번 줘야 합니다.\n• Shizuku(권장, PC 불필요): Android 11 이상은 폰의 무선 디버깅으로 Shizuku를 시작할 수 있습니다. 그다음 이 앱의 설정 화면에서 접근을 허용합니다.\n• ADB(PC 필요): USB 디버깅을 켜고 다음을 실행합니다.\n%3$s\n(마지막 줄은 선택: 재부팅 뒤 자동 시작)\n\nAndroid 14 이상은 캡처 동의가 한 번의 실행에만 유효해서, 처리를 시작할 때마다 시스템의 \"녹화 또는 전송 시작\" 동의 창이 다시 뜹니다.\nAndroid 15 이상: 개발자 옵션에서 \"화면 공유 보호 사용 중지\"를 켜세요. 켜지 않으면 캡처 중에 알림이 가려집니다.\n\n오디오 캡처를 막는 앱(예: Spotify, Chrome, SoundCloud)의 소리는 처리되지 않습니다. 내장 스피커에서만 적용됩니다. 다른 오디오 효과 앱과 함께 쓰면 처리가 멈출 수 있습니다.\n\n개인정보: 이 앱의 설정만 폰에 저장합니다. 곡 제목, 녹음, 사용 기록은 저장하지 않습니다. 어디에도 보내지 않으며, 네트워크는 선택 기능인 AutoEQ 검색(원본 프로젝트의 AutoEQ 서버)에만 씁니다.</string>
-    <string name="first_run_confirm">확인하고 켜기</string>
-    <string name="first_run_later">나중에</string>
-
     <string name="unmeasured_title">이 기기는 측정되지 않았습니다</string>
     <string name="unmeasured_message">%1$s은(는) 갤럭시 S26 Ultra에서만 측정한 설정이 있습니다. 이 기기(%2$s)에서는 보수적인 중립 설정으로 시작합니다: 보호용 저역 차단 100 Hz, 평탄한 EQ, 출력 −3 dB, 리미터 −1 dBTP. 들으면서 조정해 주세요.</string>
     <string name="unmeasured_status">이 기기는 측정되지 않았습니다. 기본값은 보수적으로 설정됩니다.</string>
@@ -32,7 +27,7 @@
     <string name="about_research_hide_title">개발자/연구 도구 숨기기</string>
     <string name="about_research_hide_summary">버전을 7번 누르면 다시 표시됩니다</string>
 
-    <string name="privacy_summary">%1$s이(가) 이 폰에 저장하는 것은 다음뿐입니다.\n• 설정(스피커 보정, 가상 저음, 앱 옵션)\n• 마지막 음량 맞춤 값(숫자 하나)\n• 앱 캐시의 기술 로그(앱을 시작할 때마다 새로 씀, 문제 해결에서 직접 공유할 때만 밖으로 나감)\n\n곡 제목·아티스트·오디오는 저장하지 않고, 마이크로 녹음하지도 않습니다. 시스템 오디오는 서비스가 도는 동안 메모리에서만 처리하고 저장하지 않습니다.\n\n어디에도 보내지 않습니다. 네트워크는 JamesDSP 이퀄라이저의 선택 기능인 AutoEQ 검색을 쓸 때만 원본 프로젝트의 AutoEQ 서버(aeq.timschneeberger.me)에 접속합니다.\n\n가상 저음 설정은 Android 클라우드 백업과 기기 간 전송에서 제외됩니다.</string>
+    <string name="privacy_summary">%1$s이(가) 이 폰에 저장하는 것은 다음뿐입니다.\n• 설정(스피커 보정, 가상 저음, 앱 옵션)\n• 마지막 음량 맞춤 값(숫자 하나)\n• 앱 캐시의 기술 로그(앱을 시작할 때마다 새로 씀, 문제 해결에서 직접 공유할 때만 밖으로 나감)\n\n곡 제목·아티스트·오디오는 저장하지 않습니다. 마이크는 공간감 \'좌우 맞추기\'에서 자동 측정을 직접 누를 때만 20~45초 동안 쓰고, 대역별 크기만 계산한 뒤 버립니다. 시스템 오디오는 서비스가 도는 동안 메모리에서만 처리하고 저장하지 않습니다.\n\n어디에도 보내지 않습니다. 네트워크는 JamesDSP 이퀄라이저의 선택 기능인 AutoEQ 검색을 쓸 때만 원본 프로젝트의 AutoEQ 서버(aeq.timschneeberger.me)에 접속합니다.\n\n가상 저음 설정은 Android 클라우드 백업과 기기 간 전송에서 제외됩니다.</string>
     <string name="privacy_full_text">전문 보기(온라인)</string>
 
     <string name="pvb_jamesdsp_chain_note">JamesDSP 효과 → %1$s 순서로 함께 적용 중입니다. 마지막 단계인 %1$s 리미터가 스피커를 보호합니다. %1$s 처리 중에는 JamesDSP 베이스 부스트·아날로그 모델링·출력 제어가 잠깁니다.</string>

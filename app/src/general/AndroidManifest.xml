@@ -52,6 +52,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <!-- First-run welcome ("반가워요", three pages): replaces the first-run dialog; opened by the home screen on the
+             first launch and by PvbGeneral.showFirstRunNotice. Not exported. -->
+        <activity
+            android:name="me.timschneeberger.rootlessjamesdsp.home.WelcomeActivity"
+            android:exported="false"
+            android:label="@string/welcome_activity_title"
+            android:theme="@style/Theme.RootlessJamesDSP" />
         <!-- Spatial "좌우 맞추기" (speaker balance by microphones or by ear), landscape like listening. -->
         <activity
             android:name="me.timschneeberger.rootlessjamesdsp.home.SpatialBalanceActivity"
