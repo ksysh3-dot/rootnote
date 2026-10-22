@@ -255,6 +255,12 @@ private:
     double dryL_[kDryLen] = {}, dryR_[kDryLen] = {};
     int dryPos_ = 0;
     PhoneModel phone_;
+    // The phone model only feeds the estimate meters (M_EST_*, analysis): it runs while someone reads them. Readers
+    // (readMeters, analyze) extend phoneUntil_ to a few seconds past the audio processed so far.
+    std::atomic<uint64_t> phoneUntil_{0};
+    bool phoneRun_ = false;
+    void wantPhoneModel();
+    bool matchRun_ = false;  // match_ runs while the matched ("flat") bypass is set
 
     // Virtual bass. Switching an algorithm on or off (or between algorithms) changes the latency: while the output is
     // audible the engine fades out (30 ms), switches, and - when the latency grows - stays silent for the extra

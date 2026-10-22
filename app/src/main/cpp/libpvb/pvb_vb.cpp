@@ -14,6 +14,7 @@
 #include <initializer_list>
 
 #include "pvb_dsp.h"
+#include "pvb_simd.h"
 #include "pvb_vb_tables.h"
 
 namespace pvb {
@@ -193,11 +194,25 @@ VbHpv::VbHpv(bool masked, bool gentle, int upperMode)
         for (int b = 0; b < 6; ++b) r |= ((i >> b) & 1) << (5 - b);
         bitrev64_[i] = r;
     }
+    for (int len = 2; len <= 64; len <<= 1) {
+        const int hl = len >> 1, step = 64 / len;
+        for (int k = 0; k < hl; ++k) {
+            tw64r_[hl - 1 + k] = cosHp_[3 * k * step];
+            tw64i_[hl - 1 + k] = -sinHp_[3 * k * step];
+        }
+    }
     for (int i = 0, bits = 0; i < kHalfFft; ++i) {
         while ((1 << bits) < kHalfFft) ++bits;
         int r = 0;
         for (int b = 0; b < bits; ++b) r |= ((i >> b) & 1) << (bits - 1 - b);
         bitrev_[i] = r;
+    }
+    for (int len = 2; len <= kHalfFft; len <<= 1) {
+        const int hl = len >> 1, step = kPvNfft / len;
+        for (int k = 0; k < hl; ++k) {
+            twr_[hl - 1 + k] = cosPv_[k * step];
+            twi_[hl - 1 + k] = -sinPv_[k * step];
+        }
     }
     // Overlap-add normaliser at each of the 16 positions in the hop: sum of win^2 over the 12 frames that cover a
     // sample, in the reference's order (oldest frame first).
@@ -472,26 +487,41 @@ void VbHpv::hpssFrame() {
     }
 }
 
-// Radix-2 complex FFT of 64 points (twiddles from the 192-point table: exp(-2 pi i j / 64) = index 3 j).
+// Radix-2 complex FFT of 64 points (twiddles from the 192-point table: exp(-2 pi i j / 64) = index 3 j, kept per stage
+// in tw64r_ / tw64i_). As in fftHalf(), the stages from half length 2 on compute two butterflies per vector.
 void VbHpv::fft64(double* re, double* im) const {
-    double ar[64], ai[64];
+    alignas(16) double ar[64], ai[64];
     for (int n = 0; n < 64; ++n) {
         ar[bitrev64_[n]] = re[n];
         ai[bitrev64_[n]] = im[n];
     }
-    for (int len = 2; len <= 64; len <<= 1) {
-        const int hl = len >> 1, step = 64 / len;
+    for (int i0 = 0; i0 < 64; i0 += 2) {   // half length 1: twiddle exp(0)
+        const double wr = tw64r_[0], wi = tw64i_[0];
+        const int a = i0, b = a + 1;
+        const double tr = ar[b] * wr - ai[b] * wi;
+        const double ti = ar[b] * wi + ai[b] * wr;
+        ar[b] = ar[a] - tr;
+        ai[b] = ai[a] - ti;
+        ar[a] += tr;
+        ai[a] += ti;
+    }
+    using simd::d2;
+    for (int len = 4; len <= 64; len <<= 1) {
+        const int hl = len >> 1;
+        const double* wrs = tw64r_ + hl - 1;
+        const double* wis = tw64i_ + hl - 1;
         for (int i0 = 0; i0 < 64; i0 += len) {
-            for (int k = 0; k < hl; ++k) {
-                const int t = 3 * k * step;
-                const double wr = cosHp_[t], wi = -sinHp_[t];
+            for (int k = 0; k < hl; k += 2) {
                 const int a = i0 + k, b = a + hl;
-                const double tr = ar[b] * wr - ai[b] * wi;
-                const double ti = ar[b] * wi + ai[b] * wr;
-                ar[b] = ar[a] - tr;
-                ai[b] = ai[a] - ti;
-                ar[a] += tr;
-                ai[a] += ti;
+                const d2 wr = simd::load(wrs + k), wi = simd::load(wis + k);
+                const d2 xr = simd::load(ar + b), xi = simd::load(ai + b);
+                const d2 tr = xr * wr - xi * wi;
+                const d2 ti = xr * wi + xi * wr;
+                const d2 yr = simd::load(ar + a), yi = simd::load(ai + a);
+                simd::store(ar + b, yr - tr);
+                simd::store(ai + b, yi - ti);
+                simd::store(ar + a, yr + tr);
+                simd::store(ai + a, yi + ti);
             }
         }
     }
@@ -517,6 +547,51 @@ void VbHpv::dft192(const double* xr, const double* xi, double* yr, double* yi, i
     }
 }
 
+// Radix-2 decimation in time on zr_ / zi_ (bit-reversed input). Every butterfly is the same arithmetic as before
+// (twiddle exp(-2 pi i k / len) from the per-stage table); from the third stage on, two neighbouring butterflies of a
+// block are computed as one pair of vector lanes (they are independent), which gives the same numbers.
+void VbHpv::fftHalf() {
+    // stages of half length 1 and 2: scalar
+    for (int len = 2; len <= 4; len <<= 1) {
+        const int hl = len >> 1;
+        for (int i0 = 0; i0 < kHalfFft; i0 += len) {
+            for (int k = 0; k < hl; ++k) {
+                const double wr = twr_[hl - 1 + k], wi = twi_[hl - 1 + k];
+                const int a = i0 + k, b = a + hl;
+                const double tr = zr_[b] * wr - zi_[b] * wi;
+                const double ti = zr_[b] * wi + zi_[b] * wr;
+                zr_[b] = zr_[a] - tr;
+                zi_[b] = zi_[a] - ti;
+                zr_[a] += tr;
+                zi_[a] += ti;
+            }
+        }
+    }
+    using simd::d2;
+    for (int len = 8; len <= kHalfFft; len <<= 1) {
+        const int hl = len >> 1;
+        const double* wrs = twr_ + hl - 1;
+        const double* wis = twi_ + hl - 1;
+        for (int i0 = 0; i0 < kHalfFft; i0 += len) {
+            double* ar = zr_ + i0;
+            double* ai = zi_ + i0;
+            double* br = ar + hl;
+            double* bi = ai + hl;
+            for (int k = 0; k < hl; k += 2) {
+                const d2 wr = simd::load(wrs + k), wi = simd::load(wis + k);
+                const d2 xr = simd::load(br + k), xi = simd::load(bi + k);
+                const d2 tr = xr * wr - xi * wi;
+                const d2 ti = xr * wi + xi * wr;
+                const d2 yr = simd::load(ar + k), yi = simd::load(ai + k);
+                simd::store(br + k, yr - tr);
+                simd::store(bi + k, yi - ti);
+                simd::store(ar + k, yr + tr);
+                simd::store(ai + k, yi + ti);
+            }
+        }
+    }
+}
+
 // Vocoder frame (complete at core sample i): harmonic stream bh[i-383 .. i]; grain centred at i + 1.
 void VbHpv::pvFrame() {
     const int64_t i = static_cast<int64_t>(i_);
@@ -537,21 +612,7 @@ void VbHpv::pvFrame() {
         put(n, frame[half + n]);
         put(kPvNfft - half + n, frame[n]);
     }
-    for (int len = 2; len <= kHalfFft; len <<= 1) {
-        const int hl = len >> 1, step = kPvNfft / len;  // twiddle exp(-2 pi i k / len) = table index 2 k step / 2
-        for (int i0 = 0; i0 < kHalfFft; i0 += len) {
-            for (int k = 0; k < hl; ++k) {
-                const double wr = cosPv_[k * step], wi = -sinPv_[k * step];
-                const int a = i0 + k, b = a + hl;
-                const double tr = zr_[b] * wr - zi_[b] * wi;
-                const double ti = zr_[b] * wi + zi_[b] * wr;
-                zr_[b] = zr_[a] - tr;
-                zi_[b] = zi_[a] - ti;
-                zr_[a] += tr;
-                zi_[a] += ti;
-            }
-        }
-    }
+    fftHalf();
     double mag[256], Xr[256], Xi[256];
     double mx = 0.0;
     for (int b = 0; b < nb; ++b) {
@@ -711,29 +772,40 @@ void VbHpv::tick(double inL, double inR, double& outL, double& outR) {
     }
     const double x = (inL + inR) / 2.0;
     inRing_[n_ & (kInRing - 1)] = x;
+    const uint64_t taps = static_cast<uint64_t>(taps_), L = static_cast<uint64_t>(L_), M = static_cast<uint64_t>(M_);
     while (mDue_ == n_) {
         // decimated sample m_: sum_k x[k] * L h[M m - L k]
-        const uint64_t r = static_cast<uint64_t>(M_) * m_ - static_cast<uint64_t>(L_) * mDue_;
+        const uint64_t r = M * m_ - L * mDue_;
         double d = 0.0;
-        for (uint64_t j = r, k = mDue_;; j += static_cast<uint64_t>(L_)) {
-            if (j >= static_cast<uint64_t>(taps_)) break;
-            d += firDec_[j] * inRing_[k & (kInRing - 1)];
-            if (k == 0) break;
-            --k;
+        if (mDue_ >= taps) {
+            // Once the stream is longer than the filter the input index never reaches 0 first: the same sum
+            // without that test.
+            for (uint64_t j = r, k = mDue_; j < taps; j += L, --k) d += firDec_[j] * inRing_[k & (kInRing - 1)];
+        } else {
+            for (uint64_t j = r, k = mDue_;; j += L) {
+                if (j >= taps) break;
+                d += firDec_[j] * inRing_[k & (kInRing - 1)];
+                if (k == 0) break;
+                --k;
+            }
         }
         hcRing_[m_ & (kHcRing - 1)] = core(d);
         ++m_;
-        mDue_ = (static_cast<uint64_t>(M_) * m_) / static_cast<uint64_t>(L_);
+        mDue_ = (M * m_) / L;
     }
     // y[n] = sum_m hc[m] * M h[L n - M m]
-    const uint64_t mMax = (static_cast<uint64_t>(L_) * n_) / static_cast<uint64_t>(M_);
+    const uint64_t mMax = (L * n_) / M;
     double y = 0.0;
-    for (uint64_t j = static_cast<uint64_t>(L_) * n_ - static_cast<uint64_t>(M_) * mMax, m = mMax;;
-         j += static_cast<uint64_t>(M_)) {
-        if (j >= static_cast<uint64_t>(taps_)) break;
-        y += firInt_[j] * hcRing_[m & (kHcRing - 1)];
-        if (m == 0) break;
-        --m;
+    const uint64_t j0 = L * n_ - M * mMax;
+    if (mMax >= taps) {
+        for (uint64_t j = j0, m = mMax; j < taps; j += M, --m) y += firInt_[j] * hcRing_[m & (kHcRing - 1)];
+    } else {
+        for (uint64_t j = j0, m = mMax;; j += M) {
+            if (j >= taps) break;
+            y += firInt_[j] * hcRing_[m & (kHcRing - 1)];
+            if (m == 0) break;
+            --m;
+        }
     }
     ++n_;
     outL = outR = y;

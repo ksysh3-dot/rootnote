@@ -22,6 +22,14 @@ double offset52(double a, double b, double c) {
     const double den=a-2*b+c;
     return clampv(std::abs(den)>1e-12 ? .5*(a-c)/den : 0.0,-1.0,1.0);
 }
+// Grid points g (0..189) that can pass |g + 20 - f| <= 8: about 17 of the 190. The test itself is still applied to
+// each of them, so exactly the same points pass as with a scan of the whole grid.
+void holdRange52(double f, int& lo, int& hi) {
+    if (!(f == f)) { lo = 0; hi = -1; return; }   // NaN: no point passes
+    const double c = clampv(f, -1000.0, 1000.0);
+    lo = std::max(0, static_cast<int>(std::floor(c - 29)));
+    hi = std::min(189, static_cast<int>(std::ceil(c - 11)));
+}
 }
 
 
@@ -301,9 +309,11 @@ void VbHpv::pvFrame52() {
     for (int p=1;p<np;++p) { minb=std::min(minb,pk[p].beta); maxb=std::max(maxb,pk[p].beta); }
     const int lo=std::max(0,static_cast<int>(minb)-12), hi=static_cast<int>(maxb)+13;
     double err[256]={};
+    std::complex<double> peakModel[6];  // (a W / 2) e^(i ph) of each peak, evaluated once instead of once per bin
+    for (int p=0;p<np;++p) peakModel[p]=(pk[p].a*pvWsum_/2)*std::exp(std::complex<double>(0,pk[p].ph));
     for (int b=lo;b<hi;++b) {
         std::complex<double> model=0;
-        for (int p=0;p<np;++p) model+=(pk[p].a*pvWsum_/2)*std::exp(std::complex<double>(0,pk[p].ph))*kernel52(b-pk[p].beta);
+        for (int p=0;p<np;++p) model+=peakModel[p]*kernel52(b-pk[p].beta);
         err[b-lo]=std::norm(std::complex<double>(xr52_[b],xi52_[b])-model);
     }
     for (int p=0;p<np;++p) {
@@ -376,15 +386,19 @@ void VbHpv::pvFrame52() {
     if(apkCount_==56) { std::move(apk52_+1,apk52_+56,apk52_); --apkCount_; }
     apk52_[apkCount_++]=am;
     double* hm=hold52_[holdPos_]; std::fill(hm,hm+190,-200.0);
-    if(onsetLeft_<=0 && !falling) for(int p=0;p<np;++p) for(int g=0;g<190;++g)
-        if(std::abs(g+20-pk[p].f)<=8) hm[g]=std::max(hm[g],pk[p].res);
+    if(onsetLeft_<=0 && !falling) for(int p=0;p<np;++p) {
+        int g0,g1; holdRange52(pk[p].f,g0,g1);
+        for(int g=g0;g<=g1;++g) if(std::abs(g+20-pk[p].f)<=8) hm[g]=std::max(hm[g],pk[p].res);
+    }
     if(harmonicCapture_) { harmonicTrace_.data[24]=static_cast<float>(onsetLeft_); harmonicTrace_.data[25]=falling?1.f:0.f; harmonicTrace_.data[26]=static_cast<float>(holdCount_); }
     --onsetLeft_; holdPos_=(holdPos_+1)%28; holdCount_=std::min(28,holdCount_+1);
     for(int p=0;p<np;++p) {
+        if(pk[p].modulation.valid) { pk[p].res=pk[p].modulation.residual; continue; }
         double r=-200;
-        for(int h=0;h<holdCount_;++h) for(int g=0;g<190;++g)
+        int g0,g1; holdRange52(pk[p].f,g0,g1);
+        for(int h=0;h<holdCount_;++h) for(int g=g0;g<=g1;++g)
             if(std::abs(g+20-pk[p].f)<=8) r=std::max(r,hold52_[h][g]);
-        pk[p].res=pk[p].modulation.valid?pk[p].modulation.residual:r;
+        pk[p].res=r;
     }
     spectrum52(md2_52_,s0,sr52_,si52_);
     for(int b=0;b<=kHalfFft;++b) sm52_[b]=std::hypot(sr52_[b],si52_[b]);
@@ -696,21 +710,7 @@ void VbHpv::spectrum52(const double* ring, int64_t s0, double* re, double* im) {
         put(n, frame[half + n]);
         put(kPvNfft - half + n, frame[n]);
     }
-    for (int len = 2; len <= kHalfFft; len <<= 1) {
-        const int hl = len >> 1, step = kPvNfft / len;  // twiddle exp(-2 pi i k / len) = table index 2 k step / 2
-        for (int i0 = 0; i0 < kHalfFft; i0 += len) {
-            for (int k = 0; k < hl; ++k) {
-                const double wr = cosPv_[k * step], wi = -sinPv_[k * step];
-                const int a = i0 + k, b = a + hl;
-                const double tr = zr_[b] * wr - zi_[b] * wi;
-                const double ti = zr_[b] * wi + zi_[b] * wr;
-                zr_[b] = zr_[a] - tr;
-                zi_[b] = zi_[a] - ti;
-                zr_[a] += tr;
-                zi_[a] += ti;
-            }
-        }
-    }
+    fftHalf();
     re[0]=zr_[0]+zi_[0]; im[0]=0;
     re[kHalfFft]=zr_[0]-zi_[0]; im[kHalfFft]=0;
     for (int k=1;k<kHalfFft;++k) {

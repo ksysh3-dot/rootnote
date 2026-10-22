@@ -286,6 +286,7 @@ private:
     double wsumHp_[kHpHop] = {};
     double cosHp_[kHpN] = {}, sinHp_[kHpN] = {};   // exp(-2 pi i n / 192); 192 = 3 x 64 (mixed radix)
     int bitrev64_[64] = {};
+    double tw64r_[63] = {}, tw64i_[63] = {};   // per-stage twiddles of fft64 (same values as its table lookups)
     double fr3_[3][64] = {}, fi3_[3][64] = {};
     double sHist_[kHpMedT][kHpBins] = {};  // magnitude spectra of the last 11 frames (ring)
     int sPos_ = 0;
@@ -305,6 +306,10 @@ private:
     static constexpr int kHalfFft = kPvNfft / 2;          // real 2048-point FFT through a complex 1024-point one
     int bitrev_[kHalfFft] = {};
     double zr_[kHalfFft] = {}, zi_[kHalfFft] = {};
+    // Twiddles of the 1024-point stages in the order the butterflies use them: stage with half length h at
+    // [h - 1, 2h - 1): cosPv_[k * 2048 / (2h)] and -sinPv_[...] (the same values the loops used to look up).
+    double twr_[kHalfFft] = {}, twi_[kHalfFft] = {};
+    void fftHalf();  // in place on zr_ / zi_ (input in bit-reversed order), radix 2
     double gw_[2 * kPvH] = {};
     int loBin_ = 0, hiBin_ = 0;
     double binHz_ = 0;

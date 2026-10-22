@@ -193,6 +193,7 @@ int Engine::analyze(float* inDb, float* outDb, float* diffDb, float* eqDb, int n
     if (inDb == nullptr || outDb == nullptr || diffDb == nullptr || eqDb == nullptr) return 0;
     if (nPts < 2 || nPts > kAnaMaxPoints) return 0;
 
+    wantPhoneModel();  // its estimate is part of the info
     std::lock_guard<std::mutex> lock(anaMtx_);
     if (ana_ == nullptr) ana_ = new AnalysisState();
     AnalysisState& A = *ana_;
