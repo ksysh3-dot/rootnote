@@ -1,6 +1,8 @@
 import android.content.SharedPreferences
 import me.timschneeberger.rootlessjamesdsp.pvb.DeviceProfiles
 import me.timschneeberger.rootlessjamesdsp.pvb.FirstRun
+import me.timschneeberger.rootlessjamesdsp.pvb.HomeLogic
+import me.timschneeberger.rootlessjamesdsp.pvb.PvbModels
 import me.timschneeberger.rootlessjamesdsp.pvb.ProfileJson
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbBuild
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbSettings
@@ -71,6 +73,9 @@ fun main(args: Array<String>) {
         s[PvbSettings.KEY_HI_Q] == d.hiQ && s[PvbSettings.KEY_OUT_DB] == d.outDb && s[PvbSettings.KEY_CEIL_DB] == d.ceilDb &&
         s[PvbSettings.KEY_RELEASE_MS] == d.releaseMs && s[PvbSettings.KEY_MATCH_ON_DISABLE] == d.matchOnDisable,
         "s26u profile must equal the s26u defaults: $s")
+    for (pr in listOf(n, s))
+        check(pr[PvbSettings.KEY_VB_STRENGTH_DB] == 4f && pr[PvbSettings.KEY_VB_VOL_LINK] == true,
+            "both profiles: virtual bass +4 with the volume link on: $pr")
 
     // Values written on a fresh general install: processing off until the first-run notice, caps applied.
     val wn = DeviceProfiles.valuesFor(neutral, SafeCaps.GENERAL)
@@ -99,6 +104,7 @@ fun main(args: Array<String>) {
         PvbSettings.KEY_VB_STRENGTH_DB to 12f, PvbSettings.KEY_HI_DB to 3f,
     ))
     PvbBuild.reset()
+    check(PvbModels.fullnessLevelDb == 6f, "s26u fullness preset stays +6")
     val s26uLoad = PvbSettings.load(extreme)
     check(s26uLoad.outDb == 0f && s26uLoad.ceilDb == 0f && s26uLoad.lowDb == 9f && s26uLoad.lowQ == 3f &&
         s26uLoad.hpHz == 40f && s26uLoad.releaseMs == 10f && s26uLoad.vbLevelDb == 12f && s26uLoad.enabled,
@@ -124,6 +130,13 @@ fun main(args: Array<String>) {
         gi.ceilDb == -3f, "values inside the caps unchanged: $gi")
     check(PvbSettings.load(extreme).outDb == -3f, "research unlock keeps the caps")
     PvbBuild.researchUnlocked = false
+
+    // --- 풍성함 증가: +4 in the general build (+6 in s26u), the preset list and the home chip agree ---
+    check(PvbModels.fullnessLevelDb == 4f, "general fullness preset is +4")
+    val full = PvbModels.presets.first { it.key == PvbModels.PRESET_FULLNESS }
+    check(full.levelDb == 4f && PvbModels.presetFor(PvbModels.P1_KEY, 4f)?.key == PvbModels.PRESET_FULLNESS &&
+        PvbModels.presetFor(PvbModels.P1_KEY, 6f) == null, "general: P1 +4 is 풍성함 증가, +6 is custom")
+    check(HomeLogic.presetWrite(HomeLogic.Chip.FULLNESS, PvbBuild.caps) == (PvbModels.P1_KEY to 4f), "chip writes P1 +4")
 
     // --- first-run gate ---
     check(FirstRun.processingAllowed(general = false, confirmed = false), "s26u: never gated")

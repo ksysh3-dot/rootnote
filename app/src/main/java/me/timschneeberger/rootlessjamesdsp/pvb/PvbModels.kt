@@ -41,11 +41,18 @@ object PvbModels {
     const val PRESET_DEEP = "deep"
     const val PRESET_CUSTOM = "custom"
 
-    val presets: List<Preset> = listOf(
+    /**
+     * Level of the "풍성함 증가" preset: +4 in the general build (2026-10-22 listening on the S26U, LOGOFF at volume
+     * 100/150 with the volume link on: the buzz of +6 drops clearly at +3..+4, and +3 is still much better than off),
+     * +6 in the s26u research build.
+     */
+    val fullnessLevelDb: Float get() = if (PvbBuild.general) 4f else 6f
+
+    val presets: List<Preset> get() = listOf(
         Preset(PRESET_FULLNESS, "풍성함 증가 (권장)",
             "악기의 몸통감과 풍성함, 잔향을 키워 곡을 풍성하게 합니다. 초저역도 조금 좋아질 수 있지만 풍성함에 중점을 둡니다. " +
                 "보수적으로 동작해 버즈음이 생길 가능성이 낮습니다.",
-            P1_KEY, 6f),
+            P1_KEY, fullnessLevelDb),
         Preset(PRESET_DEEP, "초저역 강조 (실험)",
             "스피커 한계보다 낮은 저음을 재현하려 합니다. 곡에 따라 차이가 크고 버즈음이 생길 수 있습니다. 공격적으로 동작합니다.",
             GENTLE12_KEY, 9f),

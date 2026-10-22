@@ -41,7 +41,7 @@ object DeviceProfiles {
     val FLOAT_KEYS = setOf(
         PvbSettings.KEY_HP_HZ, PvbSettings.KEY_LOW_HZ, PvbSettings.KEY_LOW_DB, PvbSettings.KEY_LOW_Q,
         PvbSettings.KEY_HI_HZ, PvbSettings.KEY_HI_DB, PvbSettings.KEY_HI_Q, PvbSettings.KEY_HS_HZ, PvbSettings.KEY_HS_DB,
-        PvbSettings.KEY_OUT_DB, PvbSettings.KEY_CEIL_DB, PvbSettings.KEY_RELEASE_MS,
+        PvbSettings.KEY_OUT_DB, PvbSettings.KEY_CEIL_DB, PvbSettings.KEY_RELEASE_MS, PvbSettings.KEY_VB_STRENGTH_DB,
     )
     val BOOL_KEYS = setOf(
         PvbSettings.KEY_MATCH_ON_DISABLE, PvbSettings.KEY_SPEAKER_ONLY, PvbSettings.KEY_VOL_LINK, PvbSettings.KEY_DYN_ON,

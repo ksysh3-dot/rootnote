@@ -63,7 +63,7 @@ python3 "$HERE/compare_alpha2_jni.py" "$HERE/../build/libpvbcapi.so" "$OUTA"
 # General distribution build: device profiles (shipped assets), safe caps, first-run gate, backup exclusions.
 OUTG="$HERE/../build/jvm-general"
 rm -rf "$OUTG"; mkdir -p "$OUTG"
-$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/DeviceProfiles.kt" "$HERE/GeneralBuildTest.kt" -d "$OUTG"
+$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/DeviceProfiles.kt" "$APP/HomeLogic.kt" "$HERE/GeneralBuildTest.kt" -d "$OUTG"
 java -cp "$OUTG:$KOTLIN_STDLIB" GeneralBuildTestKt "$HERE/../../.."
 
 # General build home screen: master/headline, preset chips from model + level, caps, volume-link line, en/ko strings.
