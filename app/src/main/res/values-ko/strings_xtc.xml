@@ -17,7 +17,7 @@
     <string name="pvb_xtc_portrait_test_off">Rootnote가 켜져 있고 폰 스피커로 나올 때 확인할 수 있어요.</string>
     <string name="pvb_xtc_mode">공간감 (크로스토크 제거)</string>
     <string name="pvb_xtc_off">꺼짐</string>
-    <string name="pvb_xtc_centre">중앙 보존 (보컬 음색 그대로)</string>
+    <string name="pvb_xtc_centre">중앙 보존 (보컬 음색 변화 적게)</string>
     <string name="pvb_xtc_full">완전 (더 넓게, 보컬 음색 조금 바뀜)</string>
     <string name="pvb_xtc_strength">공간감 세기</string>
     <string name="pvb_xtc_gentle">약하게</string>

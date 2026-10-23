@@ -4,14 +4,17 @@
 // Glasgal's RACE). The feedback path is shaped by first-order filters: a high-pass at loHz, a low-pass at hiHz and a
 // head-shadow shelf (far ear / near ear, Brown-Duda form), so the bass and the top end are left almost untouched.
 //   full:        yL = xL - g B[yR(t - tau)],  yR = xR - g B[yL(t - tau)]
-//   centre safe: mid unchanged, side S = s + g B[S(t - tau)]   (centre sounds keep their tone; less separation)
+//   centre safe: mid unchanged, side S = s + g B[S(t - tau)]   (less separation; the mid passes this stage untouched,
+//                but the balance bells, the limiter and the speakers after it still act on it)
 // tau comes from a standard spherical head (Woodworth), scaled by hat size, and the listening distance: nothing is
 // measured. The delay line interpolates linearly, like JamesDSP's EEL fractionalDelayLine, so the sound matches the
 // LiveProg prototype (tools/xtc/race_xtc.eel) that was judged by ear; tools/xtc/check_eel_port.py is the reference.
 //
 // Speaker balance (P_XTC_BAL_LO_DB / P_XTC_BAL_HI_DB): the two phone speakers differ (a bottom speaker and the
-// earpiece), and cancellation assumes equal speakers. For speakers a_L, a_R the exact inverse is the symmetric
-// canceller followed by diag(1/a_L, 1/a_R), so after the canceller each channel gets a gentle two-band correction
+// earpiece), and cancellation assumes equal speakers. Only if they differed by a plain gain a_L, a_R (same position,
+// direction and phase) would the inverse be the symmetric canceller followed by diag(1/a_L, 1/a_R). Real phone
+// speakers also differ in phase, delay and directivity, which no level correction undoes; this corrects the level
+// difference only, as an approximation: after the canceller each channel gets a gentle two-band correction
 // (RBJ peaking bells at ~775 Hz, Q 0.7 for 400-1500 Hz and ~3.5 kHz, Q 0.55 for 1.5-8 kHz): balance b dB ("the left
 // speaker is b dB louder") lowers the left by b/2 and raises the right by b/2. Only on the processed path.
 //

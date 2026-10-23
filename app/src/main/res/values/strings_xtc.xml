@@ -18,7 +18,7 @@
     <string name="pvb_xtc_portrait_test_off">Rootnote has to be on and playing on the phone speakers.</string>
     <string name="pvb_xtc_mode">Spatial (crosstalk cancellation)</string>
     <string name="pvb_xtc_off">Off</string>
-    <string name="pvb_xtc_centre">Keep centre (vocals keep their tone)</string>
+    <string name="pvb_xtc_centre">Keep centre (vocals change less)</string>
     <string name="pvb_xtc_full">Full (wider, vocals change a little)</string>
     <string name="pvb_xtc_strength">Spatial strength</string>
     <string name="pvb_xtc_gentle">Gentle</string>
