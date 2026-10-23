@@ -44,6 +44,7 @@ This document covers the general distribution build **Rootnote** (package `kr.ks
 | 알림 | 처리 상태 표시 |
 | 인터넷 | AutoEQ 검색(선택) |
 | 부팅 완료, 다른 앱 위에 표시(선택) | 재부팅 뒤 자동 시작 |
+| 사용 정보 접근(선택) | '제외한 앱을 쓰는 동안 완전히 멈추기'를 켰을 때만: 지금 메인 화면에 있는 앱의 패키지 이름을 1초마다 확인(저장 안 함, 기록 안 남김) |
 
 ### 지우기
 
@@ -89,6 +90,7 @@ The `pvb_*` files (first four rows above) are **excluded** from Android cloud ba
 | Notifications | processing status |
 | Internet | AutoEQ search (optional) |
 | Boot completed, display over other apps (optional) | automatic start after reboot |
+| Usage access (optional) | only with "Pause fully while an excluded app is in front": checks which app is the main window once a second (package name only, never stored) |
 
 ### Deleting
 
