@@ -16,6 +16,7 @@ namespace {
 
 constexpr double kButterworthQ = 0.70710678118654752;
 constexpr double kLookaheadMs = 1.5;
+constexpr float kLimActiveGain = 0.94406088f;   // -0.5 dB: the limiter counts as working below this gain
 constexpr double kBypassFadeS = 0.05;   // enable / bypass crossfade
 constexpr double kRecoverFadeS = 0.05;  // fade-in after a reset caused by bad samples
 constexpr double kDynHoldBelowDb = -60.0;  // dynamic low-mid holds its value below this level
@@ -849,6 +850,10 @@ void Engine::process(float* io, int frames) {
     const float blockMinGain = static_cast<float>(mix_.value() <= 0 && flatX_.value() >= 1 ? flatMin :
         mix_.value() >= 1 || flatX_.value() <= 0 ? wetMin : std::min(wetMin,flatMin));
     storeMin(mLimMin_, blockMinGain);
+    // how long the limiter works, not only how deep (review question 14): a short hard clamp and a long light one
+    // can show the same largest reduction
+    mLimFrames_.fetch_add(static_cast<uint64_t>(frames), std::memory_order_relaxed);
+    if (blockMinGain < kLimActiveGain) mLimActiveFrames_.fetch_add(static_cast<uint64_t>(frames), std::memory_order_relaxed);
     storeMin(anaLimMin_, blockMinGain);
     mLowDb_.store(static_cast<float>(lowDbNow_.value() + dynOff_), std::memory_order_relaxed);
     mDyn_.store(static_cast<float>(dynOff_), std::memory_order_relaxed);
@@ -984,6 +989,11 @@ void Engine::readMeters(float* out, int count) {
     m[M_VB_UPPER_BLEND] = mVbUpperBlend_.load(std::memory_order_relaxed);
     m[M_VB_UPPER_TARGET] = mVbUpperTarget_.load(std::memory_order_relaxed);
     m[M_VB_UPPER_TRANSITIONS] = mVbUpperTransitions_.load(std::memory_order_relaxed);
+    {
+        const uint64_t act = mLimActiveFrames_.exchange(0, std::memory_order_relaxed);
+        const uint64_t all = mLimFrames_.exchange(0, std::memory_order_relaxed);
+        m[M_LIM_ACTIVE_PCT] = all > 0 ? static_cast<float>(100.0 * static_cast<double>(std::min(act, all)) / all) : 0.f;
+    }
     for (int j = 0; j < 4; ++j)
         m[M_VB_UNKNOWN_FRAMES + j] = mVbSceneFrames_[j].load(std::memory_order_relaxed);
     const int n = count < M_COUNT ? count : static_cast<int>(M_COUNT);

@@ -497,7 +497,8 @@ class LiveAbView(context: Context) : LinearLayout(context) {
             switches = switches,
             listenSeconds = (SystemClock.elapsedRealtime() - trialStartMs) / 1000.0,
             batteryPct = battery(),
-            appVersion = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
+            // with the source commit, so a record can be traced to the exact engine it played (review question 74)
+            appVersion = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE}) @${BuildConfig.COMMIT_SHA}",
             route = PvbRuntime.status.routeName,
         )
     }

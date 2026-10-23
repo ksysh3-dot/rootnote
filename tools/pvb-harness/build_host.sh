@@ -11,4 +11,12 @@ FLAGS="-std=c++17 -O2 -fno-fast-math -Wall -Wextra -Wpedantic -Werror -fPIC -sha
 if [ -z "${JAVA_HOME:-}" ]; then JAVA_HOME="$(dirname "$(dirname "$(readlink -f "$(command -v java)")")")"; fi
 "$CXX" $FLAGS -I"$SRC" -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/linux" \
     "$SRC/pvb_engine.cpp" "$SRC/pvb_analysis.cpp" "$SRC/pvb_vb.cpp" "$SRC/pvb_vb52.cpp" "$SRC/pvb_jni.cpp" -o "$OUT/libpvbengine.so"
-echo "built: $OUT/libpvbcapi.so $OUT/libpvbengine.so"
+# Which source this build is (review question 74): a WAV rendered with it can name the exact engine.
+REPO="$HERE/../.."
+if SHA="$(git -C "$REPO" rev-parse --short=12 HEAD 2>/dev/null)"; then
+    git -C "$REPO" diff --quiet HEAD -- app/src/main/cpp tools/pvb-harness/pvb_capi.cpp || SHA="$SHA-dirty"
+else
+    SHA="unknown"
+fi
+echo "$SHA" > "$OUT/source_commit.txt"
+echo "built: $OUT/libpvbcapi.so $OUT/libpvbengine.so" "(source $SHA)"

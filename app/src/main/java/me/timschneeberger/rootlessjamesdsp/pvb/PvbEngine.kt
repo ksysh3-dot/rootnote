@@ -104,7 +104,9 @@ object PvbMeter {
     const val VB_UPPER_TRANSITIONS = 23
     const val DIAGNOSTIC_SOLO_BLEND = 24
     const val DIAGNOSTIC_SOLO_EXTRA_GR_DB = 25
-    const val COUNT = 26
+    /** Share of audio time since the last read in blocks where the limiter took off more than 0.5 dB, %. */
+    const val LIM_ACTIVE_PCT = 26
+    const val COUNT = 27
 }
 
 /** Developer-mode meter layout (same order as pvb::DevMeter in pvb_engine.h), then [RING] (dry, layer) pairs. */
