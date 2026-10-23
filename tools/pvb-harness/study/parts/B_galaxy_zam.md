@@ -1,6 +1,9 @@
 # Part B: Galaxy Z Fold / Z Flip, A series, M series (Tab low priority)
 
-Status: IN PROGRESS (written incrementally; partial results are kept).
+Status: DONE for this pass (2026-10-23). No third-octave curve could be read for any part-B model; what exists is
+one measured scalar per model from Bandicoot Lab (Z Fold7, Z Flip7), qualitative DXOMARK / NotebookCheck text, and
+a list of charts and pages for the main session to read with a browser. The shared web-search budget ran out
+near the end, so Galaxy Tab and the M series were not searched further.
 
 All values are RAW as the source shows them, re 1 kHz where numeric. No anchor offset is applied here.
 
@@ -102,3 +105,110 @@ Inference (mine): under one method, the bass-band drop is 18.4 dB for the S26 Ul
 27.5 dB for Z Flip7, i.e. Z Fold7 about 5.6 dB and Z Flip7 about 9.1 dB less bass (60-250 Hz band average vs
 mids) than the S26 Ultra. Band averages hide the slope, so this does not give per-band third-octave values;
 "roughly 190 Hz" for Z Fold8 is not defined as f10 and is NOT entered as ten_db_down_hz.
+
+## Charts and anchoring
+
+- No chart could be calibrated or digitized: every curve found is either JS-rendered (DXOMARK, NotebookCheck
+  review charts, Bandicoot Chart Builder) or a raster image WebFetch cannot open (the NotebookCheck
+  Flip8-vs-Razr image fetch failed with a server error). So there are no calibration records in this part.
+- anchor.md (researcher A, v0.1, PRELIMINARY) existed when I checked midway. It finds no per-band method offset for
+  any site; Bandicoot scalars are "rough", usable for model-to-model differences (B), C for mapping to our bands.
+  This part therefore records raw text and scalars only.
+
+## Per-model summary
+
+Level columns (125-500 Hz re 1 kHz), 10 dB-down frequency and 2-5 kHz tilt: **not obtainable for any model**
+from readable sources. The table gives what each model does have.
+
+| Model | Readable evidence | Bass relative to S26 Ultra | Treble | Confidence |
+|---|---|---|---|---|
+| Z Fold (2019) | none found | - | - | - |
+| Z Fold2 5G | DXOMARK text | less (no low-end extension) | muffled, lacks upper content | C |
+| Z Fold3 5G | DXOMARK text | similar or a bit less ("correct amount of bass") | good, slight lack of extension | C |
+| Z Fold4 | DXOMARK text | "similar to S22 Ultra", wants more low-end | satisfying | C |
+| Z Fold5 | DXOMARK text | same as Fold4 per DXOMARK | satisfying | C |
+| Z Fold6 | none readable (NotebookCheck review cut off; no DXOMARK audio) | - | - | - |
+| Z Fold7 | Bandicoot scalar | bass-band drop 24 dB vs 18.4 dB for S26U, same lab: about 5.6 dB less bass | "clear and reasonably extended" | B (difference only) |
+| Z Fold8 | Bandicoot text, NotebookCheck news | "rolls off below roughly 190 Hz" (undefined cutoff) | "unremarkable" (Bandicoot); smaller ultra-high dip than Ultra (NBC) | C |
+| Z Fold8 Ultra | Bandicoot text, NotebookCheck news | conflicting: "Bass is thin" (Bandicoot) vs "noticeable amount of bass", pink noise slightly better than S26U (NotebookCheck) | "decent" | C |
+| Z Flip (2020) / Flip3 | NotebookCheck reviews exist, cut off | - | - | - |
+| Z Flip4 | DXOMARK text | less ("lack of low-midrange support", thinner) | - | C |
+| Z Flip5 | DXOMARK text | less ("lacked low-end extension") | "slightly thin but clear" | C |
+| Z Flip6 | none readable | - | - | - |
+| Z Flip7 | Bandicoot scalar | bass-band drop 27.5 dB vs 18.4 dB: about 9.1 dB less bass than S26U, 3.5 dB less than Fold7 | "clear but ... uneven" | B (difference only) |
+| Z Flip7 FE | none found | - | - | - |
+| Z Flip8 | NotebookCheck news (+ chart image) | "some bass" / "leichten Bass"; far more linear than Razr 70 Plus/Ultra | "much more linear" than Razr | C |
+| A52 5G / A52s 5G | DXOMARK text (A52s = A52 per DXOMARK) | less ("lack of bass and low-end extension") | respectable | C |
+| A33 5G, A53 5G | DXOMARK text | "satisfying" but con "limited/lacks sufficient bass" | bright, lower treble harsh at times | C |
+| A34 5G | DXOMARK score only | - | - | C |
+| A54 5G | DXOMARK text | warm, "lacked some depth in the low-end" | lacks high-end extension | C |
+| A55, A56, A36, A26, A16 5G/4G | NotebookCheck reviews exist, cut off | - | - | - |
+| M series (M55, M35, M15 ...) | none found; NotebookCheck has device pages but no own review of M55 | - | - | - |
+| Galaxy Tab | not researched (low priority, search budget gone) | - | - | - |
+
+Grouping supported by the data: A52 5G and A52s 5G (DXOMARK: results match, identical scores); Z Fold4 and
+Z Fold5 (DXOMARK: same tonal balance). Z Fold4 / Z Flip4 are likened by DXOMARK to the S22 Ultra and A52, which
+suggests a family sound but not a shared speaker. No other grouping is supported.
+
+## Inference for starting settings (mine, NOT data)
+
+- Direction: every source that compares a part-B model with a Samsung S-series phone puts its bass at or below
+  the S-series (the one exception is NotebookCheck's Fold8 Ultra vs S26 Ultra, contradicted by Bandicoot).
+  Flip models come out thinner than Fold models in both DXOMARK (Flip4/5 vs Fold4/5) and Bandicoot (Flip7 vs Fold7).
+- Size, Bandicoot only (100 % volume, 50 cm, band edges of "mids" unknown): Fold7 about 5.6 dB and Flip7 about
+  9.1 dB less 60-250 Hz output than the S26 Ultra relative to the mids. ILLUSTRATION ONLY: if that extra drop were
+  spread evenly over 125-250 Hz of our S26U curve, the 10 dB-down point would move from about 190 Hz to about
+  255 Hz (Fold7) and about 280 Hz (Flip7, assuming 315 Hz unchanged). A real roll-off moves in frequency rather
+  than shifting flat, so treat these as order-of-magnitude. Practical reading: for Fold/Flip, a high-pass and
+  virtual-bass crossover at or above the S26U values is safer than lower ones; no source supports boosting
+  low bass on these phones.
+- Treble: no number for any part-B model. Bandicoot's S26U "8 dB above the mids" has no Fold/Flip counterpart.
+
+## Images / charts to digitize (main session, browser screenshots)
+
+1. NotebookCheck pink-noise comparison, Galaxy Z Flip8 vs Razr 70 Plus / 70 Ultra (raster jpg, thumbnail):
+   https://www.notebookcheck.com/fileadmin/_processed_/1/2/csm_sound-comparision_4a30edd023.jpg
+   (in https://www.notebookcheck.com/Samsung-um-Welten-besser-als-Motorola-Smartphones-fuer-Audio-Fans-ist-Galaxy-Z-Flip8-die-beste-Wahl.1388378.0.html ;
+   German caption says "Flip9", a typo). WebFetch could not open the image.
+2. Bandicoot Lab Chart Builder (JS), "Audio > Speaker Frequency Response": overlay S26 Ultra with Z Fold7, Z Flip7,
+   Z Fold8, Z Fold8 Ultra. Same lab, same mic and distance for our anchor model, so this is the most direct route to
+   per-band differences: https://bandicootlab.com/chart-builder
+3. DXOMARK "Music playback frequency response" (JS graph, 1/12 octave, anechoic) on each page in the DXOMARK table
+   above: Z Fold2, Fold3, Fold4, Fold5, Flip4, Flip5, A52 5G, A33, A53, A54 (10 pages). No S26U on DXOMARK, so
+   these give shapes but need their own offset (anechoic, no room gain).
+4. NotebookCheck review "Speakers" sections (JS pink-noise chart; A reports it as interactive, possibly with a data
+   table to copy). Pages, all cut off for WebFetch:
+   - Z Fold8 Ultra https://www.notebookcheck.net/The-thinnest-Samsung-smartphone-ever-takes-on-the-iPhone-Ultra-Galaxy-Z-Fold-8-Ultra-Review.1390192.0.html
+   - Z Fold8 https://www.notebookcheck.net/Shooting-to-the-top-with-a-new-form-factor-Samsung-Galaxy-Z-Fold8-review.1394389.0.html
+   - Z Flip8 https://www.notebookcheck.net/Ultra-lightweight-smartphone-powerhouse-with-a-6-9-inch-OLED-screen-Samsung-Galaxy-Z-Flip-8-review.1398173.0.html
+   - Z Fold7 https://www.notebookcheck.net/The-market-leader-strikes-back-Samsung-Galaxy-Z-Fold7-review.1093384.0.html
+   - Z Flip7 https://www.notebookcheck.net/Compact-Flip-phone-loses-ground-Samsung-Galaxy-Z-Flip7-review.1102761.0.html
+   - Z Fold6 https://www.notebookcheck.net/Samsung-Galaxy-Z-Fold-6-review-The-dustproof-foldable-smartphone-with-an-S-Pen-gets-throttled.877030.0.html
+   - Z Flip6 https://www.notebookcheck.net/Samsung-Galaxy-Z-Flip6-5G-review-An-almost-unrivalled-flip-phone-continues-to-improve.890376.0.html
+   - Z Fold5 https://www.notebookcheck.net/Samsung-Galaxy-Z-Fold5-review-Small-steps-toward-being-the-best-foldable-smartphone.743358.0.html
+   - Z Flip5 https://www.notebookcheck.net/Samsung-Galaxy-Z-Flip5-5G-review-The-foldable-phone-with-a-large-cover-display.742501.0.html
+   - Z Flip3 https://www.notebookcheck.net/Samsung-Galaxy-Z-Flip3-5G-in-review-High-tech-foldable-smartphone.563197.0.html
+   - Z Flip (2020) https://www.notebookcheck.net/Samsung-Galaxy-Z-Flip-review-The-better-foldable-smartphone.458678.0.html
+   - A56 https://www.notebookcheck.net/Loads-of-innovations-in-the-premium-mid-range-Samsung-Galaxy-A56-5G-review.1020512.0.html
+   - A55 https://www.notebookcheck.net/Samsung-Galaxy-A55-5G-review-A-lot-of-premium-features-in-a-midrange-smartphone.835803.0.html
+   - A36 https://www.notebookcheck.net/Samsung-Galaxy-A36-5G-review-The-affordable-smartphone-focuses-on-security-a-premium-feel.1013221.0.html
+   - A26 https://www.notebookcheck.net/The-new-Galaxy-A-smartphone-brings-a-breath-of-fresh-air-to-the-mid-range-Samsung-Galaxy-A26-5G-review.1015052.0.html
+   - A16 5G https://www.notebookcheck.net/Samsung-Galaxy-A16-5G-smartphone-review-The-particularly-inexpensive-Galaxy-with-6-years-of-updates.948868.0.html
+   - A16 4G https://www.notebookcheck.net/Samsung-Galaxy-A16-4G-Review-OLED-display-smartphone-for-under-180-Euros.1002095.0.html
+   The S26 Ultra review (in anchor.md) is on the same chart, so these would give same-method differences.
+
+Count: 1 raster image + 1 Bandicoot chart view + 10 DXOMARK graphs + 17 NotebookCheck review charts = 29.
+
+## Not used
+
+- GSMArena: not used. It measures loudness only, and no model was left where it would have been the only
+  evidence and still searchable (M series / Tab searches stopped when the shared search budget ran out).
+- Mobilissimo.ro acoustics articles (Z Fold7, Fold5, Fold8, Fold8 Ultra, Fold2, Flip6, Flip3, A72): dBA loudness
+  and listening impressions only, no frequency response, no conditions.
+
+## Open gaps
+
+- No third-octave data for any part-B model; everything numeric depends on the browser work listed above.
+- Bandicoot band edges (mids) and smoothing are unpublished; its 100 % volume brings in each phone's bass protection.
+- M series and Galaxy Tab: no evidence collected.
+- Z Fold6 / Z Flip6 / A55-A56 generation: only NotebookCheck exists, unread.

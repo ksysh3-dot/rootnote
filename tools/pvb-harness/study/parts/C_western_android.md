@@ -19,6 +19,9 @@ Anchor: anchor.md (researcher A, v0.1, 2026-10-23) was read; it gives no per-ban
 | Sony product pages (Xperia 1 VII) | Marketing | "extended treble and up to 10% richer mid-bass", no baseline, no numbers. Not used. |
 
 ### NotebookCheck: what was tried
+Offset re-fetch (coordinator request): Pixel 10 Pro at offset 92000 and Pixel 9 Pro at offset 90000. In both, the
+fetched text itself ends inside the benchmark tables (total 92,867 and 91,496 characters). The tool stores a cut
+page, so a larger offset cannot reach the Speakers section. No numbers, unchanged.
 The fetch tool cut every review at about 93k characters. Table of contents of the Pixel 9 Pro review confirms the
 speaker section exists ("13. Emissions - Dual speakers inside the Pixel phone") but sections 13-15 are beyond the cut.
 Short "Verdict on ..." articles carry no speaker data. One NotebookCheck news article quotes the review's audio
