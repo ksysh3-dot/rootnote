@@ -80,11 +80,12 @@ struct DevVoicing {
     double rolloffOffset = 0;         // dB/oct added to the module's sustained upper roll-off above 220 Hz
     double sustDb = 0, percDb = 0;    // sustained (vocoder) / percussive (analytic) path gains
     int attackHops = kAttackHops, releaseHops = kReleaseHops;   // P1-family track life (continuity) attack/release
+    double tableScale = 1.0;          // speaker-floor scale: weight/gain table looked up at f / tableScale
     bool operator==(const DevVoicing& o) const {
         for (int i = 0; i < 4; ++i) if (harmDb[i] != o.harmDb[i]) return false;
         return boundaryHz == o.boundaryHz && outLoHz == o.outLoHz && outHiHz == o.outHiHz &&
                rolloffOffset == o.rolloffOffset && sustDb == o.sustDb && percDb == o.percDb &&
-               attackHops == o.attackHops && releaseHops == o.releaseHops;
+               attackHops == o.attackHops && releaseHops == o.releaseHops && tableScale == o.tableScale;
     }
     bool operator!=(const DevVoicing& o) const { return !(*this == o); }
 };

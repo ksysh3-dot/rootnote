@@ -362,6 +362,7 @@ void VbHpv::reset() {
 
 // numpy.interp(f, grid, arange(400)), clipped, then linear interpolation of the weight and gain tables.
 void VbHpv::lookup(double f, double* wk, double& gk) const {
+    if (dev_.tableScale != 1.0) f /= dev_.tableScale;   // developer speaker-floor scale (1 = model, untouched)
     const double* x = vbt::kGridHz;
     const int n = vbt::kGrid;
     double idx;
@@ -413,7 +414,7 @@ double VbHpv::bandLayer(double re, double im) {
     prevUr_ = ur;
     prevUi_ = ui;
     const double fi = fInst_.tick(f);
-    const double fc = clampv(fi, params.fLoHz, params.fHiHz);
+    const double fc = clampv(fi, params.fLoHz, dev_.tableScale != 1.0 ? params.fHiHz * dev_.tableScale : params.fHiHz);
     double wk[kKMax - 1], gUnused;
     lookup(fc, wk, gUnused);
     if (devHarm_) devWeights(wk);

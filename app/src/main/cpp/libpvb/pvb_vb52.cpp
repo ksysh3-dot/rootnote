@@ -671,7 +671,7 @@ double VbHpv::burstSample52(int64_t j) {
         // Harmonic composition from the current P1 track nearest the percussive frequency.
         double f=lastFc_,best=.2*lastFc_;
         for(int t=0;t<nt52_;++t) if(tr52_[t].life>0 && std::abs(tr52_[t].f-lastFc_)<best) {best=std::abs(tr52_[t].f-lastFc_);f=tr52_[t].f;}
-        f=clampv(f,params.fLoHz,params.fHiHz);
+        f=clampv(f,params.fLoHz,dev_.tableScale!=1.0?params.fHiHz*dev_.tableScale:params.fHiHz);
         auto& v=(!bursts_[0].on || (bursts_[1].on && bursts_[0].start>bursts_[1].start))?bursts_[0]:bursts_[1];
         double g; lookup(f,v.w,g);
         for(int k=2;k<=8;++k) if(gentle_ && k*f>220) {

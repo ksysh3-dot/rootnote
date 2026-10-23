@@ -90,7 +90,7 @@ void sanitizeParams(float* v) {
     // Developer mode: hard engine limits (the app's sliders stay inside them).
     v[P_DEV_ON] = v[P_DEV_ON] >= 0.5f ? 1.f : 0.f;
     v[P_DEV_METER] = v[P_DEV_METER] >= 0.5f ? 1.f : 0.f;
-    v[P_D_BOUNDARY_HZ] = clampv(v[P_D_BOUNDARY_HZ], 80.f, 220.f);
+    v[P_D_BOUNDARY_HZ] = clampv(v[P_D_BOUNDARY_HZ], 80.f, 280.f);   // up to 280: generator edge follows a higher speaker floor
     v[P_D_OUT_LO_HZ] = clampv(v[P_D_OUT_LO_HZ], 60.f, 300.f);
     v[P_D_OUT_HI_HZ] = std::max(clampv(v[P_D_OUT_HI_HZ], 250.f, 1200.f), 1.5f * v[P_D_OUT_LO_HZ]);
     for (int i : {P_D_H2_DB, P_D_H3_DB, P_D_H4_DB, P_D_H5_DB}) v[i] = clampv(v[i], -24.f, 12.f);
@@ -99,6 +99,7 @@ void sanitizeParams(float* v) {
     v[P_D_PERC_DB] = clampv(v[P_D_PERC_DB], -24.f, 12.f);
     v[P_D_ATTACK_MS] = clampv(v[P_D_ATTACK_MS], 1.f, 200.f);
     v[P_D_RELEASE_MS] = clampv(v[P_D_RELEASE_MS], 1.f, 1000.f);
+    v[P_D_TABLE_SCALE] = v[P_D_TABLE_SCALE] < 0.5f ? 1.f : clampv(v[P_D_TABLE_SCALE], 0.75f, 1.75f);
     v[P_XTC_MODE] = clampv(std::nearbyint(v[P_XTC_MODE]), 0.f, static_cast<float>(Xtc::kModeMax));
     v[P_XTC_STRENGTH_DB] = clampv(v[P_XTC_STRENGTH_DB], -12.f, -1.f);
     v[P_XTC_DIST_CM] = clampv(v[P_XTC_DIST_CM], 20.f, 80.f);
@@ -180,6 +181,7 @@ void defaultParams(float* v) {
     v[P_XTC_HI_HZ] = 8000.f;
     v[P_XTC_BAL_LO_DB] = 0.f;        // speakers taken as equal
     v[P_XTC_BAL_HI_DB] = 0.f;
+    v[P_D_TABLE_SCALE] = 1.f;
 }
 
 double estimatePhoneLimiterGr(double levelDb) { return PhoneModel::staticGr(levelDb); }
@@ -277,6 +279,7 @@ void Engine::applyDev(const float* v) {
         d.percDb = v[P_D_PERC_DB];
         d.attackHops = msToHops(v[P_D_ATTACK_MS]);
         d.releaseHops = msToHops(v[P_D_RELEASE_MS]);
+        d.tableScale = v[P_D_TABLE_SCALE];
     }
     if (d != devApplied_) {
         devApplied_ = d;

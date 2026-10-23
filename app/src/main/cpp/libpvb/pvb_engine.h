@@ -108,6 +108,11 @@ enum Param : int {
     P_XTC_HI_HZ,        // feedback band, first-order low-pass
     P_XTC_BAL_LO_DB,    // speaker balance after the canceller: left louder by this, 400-1500 Hz (pvb_xtc.h)
     P_XTC_BAL_HI_DB,    // the same, 1.5-8 kHz
+    // Developer mode, appended after the spatial block to keep the indices above stable. Speaker-floor scale of the
+    // virtual-bass weight/gain table: notes are looked up at f / scale, so a phone whose speaker stops k times higher
+    // than the S26 Ultra gives notes up to k x higher the layer the model gives the S26 Ultra's. 1 (and 0, so a
+    // zero-filled array stays the model) = the model, bit-identical; 0.75..1.75. Needs P_DEV_ON like every P_D_*.
+    P_D_TABLE_SCALE,
     P_COUNT
 };
 
