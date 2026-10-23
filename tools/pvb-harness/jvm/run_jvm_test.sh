@@ -15,6 +15,11 @@ OUTM="$HERE/../build/jvm-measure"
 rm -rf "$OUTM"; mkdir -p "$OUTM"
 $KOTLINC -classpath "$KOTLIN_STDLIB" "$APP/PvbMeasureMath.kt" "$HERE/MeasureMathTest.kt" -d "$OUTM"
 java -cp "$OUTM:$KOTLIN_STDLIB" MeasureMathTestKt
+# bass fit ("저음 맞추기") test logic (pure Kotlin)
+OUTB="$HERE/../build/jvm-bassfit"
+rm -rf "$OUTB"; mkdir -p "$OUTB"
+$KOTLINC -classpath "$KOTLIN_STDLIB" "$APP/PvbMeasureMath.kt" "$APP/BassFit.kt" "$HERE/BassFitTest.kt" -d "$OUTB"
+java -cp "$OUTB:$KOTLIN_STDLIB" BassFitTestKt
 # service read/write arithmetic (pure Kotlin)
 OUTP="$HERE/../build/jvm-pump"
 rm -rf "$OUTP"; mkdir -p "$OUTP"

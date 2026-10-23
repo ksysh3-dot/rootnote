@@ -1,6 +1,6 @@
 # "저음 맞추기" (bass fit): in-app listening tests
 
-Status: plan, 2026-10-24. Engine knob (step 0) done; the rest not started. First shipped in developer mode only; opened
+Status: plan, 2026-10-24. Engine knob (step 0) and the pure test logic (`pvb/BassFit.kt`, `jvm/BassFitTest.kt`) done; screen not started. First shipped in developer mode only; opened
 to everyone after the S26 Ultra result matches the UMIK-1 measurement.
 
 ## Goal
@@ -41,7 +41,7 @@ Before step 1, with the phone microphone (the permission the measurement feature
 | Step | What it finds | Method | Time |
 |---|---|---|---|
 | 1 | Speaker floor (lowest note the speaker itself plays cleanly) | Two-interval forced choice ("어느 쪽에서 소리가 났나요?"), tone bursts from 300 Hz down in 1/6-octave steps, 2-down/1-up staircase (Levitt 1971; QUEST/Psi possible later), option "윙·지직만 났어요" counts as not heard; optional phone-mic bass check alongside. Then ABX: edge at floor vs floor x 1.3 on a 150-250 Hz bass line; no difference keeps the lower | 3 min |
-| 2 | Is the layer audible; preferred strength | ABX off vs +4; then blind A/B "better / no difference" bracketing 0..+8 dB in 2 dB steps; ties take the lower | 2 min |
+| 2 | Is the layer audible; preferred strength | ABX off vs +4; then blind A/B "better / no difference" climbing over 0..+8 dB in 2 dB steps from the middle (2 vs 4, then 0 vs 2 or 4 vs 6, then 6 vs 8); ties take the lower; the first pair is asked again for consistency | 2 min |
 | 3 | Break-up limit | Layer raised in 3 dB steps; ABX current vs 6 dB lower, "어느 쪽이 지직거리나요?"; first distinguishable step = break-up; limit = break-up - 3 dB, also the volume link's start | 2 min |
 | 4 (optional, precision) | Harmonic shape | Two knobs only: tilt (existing roll-off value) and low-order weight (H2 vs H3-5, existing harmonic offsets). 3 x 3 grid, ~18-20 blind pairs chosen where the ranking is uncertain, Bradley-Terry scores; Gaussian-process preference learning later if needed | 5-7 min |
 | Check | New vs previous settings on real music | Live blind A/B (existing) | 1 min |
@@ -78,3 +78,12 @@ the model.
 - First release place: developer mode (recommended) or advanced settings.
 - Optional phone-mic bass check in step 1.
 - Outside developer mode the results must apply without `P_DEV_ON` (the D_* values are developer-only today).
+
+## Test logic check (simulated listeners, BassFitTest)
+
+- Guessing listener judged "distinguished" in 3.6 % of ABX runs; a 95 %-right listener in 94 %.
+- Floor staircase: median error 0.08-0.09 octave, 90th percentile 0.25-0.29 octave (true floors 130-240 Hz,
+  logistic listener); a listener who "hears" silent catch trials is marked unreliable.
+- Strength: lands on the level nearest the listener's ideal; ties keep the lower; a reversed repeat is flagged.
+- Break-up: found at the right step in 94 % of runs (the rest are guessing false alarms on lower steps).
+- Shape grid: the preferred cell found in 37-40 of 40 runs with 18 pairs (noisy listener).
