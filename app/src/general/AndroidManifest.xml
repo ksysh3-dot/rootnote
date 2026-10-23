@@ -100,6 +100,18 @@
             android:exported="false"
             android:label="@string/home_advanced_title"
             android:theme="@style/Theme.RootlessJamesDSP" />
+        <!-- Setup steps in Compose (setup/RnSetupActivity.kt); OnboardingActivity forwards rootless setups here. -->
+        <activity
+            android:name="me.timschneeberger.rootlessjamesdsp.setup.RnSetupActivity"
+            android:exported="false"
+            android:label="@string/onboarding_methods_title"
+            android:theme="@style/Theme.RootlessJamesDSP" />
+        <!-- App compatibility in Compose (compat/RnAppCompatActivity.kt); AppCompatibilityActivity forwards here. -->
+        <activity
+            android:name="me.timschneeberger.rootlessjamesdsp.compat.RnAppCompatActivity"
+            android:exported="false"
+            android:label="@string/title_activity_app_compat"
+            android:theme="@style/Theme.RootlessJamesDSP" />
         <activity android:name="me.timschneeberger.rootlessjamesdsp.activity.MainActivity">
             <intent-filter tools:node="remove">
                 <action android:name="android.intent.action.MAIN" />

@@ -187,6 +187,16 @@ object PvbGeneral {
         addFlags(from.flags and Intent.FLAG_GRANT_READ_URI_PERMISSION)
     }
 
+    /** The general build's setup steps and app-compatibility screen (src/general, Compose); named by string. */
+    const val SETUP_ACTIVITY = "me.timschneeberger.rootlessjamesdsp.setup.RnSetupActivity"
+    const val APPCOMPAT_ACTIVITY = "me.timschneeberger.rootlessjamesdsp.compat.RnAppCompatActivity"
+
+    /** [className] started with [from]'s extras (a legacy screen of the general build forwarding to its Compose one). */
+    fun forwardIntent(context: Context, className: String, from: Intent?): Intent =
+        Intent().setClassName(context.packageName, className).apply {
+            from?.extras?.let { putExtras(it) }
+        }
+
     /** Developer mode screen of the general build (src/general, Compose); named by string like [HOME_ACTIVITY]. */
     const val DEVMODE_ACTIVITY = "me.timschneeberger.rootlessjamesdsp.devmode.DevModeActivity"
     /** pvb_flags: developer-mode consent given, gauge style, warning counts and hidden warnings. */

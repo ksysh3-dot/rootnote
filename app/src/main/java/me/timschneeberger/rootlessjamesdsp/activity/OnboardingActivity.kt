@@ -1,5 +1,8 @@
 package me.timschneeberger.rootlessjamesdsp.activity
 
+import me.timschneeberger.rootlessjamesdsp.pvb.PvbBuild
+import me.timschneeberger.rootlessjamesdsp.pvb.PvbGeneral
+
 import android.os.Bundle
 import androidx.core.view.WindowCompat
 import me.timschneeberger.rootlessjamesdsp.BuildConfig
@@ -19,6 +22,13 @@ class OnboardingActivity : BaseActivity(){
     {
         WindowCompat.setDecorFitsSystemWindows(window,false)
         super.onCreate(savedInstanceState)
+
+        // General build (rootless): the setup steps are the Compose RnSetupActivity; root setups stay here.
+        if (PvbBuild.general && isRootless() && !intent.getBooleanExtra(EXTRA_ROOT_SETUP_DUMP_PERM, false)) {
+            startActivity(PvbGeneral.forwardIntent(this, PvbGeneral.SETUP_ACTIVITY, intent))
+            finish()
+            return
+        }
 
         fragment = if (savedInstanceState != null) {
             supportFragmentManager.getFragment(savedInstanceState, "onboarding") as OnboardingFragment

@@ -1,5 +1,8 @@
 package me.timschneeberger.rootlessjamesdsp.activity
 
+import me.timschneeberger.rootlessjamesdsp.pvb.PvbBuild
+import me.timschneeberger.rootlessjamesdsp.pvb.PvbGeneral
+
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
@@ -13,6 +16,14 @@ class AppCompatibilityActivity : BaseActivity() {
     @SuppressLint("InlinedApi")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // General build: the Compose RnAppCompatActivity, with the same extras.
+        if (PvbBuild.general) {
+            startActivity(PvbGeneral.forwardIntent(this, PvbGeneral.APPCOMPAT_ACTIVITY, intent)
+                .addFlags(intent.flags and android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
+            finish()
+            return
+        }
 
         val binding = ActivityAppCompatibilityBinding.inflate(layoutInflater)
 

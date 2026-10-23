@@ -51,6 +51,8 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -180,15 +182,16 @@ fun <T> RnChoiceSheet(title: String, choices: List<RnChoice<T>>, selected: T?, o
     }
 }
 
-/** A 24 dp check in the accent colour (2 dp round strokes). */
+/** A 24 dp check in the accent colour (2 dp round strokes); [color] and [side] for a check on a filled mark. */
 @Composable
-fun RnCheckMark() {
+fun RnCheckMark(color: Color? = null, side: Dp = 24.dp) {
     val c = LocalRn.current
-    Canvas(Modifier.size(24.dp)) {
+    val tint = color ?: c.accentText
+    Canvas(Modifier.size(side)) {
         val s = size.width / 24f
         val st = Stroke(2.2f * s, cap = StrokeCap.Round)
         val p = androidx.compose.ui.graphics.Path().apply { moveTo(5f * s, 12.5f * s); lineTo(10f * s, 17.5f * s); lineTo(19f * s, 7f * s) }
-        drawPath(p, c.accentText, style = st)
+        drawPath(p, tint, style = st)
     }
 }
 
