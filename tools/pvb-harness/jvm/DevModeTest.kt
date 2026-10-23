@@ -429,8 +429,10 @@ fun main(args: Array<String>) {
     for (kind in DevTestKind.values()) {
         val g = DevTestSignal()
         g.set(kind, 55.0)
-        val buf = FloatArray(2 * 48000 * 4)
-        g.render(buf, 48000 * 4, 48000)
+        // the bass check reaches its loudest level (-12 dBFS) only in its last third: render all of it
+        val frames = if (kind == DevTestKind.BASS_STEPS) (me.timschneeberger.rootlessjamesdsp.pvb.BassCheck.DURATION_S * 48000).toInt() else 48000 * 4
+        val buf = FloatArray(2 * frames)
+        g.render(buf, frames, 48000)
         val peak = buf.maxOf { abs(it) }
         val channels = when (kind) {
             DevTestKind.XTC_SWEEP_L -> (0 until buf.size step 2).all { buf[it + 1] == 0f }
@@ -440,7 +442,7 @@ fun main(args: Array<String>) {
         check(buf.all { it.isFinite() } && peak in 0.1f..0.4f && channels,
             "$kind: finite, peak ${"%.2f".format(peak)} (-8..-20 dBFS), channels as intended")
         val g2 = DevTestSignal(); g2.set(kind, 55.0)
-        val buf2 = FloatArray(buf.size); g2.render(buf2, 48000 * 4, 48000)
+        val buf2 = FloatArray(buf.size); g2.render(buf2, frames, 48000)
         check(buf.contentEquals(buf2), "$kind: deterministic")
         val sh = ShortArray(2 * 4800); g2.set(kind, 55.0); g2.renderShort(sh, 4800, 44100)
         check(sh.any { it.toInt() != 0 }, "$kind: 16-bit at 44.1 kHz")

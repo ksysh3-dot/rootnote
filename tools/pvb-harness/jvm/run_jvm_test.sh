@@ -23,7 +23,7 @@ java -cp "$OUTP:$KOTLIN_STDLIB" PcmPumpTestKt
 # spatial speaker balance, cross method with the phone's microphones (pure Kotlin)
 OUTSB="$HERE/../build/jvm-spatial-balance"
 rm -rf "$OUTSB"; mkdir -p "$OUTSB"
-$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/DevParams.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/DevTestSound.kt" "$APP/SpatialBalance.kt" "$HERE/SpatialBalanceTest.kt" -d "$OUTSB"
+$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/DevParams.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/DevTestSound.kt" "$APP/BassCheck.kt" "$APP/SpatialBalance.kt" "$HERE/SpatialBalanceTest.kt" -d "$OUTSB"
 java -cp "$OUTSB:$KOTLIN_STDLIB" SpatialBalanceTestKt
 # service silence pause (battery; pure Kotlin)
 OUTG="$HERE/../build/jvm-silence"
@@ -73,6 +73,11 @@ OUTFP="$HERE/../build/jvm-foreground-pause"
 rm -rf "$OUTFP"; mkdir -p "$OUTFP"
 $KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/../../../app/src/main/java/me/timschneeberger/rootlessjamesdsp/service/ForegroundPause.kt" "$HERE/ForegroundPauseTest.kt" -d "$OUTFP"
 java -cp "$OUTFP:$KOTLIN_STDLIB" ForegroundPauseTestKt
+# "저음 검사": stepped tones and their analysis on a simulated phone (pure Kotlin)
+OUTBC="$HERE/../build/jvm-bass-check"
+rm -rf "$OUTBC"; mkdir -p "$OUTBC"
+$KOTLINC -classpath "$KOTLIN_STDLIB" "$APP/DevTestSound.kt" "$APP/BassCheck.kt" "$HERE/BassCheckTest.kt" -d "$OUTBC"
+java -cp "$OUTBC:$KOTLIN_STDLIB" BassCheckTestKt
 # Alpha 3.3 live blind A/B: seeded shuffle, record JSON/CSV, tally, file store, comparison catalogue (pure Kotlin).
 $KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/DevParams.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/PvbNative.kt" "$APP/PvbEngine.kt" "$APP/PvbRuntime.kt" "$APP/PvbAbConditions.kt" "$APP/LiveAb.kt" "$APP/LiveAbComparisons.kt" "$HERE/LiveAbTest.kt" -d "$OUTA"
 java -cp "$OUTA:$KOTLIN_STDLIB" LiveAbTestKt
@@ -116,5 +121,5 @@ java -Djava.library.path="$HERE/../build" -cp "$OUTC:$KOTLIN_STDLIB" JdspChainTe
 # the device profile, test sounds, en/ko strings, and the engine's developer-mode meters through JNI.
 OUTV="$HERE/../build/jvm-devmode"
 rm -rf "$OUTV"; mkdir -p "$OUTV"
-$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/DevParams.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/DeviceProfiles.kt" "$APP/PvbNative.kt" "$APP/PvbEngine.kt" "$APP/DevShareCode.kt" "$APP/SettingsSummary.kt" "$APP/DevWarnings.kt" "$APP/DevTestSound.kt" "$HERE/DevModeTest.kt" -d "$OUTV"
+$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/DevParams.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/DeviceProfiles.kt" "$APP/PvbNative.kt" "$APP/PvbEngine.kt" "$APP/DevShareCode.kt" "$APP/SettingsSummary.kt" "$APP/DevWarnings.kt" "$APP/DevTestSound.kt" "$APP/BassCheck.kt" "$HERE/DevModeTest.kt" -d "$OUTV"
 java -Djava.library.path="$HERE/../build" -cp "$OUTV:$KOTLIN_STDLIB" DevModeTestKt "$HERE/../../.." --jni

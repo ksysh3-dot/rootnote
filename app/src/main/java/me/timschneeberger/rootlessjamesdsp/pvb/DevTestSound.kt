@@ -19,6 +19,8 @@ enum class DevTestKind {
     XTC_BAND_LO, XTC_BAND_HI,
     /** Spatial self-measurement: a log sweep 300 Hz-10 kHz in one channel only (3 s, then 1.5 s silence), -18 dBFS. */
     XTC_SWEEP_L, XTC_SWEEP_R,
+    /** "저음 검사" ([BassCheck]): stepped tones 80 Hz-1 kHz at -24/-18/-12 dBFS, both channels, after 1 s of silence. */
+    BASS_STEPS,
 }
 
 class DevTestSignal {
@@ -134,6 +136,7 @@ class DevTestSignal {
             DevTestKind.BASS_CHORD -> bassChord(time)
             DevTestKind.XTC_BAND_LO, DevTestKind.XTC_BAND_HI -> band()
             DevTestKind.XTC_SWEEP_L, DevTestKind.XTC_SWEEP_R -> xtcSweep(time)
+            DevTestKind.BASS_STEPS -> bassStep(time)
         }
     }
 
@@ -152,6 +155,19 @@ class DevTestSignal {
             x > on - fade -> 0.5 - 0.5 * cos(PI * (on - x) / fade)
             else -> 1.0
         }
+    }
+
+    // Stepped tones of the bass check: the step's phase restarts with it, 10 ms raised-cosine edges.
+    private fun bassStep(time: Double): Double {
+        val step = BassCheck.stepAt(time) ?: return 0.0
+        val x = time - BassCheck.stepStart(step.index)
+        val fade = BassCheck.FADE_S
+        val edge = when {
+            x < fade -> 0.5 - 0.5 * cos(PI * x / fade)
+            x > BassCheck.TONE_S - fade -> 0.5 - 0.5 * cos(PI * (BassCheck.TONE_S - x) / fade)
+            else -> 1.0
+        }
+        return step.amplitude * edge * sin(2 * PI * step.hz * x)
     }
 
     // Single bass tone (40 / 55 / 80 Hz): 2 s on, 0.6 s off, so both the steady harmonics and the tail show.
