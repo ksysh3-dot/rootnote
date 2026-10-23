@@ -34,14 +34,14 @@ The full owner table (who writes, who clears, who reads, on which thread) is the
 | # | Signal | Operation |
 |---|---|---|
 | 1 | `xl/xr` | Input; non-finite samples become 0 (counted). |
-| 2 | `xdl/xdr` | Input delayed by the generator latency, so the dry path lines up with the layer. |
-| 3 | `cl/cr` | Spatial stage (`Xtc::tick`) on the delayed input: landscape cancel, or upright mono / two-way split; not run at all when off. |
-| 4 | `wl/wr` | Protective high-pass (two stages), low-mid bell, high bell, high shelf. |
-| 5 | `layL/layR` | Virtual-bass layer: from the undelayed input (`xl/xr`) or, for models whose `VbModule::inputAfterEq()` is true (Bankstown), from `wl/wr`. Then the experimental trims. |
-| 6 | `layL/layR` | Upright only, input-based models only: `Xtc::routeLayer` sends the layer where the music's low part goes (split: the low channel, +3 dB; mono: both). Models generating from `wl/wr` already follow the split. |
-| 7 | `wl/wr` | `(EQ output + layer level × layer) × output gain`. |
-| 8 | `ll/lr` | Look-ahead limiter (its latency `lat`); the solo monitor has its own limiter. |
-| 9 | `dl/dr` | Dry input delayed by `lat`; loudness matcher fed with dry and limited; matched bypass through its own limiter. |
+| 2 | `alignedL/R` | Input delayed by the generator latency, so the dry path lines up with the layer. |
+| 3 | `spatialL/R` | Spatial stage (`Xtc::tick`) on the delayed input: landscape cancel, or upright mono / two-way split; not run at all when off. |
+| 4 | `eqL/R` | Protective high-pass (two stages), low-mid bell, high bell, high shelf. |
+| 5 | `layL/layR` | Virtual-bass layer: from the undelayed input (`xl/xr`) or, for models whose `VbModule::inputAfterEq()` is true (Bankstown), from `eqL/R`. Then the experimental trims. |
+| 6 | `layL/layR` | Upright only, input-based models only: `Xtc::routeLayer` sends the layer where the music's low part goes (split: the low channel, +3 dB; mono: both). Models generating from `eqL/R` already follow the split. |
+| 7 | `preLimitL/R` | `(EQ output + layer level × layer) × output gain`. |
+| 8 | `limitedL/R` | Look-ahead limiter (its latency `lat`); the solo monitor has its own limiter. |
+| 9 | `dryDelayedL/R` | Dry input delayed by `lat`; loudness matcher fed with dry and limited; matched bypass through its own limiter. |
 | 10 | `yl/yr` | Wet/dry mix × fade × gate (comparison mute/headroom) × model switch fade; checked as float before writing (a non-finite or out-of-range block is silenced and the engine resets). |
 
 Developer meters and diagnostic capture read along the way and never change the output.
