@@ -18,4 +18,5 @@
     <string name="onboarding_methods_adb_title">ADB (PC 필요)</string>
     <string name="onboarding_methods_rootless_shizuku">\u25CF PC 필요 없음\n\u25CF Android 11 이상: 이 폰의 무선 디버깅으로 Shizuku 시작\n\u25CF Android 10: Shizuku를 시작할 때 PC가 한 번 필요</string>
     <string name="onboarding_methods_rootless_adb">\u25CF PC와 USB 케이블 필요\n\u25CF 고급 사용자용\n\u25CF Android 10 이상</string>
+    <string name="theme_default">원본 기본값</string>
 </resources>

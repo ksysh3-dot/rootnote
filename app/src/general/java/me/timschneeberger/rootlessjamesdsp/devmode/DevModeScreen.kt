@@ -109,6 +109,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import me.timschneeberger.rootlessjamesdsp.R
+import me.timschneeberger.rootlessjamesdsp.home.rootnotePalette
 import me.timschneeberger.rootlessjamesdsp.pvb.DevEvidence
 import me.timschneeberger.rootlessjamesdsp.pvb.DevEvidenceText
 import me.timschneeberger.rootlessjamesdsp.pvb.DevGroup
@@ -206,20 +207,20 @@ data class DevPalette(
     val researchBg: Color, val researchText: Color, val makerBg: Color, val makerText: Color,
     val measuredBg: Color, val measuredText: Color, val guessBg: Color, val guessText: Color,
     val dark: Boolean,
-) {
-    /** Text on rn_fill: white in light mode (5.3:1), deep teal in dark mode (white on #2BB0AA would be 2.6:1). */
-    val onFill: Color get() = if (dark) Color(0xFF003734) else Color.White
-}
+    /** Text on [fill]: for 심해 틸 white in light mode (5.3:1), deep teal in dark mode; else the theme's onPrimary. */
+    val onFill: Color,
+)
 
+/** rn_* tokens, with the page colour and the accent family of the chosen app theme (home/RootnotePalette.kt). */
 @Composable
-fun devPalette(dark: Boolean): DevPalette = DevPalette(
-    bg = colorResource(R.color.rn_bg), band = colorResource(R.color.rn_band), press = colorResource(R.color.rn_press),
+fun devPalette(dark: Boolean): DevPalette = rootnotePalette().let { rn -> DevPalette(
+    bg = rn.bg, band = colorResource(R.color.rn_band), press = colorResource(R.color.rn_press),
     divider = colorResource(R.color.rn_divider), textPrimary = colorResource(R.color.rn_text_primary),
     textSecondary = colorResource(R.color.rn_text_secondary), chevron = colorResource(R.color.rn_chevron),
-    fill = colorResource(R.color.rn_fill), accentText = colorResource(R.color.rn_accent_text),
+    fill = rn.fill, accentText = rn.accentText,
     chipBorder = colorResource(R.color.rn_chip_border), chipText = colorResource(R.color.rn_chip_text),
-    chipSelectedBg = colorResource(R.color.rn_chip_selected_bg),
-    chipSelectedBorder = colorResource(R.color.rn_chip_selected_border),
+    chipSelectedBg = rn.chipSelectedBg,
+    chipSelectedBorder = rn.chipSelectedBorder,
     switchOff = colorResource(R.color.rn_switch_off), sliderInactive = colorResource(R.color.rn_slider_inactive),
     thumb = colorResource(R.color.rn_thumb),
     warnBg = colorResource(R.color.rn_warn_bg), warnText = colorResource(R.color.rn_warn_text),
@@ -230,7 +231,8 @@ fun devPalette(dark: Boolean): DevPalette = DevPalette(
     measuredBg = colorResource(R.color.rn_badge_measured_bg), measuredText = colorResource(R.color.rn_badge_measured_text),
     guessBg = colorResource(R.color.rn_badge_guess_bg), guessText = colorResource(R.color.rn_badge_guess_text),
     dark = dark,
-)
+    onFill = rn.onFill,
+) }
 
 internal val LocalDevPalette = staticCompositionLocalOf<DevPalette> { error("DevPalette not provided") }
 internal val LocalDevReduceMotion = staticCompositionLocalOf { false }

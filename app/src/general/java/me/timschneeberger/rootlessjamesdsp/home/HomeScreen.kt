@@ -177,67 +177,6 @@ class HomeActions(
     val onXtcBalance: () -> Unit = {},
 )
 
-/** The "심해 틸" palette (res/values[-night]/colors_rootnote.xml of the general flavor). */
-@Immutable
-data class RootnotePalette(
-    val bg: Color,
-    val band: Color,
-    val press: Color,
-    val divider: Color,
-    val textPrimary: Color,
-    val textSecondary: Color,
-    val chevron: Color,
-    val fill: Color,
-    val accentText: Color,
-    val chipBg: Color,
-    val chipBorder: Color,
-    val chipText: Color,
-    val chipSelectedBg: Color,
-    val chipSelectedBorder: Color,
-    val chipSelectedText: Color,
-    val switchOff: Color,
-    val sliderInactive: Color,
-    val thumb: Color,
-    val xtcFill: Color,
-    val xtcAccentText: Color,
-    val xtcChipSelectedBg: Color,
-    val xtcChipSelectedBorder: Color,
-    val xtcChipSelectedText: Color,
-) {
-    /** The same palette with the spatial purple in the accent roles (fill, accent text, selected chip). */
-    fun spatial(): RootnotePalette = copy(
-        fill = xtcFill, accentText = xtcAccentText, chipSelectedBg = xtcChipSelectedBg,
-        chipSelectedBorder = xtcChipSelectedBorder, chipSelectedText = xtcChipSelectedText,
-    )
-}
-
-@Composable
-fun rootnotePalette(): RootnotePalette = RootnotePalette(
-    bg = colorResource(R.color.rn_bg),
-    band = colorResource(R.color.rn_band),
-    press = colorResource(R.color.rn_press),
-    divider = colorResource(R.color.rn_divider),
-    textPrimary = colorResource(R.color.rn_text_primary),
-    textSecondary = colorResource(R.color.rn_text_secondary),
-    chevron = colorResource(R.color.rn_chevron),
-    fill = colorResource(R.color.rn_fill),
-    accentText = colorResource(R.color.rn_accent_text),
-    chipBg = colorResource(R.color.rn_chip_bg),
-    chipBorder = colorResource(R.color.rn_chip_border),
-    chipText = colorResource(R.color.rn_chip_text),
-    chipSelectedBg = colorResource(R.color.rn_chip_selected_bg),
-    chipSelectedBorder = colorResource(R.color.rn_chip_selected_border),
-    chipSelectedText = colorResource(R.color.rn_chip_selected_text),
-    switchOff = colorResource(R.color.rn_switch_off),
-    sliderInactive = colorResource(R.color.rn_slider_inactive),
-    thumb = colorResource(R.color.rn_thumb),
-    xtcFill = colorResource(R.color.rn_xtc_fill),
-    xtcAccentText = colorResource(R.color.rn_xtc_accent_text),
-    xtcChipSelectedBg = colorResource(R.color.rn_xtc_chip_selected_bg),
-    xtcChipSelectedBorder = colorResource(R.color.rn_xtc_chip_selected_border),
-    xtcChipSelectedText = colorResource(R.color.rn_xtc_chip_selected_text),
-)
-
 private val LocalPalette = staticCompositionLocalOf<RootnotePalette> { error("RootnotePalette not provided") }
 private val LocalReduceMotion = staticCompositionLocalOf { false }
 

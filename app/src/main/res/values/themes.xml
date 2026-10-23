@@ -65,6 +65,9 @@
     <style name="Theme.RootlessJamesDSP.CardView" parent="Widget.Material3.CardView.Elevated" />
 
     <!-- === Custom themes taken from Tachiyomi: https://github.com/tachiyomiorg/tachiyomi === -->
+    <!-- 심해 틸 (Rootnote): defined by the general build (src/general/res/values*/themes_rootnote.xml); empty here. -->
+    <style name="Theme.RootlessJamesDSP.Rootnote" />
+
     <style name="Theme.RootlessJamesDSP.Monet" />
 
     <!--== Green Apple Theme ==-->

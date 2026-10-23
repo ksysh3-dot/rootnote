@@ -19,14 +19,7 @@ class SettingsAppearanceFragment : SettingsBaseFragment() {
         preferenceManager.sharedPreferencesName = Constants.PREF_APP
         setPreferencesFromResource(R.xml.app_appearance_preferences, rootKey)
 
-        val appThemes = AppTheme.values().filter {
-            val monetFilter = if (it == AppTheme.MONET) {
-                isDynamicColorAvailable
-            } else {
-                true
-            }
-            it.titleResId != null && monetFilter
-        }
+        val appThemes = AppTheme.choices(me.timschneeberger.rootlessjamesdsp.pvb.PvbBuild.general, isDynamicColorAvailable)
         appTheme?.entries = appThemes
 
         themeMode?.setOnPreferenceChangeListener { _, _ ->

@@ -44,4 +44,5 @@
     <string name="vb_preset_custom_title">사용자 지정</string>
     <string name="vb_preset_custom_desc">크기를 직접 바꾼 상태입니다.</string>
     <string name="vb_mode_note">모드는 가상 저음의 방식과 크기만 정합니다. EQ·출력 등 다른 설정은 그대로입니다.</string>
+    <string name="theme_rootnote">심해 틸</string>
 </resources>

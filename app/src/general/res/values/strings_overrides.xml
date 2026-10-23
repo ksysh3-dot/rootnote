@@ -20,4 +20,6 @@
     <string name="onboarding_methods_adb_title">ADB (needs a PC)</string>
     <string name="onboarding_methods_rootless_shizuku">\u25CF No PC needed\n\u25CF Android 11 and later: start Shizuku with wireless debugging on this phone\n\u25CF Android 10: starting Shizuku needs a PC once</string>
     <string name="onboarding_methods_rootless_adb">\u25CF Needs a PC and a USB cable\n\u25CF For advanced users\n\u25CF Android 10 and later</string>
+    <!-- App theme picker: the upstream default moves to the end of the list and says what it is -->
+    <string name="theme_default">Original default</string>
 </resources>

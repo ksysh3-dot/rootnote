@@ -40,7 +40,27 @@ object PvbGeneral {
         val f = flags(context)
         PvbBuild.researchUnlocked = f.getBoolean(KEY_RESEARCH_UNLOCKED, false)
         PvbBuild.firstRunConfirmed = f.getBoolean(FirstRun.KEY_CONFIRMED, false)
-        if (PvbBuild.general) applyProfileOnce(context)
+        if (PvbBuild.general) {
+            applyProfileOnce(context)
+            migrateThemeOnce(context)
+        }
+    }
+
+    private const val KEY_THEME_MIGRATED = "theme_rootnote_migrated"
+
+    /**
+     * Earlier general builds meant "기본값" to be the teal palette (a resource-qualifier bug showed purple in light
+     * mode). Now 심해 틸 is its own theme and the default; an install that stored DEFAULT moves to it once, so an
+     * update keeps the look it was meant to have. A later explicit choice of "원본 기본값" is kept.
+     */
+    private fun migrateThemeOnce(context: Context) {
+        val f = flags(context)
+        if (f.getBoolean(KEY_THEME_MIGRATED, false)) return
+        val app = context.applicationContext.getSharedPreferences(
+            me.timschneeberger.rootlessjamesdsp.utils.Constants.PREF_APP, Context.MODE_PRIVATE)
+        val key = context.getString(me.timschneeberger.rootlessjamesdsp.R.string.key_appearance_app_theme)
+        if (app.getString(key, null) == "DEFAULT") app.edit().putString(key, "ROOTNOTE").apply()
+        f.edit().putBoolean(KEY_THEME_MIGRATED, true).apply()
     }
 
     /** The device profile of this phone (general build), read from the assets once. */

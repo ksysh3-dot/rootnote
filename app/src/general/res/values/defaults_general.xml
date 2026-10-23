@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- General build: defaults that differ from src/main/res/values/defaults.xml. -->
+<resources>
+    <!-- 심해 틸 is the general build's app theme by default (AppTheme.ROOTNOTE). -->
+    <string name="default_appearance_app_theme" translatable="false">ROOTNOTE</string>
+</resources>

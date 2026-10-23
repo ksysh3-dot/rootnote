@@ -321,7 +321,7 @@ private fun PillButton(label: String, filled: Boolean, enabled: Boolean, reduceM
             keepWords(label),
             // text on the teal fill: the theme's onPrimary (white in light mode, deep teal in dark mode, where white on
             // #2BB0AA would be 2.6:1); devmode's onFill writes the same values
-            color = if (filled) colorResource(R.color.rn_m3_onPrimary) else c.textPrimary,
+            color = if (filled) c.onFill else c.textPrimary,
             fontSize = 15.sp, lineHeight = 21.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center,
         )
     }

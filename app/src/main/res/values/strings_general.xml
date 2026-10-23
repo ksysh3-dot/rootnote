@@ -54,4 +54,6 @@
     <string name="vb_preset_custom_title">Custom</string>
     <string name="vb_preset_custom_desc">The strength was changed by hand.</string>
     <string name="vb_mode_note">The mode only sets the virtual bass sound and strength; EQ and output stay as they are.</string>
+    <!-- App theme picker: the Rootnote palette (general build) -->
+    <string name="theme_rootnote">Abyss teal</string>
 </resources>

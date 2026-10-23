@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- General build (dark): the default app theme uses the Rootnote teal palette (colors_rootnote.xml).
-     Overrides the thin Theme.RootlessJamesDSP / .Dialog styles of src/main (values and values-night); the base
-     styles and every other theme choice (Monet, Green Apple, ...) are unchanged, and the s26u build never sees
-     this file. -->
+<!-- General build (dark): the "심해 틸" app theme (AppTheme.ROOTNOTE, the default; colors_rootnote.xml).
+     It is its own style, a child of Theme.RootlessJamesDSP, rather than an override of Theme.RootlessJamesDSP:
+     src/main/res/values-v29 redefines Theme.RootlessJamesDSP, and on every supported device (minSdk 29) that
+     version-qualified style won over an unqualified override here, so light mode showed the upstream purple.
+     The upstream default ("원본 기본값") and every other theme choice are unchanged; the s26u build never sees this
+     file (its Theme.RootlessJamesDSP.Rootnote in src/main is empty). The dialog style stays teal. -->
 <resources>
-    <style name="Theme.RootlessJamesDSP" parent="Base.Theme.RootlessJamesDSP">
+    <style name="Theme.RootlessJamesDSP.Rootnote" parent="Theme.RootlessJamesDSP">
         <item name="colorPrimary">@color/rn_m3_primary</item>
         <item name="colorOnPrimary">@color/rn_m3_onPrimary</item>
         <item name="colorPrimaryContainer">@color/rn_m3_primaryContainer</item>
