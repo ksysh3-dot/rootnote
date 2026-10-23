@@ -146,10 +146,11 @@
     <string name="welcome_spatial_title">소리가 폰 밖\n양옆으로 넓어져요</string>
     <string name="welcome_hero_logo_a11y">Rootnote 표시: 이어진 음표 넷. 위의 세 음표(배음)가 차례로 나타나고, 마지막에 속이 빈 첫 음표(들리지 않는 기음)가 나타나요.</string>
     <string name="welcome_hero_bass_a11y">폰 그림. 처음엔 작은 소리만 나오다가, 청록색 큰 물결(가상 저음)이 아래 스피커에서 퍼져요.</string>
-    <string name="welcome_hero_space_a11y">폰 그림. 작은 소리 뒤로 보라색 물결(공간감)이 폰 밖 양옆으로 넓어져요.</string>
+    <string name="welcome_hero_space_a11y">위에서 본 그림: 가로로 든 폰과 그 앞의 사람. 처음엔 두 스피커 소리가 반대쪽 귀로도 새다가(점선), 그 선이 사라지고 두 소리가 양쪽 귀 옆으로 벌어져요.</string>
+    <string name="welcome_start_title">이제 시작해 볼까요?</string>
     <string name="welcome_skip">건너뛰기</string>
     <string name="welcome_next">다음</string>
-    <string name="welcome_later">다음에</string>
+    <string name="welcome_later">나중에</string>
     <string name="welcome_start">확인하고 시작하기</string>
     <string name="welcome_pages_a11y">%2$d쪽 중 %1$d쪽</string>
     <string name="welcome_hello_title">반가워요!</string>
@@ -185,7 +186,7 @@
     <string name="welcome_ready_privacy_more">자세히 보기</string>
     <string name="welcome_ready_legal">RootlessJamesDSP를 바탕으로 만든 비공식 포크예요. 원작 개발자가 만들거나 지원하지 않고, 보증 없이 GPL-3.0으로 배포돼요.</string>
     <string name="welcome_ready_license">라이선스</string>
-    <string name="welcome_consent">\'확인하고 시작하기\'를 누르면 가상 저음(실험 기능)이 이 폰의 기본 세기로 켜져요.</string>
+    <string name="welcome_consent">시작하면 가상 저음(실험 기능)이 이 폰의 기본 세기로 켜져요. 홈에서 언제든 끌 수 있어요.</string>
     <string name="welcome_hero_original">원래 소리</string>
     <string name="welcome_hero_delay">약 0.15초</string>
     <string name="welcome_hero_delay_a11y">원래 소리와 처리된 소리가 나란히 흐르는 그림. 처리된 소리가 약 0.15초 늦게 따라와요.</string>

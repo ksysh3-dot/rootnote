@@ -6,13 +6,10 @@ import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -50,7 +47,6 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -69,6 +65,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.graphicsLayer
@@ -137,16 +134,17 @@ class WelcomeActions(
 )
 
 private val Ease = CubicBezierEasing(0.32f, 0.72f, 0f, 1f)
-private const val PAGES = 6
+private const val PAGES = 7
 /** The last page (the consent); where the welcome opens when it was put off once already. */
 const val WELCOME_LAST_PAGE = PAGES - 1
 
-/** Pages: hello, virtual bass, spatial, the delay, good to know, ready (the consent). */
+/** Pages: hello, virtual bass, spatial, the delay, good to know, setup, start (the consent). */
 private const val P_HELLO = 0
 private const val P_BASS = 1
 private const val P_SPACE = 2
 private const val P_DELAY = 3
 private const val P_KNOW = 4
+private const val P_SETUP = 5
 
 @Composable
 fun WelcomeScreen(state: WelcomeState, actions: WelcomeActions) {
@@ -165,7 +163,7 @@ fun WelcomeScreen(state: WelcomeState, actions: WelcomeActions) {
             .background(c.bg)
             .safeDrawingPadding()
     ) {
-        val stageHeight = maxHeight * 0.3f
+        val stageHeight = maxHeight * 0.4f
         Column(Modifier.fillMaxSize()) {
             WelcomeTopBar(page = pager.currentPage, reduceMotion = state.reduceMotion, showSkip = !last) {
                 scope.launch { pager.animateScrollToPage(WELCOME_LAST_PAGE) }
@@ -212,7 +210,7 @@ private fun Dots(page: Int, reduceMotion: Boolean) {
         for (i in 0 until PAGES) {
             val on = i == page
             val w by animateFloatAsState(if (on) 18f else 6f, tween(if (reduceMotion) 0 else 300, easing = Ease), label = "dot")
-            Box(Modifier.size(width = w.dp, height = 6.dp).background(if (on) c.fill else c.divider, CircleShape))
+            Box(Modifier.size(width = w.dp, height = 6.dp).background(if (on) c.fill else c.chipBorder, CircleShape))
         }
     }
 }
@@ -225,7 +223,6 @@ private fun Dots(page: Int, reduceMotion: Boolean) {
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 private fun WelcomeBottomBar(last: Boolean, reduceMotion: Boolean, actions: WelcomeActions, onNext: () -> Unit) {
-    val c = rootnotePalette()
     AnimatedContent(
         targetState = last,
         transitionSpec = {
@@ -243,7 +240,6 @@ private fun WelcomeBottomBar(last: Boolean, reduceMotion: Boolean, actions: Welc
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             if (isLast) {
-                Text(stringResource(R.string.welcome_consent), color = c.textSecondary, fontSize = 13.sp, lineHeight = 18.sp)
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     PillButton(stringResource(R.string.welcome_later), filled = false, shown, Modifier.weight(1f), actions.onLater)
                     PillButton(stringResource(R.string.welcome_start), filled = true, shown, Modifier.weight(2f), actions.onStart)
@@ -338,11 +334,11 @@ private fun WelcomePage(page: Int, state: WelcomeState, active: Boolean, stageHe
                 WelcomeStage(page, state, active, Modifier.padding(top = 14.dp).fillMaxWidth().height(stageHeight))
             }
             P_DELAY -> {
-                PageHead(Glyph.CLOCK, c.fill, R.string.welcome_know_delay_title, stringResource(R.string.welcome_know_delay_body))
+                PageHead(Glyph.CLOCK, c.textPrimary, R.string.welcome_know_delay_title, stringResource(R.string.welcome_know_delay_body))
                 WelcomeStage(page, state, active, Modifier.padding(top = 14.dp).fillMaxWidth().height(stageHeight))
             }
             P_KNOW -> {
-                PageHead(Glyph.FLASK, c.fill, R.string.welcome_know_title, stringResource(R.string.welcome_know_body))
+                PageHead(Glyph.INFO, c.textPrimary, R.string.welcome_know_title, stringResource(R.string.welcome_know_body))
                 WarningPill(stringResource(R.string.welcome_know_volume))
                 Column {
                     InfoRow(Glyph.FLASK, c.textSecondary, stringResource(R.string.welcome_know_experimental_title),
@@ -353,7 +349,8 @@ private fun WelcomePage(page: Int, state: WelcomeState, active: Boolean, stageHe
                         stringResource(R.string.welcome_know_others_body))
                 }
             }
-            else -> ReadyPage(state, actions)
+            P_SETUP -> SetupPage(state)
+            else -> StartPage(actions)
         }
     }
 }
@@ -386,7 +383,7 @@ private fun HelloPage(state: WelcomeState, active: Boolean) {
             )
         }
         Spacer(Modifier.height(32.dp))
-        WelcomeStage(P_HELLO, state, active, Modifier.size(176.dp), card = false)
+        WelcomeStage(P_HELLO, state, active, Modifier.size(200.dp), card = false)
         Spacer(Modifier.height(32.dp))
         Text(
             stringResource(R.string.welcome_hello_body, stringResource(R.string.app_brand_name)),
@@ -429,18 +426,17 @@ private fun Appear(reduceMotion: Boolean, content: @Composable () -> Unit) {
     Box(Modifier.graphicsLayer { alpha = p; translationY = (1f - p) * 12.dp.toPx() }) { content() }
 }
 
-/** 6: what happens next on this phone (only the lines that apply to its Android version), privacy, licence. */
-@OptIn(ExperimentalLayoutApi::class)
+/** 6: what happens next on this phone, only the lines that apply to its Android version. */
 @Composable
-private fun ReadyPage(state: WelcomeState, actions: WelcomeActions) {
+private fun SetupPage(state: WelcomeState) {
     val c = rootnotePalette()
-    PageHead(Glyph.KEY, c.fill, R.string.welcome_ready_title, stringResource(R.string.welcome_ready_body))
+    PageHead(Glyph.KEY, c.textPrimary, R.string.welcome_ready_title, stringResource(R.string.welcome_ready_body))
     Column {
         if (state.permissionsReady)
             InfoRow(Glyph.CHECK, c.textSecondary, stringResource(R.string.welcome_ready_granted_title),
                 stringResource(R.string.welcome_ready_granted_body))
         else
-            InfoRow(Glyph.KEY, c.textSecondary, stringResource(R.string.welcome_ready_grant_title),
+            InfoRow(Glyph.TERMINAL, c.textSecondary, stringResource(R.string.welcome_ready_grant_title),
                 stringResource(R.string.welcome_ready_grant_body))
         InfoRow(
             Glyph.DIALOG, c.textSecondary, stringResource(R.string.welcome_ready_capture_title),
@@ -449,12 +445,23 @@ private fun ReadyPage(state: WelcomeState, actions: WelcomeActions) {
         if (state.screenShareSetting)
             InfoRow(Glyph.TOGGLE, c.textSecondary, stringResource(R.string.welcome_ready_a15_title),
                 stringResource(R.string.welcome_ready_a15_body))
-        InfoRow(Glyph.LOCK, c.textSecondary, stringResource(R.string.welcome_ready_privacy_title),
-            stringResource(R.string.welcome_ready_privacy_body)) {
-            FlowRow(Modifier.offset(x = (-12).dp)) {
-                TextAction(stringResource(R.string.welcome_ready_privacy_more), onClick = actions.onPrivacy)
-                TextAction(stringResource(R.string.welcome_ready_license), onClick = actions.onLicense)
-            }
+    }
+}
+
+/**
+ * 7: the decision, kept calm: what starting does (the consent itself, as the page's line), privacy with its details,
+ * the licence. The two answers are the bottom buttons.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun StartPage(actions: WelcomeActions) {
+    val c = rootnotePalette()
+    PageHead(Glyph.CHECK, c.textPrimary, R.string.welcome_start_title, stringResource(R.string.welcome_consent))
+    InfoRow(Glyph.LOCK, c.textSecondary, stringResource(R.string.welcome_ready_privacy_title),
+        stringResource(R.string.welcome_ready_privacy_body)) {
+        FlowRow(Modifier.offset(x = (-12).dp)) {
+            TextAction(stringResource(R.string.welcome_ready_privacy_more), onClick = actions.onPrivacy)
+            TextAction(stringResource(R.string.welcome_ready_license), onClick = actions.onLicense)
         }
     }
     Note(stringResource(R.string.welcome_ready_legal))
@@ -502,27 +509,36 @@ private fun WarningPill(text: String) {
 // ------------------------------------------------------------------------------------------------- the stage
 
 /** Stage colours: teal = virtual bass and progress, purple = spatial. */
-private class HeroColors(val bass: Color, val space: Color, val ink: Color, val soft: Color, val line: Color, val bg: Color)
+private class HeroColors(val bass: Color, val space: Color, val ink: Color, val soft: Color, val line: Color, val bg: Color) {
+    /** Dark mode: the phone is drawn in a muted grey instead of the text colour, so it never outshines the words. */
+    val dark: Boolean = bg.luminance() < 0.5f
+    val body: Color = if (dark) line else ink.copy(alpha = 0.88f)
+    val screen: Color = if (dark) bg.copy(alpha = 0.6f) else bg.copy(alpha = 0.22f)
+    val marks: Color = if (dark) soft else bg.copy(alpha = 0.75f)
+}
 
-/** Key frame and loop length per page (hello, bass, spatial, delay); pages without a stage are not listed. */
-private val KEY_FRAMES = floatArrayOf(0.75f, 0.8f, 0.8f, 0.5f)
-private val PERIODS = intArrayOf(4800, 4200, 4200, 3600)
+/**
+ * Per page with a picture (hello, bass, spatial, delay): the frame it rests on, and the length of a whole cycle. The
+ * picture plays once, from the start to its resting frame, each time its page is reached (motion that answers the
+ * swipe, then stillness); with the animations off, or off-screen, it shows the resting frame.
+ */
+private val KEY_FRAMES = floatArrayOf(0.9f, 0.8f, 0.8f, 0.5f)
+private val PERIODS = intArrayOf(3600, 4200, 4200, 3600)
 
 @Composable
 private fun WelcomeStage(page: Int, state: WelcomeState, active: Boolean, modifier: Modifier, card: Boolean = true) {
     val c = rootnotePalette()
     val colors = remember(c) { HeroColors(c.fill, c.xtcFill, c.textPrimary, c.textSecondary, c.chipBorder, c.bg) }
-    // One clock per page (0..1, looping from the page's key frame); a still key frame with the animations off or
-    // off-screen. Read only while drawing, so a frame never recomposes the page.
-    val clock: State<Float> = if (state.reduceMotion || !active) {
-        remember(page) { mutableFloatStateOf(KEY_FRAMES[page]) }
-    } else {
-        val inf = rememberInfiniteTransition(label = "welcome$page")
-        inf.animateFloat(
-            KEY_FRAMES[page], KEY_FRAMES[page] + 1f,
-            infiniteRepeatable(tween(PERIODS[page], easing = LinearEasing), RepeatMode.Restart), label = "t$page",
-        )
+    // One clock per page, 0 -> its resting frame, played once when the page becomes active. Read only while
+    // drawing, so a frame never recomposes the page.
+    val anim = remember(page) { Animatable(KEY_FRAMES[page]) }
+    LaunchedEffect(page, active, state.reduceMotion) {
+        if (active && !state.reduceMotion) {
+            anim.snapTo(0f)
+            anim.animateTo(KEY_FRAMES[page], tween((PERIODS[page] * KEY_FRAMES[page]).toInt(), easing = LinearEasing))
+        } else anim.snapTo(KEY_FRAMES[page])
     }
+    val clock: State<Float> = anim.asState()
     val description = stringResource(
         when (page) {
             P_HELLO -> R.string.welcome_hero_logo_a11y
@@ -545,7 +561,7 @@ private fun WelcomeStage(page: Int, state: WelcomeState, active: Boolean, modifi
             when (page) {
                 P_HELLO -> heroLogo(t, colors)
                 P_BASS -> heroHello(t, colors, measurer, labels, bass = true, space = false)
-                P_SPACE -> heroHello(t, colors, measurer, labels, bass = false, space = true)
+                P_SPACE -> heroSpace(t, colors, measurer, labels)
                 else -> heroDelay(t, colors, measurer, labels)
             }
         }
@@ -631,25 +647,70 @@ private fun DrawScope.heroHello(t: Float, col: HeroColors, measurer: TextMeasure
         drawArc(col.soft.copy(alpha = a), 35f, 110f, false, Offset(foot.x - r, foot.y - r), Size(2 * r, 2 * r), style = stroke)
     }
     // the phone, front view: body, screen, a small "now playing" level, earpiece slot and bottom speaker holes
-    drawRoundRect(col.ink.copy(alpha = 0.88f), Offset(cx - pw / 2f, top), Size(pw, ph), CornerRadius(unit * 0.42f))
+    drawRoundRect(col.body, Offset(cx - pw / 2f, top), Size(pw, ph), CornerRadius(unit * 0.42f))
     drawRoundRect(
-        col.bg.copy(alpha = 0.22f), Offset(cx - pw / 2f + unit * 0.14f, top + unit * 0.5f),
+        col.screen, Offset(cx - pw / 2f + unit * 0.14f, top + unit * 0.5f),
         Size(pw - unit * 0.28f, ph - unit * 0.95f), CornerRadius(unit * 0.22f),
     )
     for (i in 0 until 4) {
         val lv = 0.35f + 0.65f * (0.5f + 0.5f * sin(2f * PI.toFloat() * (t * 2f + i * 0.27f)))
         val h = unit * 0.9f * lv
         val x = cx + (i - 1.5f) * unit * 0.34f
-        drawLine(col.bg.copy(alpha = 0.75f), Offset(x, cy + unit * 0.45f), Offset(x, cy + unit * 0.45f - h), unit * 0.14f, StrokeCap.Round)
+        drawLine(col.marks, Offset(x, cy + unit * 0.45f), Offset(x, cy + unit * 0.45f - h), unit * 0.14f, StrokeCap.Round)
     }
-    drawLine(col.bg.copy(alpha = 0.6f), Offset(cx - unit * 0.3f, ear.y), Offset(cx + unit * 0.3f, ear.y), unit * 0.08f, StrokeCap.Round)
-    for (i in -2..2) drawCircle(col.bg.copy(alpha = 0.6f), unit * 0.045f, Offset(cx + i * unit * 0.14f, bottom - unit * 0.2f))
+    drawLine(col.marks, Offset(cx - unit * 0.3f, ear.y), Offset(cx + unit * 0.3f, ear.y), unit * 0.08f, StrokeCap.Round)
+    for (i in -2..2) drawCircle(col.marks, unit * 0.045f, Offset(cx + i * unit * 0.14f, bottom - unit * 0.2f))
     // what each colour is (never the colour alone)
     label(measurer, labels.getOrElse(0) { "" }, col.bass.copy(alpha = bassIn), Offset(0f, bottom), size.width / 3f, vAlign = 1f)
     val spaceText = labels.getOrElse(1) { "" }
     val w = measurer.measure(spaceText, labelStyle(),
         maxLines = 2, constraints = Constraints(maxWidth = (size.width / 3f).toInt().coerceAtLeast(1))).size.width
     label(measurer, spaceText, col.space.copy(alpha = spaceIn), Offset(size.width - w, top), size.width / 3f)
+}
+
+/**
+ * Spatial, seen from above, as the spatial story draws it: the phone held sideways, the listener below it. At first
+ * each speaker also reaches the far ear (the dashed crossing lines) and the sound sits on the phone; then the
+ * crossing lines fade and the two sounds move out beside the ears.
+ */
+private fun DrawScope.heroSpace(t: Float, col: HeroColors, measurer: TextMeasurer, labels: List<String>) {
+    val unit = min(size.width / 8.5f, size.height / 6.4f)
+    val cx = size.width / 2f
+    // the phone (top) to the bottom of the head is 5 units: centred in the picture
+    val phoneY = (size.height - unit * 5f) / 2f + unit * 0.45f
+    val pw = unit * 4.2f
+    val ph = unit * 0.9f
+    val spL = Offset(cx - pw / 2f + unit * 0.35f, phoneY)
+    val spR = Offset(cx + pw / 2f - unit * 0.35f, phoneY)
+    val headY = phoneY + unit * 3.6f
+    val headR = unit * 0.95f
+    val earL = Offset(cx - headR, headY)
+    val earR = Offset(cx + headR, headY)
+    val clear = smooth((t - 0.3f) / 0.35f)
+    val dash = PathEffect.dashPathEffect(floatArrayOf(10f, 8f))
+    // the leak to the far ear fades; the direct paths stay
+    drawLine(col.space.copy(alpha = 0.55f * (1f - clear)), spL, earR, 2.dp.toPx(), pathEffect = dash)
+    drawLine(col.space.copy(alpha = 0.55f * (1f - clear)), spR, earL, 2.dp.toPx(), pathEffect = dash)
+    drawLine(col.space.copy(alpha = 0.8f), spL, earL, 2.dp.toPx(), StrokeCap.Round)
+    drawLine(col.space.copy(alpha = 0.8f), spR, earR, 2.dp.toPx(), StrokeCap.Round)
+    // the phone, held sideways: body, screen, two speakers
+    drawRoundRect(col.body, Offset(cx - pw / 2f, phoneY - ph / 2f), Size(pw, ph), CornerRadius(ph * 0.35f))
+    drawRoundRect(col.screen, Offset(cx - pw / 2f + unit * 0.6f, phoneY - ph / 2f + unit * 0.12f),
+        Size(pw - unit * 1.2f, ph - unit * 0.24f), CornerRadius(ph * 0.2f))
+    drawCircle(col.space, unit * 0.17f, spL)
+    drawCircle(col.space, unit * 0.17f, spR)
+    // the listener
+    val center = Offset(cx, headY)
+    drawCircle(col.bg, headR, center)
+    drawCircle(col.ink.copy(alpha = 0.7f), headR, center, style = Stroke(2.dp.toPx()))
+    drawRoundRect(col.ink.copy(alpha = 0.7f), Offset(earL.x - unit * 0.16f, headY - unit * 0.3f), Size(unit * 0.2f, unit * 0.6f), CornerRadius(unit * 0.1f))
+    drawRoundRect(col.ink.copy(alpha = 0.7f), Offset(earR.x - unit * 0.04f, headY - unit * 0.3f), Size(unit * 0.2f, unit * 0.6f), CornerRadius(unit * 0.1f))
+    // the two sounds: from the middle of the phone out beside the ears
+    val y = phoneY + unit * 1.3f + (headY - unit * 0.6f - phoneY - unit * 1.3f) * clear
+    val spread = unit * 0.35f + (headR + unit * 1.0f - unit * 0.35f) * clear
+    drawCircle(col.space, unit * 0.2f, Offset(cx - spread, y))
+    drawCircle(col.space, unit * 0.2f, Offset(cx + spread, y))
+    label(measurer, labels.getOrElse(1) { "" }, col.space.copy(alpha = clear), Offset(cx + spread + unit * 0.4f, y), size.width / 3f, vAlign = 0.5f)
 }
 
 /**
@@ -769,7 +830,7 @@ private fun lerp(a: Color, b: Color, f: Float) = Color(
 // ------------------------------------------------------------------------------------------------- symbols
 
 /** Symbols drawn on a 24-unit grid with 2 dp round strokes (docs/DESIGN.md 7: no emoji, line icons). */
-private enum class Glyph { BASS, SPACE, PHONE, FLASK, CLOCK, SPEAKER, APPS, KEY, CHECK, DIALOG, TOGGLE, LOCK, WAVES }
+private enum class Glyph { BASS, SPACE, PHONE, FLASK, CLOCK, SPEAKER, APPS, KEY, CHECK, DIALOG, TOGGLE, LOCK, WAVES, INFO, TERMINAL }
 
 private fun DrawScope.glyph(g: Glyph, color: Color, origin: Offset = Offset.Zero, box: Float = size.minDimension) {
     val s = box / 24f
@@ -831,6 +892,8 @@ private fun DrawScope.glyph(g: Glyph, color: Color, origin: Offset = Offset.Zero
             line(8f, 11f, 8f, 8f); line(16f, 11f, 16f, 8f); arc(12f, 8f, 4f, 180f, 180f)
             dot(12f, 16f, 1.2f)
         }
+        Glyph.INFO -> { ring(12f, 12f, 9f); dot(12f, 7.6f, 1.3f); line(12f, 11f, 12f, 16.5f) }
+        Glyph.TERMINAL -> { rrect(3f, 4f, 21f, 20f, 3f); poly(7f, 9f, 10f, 12f, 7f, 15f); line(12.5f, 15f, 16.5f, 15f) }
         Glyph.WAVES -> {
             dot(5f, 12f, 1.6f)
             arc(5f, 12f, 5f, -40f, 80f); arc(5f, 12f, 10f, -35f, 70f); arc(5f, 12f, 15f, -30f, 60f)

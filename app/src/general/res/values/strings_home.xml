@@ -146,7 +146,8 @@
     <string name="welcome_spatial_title">The sound opens out\nbeyond the phone</string>
     <string name="welcome_hero_logo_a11y">The Rootnote mark: four beamed notes. The three upper notes (overtones) appear one by one, then the empty first note (the fundamental you hear but is not played).</string>
     <string name="welcome_hero_bass_a11y">A phone. At first only a small sound comes out; then a large teal wave (virtual bass) spreads from the bottom speaker.</string>
-    <string name="welcome_hero_space_a11y">A phone. After its small sound, purple waves (spatial) open out to both sides beyond the phone.</string>
+    <string name="welcome_hero_space_a11y">Seen from above: the phone held sideways and the listener in front of it. At first each speaker also leaks to the far ear (dashed lines); then those lines fade and the two sounds move out beside the ears.</string>
+    <string name="welcome_start_title">Ready to start?</string>
     <string name="welcome_skip">Skip</string>
     <string name="welcome_next">Next</string>
     <string name="welcome_later">Not now</string>
@@ -185,7 +186,7 @@
     <string name="welcome_ready_privacy_more">Details</string>
     <string name="welcome_ready_legal">An unofficial fork of RootlessJamesDSP. It is not made or supported by the original developers and comes with no warranty under the GPL-3.0.</string>
     <string name="welcome_ready_license">License</string>
-    <string name="welcome_consent">\"Agree and start\" turns on virtual bass (experimental) at the default strength for this phone.</string>
+    <string name="welcome_consent">Starting turns on virtual bass (experimental) at the default strength for this phone. You can turn it off on the home screen at any time.</string>
     <string name="welcome_hero_original">Original</string>
     <string name="welcome_hero_delay">about 0.15 s</string>
     <string name="welcome_hero_delay_a11y">The original sound and the processed sound run side by side. The processed sound follows about 0.15 s later.</string>

@@ -130,8 +130,9 @@ fun main(args: Array<String>) {
         welKo["home_chip_fullness"]!! in welKo["welcome_know_experimental_body"]!!, "welcome: names the fullness preset")
     expect("Android 14" in welEn["welcome_ready_capture_body_14"]!! && "Android 14" in welKo["welcome_ready_capture_body_14"]!!,
         "welcome: Android 14 capture consent")
-    expect(welEn["welcome_start"]!! in welEn["welcome_consent"]!! && welKo["welcome_start"]!! in welKo["welcome_consent"]!!,
-        "welcome: the consent line names its button")
+    expect("virtual bass" in welEn["welcome_consent"]!! && "가상 저음" in welKo["welcome_consent"]!! &&
+        "experimental" in welEn["welcome_consent"]!! && "실험 기능" in welKo["welcome_consent"]!!,
+        "welcome: the start page says what starting turns on, and that it is experimental")
     expect("GPL-3.0" in welEn["welcome_ready_legal"]!! && "GPL-3.0" in welKo["welcome_ready_legal"]!!, "welcome: licence line")
     expect("AutoEQ" in welEn["welcome_ready_privacy_body"]!! && "AutoEQ" in welKo["welcome_ready_privacy_body"]!!,
         "welcome: the only network use is named")
