@@ -70,6 +70,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
@@ -97,20 +98,16 @@ import kotlin.math.min
 import kotlin.math.sin
 
 /*
- * The welcome (WelcomeActivity): the first-run notice of the general build as three short pages, built like the
- * spatial story (SpatialStory.kt) and shaped after other apps' first screens:
- * - one message per page, each carried by one motion (Toss "why motion in finance");
- * - what the app does as a short list of rows with a symbol each, at most three (Apple's welcome sheet; Material's
- *   "top user benefits": no more than three);
- * - the honest limits and the consent kept inside the flow instead of a wall of text (Apple HIG: licensing details
- *   integrated in a balanced way; Samsung's start process: a disclaimer shown once, confirmed at the bottom);
- * - the looking area on top, the touching area at the bottom (One UI), with a full-width call to action: "다음" on
- *   the first pages, "다음에" / "확인하고 시작하기" on the last (Toss's bottom CTA and its button words: "~하기" for
- *   the one action asked, "다음에" instead of "취소").
- * Palette, type and motion are the home screen's (docs/DESIGN.md): teal for virtual bass and the main actions,
- * purple for spatial, iOS easing; with the system animations off every stage shows one still key frame. Pages
- * scroll, so text up to 200 % never clips; the stage keeps the same height on every page (30 % of the screen, so
- * the bottom buttons growing on the last page do not resize it).
+ * The welcome (WelcomeActivity): the first-run notice of the general build as six full-screen pages, one message
+ * each, shaped after other apps' first screens (Toss, Samsung Smart Switch):
+ * 1 "반가워요!" alone in the middle with the app's mark drawn in motion; 2 virtual bass; 3 spatial; 4 the delay and
+ * its fix; 5 what to know before turning it on; 6 setup, privacy and licence, ending with "다음에" / "확인하고
+ * 시작하기" (Toss's bottom CTA and its button words: "~하기" for the one action asked, "다음에" instead of "취소").
+ * Each page: a symbol, a large title of one or two lines, a short line, then its picture or its few rows; the
+ * looking area on top, the touching area at the bottom (One UI). One motion per page (Toss "why motion in
+ * finance"); legal details kept inside the flow without breaking it (Apple HIG). Palette, type and motion are the
+ * home screen's (docs/DESIGN.md); with the system animations off every picture shows one still key frame. Pages
+ * scroll, so text up to 200 % never clips; pictures keep one height (30 % of the screen).
  */
 
 @Immutable
@@ -140,9 +137,16 @@ class WelcomeActions(
 )
 
 private val Ease = CubicBezierEasing(0.32f, 0.72f, 0f, 1f)
-private const val PAGES = 3
+private const val PAGES = 6
 /** The last page (the consent); where the welcome opens when it was put off once already. */
 const val WELCOME_LAST_PAGE = PAGES - 1
+
+/** Pages: hello, virtual bass, spatial, the delay, good to know, ready (the consent). */
+private const val P_HELLO = 0
+private const val P_BASS = 1
+private const val P_SPACE = 2
+private const val P_DELAY = 3
+private const val P_KNOW = 4
 
 @Composable
 fun WelcomeScreen(state: WelcomeState, actions: WelcomeActions) {
@@ -178,10 +182,9 @@ fun WelcomeScreen(state: WelcomeState, actions: WelcomeActions) {
 
 // ------------------------------------------------------------------------------------------------- top and bottom
 
-/** The brand mark as the home screen's top bar writes it, the page dots, and "건너뛰기" (kept in place when hidden). */
+/** Nothing but where you are and "건너뛰기" (kept in place, silent, on the last page): each page is one message. */
 @Composable
 private fun WelcomeTopBar(page: Int, reduceMotion: Boolean, showSkip: Boolean, onSkip: () -> Unit) {
-    val c = rootnotePalette()
     Row(
         Modifier
             .fillMaxWidth()
@@ -189,15 +192,8 @@ private fun WelcomeTopBar(page: Int, reduceMotion: Boolean, showSkip: Boolean, o
             .padding(start = 16.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.size(10.dp).background(c.fill, CircleShape))
-        Spacer(Modifier.width(8.dp))
-        Text(
-            stringResource(R.string.app_brand_name),
-            modifier = Modifier.weight(1f).semantics { heading() },
-            color = c.textPrimary, fontSize = 20.sp, lineHeight = 26.sp, fontWeight = FontWeight.Bold,
-            letterSpacing = (-0.3).sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
-        )
         Dots(page, reduceMotion)
+        Spacer(Modifier.weight(1f))
         TextAction(stringResource(R.string.welcome_skip), visible = showSkip, onClick = onSkip)
     }
 }
@@ -309,27 +305,119 @@ private fun TextAction(label: String, visible: Boolean = true, onClick: () -> Un
 
 // ------------------------------------------------------------------------------------------------- pages
 
+/**
+ * One message per page, laid out like the first screens of Toss and Samsung's apps: a symbol, a large title of one
+ * or two lines, a short line under it, then the picture (or the few rows that page needs) in the space below. The
+ * first page is the greeting alone, centred.
+ */
 @Composable
 private fun WelcomePage(page: Int, state: WelcomeState, active: Boolean, stageHeight: Dp, actions: WelcomeActions) {
+    val c = rootnotePalette()
+    if (page == P_HELLO) {
+        HelloPage(state, active)
+        return
+    }
     Column(
         Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(start = 16.dp, end = 16.dp, top = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+            .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        WelcomeStage(page, state, active, Modifier.fillMaxWidth().height(stageHeight))
-        Spacer(Modifier.height(4.dp))
         when (page) {
-            0 -> Appear(state.reduceMotion) { HelloText(state) }
-            1 -> KnowText()
-            else -> ReadyText(state, actions)
+            P_BASS -> {
+                PageHead(Glyph.BASS, c.fill, R.string.welcome_bass_title, stringResource(R.string.welcome_bass_body))
+                WelcomeStage(page, state, active, Modifier.padding(top = 14.dp).fillMaxWidth().height(stageHeight))
+                Note(
+                    state.measuredName?.let { stringResource(R.string.welcome_device_measured, it) }
+                        ?: stringResource(R.string.welcome_device_unmeasured)
+                )
+            }
+            P_SPACE -> {
+                PageHead(Glyph.SPACE, c.xtcFill, R.string.welcome_spatial_title, stringResource(R.string.welcome_spatial_body))
+                WelcomeStage(page, state, active, Modifier.padding(top = 14.dp).fillMaxWidth().height(stageHeight))
+            }
+            P_DELAY -> {
+                PageHead(Glyph.CLOCK, c.fill, R.string.welcome_know_delay_title, stringResource(R.string.welcome_know_delay_body))
+                WelcomeStage(page, state, active, Modifier.padding(top = 14.dp).fillMaxWidth().height(stageHeight))
+            }
+            P_KNOW -> {
+                PageHead(Glyph.FLASK, c.fill, R.string.welcome_know_title, stringResource(R.string.welcome_know_body))
+                WarningPill(stringResource(R.string.welcome_know_volume))
+                Column {
+                    InfoRow(Glyph.FLASK, c.textSecondary, stringResource(R.string.welcome_know_experimental_title),
+                        stringResource(R.string.welcome_know_experimental_body))
+                    InfoRow(Glyph.SPEAKER, c.textSecondary, stringResource(R.string.welcome_know_speaker_title),
+                        stringResource(R.string.welcome_know_speaker_body))
+                    InfoRow(Glyph.APPS, c.textSecondary, stringResource(R.string.welcome_know_others_title),
+                        stringResource(R.string.welcome_know_others_body))
+                }
+            }
+            else -> ReadyPage(state, actions)
         }
-        Spacer(Modifier.height(8.dp))
     }
 }
 
-/** The first page's words come in once, after the picture: a short rise and fade (350 ms, iOS easing). */
+/**
+ * 1: "반가워요!" alone in the middle, with the app's mark: a beamed arpeggio whose first note head is empty (the
+ * fundamental the speaker cannot play) — the overtones arrive one by one and the empty head appears last, as if
+ * heard. Nothing explains it here; the next pages do.
+ */
+@Composable
+private fun HelloPage(state: WelcomeState, active: Boolean) {
+    val c = rootnotePalette()
+    // centred on the page, and still scrolls when large fonts make it taller than the page
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .heightIn(min = maxHeight)
+            .padding(horizontal = 24.dp, vertical = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Appear(state.reduceMotion) {
+            Text(
+                stringResource(R.string.welcome_hello_title),
+                modifier = Modifier.semantics { heading() },
+                color = c.accentText, fontSize = 28.sp, lineHeight = 36.sp, fontWeight = FontWeight.Bold,
+                letterSpacing = (-0.4).sp, textAlign = TextAlign.Center,
+            )
+        }
+        Spacer(Modifier.height(32.dp))
+        WelcomeStage(P_HELLO, state, active, Modifier.size(176.dp), card = false)
+        Spacer(Modifier.height(32.dp))
+        Text(
+            stringResource(R.string.welcome_hello_body, stringResource(R.string.app_brand_name)),
+            color = c.textSecondary, fontSize = 15.sp, lineHeight = 22.sp, textAlign = TextAlign.Center,
+        )
+        // the greeting sits a little above the middle, as on the screens it follows
+        Spacer(Modifier.height(48.dp))
+    }
+    }
+}
+
+/** The page's symbol (40 dp), its title (22/30 bold, one or two lines) and the line under it. */
+@Composable
+private fun PageHead(symbol: Glyph, tint: Color, title: Int, body: String) {
+    val c = rootnotePalette()
+    Canvas(Modifier.size(40.dp)) { glyph(symbol, tint) }
+    Spacer(Modifier.height(6.dp))
+    Text(
+        stringResource(title), modifier = Modifier.semantics { heading() },
+        color = c.textPrimary, fontSize = 22.sp, lineHeight = 30.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.4).sp,
+    )
+    Text(body, color = c.textSecondary, fontSize = 15.sp, lineHeight = 22.sp)
+}
+
+@Composable
+private fun Note(text: String) {
+    val c = rootnotePalette()
+    Text(text, color = c.textSecondary, fontSize = 13.sp, lineHeight = 18.sp)
+}
+
+/** The first page's words come in once: a short rise and fade (350 ms, iOS easing). */
 @Composable
 private fun Appear(reduceMotion: Boolean, content: @Composable () -> Unit) {
     var shown by rememberSaveable { mutableStateOf(reduceMotion) }
@@ -341,94 +429,35 @@ private fun Appear(reduceMotion: Boolean, content: @Composable () -> Unit) {
     Box(Modifier.graphicsLayer { alpha = p; translationY = (1f - p) * 12.dp.toPx() }) { content() }
 }
 
-@Composable
-private fun Heading(text: String) {
-    val c = rootnotePalette()
-    Text(
-        text, modifier = Modifier.semantics { heading() },
-        color = c.textPrimary, fontSize = 20.sp, lineHeight = 26.sp, fontWeight = FontWeight.Bold,
-    )
-}
-
-@Composable
-private fun Body(text: String) {
-    val c = rootnotePalette()
-    Text(text, color = c.textPrimary, fontSize = 15.sp, lineHeight = 22.sp)
-}
-
-/** 1: hello, and what the app does (two features and how it starts on this phone). */
-@Composable
-private fun HelloText(state: WelcomeState) {
-    val c = rootnotePalette()
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Heading(stringResource(R.string.welcome_hello_title))
-        Body(stringResource(R.string.welcome_hello_body))
-        Column {
-            InfoRow(Glyph.BASS, c.fill, stringResource(R.string.home_tab_bass), stringResource(R.string.welcome_bass_body))
-            InfoRow(Glyph.SPACE, c.xtcFill, stringResource(R.string.home_tab_spatial), stringResource(R.string.welcome_spatial_body))
-            InfoRow(
-                Glyph.PHONE, c.textSecondary, stringResource(R.string.welcome_device_title),
-                state.measuredName?.let { stringResource(R.string.welcome_device_measured, it) }
-                    ?: stringResource(R.string.welcome_device_unmeasured),
-            )
-        }
-    }
-}
-
-/** 2: the honest limits, with the one fix there is (exclude apps) and the one warning that cannot be hidden. */
-@Composable
-private fun KnowText() {
-    val c = rootnotePalette()
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Heading(stringResource(R.string.welcome_know_title))
-        Body(stringResource(R.string.welcome_know_body))
-        // the one warning that cannot be hidden, before the rows so it is seen without scrolling
-        WarningPill(stringResource(R.string.welcome_know_volume))
-        Column {
-            InfoRow(Glyph.FLASK, c.textSecondary, stringResource(R.string.welcome_know_experimental_title),
-                stringResource(R.string.welcome_know_experimental_body))
-            InfoRow(Glyph.CLOCK, c.textSecondary, stringResource(R.string.welcome_know_delay_title),
-                stringResource(R.string.welcome_know_delay_body))
-            InfoRow(Glyph.SPEAKER, c.textSecondary, stringResource(R.string.welcome_know_speaker_title),
-                stringResource(R.string.welcome_know_speaker_body))
-            InfoRow(Glyph.APPS, c.textSecondary, stringResource(R.string.welcome_know_others_title),
-                stringResource(R.string.welcome_know_others_body))
-        }
-    }
-}
-
-/** 3: what happens next on this phone (only the lines that apply to its Android version), privacy, licence. */
+/** 6: what happens next on this phone (only the lines that apply to its Android version), privacy, licence. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ReadyText(state: WelcomeState, actions: WelcomeActions) {
+private fun ReadyPage(state: WelcomeState, actions: WelcomeActions) {
     val c = rootnotePalette()
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Heading(stringResource(R.string.welcome_ready_title))
-        Body(stringResource(R.string.welcome_ready_body))
-        Column {
-            if (state.permissionsReady)
-                InfoRow(Glyph.CHECK, c.textSecondary, stringResource(R.string.welcome_ready_granted_title),
-                    stringResource(R.string.welcome_ready_granted_body))
-            else
-                InfoRow(Glyph.KEY, c.textSecondary, stringResource(R.string.welcome_ready_grant_title),
-                    stringResource(R.string.welcome_ready_grant_body))
-            InfoRow(
-                Glyph.DIALOG, c.textSecondary, stringResource(R.string.welcome_ready_capture_title),
-                stringResource(if (state.consentEveryTime) R.string.welcome_ready_capture_body_14 else R.string.welcome_ready_capture_body_old),
-            )
-            if (state.screenShareSetting)
-                InfoRow(Glyph.TOGGLE, c.textSecondary, stringResource(R.string.welcome_ready_a15_title),
-                    stringResource(R.string.welcome_ready_a15_body))
-            InfoRow(Glyph.LOCK, c.textSecondary, stringResource(R.string.welcome_ready_privacy_title),
-                stringResource(R.string.welcome_ready_privacy_body)) {
-                FlowRow(Modifier.offset(x = (-12).dp)) {
-                    TextAction(stringResource(R.string.welcome_ready_privacy_more), onClick = actions.onPrivacy)
-                    TextAction(stringResource(R.string.welcome_ready_license), onClick = actions.onLicense)
-                }
+    PageHead(Glyph.KEY, c.fill, R.string.welcome_ready_title, stringResource(R.string.welcome_ready_body))
+    Column {
+        if (state.permissionsReady)
+            InfoRow(Glyph.CHECK, c.textSecondary, stringResource(R.string.welcome_ready_granted_title),
+                stringResource(R.string.welcome_ready_granted_body))
+        else
+            InfoRow(Glyph.KEY, c.textSecondary, stringResource(R.string.welcome_ready_grant_title),
+                stringResource(R.string.welcome_ready_grant_body))
+        InfoRow(
+            Glyph.DIALOG, c.textSecondary, stringResource(R.string.welcome_ready_capture_title),
+            stringResource(if (state.consentEveryTime) R.string.welcome_ready_capture_body_14 else R.string.welcome_ready_capture_body_old),
+        )
+        if (state.screenShareSetting)
+            InfoRow(Glyph.TOGGLE, c.textSecondary, stringResource(R.string.welcome_ready_a15_title),
+                stringResource(R.string.welcome_ready_a15_body))
+        InfoRow(Glyph.LOCK, c.textSecondary, stringResource(R.string.welcome_ready_privacy_title),
+            stringResource(R.string.welcome_ready_privacy_body)) {
+            FlowRow(Modifier.offset(x = (-12).dp)) {
+                TextAction(stringResource(R.string.welcome_ready_privacy_more), onClick = actions.onPrivacy)
+                TextAction(stringResource(R.string.welcome_ready_license), onClick = actions.onLicense)
             }
         }
-        Text(stringResource(R.string.welcome_ready_legal), color = c.textSecondary, fontSize = 13.sp, lineHeight = 18.sp)
     }
+    Note(stringResource(R.string.welcome_ready_legal))
 }
 
 /**
@@ -475,11 +504,12 @@ private fun WarningPill(text: String) {
 /** Stage colours: teal = virtual bass and progress, purple = spatial. */
 private class HeroColors(val bass: Color, val space: Color, val ink: Color, val soft: Color, val line: Color, val bg: Color)
 
-private val KEY_FRAMES = floatArrayOf(0.8f, 0.5f, 0.9f)
-private val PERIODS = intArrayOf(4200, 3600, 4200)
+/** Key frame and loop length per page (hello, bass, spatial, delay); pages without a stage are not listed. */
+private val KEY_FRAMES = floatArrayOf(0.75f, 0.8f, 0.8f, 0.5f)
+private val PERIODS = intArrayOf(4800, 4200, 4200, 3600)
 
 @Composable
-private fun WelcomeStage(page: Int, state: WelcomeState, active: Boolean, modifier: Modifier) {
+private fun WelcomeStage(page: Int, state: WelcomeState, active: Boolean, modifier: Modifier, card: Boolean = true) {
     val c = rootnotePalette()
     val colors = remember(c) { HeroColors(c.fill, c.xtcFill, c.textPrimary, c.textSecondary, c.chipBorder, c.bg) }
     // One clock per page (0..1, looping from the page's key frame); a still key frame with the animations off or
@@ -495,26 +525,28 @@ private fun WelcomeStage(page: Int, state: WelcomeState, active: Boolean, modifi
     }
     val description = stringResource(
         when (page) {
-            0 -> R.string.welcome_hero_hello_a11y
-            1 -> R.string.welcome_hero_delay_a11y
-            else -> R.string.welcome_hero_ready_a11y
+            P_HELLO -> R.string.welcome_hero_logo_a11y
+            P_BASS -> R.string.welcome_hero_bass_a11y
+            P_SPACE -> R.string.welcome_hero_space_a11y
+            else -> R.string.welcome_hero_delay_a11y
         }
     )
     val labels = when (page) {
-        0 -> listOf(stringResource(R.string.home_tab_bass), stringResource(R.string.home_tab_spatial))
-        1 -> listOf(stringResource(R.string.welcome_hero_original), stringResource(R.string.app_brand_name),
+        P_DELAY -> listOf(stringResource(R.string.welcome_hero_original), stringResource(R.string.app_brand_name),
             stringResource(R.string.welcome_hero_delay))
-        else -> listOf(stringResource(R.string.welcome_step_grant), stringResource(R.string.welcome_step_allow),
-            stringResource(R.string.welcome_step_listen))
+        else -> listOf(stringResource(R.string.home_tab_bass), stringResource(R.string.home_tab_spatial))
     }
     val measurer = rememberTextMeasurer()
-    Box(modifier.clip(RoundedCornerShape(20.dp)).background(c.band)) {
-        Canvas(Modifier.fillMaxSize().padding(16.dp).semantics { contentDescription = description }) {
+    Box(if (card) modifier.clip(RoundedCornerShape(20.dp)).background(c.band) else modifier) {
+        Canvas(
+            Modifier.fillMaxSize().padding(if (card) 16.dp else 0.dp).semantics { contentDescription = description }
+        ) {
             val t = clock.value % 1f
             when (page) {
-                0 -> heroHello(t, colors, measurer, labels)
-                1 -> heroDelay(t, colors, measurer, labels)
-                else -> heroReady(t, colors, measurer, labels)
+                P_HELLO -> heroLogo(t, colors)
+                P_BASS -> heroHello(t, colors, measurer, labels, bass = true, space = false)
+                P_SPACE -> heroHello(t, colors, measurer, labels, bass = false, space = true)
+                else -> heroDelay(t, colors, measurer, labels)
             }
         }
     }
@@ -552,7 +584,8 @@ private fun DrawScope.label(measurer: TextMeasurer, text: String, color: Color, 
  * bass it cannot play spreads from the bottom speaker in large teal rings; then purple arcs open the sound out to
  * both sides. Everything fades a little before the loop starts again.
  */
-private fun DrawScope.heroHello(t: Float, col: HeroColors, measurer: TextMeasurer, labels: List<String>) {
+private fun DrawScope.heroHello(t: Float, col: HeroColors, measurer: TextMeasurer, labels: List<String>,
+                                 bass: Boolean = true, space: Boolean = true) {
     val unit = min(size.width / 10f, size.height / 7f)
     val cx = size.width / 2f
     val cy = size.height * 0.5f
@@ -561,8 +594,9 @@ private fun DrawScope.heroHello(t: Float, col: HeroColors, measurer: TextMeasure
     val top = cy - ph / 2f
     val bottom = cy + ph / 2f
     val end = 1f - smooth((t - 0.9f) / 0.1f)
-    val bassIn = smooth((t - 0.2f) / 0.2f) * end
-    val spaceIn = smooth((t - 0.48f) / 0.2f) * end
+    // with one feature only, it comes in after the small sound (0.3); with both, bass first and spatial after it
+    val bassIn = if (!bass) 0f else smooth((t - (if (space) 0.2f else 0.3f)) / 0.2f) * end
+    val spaceIn = if (!space) 0f else smooth((t - (if (bass) 0.48f else 0.3f)) / 0.2f) * end
     val ear = Offset(cx, top + unit * 0.25f)
     val foot = Offset(cx, bottom)
 
@@ -587,7 +621,7 @@ private fun DrawScope.heroHello(t: Float, col: HeroColors, measurer: TextMeasure
         }
     }
     // the small sound of the phone alone: short thin arcs, quieter once the bass is filled in
-    val small = 1f - 0.6f * bassIn
+    val small = 1f - 0.6f * maxOf(bassIn, spaceIn)
     for (k in 0 until 3) {
         val p = ((t * 3f) + k / 3f) % 1f
         val r = unit * (0.25f + 0.55f * p)
@@ -670,43 +704,61 @@ private fun DrawScope.heroDelay(t: Float, col: HeroColors, measurer: TextMeasure
 }
 
 /**
- * 3 (ready): three steps on a line, "권한 한 번" -> "켤 때 확인" -> "듣기". A dot travels from step to step and lights
- * each one it reaches; before the loop starts again the lights fade.
+ * The app's mark (docs/DESIGN.md 7): a beamed arpeggio, four notes rising. The three overtones arrive one by one, the
+ * beam joins them, and only then does the first, empty note head appear: the fundamental the small speaker cannot
+ * play, which the ear still hears. It fades a little before the loop starts again.
  */
-private fun DrawScope.heroReady(t: Float, col: HeroColors, measurer: TextMeasurer, labels: List<String>) {
+private fun DrawScope.heroLogo(t: Float, col: HeroColors) {
     val w = size.width
-    val unit = min(w / 10f, size.height / 7f)
-    val y = size.height * 0.45f
-    val xs = floatArrayOf(w * 0.17f, w * 0.5f, w * 0.83f)
-    val r = unit * 1.05f
-    val p = when {
-        t < 0.12f -> 0f
-        t < 0.42f -> smooth((t - 0.12f) / 0.3f)
-        t < 0.52f -> 1f
-        t < 0.82f -> 1f + smooth((t - 0.52f) / 0.3f)
-        else -> 2f
+    val h = size.height
+    val end = 1f - smooth((t - 0.92f) / 0.08f)
+    val xs = floatArrayOf(0.2f, 0.42f, 0.64f, 0.86f).map { it * w }
+    val ys = floatArrayOf(0.8f, 0.7f, 0.6f, 0.5f).map { it * h }
+    val rx = w * 0.085f
+    val ry = w * 0.062f
+    val beamY0 = h * 0.2f
+    val beamY1 = h * 0.12f
+    fun beamAt(x: Float) = beamY0 + (beamY1 - beamY0) * (x - xs[0]) / (xs[3] - xs[0])
+    val stroke = w * 0.035f
+    fun head(i: Int, a: Float, hollow: Boolean, grow: Float) {
+        if (a <= 0f) return
+        val cx = xs[i] - rx * 0.35f
+        val cy = ys[i]
+        rotate(-20f, Offset(cx, cy)) {
+            val tl = Offset(cx - rx * grow, cy - ry * grow)
+            val sz = Size(2 * rx * grow, 2 * ry * grow)
+            if (hollow) drawOval(col.bass.copy(alpha = a), tl, sz, style = Stroke(stroke * 0.8f))
+            else drawOval(col.bass.copy(alpha = a), tl, sz)
+        }
+        // the stem, from the right of the head up to the beam
+        val sx = cx + rx * 0.82f
+        drawLine(col.bass.copy(alpha = a), Offset(sx, cy - ry * 0.3f), Offset(sx, beamAt(sx)), stroke * 0.6f, StrokeCap.Round)
     }
-    val end = 1f - smooth((t - 0.94f) / 0.06f)
-    fun xAt(q: Float): Float = if (q <= 1f) xs[0] + (xs[1] - xs[0]) * q else xs[1] + (xs[2] - xs[1]) * (q - 1f)
-    // the track and the part already travelled
-    drawLine(col.line, Offset(xs[0], y), Offset(xs[2], y), 2.dp.toPx(), StrokeCap.Round)
-    drawLine(col.bass.copy(alpha = end), Offset(xs[0], y), Offset(xAt(p), y), 3.dp.toPx(), StrokeCap.Round)
-    val glyphs = listOf(Glyph.KEY, Glyph.DIALOG, Glyph.WAVES)
-    for (i in 0 until 3) {
-        val lit = (if (i == 0) 1f else smooth((p - (i - 0.15f)) / 0.15f) * end).coerceIn(0f, 1f)
-        val center = Offset(xs[i], y)
-        drawCircle(col.bg, r, center)
-        drawCircle(col.bass.copy(alpha = 0.14f * lit), r, center)
-        drawCircle(lerp(col.line, col.bass, lit), r, center, style = Stroke(2.dp.toPx()))
-        val box = r * 1.15f
-        glyph(glyphs[i], lerp(col.soft, col.bass, lit), Offset(center.x - box / 2f, center.y - box / 2f), box)
-        label(
-            measurer, labels.getOrElse(i) { "" }, lerp(col.soft, col.ink, lit),
-            Offset(center.x, y + r + 8.dp.toPx()), w / 3f - 8.dp.toPx(), center = true,
-        )
+    // the overtones, one by one
+    for (i in 1..3) {
+        val a = smooth((t - (0.06f + 0.12f * (i - 1))) / 0.1f) * end
+        head(i, a, hollow = false, grow = 0.7f + 0.3f * a)
     }
-    // the travelling dot (between the steps only)
-    if (p > 0.02f && p < 1.98f && kotlin.math.abs(p - 1f) > 0.02f) drawCircle(col.bass, unit * 0.16f, Offset(xAt(p), y))
+    // the beam joins the overtones, then reaches back to the fundamental's stem
+    fun stemX(i: Int) = xs[i] - rx * 0.35f + rx * 0.82f
+    val over = smooth((t - 0.42f) / 0.12f)
+    if (over > 0f && end > 0f) {
+        val xb = stemX(1) + (stemX(3) - stemX(1)) * over
+        drawLine(col.bass.copy(alpha = end), Offset(stemX(1), beamAt(stemX(1))), Offset(xb, beamAt(xb)), stroke * 1.4f, StrokeCap.Round)
+    }
+    val back = smooth((t - 0.6f) / 0.12f)
+    if (back > 0f && end > 0f) {
+        val xa = stemX(1) - (stemX(1) - stemX(0)) * back
+        drawLine(col.bass.copy(alpha = end), Offset(xa, beamAt(xa)), Offset(stemX(1), beamAt(stemX(1))), stroke * 1.4f, StrokeCap.Round)
+    }
+    // the fundamental: an empty head, heard though not played; a soft ring answers it
+    val fund = smooth((t - 0.6f) / 0.14f) * end
+    head(0, fund, hollow = true, grow = 1f)
+    if (fund > 0f && t < 0.92f) {
+        val p = ((t - 0.6f) / 0.32f).coerceIn(0f, 1f)
+        val cx = xs[0] - rx * 0.35f
+        drawCircle(col.bass.copy(alpha = 0.5f * (1f - p) * fund), rx * (1.2f + 1.6f * p), Offset(cx, ys[0]), style = Stroke(stroke * 0.4f))
+    }
 }
 
 private fun lerp(a: Color, b: Color, f: Float) = Color(

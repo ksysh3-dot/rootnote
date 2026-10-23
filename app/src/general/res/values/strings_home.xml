@@ -142,16 +142,20 @@
     <string name="story_compare_spatial">Spatial</string>
     <!-- Welcome (WelcomeActivity): the first-run notice of the general build, three pages -->
     <string name="welcome_activity_title">Welcome</string>
+    <string name="welcome_bass_title">The bass a small speaker cannot play,\nfilled in with overtones</string>
+    <string name="welcome_spatial_title">The sound opens out\nbeyond the phone</string>
+    <string name="welcome_hero_logo_a11y">The Rootnote mark: four beamed notes. The three upper notes (overtones) appear one by one, then the empty first note (the fundamental you hear but is not played).</string>
+    <string name="welcome_hero_bass_a11y">A phone. At first only a small sound comes out; then a large teal wave (virtual bass) spreads from the bottom speaker.</string>
+    <string name="welcome_hero_space_a11y">A phone. After its small sound, purple waves (spatial) open out to both sides beyond the phone.</string>
     <string name="welcome_skip">Skip</string>
     <string name="welcome_next">Next</string>
     <string name="welcome_later">Not now</string>
     <string name="welcome_start">Agree and start</string>
     <string name="welcome_pages_a11y">Page %1$d of %2$d</string>
-    <string name="welcome_hello_title">Nice to meet you</string>
-    <string name="welcome_hello_body">Music on your phone speakers gets the bass and the space a small speaker cannot give.</string>
+    <string name="welcome_hello_title">Nice to meet you!</string>
+    <string name="welcome_hello_body">This is %1$s.\nIt fills in the bass and the space your phone speakers are missing.</string>
     <string name="welcome_bass_body">Instead of the low notes the speaker cannot play, their overtones are added. Your ear hears the bass from the overtones alone.</string>
-    <string name="welcome_spatial_body">Less of each speaker leaks to the opposite ear, so the sound opens up beyond the sides of the phone. Try it with the phone held sideways.</string>
-    <string name="welcome_device_title">Starts right for this phone</string>
+    <string name="welcome_spatial_body">Less of each speaker leaks to the opposite ear. Try it with the phone held sideways.</string>
     <string name="welcome_device_measured">Starts with the values measured on the %1$s.</string>
     <string name="welcome_device_unmeasured">This phone has not been measured yet, so it starts carefully: bass protection on and the output lower. Adjust it by ear.</string>
     <string name="welcome_know_title">Good to know first</string>
@@ -184,10 +188,5 @@
     <string name="welcome_consent">\"Agree and start\" turns on virtual bass (experimental) at the default strength for this phone.</string>
     <string name="welcome_hero_original">Original</string>
     <string name="welcome_hero_delay">about 0.15 s</string>
-    <string name="welcome_step_grant">Permissions once</string>
-    <string name="welcome_step_allow">Allow when on</string>
-    <string name="welcome_step_listen">Listen</string>
-    <string name="welcome_hero_hello_a11y">A phone. At first only a small sound comes out; then a large teal wave (virtual bass) spreads from below, and purple waves (spatial) open up to both sides.</string>
     <string name="welcome_hero_delay_a11y">The original sound and the processed sound run side by side. The processed sound follows about 0.15 s later.</string>
-    <string name="welcome_hero_ready_a11y">Three steps: permissions once, allow when on, listen. A dot passes through them and lights each step.</string>
 </resources>

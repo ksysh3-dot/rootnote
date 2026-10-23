@@ -21,7 +21,7 @@ import me.timschneeberger.rootlessjamesdsp.utils.extensions.PermissionExtensions
 import me.timschneeberger.rootlessjamesdsp.utils.extensions.PermissionExtensions.hasRecordPermission
 
 /**
- * "반가워요": the first-run notice of the general build as three short pages (WelcomeScreen.kt). It replaces the old
+ * "반가워요": the first-run notice of the general build as six full-screen pages (WelcomeScreen.kt). It replaces the old
  * first-run dialog and carries the same consent: "확인하고 시작하기" confirms it (PvbGeneral.confirmFirstRun turns
  * processing and virtual bass on, at the profile's strength) and, since the first page already said how this phone
  * starts, the separate "not measured" notice is marked shown.
