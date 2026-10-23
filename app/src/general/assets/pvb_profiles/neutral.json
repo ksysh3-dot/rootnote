@@ -2,19 +2,19 @@
   "id": "neutral",
   "name": "Neutral (not measured)",
   "measured": false,
-  "_note": "Conservative defaults for any phone that has not been measured: protective high-pass only, flat EQ, 3 dB of output headroom. Match-on-disable is off, so the S26U-tuned loudness weighting of the matcher is never used; the S26U speaker and limiter curves are not shown. Virtual bass starts at +0, the weakest step (not +4 as on the S26U): nothing is known about an unmeasured speaker, so the default only switches it on and every increase is left to the listener; the EQ balance comes first (2026-10-23, S25+ feedback; the home tip says the same).",
+  "_note": "Conservative defaults for any phone that has not been measured: high-pass 120 Hz, low-mid +2 dB at 220 Hz, treble -2 dB at 4.5 kHz, 3 dB of output headroom. The EQ start (2026-10-23, docs/SPEAKER_ESTIMATES.md) is the S26 Ultra shape scaled back to the weak end of 92 Android phones measured by NotebookCheck: 90 % of them are 10 dB down (re the mids) at or below about 240 Hz, and their 200-400 Hz band is at most about 2 dB below the S26 Ultra; datasheets and papers bound it from above (no part makes useful bass below its box resonance without the maker's processing). Match-on-disable is off, so the S26U-tuned loudness weighting of the matcher is never used; the S26U speaker and limiter curves are not shown. Virtual bass starts at +0, the weakest step (not +4 as on the S26U): nothing is known about an unmeasured speaker, so the default only switches it on and every increase is left to the listener; the EQ balance comes first (2026-10-23, S25+ feedback; the home tip says the same).",
   "match": {
     "manufacturer": [],
     "model_prefixes": []
   },
   "settings": {
     "pvb_speaker_only": true,
-    "pvb_hp_hz": 100,
+    "pvb_hp_hz": 120,
     "pvb_low_hz": 220,
-    "pvb_low_db": 0,
+    "pvb_low_db": 2,
     "pvb_low_q": 1,
     "pvb_hi_hz": 4500,
-    "pvb_hi_db": 0,
+    "pvb_hi_db": -2,
     "pvb_hi_q": 0.6,
     "pvb_hs_hz": 2500,
     "pvb_hs_db": 0,
@@ -31,7 +31,7 @@
   "loudness_weighting": "none",
   "short_name": "",
   "_devmode_note": "Developer mode: speaker_floor_hz (graph zone below which the speaker plays practically nothing) and the bass protection threshold line protect_db_at_50 + protect_db_per_pct x (volume % - 50), at our output, 150-400 Hz, sine-equivalent dBFS. Not measured on this phone: the S26U line, shown as an estimate.",
-  "speaker_floor_hz": 150,
+  "speaker_floor_hz": 200,
   "protect_db_at_50": -15,
   "protect_db_per_pct": -0.4,
   "phone_model_curves": false

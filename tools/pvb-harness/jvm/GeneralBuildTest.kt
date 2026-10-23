@@ -1,4 +1,5 @@
 import android.content.SharedPreferences
+import me.timschneeberger.rootlessjamesdsp.pvb.DeviceProfile
 import me.timschneeberger.rootlessjamesdsp.pvb.DeviceProfiles
 import me.timschneeberger.rootlessjamesdsp.pvb.FirstRun
 import me.timschneeberger.rootlessjamesdsp.pvb.HomeLogic
@@ -60,9 +61,11 @@ fun main(args: Array<String>) {
 
     // Neutral profile values (release audit, section 7)
     val n = neutral.settings
-    check(n[PvbSettings.KEY_HP_HZ] == 100f && n[PvbSettings.KEY_LOW_DB] == 0f && n[PvbSettings.KEY_HI_DB] == 0f &&
+    check(n[PvbSettings.KEY_HP_HZ] == 120f && n[PvbSettings.KEY_LOW_DB] == 2f && n[PvbSettings.KEY_HI_DB] == -2f &&
         n[PvbSettings.KEY_HS_DB] == 0f && n[PvbSettings.KEY_OUT_DB] == -3f && n[PvbSettings.KEY_CEIL_DB] == -1f,
-        "neutral EQ values: $n")
+        "neutral EQ values (conservative start, docs/SPEAKER_ESTIMATES.md): $n")
+    check(neutral.speakerFloorHz == 200f, "neutral speaker floor 200 Hz (weak end of measured phones)")
+    check((n[PvbSettings.KEY_LOW_DB] as Float) <= (s26uProfileLowDb(profiles) ?: 3f), "neutral low-mid boost never above the S26U profile")
     check(n[PvbSettings.KEY_MATCH_ON_DISABLE] == false && n[PvbSettings.KEY_VOL_LINK] == false &&
         n[PvbSettings.KEY_DYN_ON] == false && n[PvbSettings.KEY_VB_ON] == false, "neutral switches off: $n")
     // s26u profile = the s26u build defaults
@@ -194,3 +197,5 @@ fun main(args: Array<String>) {
     println("General build: profiles (s26u SM-S948*, neutral fallback), caps (out -3, ceil -1, low +6, Q 2, HP 80, " +
         "release 30, VB 9), first-run gate, ADB commands, backup/transfer exclusions (${required.size} files) passed")
 }
+
+private fun s26uProfileLowDb(profiles: List<DeviceProfile>): Float? = profiles.firstOrNull { it.id == "s26u" }?.settings?.get(PvbSettings.KEY_LOW_DB) as? Float

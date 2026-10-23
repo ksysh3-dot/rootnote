@@ -88,7 +88,7 @@ CI는 `GENERAL_KEYSTORE_B64`를 `$RUNNER_TEMP/general.jks`로 풀고 `GENERAL_KE
 ## 5. 기기 프로파일
 
 - `app/src/general/assets/pvb_profiles/s26u.json`: `samsung` + 모델 접두어 `SM-S948`. `SM-S948N`은 측정한 기기에서 확인. 다른 지역 접미어(B, U, U1, W, 0 등)는 **TODO-confirm**. `SM-S938*`(S25 Ultra)은 일부러 제외.
-- `neutral.json`: 저역 차단 100 Hz, 저중역 0, 고역 0, 고음 기울기 0, 출력 −3 dB, 상한 −1 dBTP, 끌 때 음량 맞춤·볼륨 연동·조용한 구간·가상 저음 꺼짐. 음량 맞춤을 끄므로 S26U 스피커 가중 필터는 쓰이지 않고, S26U 곡선(분석 화면 스피커 반영, 폰 리미터 추정)은 표시하지 않습니다.
+- `neutral.json`: 저역 차단 120 Hz, 저중역 +2 dB(220 Hz), 고역 −2 dB(4.5 kHz) — 실측된 안드로이드 92기종 중 약한 쪽 끝에 맞춘 보수적 시작값(docs/SPEAKER_ESTIMATES.md), 고음 기울기 0, 출력 −3 dB, 상한 −1 dBTP, 끌 때 음량 맞춤·볼륨 연동·조용한 구간·가상 저음 꺼짐. 음량 맞춤을 끄므로 S26U 스피커 가중 필터는 쓰이지 않고, S26U 곡선(분석 화면 스피커 반영, 폰 리미터 추정)은 표시하지 않습니다.
 - 처음 설치할 때 한 번만 `pvb_settings`에 씁니다(`pvb_device_profile` 키로 기록). 이후 값은 사용자 것입니다. 측정되지 않은 기기에서는 첫 실행 안내(시작 안내)의 첫 쪽에서 조심스러운 시작값을 알리고, 상태 카드에도 한 줄 표시합니다. 시작 안내를 확인하면 따로 있던 "이 기기는 측정되지 않았습니다" 대화상자는 띄우지 않습니다.
 - 새 기기를 추가하려면 JSON 파일을 하나 더 넣습니다(`settings` 키는 `DeviceProfiles.FLOAT_KEYS`/`BOOL_KEYS`만 읽음).
 

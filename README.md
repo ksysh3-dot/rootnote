@@ -30,7 +30,7 @@ only; headphones and Bluetooth are bypassed.
 **Beta** (`0.9.0-beta.4`, Android 10 or later, arm64).
 
 - The default settings were measured on a **Galaxy S26 Ultra** (model `SM-S948*`). Every other phone starts
-  with a conservative neutral profile (100 Hz protective low cut, flat EQ, output -3 dB, limiter -1 dBTP) and a
+  with a conservative neutral profile (120 Hz low cut, low-mid +2 dB, treble -2 dB, output -3 dB, limiter -1 dBTP; see docs/SPEAKER_ESTIMATES.md) and a
   one-time notice that it has not been measured. Adjust by ear.
 - Nothing is processed before you confirm the first-run notice. Confirming it turns the speaker correction **and
   virtual bass** on (the notice carries the virtual-bass warning); the home screen switch turns processing off.

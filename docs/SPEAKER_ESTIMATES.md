@@ -1,6 +1,8 @@
 # Speaker response estimates for unmeasured phones
 
-Status: research result, 2026-10-23. Not yet used by the app. Proposals at the end need the maintainer's decision.
+Status: research result, 2026-10-23. Applied: the conservative start for every unmeasured phone (neutral profile: high-pass
+120 Hz, low-mid +2 dB at 220 Hz, treble -2 dB at 4.5 kHz, speaker floor 200 Hz, virtual bass +0). The per-group Galaxy
+values below are still proposals.
 
 ## What this is
 
