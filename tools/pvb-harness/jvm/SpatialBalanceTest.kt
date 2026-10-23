@@ -130,6 +130,13 @@ fun main() {
         listOf(record(pr, false), record(pr, false)), sr)
     check("runs that disagree by 3 dB: not reliable", !unsteady.reliable, "repeat=${"%.2f".format(unsteady.repeatDb)}")
 
+    // a burst confined to two bands of one run (8 dB): the median hides it, the worst-band check does not
+    val burst = pl.copyOf().also { peaking(it, sr, 5000.0, 4.0, 8.0); peaking(it, sr, 6300.0, 4.0, 8.0) }
+    val bursty = SpatialBalance.analyze(noise, listOf(record(pl, true), record(burst, true)),
+        listOf(record(pr, false), record(pr, false)), sr)
+    check("a burst in two bands of one run: not reliable", !bursty.reliable,
+        "repeat=${"%.2f".format(bursty.repeatDb)} worst=${"%.2f".format(bursty.repeatWorstDb)}")
+
     val silent = SpatialBalance.analyze(noise, listOf(noise), listOf(noise), sr)
     check("nothing played (noise only): not usable, balance 0", !silent.usable && silent.loDb == 0f && silent.hiDb == 0f)
 

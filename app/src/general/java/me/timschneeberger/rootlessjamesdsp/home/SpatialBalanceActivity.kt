@@ -40,14 +40,15 @@ import me.timschneeberger.rootlessjamesdsp.service.BaseAudioProcessorService
  * - Automatic: the phone plays a sweep from the left channel, then the right (twice each) and records its own two
  *   microphones; SpatialBalance cancels the microphones and the distances (cross method). Spatial and virtual bass
  *   are held off while measuring, so the raw speakers are compared. The result is an estimate for this grip (the
- *   path assumption cannot be checked, SpatialBalance notes): a sound recording is offered with "귀로 확인하기" first,
- *   an unsound one (one microphone, runs that disagree) only leads to tuning by ear from the stored values.
+ *   path assumption cannot be checked, SpatialBalance notes): a sound recording only places the by-ear slider
+ *   ("귀로 확인하기"), an unsound one (one microphone, runs that disagree) is not used and tuning by ear starts from
+ *   the stored values. A measured value is never stored without the listener's "저장".
  * - By ear: band noise (400-1500 Hz, then 1.5-8 kHz) in both channels with spatial on; the listener moves it to the
  *   centre. Starts from a sound automatic result, so the ear only confirms or fine-tunes it.
  *
  * Everything plays through the speaker path with JamesDSP held out (PvbRuntime.calibrating: a crossfeed or widening
  * would carry one channel into the other; DevTestSound replaces the captured music) and through
- * PvbRuntime.setDevOverride. Nothing is stored before "저장" / "이대로 저장"; leaving the screen or a step stops the
+ * PvbRuntime.setDevOverride. Nothing is stored before the by-ear "저장" (or "값 지우기"); leaving the screen or a step stops the
  * sound, clears the override and goes back to the stored values.
  * The rotation it was set in is stored: turned round, the controller swaps the correction with the speakers.
  */
@@ -81,7 +82,6 @@ class SpatialBalanceActivity : BaseActivity() {
                     onEar = { startEar() },
                     onEarValue = { v -> setEarValue(v) },
                     onEarNext = { earNext() },
-                    onApplyAuto = { r -> applyAuto(r) },
                     onRefine = { r -> refine(r) },
                     onSave = { save() },
                     onReset = { reset() },
@@ -282,13 +282,6 @@ class SpatialBalanceActivity : BaseActivity() {
     }
 
     private fun post(block: () -> Unit) { main.post { if (!isFinishing) block() } }
-
-    /** "이대로 저장": only offered for a sound result. */
-    private fun applyAuto(r: SpatialBalance.Result) {
-        if (!r.reliable) return
-        ui = ui.copy(loDb = r.loDb, hiDb = r.hiDb, source = "mic")
-        save()
-    }
 
     /**
      * "귀로 확인하기" / "귀로 맞추기": the by-ear steps start from a sound result, otherwise from the stored values.

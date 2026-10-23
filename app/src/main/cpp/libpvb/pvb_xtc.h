@@ -171,7 +171,8 @@ public:
     // this stage and added after it, so without this it would reach both speakers whatever the portrait mode. MONO:
     // both get the mono layer; SPLIT_*: all of it goes to the low channel at +3 dB like the music's low part (the
     // layer is harmonics of the bass, at most a few hundred hertz), nothing to the earpiece. Landscape modes leave
-    // the layer as it is. Follows the same crossfade as tick(); call after tick() for the same sample.
+    // the layer as it is. Follows the same crossfade as tick(); call after tick() for the same sample, and only for a
+    // layer generated from the input before this stage (a layer made from the processed signal already follows it).
     inline void routeLayer(double& l, double& r) const {
         if (cur_.mode < PORTRAIT_MONO || x_ == 0.0) return;
         const double mono = 0.5 * (l + r);

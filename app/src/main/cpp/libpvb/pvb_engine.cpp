@@ -661,13 +661,16 @@ void Engine::process(float* io, int frames) {
                 }
             }
         }
-        // Upright split or mono: the layer goes where the music's low part goes (not to the earpiece).
-        if (!xtc_.idle()) xtc_.routeLayer(layL, layR);
+        // Developer meter: the layer as generated (before the routing below), like its dry reference from before XTC.
+        const double layMid = 0.5 * (layL + layR);
+        // Upright split or mono: the layer goes where the music's low part goes (not to the earpiece). Models that
+        // generate from the EQ output (inputAfterEq, Bankstown) already follow the split: left as they are.
+        if (vbCur_ >= 0 && !vbMods_[vbCur_]->inputAfterEq() && !xtc_.idle()) xtc_.routeLayer(layL, layR);
         if (devMeterOn_) {
             // Developer-mode display only (nothing here reaches the output): dry low band (aligned with the layer),
             // layer, and both in the 150-400 Hz band where the phone's protection acts.
             const double low = devLp_.tick(sDevLp_, 0.5 * (xdl + xdr));
-            const double lay = vg * 0.5 * (layL + layR) * og;
+            const double lay = vg * layMid * og;
             devBinDry_ += low * low;
             devBinLay_ += lay * lay;
             const double bd = devBp_.tick(sDevBpDry_, 0.5 * (wl + wr) * og);

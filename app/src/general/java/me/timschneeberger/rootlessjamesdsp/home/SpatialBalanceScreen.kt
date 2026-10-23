@@ -90,9 +90,10 @@ class BalanceActions(
     val onEar: () -> Unit,
     val onEarValue: (Float) -> Unit,
     val onEarNext: () -> Unit,
-    /** "이대로 저장" (a sound result only). */
-    val onApplyAuto: (SpatialBalance.Result) -> Unit,
-    /** "귀로 확인하기" / "귀로 맞추기" from a result; stores nothing. */
+    /**
+     * "귀로 확인하기" / "귀로 맞추기" from a result: the by-ear steps start at a sound result (else at the stored values).
+     * Stores nothing; a measured value is only stored by the by-ear "저장".
+     */
     val onRefine: (SpatialBalance.Result) -> Unit,
     val onSave: () -> Unit,
     val onReset: () -> Unit,
@@ -228,20 +229,16 @@ private fun StepContent(ui: BalanceUi, actions: BalanceActions) {
         BalanceStep.RESULT -> {
             val r = ui.result ?: return
             title(stringResource(R.string.balance_result_title))
-            body(stringResource(R.string.balance_result_body, sideText(r.loDb), sideText(r.hiDb)))
-            // a sound recording is still an estimate for this grip (the microphones' paths are assumed mirror-like):
-            // confirming by ear comes first; an unsound one is not offered at all
+            // a sound recording is still an estimate for this grip (the microphones' paths are assumed mirror-like, and
+            // a mixed pair can pass): it only places the by-ear slider, the listener saves; an unsound one is not used
+            if (r.reliable) body(stringResource(R.string.balance_result_body, sideText(r.loDb), sideText(r.hiDb)))
             note(stringResource(when {
                 r.reliable -> R.string.balance_result_estimate
                 !r.distinctMics -> R.string.balance_result_one_mic
                 else -> R.string.balance_result_unsteady
             }))
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                ActionButton(stringResource(if (r.reliable) R.string.balance_check_ear else R.string.balance_ear),
-                    filled = true, enabled = true) { actions.onRefine(r) }
-                if (r.reliable)
-                    ActionButton(stringResource(R.string.balance_apply), filled = false, enabled = true) { actions.onApplyAuto(r) }
-            }
+            ActionButton(stringResource(if (r.reliable) R.string.balance_check_ear else R.string.balance_ear),
+                filled = true, enabled = true) { actions.onRefine(r) }
         }
         BalanceStep.EAR_LO, BalanceStep.EAR_HI -> {
             val lo = ui.step == BalanceStep.EAR_LO

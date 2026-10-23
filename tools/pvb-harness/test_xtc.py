@@ -155,12 +155,18 @@ def main():
     t = np.arange(sr * 6) / sr
     bass = np.repeat((0.2 * np.sin(2 * np.pi * 80 * t))[:, None], 2, axis=1).astype(np.float32)
     k2 = 2 * sr
-    for mode, low_ch in ((4, 0), (5, 1)):
-        y = te.Engine(lib, sr, xtc_mode=mode, vb_on=1, vb_algo=6, vb_level_db=4).process(bass)[k2:]
-        lay = band_db(y, 150, 800)
-        check(f'upright split {mode} + virtual bass (P1): the layer only on the low channel (earpiece >= 40 dB lower)',
-              lay[low_ch] - lay[1 - low_ch] >= 40 and np.all(np.isfinite(y)),
-              f'low {lay[low_ch]:.1f} dBFS, earpiece {lay[1 - low_ch]:.1f} dBFS')
+    # Both model families: P1 (generates from the input, routed by the XTC stage) and Bankstown (generates from the
+    # EQ output, so it already follows the split and must not be routed twice). The layer's power is kept: the low
+    # channel gets the per-channel landscape level +3 dB.
+    for algo, name in ((6, 'P1'), (1, 'Bankstown')):
+        flat = band_db(te.Engine(lib, sr, xtc_mode=0, vb_on=1, vb_algo=algo, vb_level_db=4).process(bass)[k2:], 150, 800)
+        for mode, low_ch in ((4, 0), (5, 1)):
+            y = te.Engine(lib, sr, xtc_mode=mode, vb_on=1, vb_algo=algo, vb_level_db=4).process(bass)[k2:]
+            lay = band_db(y, 150, 800)
+            check(f'upright split {mode} + virtual bass ({name}): layer only on the low channel (earpiece >= 40 dB lower), '
+                  f'power kept (low = landscape + 3 dB)',
+                  lay[low_ch] - lay[1 - low_ch] >= 40 and abs(lay[low_ch] - flat[low_ch] - 3.01) < 0.2 and np.all(np.isfinite(y)),
+                  f'low {lay[low_ch]:.1f} dBFS (landscape {flat[low_ch]:.1f}), earpiece {lay[1 - low_ch]:.1f} dBFS')
     left_bass = bass.copy(); left_bass[:, 1] = 0
     y = te.Engine(lib, sr, xtc_mode=3, vb_on=1, vb_algo=6, vb_level_db=4).process(left_bass)[k2:]
     lay = band_db(y, 150, 800)

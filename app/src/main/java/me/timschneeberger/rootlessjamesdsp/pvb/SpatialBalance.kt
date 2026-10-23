@@ -22,8 +22,9 @@ import kotlin.math.sqrt
  * real phone only approximates (mic port placement, directivity, the hand). The leftover is
  * 10·log10((H_L0·H_L1)/(H_R0·H_R1)) dB for amplitude transfers H and cannot be seen in the recordings (three
  * unknowns, two equations). So the result is an estimate for this grip: [Result.reliable] only says the recording was
- * sound (two microphones positively told apart, the runs agree, enough signal), never that the path assumption holds,
- * and the screen asks the listener to confirm it by ear. Two microphones are established positively: the per-mic
+ * sound (two microphones positively told apart, the runs agree, enough signal), never that the path assumption holds.
+ * A mixed (beamformed) pair or a per-channel level stage can still pass, so the screen never saves a measured value
+ * directly: a sound result only places the by-ear slider, and the listener's "저장" is what stores it. Two microphones are established positively: the per-mic
  * left/right ratios must differ clearly ([MIN_MIC_SPREAD_DB]); one microphone copied to both channels with any gain,
  * delay or filter gives the same ratio on both channels, and the recorder's own microphone list
  * (AudioRecord.getActiveMicrophones, [analyze] micsReported) overrides when it reports a single microphone.
@@ -42,8 +43,10 @@ object SpatialBalance {
     const val MIN_MIC_SPREAD_DB = 4.0
     /** ...with the same sign in at least this share of the valid bands. */
     const val MIN_SPREAD_AGREEMENT = 0.8
-    /** The repeated runs agree within this (median over bands, mics and sides, dB) for a reliable result. */
+    /** The repeated runs agree within this (median over bands and mics, worse side, dB) for a reliable result. */
     const val MAX_REPEAT_DB = 1.0
+    /** ...and no more than a tenth of the bands differ by more than this (a burst in a few bands, dB). */
+    const val MAX_REPEAT_WORST_DB = 3.0
     /** Lags (samples, either way) tried when looking for one microphone copied to both channels. */
     const val CLONE_MAX_LAG = 48
 
@@ -66,6 +69,8 @@ object SpatialBalance {
         val micSpreadDb: Double = Double.NaN,
         /** Difference between the first two runs of each side (dB, the worse side's median); NaN with one run per side. */
         val repeatDb: Double = Double.NaN,
+        /** The same, the worse side's 90th percentile (a burst confined to a few bands). */
+        val repeatWorstDb: Double = Double.NaN,
         /** Microphones the recorder reported (AudioRecord.getActiveMicrophones); -1 when unknown. */
         val micsReported: Int = -1,
     ) {
@@ -73,7 +78,7 @@ object SpatialBalance {
          * The recording itself was sound: usable, two microphones, repeatable. Not a proof that the paths cancel
          * (see the class notes): the value is still offered as an estimate to confirm by ear.
          */
-        val reliable: Boolean get() = usable && distinctMics && !(repeatDb > MAX_REPEAT_DB)
+        val reliable: Boolean get() = usable && distinctMics && !(repeatDb > MAX_REPEAT_DB) && !(repeatWorstDb > MAX_REPEAT_WORST_DB)
     }
 
     /** Band powers (mean square) of channel [ch] of [r] for every band in [BANDS] (two cascaded RBJ band-passes). */
@@ -177,6 +182,7 @@ object SpatialBalance {
         // repeatability: the first two runs of each side, per band and mic where both are clear of the noise; the
         // worse side's median
         var repeat = Double.NaN
+        var repeatWorst = Double.NaN
         for (runs in listOf(lRuns, rRuns)) {
             if (runs.size < 2) continue
             val diffs = ArrayList<Double>()
@@ -185,8 +191,11 @@ object SpatialBalance {
                 if (above(a, m, i) && above(b, m, i)) diffs += abs(10 * log10((a - nz[m][i]) / (b - nz[m][i])))
             }
             if (diffs.isEmpty()) continue
-            val median = diffs.sorted()[diffs.size / 2]
+            val sorted = diffs.sorted()
+            val median = sorted[sorted.size / 2]
+            val p90 = sorted[minOf(sorted.size - 1, (sorted.size * 9) / 10)]
             if (repeat.isNaN() || median > repeat) repeat = median
+            if (repeatWorst.isNaN() || p90 > repeatWorst) repeatWorst = p90
         }
         fun avg(sel: (Double) -> Boolean): Double? {
             val v = BANDS.indices.filter { sel(BANDS[it]) }.map { bands[it] }.filter { !it.isNaN() }
@@ -202,6 +211,7 @@ object SpatialBalance {
             usable = lo != null && hi != null,
             micSpreadDb = spread,
             repeatDb = repeat,
+            repeatWorstDb = repeatWorst,
             micsReported = micsReported,
         )
     }
