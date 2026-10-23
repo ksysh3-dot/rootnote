@@ -114,5 +114,6 @@ class WelcomeActivity : BaseActivity() {
             Intent(context, WelcomeActivity::class.java)
                 .putExtra(EXTRA_THEN_SETUP, true)
                 .putExtra(EXTRA_FIX_PERMS, fixPerms)
+                .putExtra(PvbGeneral.EXTRA_WELCOME_AT_CONSENT, PvbGeneral.welcomeLater)
     }
 }

@@ -2,8 +2,10 @@ package me.timschneeberger.rootlessjamesdsp.home
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.EnterExitState
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -84,6 +86,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
@@ -106,7 +109,8 @@ import kotlin.math.sin
  *   the one action asked, "다음에" instead of "취소").
  * Palette, type and motion are the home screen's (docs/DESIGN.md): teal for virtual bass and the main actions,
  * purple for spatial, iOS easing; with the system animations off every stage shows one still key frame. Pages
- * scroll, so text up to 200 % never clips; the stage keeps about 40 % of the page.
+ * scroll, so text up to 200 % never clips; the stage keeps the same height on every page (30 % of the screen, so
+ * the bottom buttons growing on the last page do not resize it).
  */
 
 @Immutable
@@ -145,25 +149,29 @@ fun WelcomeScreen(state: WelcomeState, actions: WelcomeActions) {
     val c = rootnotePalette()
     val pager = rememberPagerState(initialPage = state.initialPage.coerceIn(0, WELCOME_LAST_PAGE)) { PAGES }
     val scope = rememberCoroutineScope()
-    val last = pager.currentPage == WELCOME_LAST_PAGE
+    // The answers appear only once the last page has settled, never in the middle of a swipe.
+    val last = pager.settledPage == WELCOME_LAST_PAGE
     // Back turns the page back; on the first page it leaves (WelcomeActivity decides what that means).
     BackHandler {
         if (pager.currentPage > 0) scope.launch { pager.animateScrollToPage(pager.currentPage - 1) } else actions.onLeave()
     }
-    Column(
+    BoxWithConstraints(
         Modifier
             .fillMaxSize()
             .background(c.bg)
             .safeDrawingPadding()
     ) {
-        WelcomeTopBar(page = pager.currentPage, reduceMotion = state.reduceMotion, showSkip = !last) {
-            scope.launch { pager.animateScrollToPage(WELCOME_LAST_PAGE) }
-        }
-        HorizontalPager(state = pager, modifier = Modifier.weight(1f).fillMaxWidth()) { page ->
-            WelcomePage(page, state, active = page == pager.currentPage, actions)
-        }
-        WelcomeBottomBar(last, state.reduceMotion, actions) {
-            scope.launch { pager.animateScrollToPage(pager.currentPage + 1) }
+        val stageHeight = maxHeight * 0.3f
+        Column(Modifier.fillMaxSize()) {
+            WelcomeTopBar(page = pager.currentPage, reduceMotion = state.reduceMotion, showSkip = !last) {
+                scope.launch { pager.animateScrollToPage(WELCOME_LAST_PAGE) }
+            }
+            HorizontalPager(state = pager, modifier = Modifier.weight(1f).fillMaxWidth()) { page ->
+                WelcomePage(page, state, active = page == pager.currentPage, stageHeight, actions)
+            }
+            WelcomeBottomBar(last, state.reduceMotion, actions) {
+                scope.launch { pager.animateScrollToPage(pager.currentPage + 1) }
+            }
         }
     }
 }
@@ -178,7 +186,7 @@ private fun WelcomeTopBar(page: Int, reduceMotion: Boolean, showSkip: Boolean, o
         Modifier
             .fillMaxWidth()
             .heightIn(min = 56.dp)
-            .padding(start = 16.dp, end = 4.dp),
+            .padding(start = 16.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(Modifier.size(10.dp).background(c.fill, CircleShape))
@@ -218,6 +226,7 @@ private fun Dots(page: Int, reduceMotion: Boolean) {
  * the consent line with "다음에" and "확인하고 시작하기". The change fades out and in (150 + 150 ms, like the home
  * screen's text changes).
  */
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 private fun WelcomeBottomBar(last: Boolean, reduceMotion: Boolean, actions: WelcomeActions, onNext: () -> Unit) {
     val c = rootnotePalette()
@@ -230,6 +239,9 @@ private fun WelcomeBottomBar(last: Boolean, reduceMotion: Boolean, actions: Welc
         contentAlignment = Alignment.BottomCenter,
         label = "cta",
     ) { isLast ->
+        // Buttons answer only while fully shown: never while fading in or out (an invisible "확인하고 시작하기"
+        // must not catch a quick second tap on "다음").
+        val shown = transition.currentState == EnterExitState.Visible && transition.targetState == EnterExitState.Visible
         Column(
             Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -237,18 +249,19 @@ private fun WelcomeBottomBar(last: Boolean, reduceMotion: Boolean, actions: Welc
             if (isLast) {
                 Text(stringResource(R.string.welcome_consent), color = c.textSecondary, fontSize = 13.sp, lineHeight = 18.sp)
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    PillButton(stringResource(R.string.welcome_later), filled = false, Modifier.weight(1f), actions.onLater)
-                    PillButton(stringResource(R.string.welcome_start), filled = true, Modifier.weight(2f), actions.onStart)
+                    PillButton(stringResource(R.string.welcome_later), filled = false, shown, Modifier.weight(1f), actions.onLater)
+                    PillButton(stringResource(R.string.welcome_start), filled = true, shown, Modifier.weight(2f), actions.onStart)
                 }
             } else {
-                PillButton(stringResource(R.string.welcome_next), filled = true, Modifier.fillMaxWidth(), onNext)
+                PillButton(stringResource(R.string.welcome_next), filled = true, shown, Modifier.fillMaxWidth(), onNext)
             }
         }
     }
 }
 
+/** [enabled] false only while the button fades in or out: it keeps its look, it just does not answer. */
 @Composable
-private fun PillButton(label: String, filled: Boolean, modifier: Modifier, onClick: () -> Unit) {
+private fun PillButton(label: String, filled: Boolean, enabled: Boolean, modifier: Modifier, onClick: () -> Unit) {
     val c = rootnotePalette()
     Box(
         modifier
@@ -258,7 +271,7 @@ private fun PillButton(label: String, filled: Boolean, modifier: Modifier, onCli
                 if (filled) Modifier.background(c.fill, CircleShape)
                 else Modifier.border(1.dp, c.chipBorder, CircleShape)
             )
-            .clickable(role = Role.Button, onClick = onClick)
+            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
             .padding(horizontal = 20.dp, vertical = 12.dp),
         contentAlignment = Alignment.Center,
     ) {
@@ -293,25 +306,22 @@ private fun TextAction(label: String, visible: Boolean = true, onClick: () -> Un
 // ------------------------------------------------------------------------------------------------- pages
 
 @Composable
-private fun WelcomePage(page: Int, state: WelcomeState, active: Boolean, actions: WelcomeActions) {
-    BoxWithConstraints(Modifier.fillMaxSize()) {
-        val stageH = maxHeight * 0.42f
-        Column(
-            Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            WelcomeStage(page, state, active, Modifier.fillMaxWidth().height(stageH))
-            Spacer(Modifier.height(4.dp))
-            when (page) {
-                0 -> Appear(state.reduceMotion) { HelloText(state) }
-                1 -> KnowText()
-                else -> ReadyText(state, actions)
-            }
-            Spacer(Modifier.height(8.dp))
+private fun WelcomePage(page: Int, state: WelcomeState, active: Boolean, stageHeight: Dp, actions: WelcomeActions) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(start = 16.dp, end = 16.dp, top = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        WelcomeStage(page, state, active, Modifier.fillMaxWidth().height(stageHeight))
+        Spacer(Modifier.height(4.dp))
+        when (page) {
+            0 -> Appear(state.reduceMotion) { HelloText(state) }
+            1 -> KnowText()
+            else -> ReadyText(state, actions)
         }
+        Spacer(Modifier.height(8.dp))
     }
 }
 
@@ -346,7 +356,7 @@ private fun Body(text: String) {
 @Composable
 private fun HelloText(state: WelcomeState) {
     val c = rootnotePalette()
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Heading(stringResource(R.string.welcome_hello_title))
         Body(stringResource(R.string.welcome_hello_body))
         Column {
@@ -365,20 +375,21 @@ private fun HelloText(state: WelcomeState) {
 @Composable
 private fun KnowText() {
     val c = rootnotePalette()
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Heading(stringResource(R.string.welcome_know_title))
         Body(stringResource(R.string.welcome_know_body))
+        // the one warning that cannot be hidden, before the rows so it is seen without scrolling
+        WarningPill(stringResource(R.string.welcome_know_volume))
         Column {
             InfoRow(Glyph.FLASK, c.textSecondary, stringResource(R.string.welcome_know_experimental_title),
                 stringResource(R.string.welcome_know_experimental_body))
-            InfoRow(Glyph.CLOCK, c.fill, stringResource(R.string.welcome_know_delay_title),
+            InfoRow(Glyph.CLOCK, c.textSecondary, stringResource(R.string.welcome_know_delay_title),
                 stringResource(R.string.welcome_know_delay_body))
             InfoRow(Glyph.SPEAKER, c.textSecondary, stringResource(R.string.welcome_know_speaker_title),
                 stringResource(R.string.welcome_know_speaker_body))
             InfoRow(Glyph.APPS, c.textSecondary, stringResource(R.string.welcome_know_others_title),
                 stringResource(R.string.welcome_know_others_body))
         }
-        WarningPill(stringResource(R.string.welcome_know_volume))
     }
 }
 
@@ -387,15 +398,15 @@ private fun KnowText() {
 @Composable
 private fun ReadyText(state: WelcomeState, actions: WelcomeActions) {
     val c = rootnotePalette()
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Heading(stringResource(R.string.welcome_ready_title))
         Body(stringResource(R.string.welcome_ready_body))
         Column {
             if (state.permissionsReady)
-                InfoRow(Glyph.CHECK, c.fill, stringResource(R.string.welcome_ready_granted_title),
+                InfoRow(Glyph.CHECK, c.textSecondary, stringResource(R.string.welcome_ready_granted_title),
                     stringResource(R.string.welcome_ready_granted_body))
             else
-                InfoRow(Glyph.KEY, c.fill, stringResource(R.string.welcome_ready_grant_title),
+                InfoRow(Glyph.KEY, c.textSecondary, stringResource(R.string.welcome_ready_grant_title),
                     stringResource(R.string.welcome_ready_grant_body))
             InfoRow(
                 Glyph.DIALOG, c.textSecondary, stringResource(R.string.welcome_ready_capture_title),
@@ -445,7 +456,6 @@ private fun InfoRow(symbol: Glyph, tint: Color, title: String, body: String, ext
 private fun WarningPill(text: String) {
     Row(
         Modifier
-            .padding(top = 4.dp)
             .background(colorResource(R.color.rn_warn_bg), CircleShape)
             .padding(horizontal = 12.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -508,14 +518,23 @@ private fun WelcomeStage(page: Int, state: WelcomeState, active: Boolean, modifi
 
 private fun smooth(x: Float): Float { val v = x.coerceIn(0f, 1f); return v * v * (3f - 2f * v) }
 
-/** A stage label (12/16 sp Medium, grows with the font size). [vAlign]: 0 = [at] is its top, 1 = its bottom. */
+/** 12/16 Medium, scaled with the user's font size up to 1.3x (dp.toSp() takes the font scale back out). */
+private fun DrawScope.labelStyle(): TextStyle {
+    val k = min(fontScale, 1.3f)
+    return TextStyle(fontSize = (12f * k).dp.toSp(), lineHeight = (16f * k).dp.toSp(), fontWeight = FontWeight.Medium)
+}
+
+/**
+ * A stage label: 12/16 Medium that grows with the font size up to 1.3x, so it stays inside the picture at 200 % (the
+ * text under the picture carries the meaning at full size, and the picture has its TalkBack description).
+ * [vAlign]: 0 = [at] is its top, 1 = its bottom.
+ */
 private fun DrawScope.label(measurer: TextMeasurer, text: String, color: Color, at: Offset, maxWidth: Float = size.width,
                             center: Boolean = false, vAlign: Float = 0f) {
     if (color.alpha <= 0.01f || text.isEmpty()) return
     val r = measurer.measure(
         text,
-        TextStyle(fontSize = 12.sp, lineHeight = 16.sp, color = color, fontWeight = FontWeight.Medium,
-            textAlign = if (center) TextAlign.Center else TextAlign.Start),
+        labelStyle().copy(color = color, textAlign = if (center) TextAlign.Center else TextAlign.Start),
         maxLines = 2,
         constraints = Constraints(maxWidth = maxWidth.toInt().coerceAtLeast(1)),
     )
@@ -590,7 +609,7 @@ private fun DrawScope.heroHello(t: Float, col: HeroColors, measurer: TextMeasure
     // what each colour is (never the colour alone)
     label(measurer, labels.getOrElse(0) { "" }, col.bass.copy(alpha = bassIn), Offset(0f, bottom), size.width / 3f, vAlign = 1f)
     val spaceText = labels.getOrElse(1) { "" }
-    val w = measurer.measure(spaceText, TextStyle(fontSize = 12.sp, lineHeight = 16.sp, fontWeight = FontWeight.Medium),
+    val w = measurer.measure(spaceText, labelStyle(),
         maxLines = 2, constraints = Constraints(maxWidth = (size.width / 3f).toInt().coerceAtLeast(1))).size.width
     label(measurer, spaceText, col.space.copy(alpha = spaceIn), Offset(size.width - w, top), size.width / 3f)
 }
@@ -653,9 +672,9 @@ private fun DrawScope.heroDelay(t: Float, col: HeroColors, measurer: TextMeasure
 private fun DrawScope.heroReady(t: Float, col: HeroColors, measurer: TextMeasurer, labels: List<String>) {
     val w = size.width
     val unit = min(w / 10f, size.height / 7f)
-    val y = size.height * 0.38f
+    val y = size.height * 0.45f
     val xs = floatArrayOf(w * 0.17f, w * 0.5f, w * 0.83f)
-    val r = unit * 0.9f
+    val r = unit * 1.05f
     val p = when {
         t < 0.12f -> 0f
         t < 0.42f -> smooth((t - 0.12f) / 0.3f)
