@@ -144,17 +144,19 @@ fun main(args: Array<String>) {
     expect(keepWords("약 0.15초") == "약 0.15${wj}초", "a number joined to its unit, the space left free")
     expect(keepWords("Rootnote예요.\n폰") == "Rootnote${wj}예${wj}요${wj}.\n폰", "brand + ending joined; the newline free")
     expect(keepWords("Nice to meet you!") == "Nice to meet you!", "English unchanged")
-    expect(keepWords("가́") == "가́", "nothing before a combining mark")
-    expect(keepWords("한") == "한", "decomposed Hangul left alone")
-    expect(keepWords("가😀") == "가$wj😀", "a joiner before an emoji, never inside its surrogate pair")
+    expect(keepWords("가\u0301") == "가\u0301", "nothing before a combining mark")
+    expect(keepWords("\u1112\u1161\u11AB") == "\u1112\u1161\u11AB", "decomposed Hangul left alone")
+    expect(keepWords("가\uD83D\uDE00") == "가$wj\uD83D\uDE00", "a joiner before an emoji, never inside its surrogate pair")
     expect(keepWords(keepWords("어긋나면")) == keepWords("어긋나면"), "a second pass changes nothing")
-    for ((key, text) in welKo.filterKeys { it.startsWith("welcome_") }) {
+    for ((key, raw) in welKo.filterKeys { it.startsWith("welcome_") }) {
+        // the string as Android resolves it (the XML holds \n and \' as two characters each)
+        val text = raw.replace("\\n", "\n").replace("\\'", "'").replace("\\\"", "\"")
         val k = keepWords(text)
         expect(k.replace(wj.toString(), "") == text, "keepWords keeps every character of $key")
         for (i in 1 until text.length) {
             val a = text[i - 1]
             val b = text[i]
-            if (!a.isWhitespace() && !b.isWhitespace() && (a in '가'..'힣' || b in '가'..'힣'))
+            if (!a.isWhitespace() && !b.isWhitespace() && (a in '\uAC00'..'\uD7A3' || b in '\uAC00'..'\uD7A3'))
                 expect(k.contains("$a$wj$b"), "$key: no break between '$a' and '$b'")
         }
     }

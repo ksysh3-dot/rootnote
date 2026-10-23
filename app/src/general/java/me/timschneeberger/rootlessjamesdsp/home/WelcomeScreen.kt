@@ -52,6 +52,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -88,7 +89,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -166,8 +166,9 @@ fun WelcomeScreen(state: WelcomeState, actions: WelcomeActions) {
     val c = rootnotePalette()
     val pager = rememberPagerState(initialPage = state.initialPage.coerceIn(0, WELCOME_LAST_PAGE)) { PAGES }
     val scope = rememberCoroutineScope()
-    // One scroll position per page, held here so the bars can tell whether the page under them goes on.
-    val scrolls = List(PAGES) { rememberScrollState() }
+    // One scroll position per page, held here so the bars can tell whether the page under them goes on (each under its
+    // own key, so a restored state goes back to its own page).
+    val scrolls = List(PAGES) { key(it) { rememberScrollState() } }
     val scroll = scrolls[pager.currentPage]
     // The answers appear only once the last page has settled, never in the middle of a swipe.
     val last = pager.settledPage == WELCOME_LAST_PAGE
@@ -560,7 +561,8 @@ private fun InfoRow(symbol: Glyph, tint: Color, title: String, body: String, mod
     ) {
         Canvas(Modifier.padding(top = 1.dp).size(24.dp)) { glyph(symbol, tint) }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-            Text(keepWords(title), color = c.textPrimary, fontSize = 16.sp, lineHeight = 22.sp, fontWeight = FontWeight.Bold)
+            Text(keepWords(title), color = c.textPrimary, fontSize = 16.sp, lineHeight = 22.sp, fontWeight = FontWeight.Bold,
+                style = breaks(heading = true))
             Text(keepWords(body), color = c.textSecondary, fontSize = 13.sp, lineHeight = 18.sp, style = breaks(heading = false))
             extra?.invoke()
         }
@@ -597,7 +599,8 @@ private class HeroColors(val bass: Color, val space: Color, val ink: Color, val 
 /**
  * Per page with a picture (hello, bass, spatial, delay): the frame it rests on, and the length of a whole cycle. The
  * picture plays once, from the start to its resting frame, each time its page is reached (motion that answers the
- * swipe, then stillness); with the animations off, or off-screen, it shows the resting frame.
+ * swipe, then stillness). Off-screen, a page waits at its first frame, so a page swiped in never jumps backwards;
+ * with the animations off it shows the resting frame.
  */
 private val KEY_FRAMES = floatArrayOf(0.9f, 0.8f, 0.8f, 0.5f)
 private val PERIODS = intArrayOf(3600, 4200, 4200, 3600)

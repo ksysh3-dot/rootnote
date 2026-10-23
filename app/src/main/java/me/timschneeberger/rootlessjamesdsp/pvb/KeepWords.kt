@@ -29,14 +29,14 @@ fun keepWords(s: String): String {
     return b.toString()
 }
 
-const val WORD_JOINER = '⁠'
+const val WORD_JOINER = '\u2060'
 
 /** A precomposed syllable (가..힣) or a compatibility jamo (ㄱ, ㅏ: drawn alone, as in "ㅋㅋ"). */
-private fun Char.isHangulSyllable(): Boolean = this in '가'..'힣' || this in '㄰'..'㆏'
+private fun Char.isHangulSyllable(): Boolean = this in '\uAC00'..'\uD7A3' || this in '\u3130'..'\u318F'
 
 /** Decomposed Hangul: a syllable written as its letters, which the font joins (never split, never joined to). */
 private fun Char.isConjoiningJamo(): Boolean =
-    this in 'ᄀ'..'ᇿ' || this in 'ꥠ'..'꥿' || this in 'ힰ'..'퟿'
+    this in '\u1100'..'\u11FF' || this in '\uA960'..'\uA97F' || this in '\uD7B0'..'\uD7FF'
 
 private fun Char.attachesToPrevious(): Boolean = isLowSurrogate() || when (Character.getType(this).toByte()) {
     Character.NON_SPACING_MARK, Character.ENCLOSING_MARK, Character.COMBINING_SPACING_MARK, Character.FORMAT -> true
