@@ -78,6 +78,29 @@ object LiveAbComparisons {
         PvbAbConditions.v11vb(it, PvbModels.REFERENCE, userLevel(it))
     }
 
+    // Spatial (review 2026-10-23, questions 1-2): the canceller against the M/S widener with the same mid and side
+    // magnitude per frequency (pvb_xtc.h MS_*), at the user's strength, distance and head size, virtual bass off.
+    // Equal level by construction (test_xtc.py: within 0.3 dB per third octave, total within 0.2 dB), so 0 dB trim.
+    // Upright is off on both sides: the comparison is for the phone held sideways.
+    private fun spatial(s: PvbSettings, mode: Int) =
+        PvbAbConditions.v11(s).copy(xtcMode = mode, xtcPortrait = PvbSettings.XTC_PORTRAIT_OFF)
+
+    val XTC_CENTRE = Side("xtc_centre", UNMEASURED, false, { "공간감 중앙 보존 (크로스토크 제거)" }) {
+        spatial(it, PvbSettings.XTC_CENTRE)
+    }
+    val MS_CENTRE = Side("ms_centre", UNMEASURED, false, { "같은 크기의 좌우 넓히기 (지연 없음)" }) {
+        spatial(it, PvbSettings.XTC_MS_CENTRE)
+    }
+    val XTC_FULL = Side("xtc_full", UNMEASURED, false, { "공간감 완전 (크로스토크 제거)" }) {
+        spatial(it, PvbSettings.XTC_FULL)
+    }
+    val MS_FULL = Side("ms_full", UNMEASURED, false, { "같은 크기의 좌우 넓히기 (지연 없음, 완전 기준)" }) {
+        spatial(it, PvbSettings.XTC_MS_FULL)
+    }
+    private const val SPATIAL_NOTE = "폰을 가로로 들고 들으세요(세로로 들면 두 쪽 모두 공간감이 꺼집니다). 두 쪽은 중앙과 좌우 성분의 크기가 " +
+        "대역마다 같고, 크로스토크 제거의 지연 구조만 다릅니다. 그래서 음량 보정 없이 같은 크기입니다. 가상 저음은 두 쪽 모두 끕니다. " +
+        "공간감 세기·듣는 거리·머리 크기는 내 설정을 씁니다."
+
     private const val TRIM_NOTE = "음량 보정값은 아직 측정하지 않아 0 dB입니다."
     private const val MODEL_NOTE = "모델이 바뀔 때마다 엔진이 짧게(30 ms) 페이드하고 모델을 새로 시작합니다. 어느 쪽으로 바꿔도 같으므로 " +
         "그 자체로는 구분되지 않습니다."
@@ -99,6 +122,12 @@ object LiveAbComparisons {
         Comparison("p1_vs_d2_vs_id4", "P1 vs D2 vs 기준형 (셋)",
             "같은 크기에서 세 모델을 A·B·C로 비교합니다. $MODEL_NOTE $TRIM_NOTE",
             PvbAbConditions.HEADROOM_DB, listOf(P1, D2, ID4)),
+        Comparison("xtc_centre_vs_ms", "공간감 중앙 보존 vs 같은 크기 좌우 넓히기",
+            "크로스토크 제거(중앙 보존)가 단순히 좌우 성분을 키운 것보다 나은지 봅니다. $SPATIAL_NOTE",
+            PvbAbConditions.HEADROOM_DB, listOf(XTC_CENTRE, MS_CENTRE)),
+        Comparison("xtc_full_vs_ms", "공간감 완전 vs 같은 크기 좌우 넓히기",
+            "크로스토크 제거(완전)가 같은 크기의 단순 넓히기보다 나은지 봅니다. $SPATIAL_NOTE",
+            PvbAbConditions.HEADROOM_DB, listOf(XTC_FULL, MS_FULL)),
     )
 
     fun byId(id: String?): Comparison? = ALL.firstOrNull { it.id == id }

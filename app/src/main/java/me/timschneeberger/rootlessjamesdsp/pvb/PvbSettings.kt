@@ -161,6 +161,10 @@ data class PvbSettings(
         const val XTC_OFF = 0
         const val XTC_CENTRE = 1
         const val XTC_FULL = 2
+        /** Matched M/S widener for [XTC_CENTRE] / [XTC_FULL] (pvb_xtc.h MS_*): blind comparison conditions only;
+         *  [load] never returns them. */
+        const val XTC_MS_CENTRE = 6
+        const val XTC_MS_FULL = 7
         const val XTC_STRENGTH_DEFAULT = -6f
         const val XTC_DISTANCE_DEFAULT = 40f
         const val XTC_DISTANCE_MIN = 25f

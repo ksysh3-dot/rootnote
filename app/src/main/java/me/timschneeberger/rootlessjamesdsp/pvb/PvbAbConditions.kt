@@ -39,6 +39,7 @@ object PvbAbConditions {
         outDb = -5f, ceilDb = -1f, releaseMs = 60f, volLink = false, dynOn = false, hsHz = 2500f, hsDb = 0f,
         vbOn = false, vbVolLink = false,   // alpha 3.2: fixed layer levels, as measured for the trims
         xSmooth = false, xRise = false, xS1m = false, xDense = false,   // experimental options: not in comparisons
+        xtcMode = PvbSettings.XTC_OFF,   // spatial: only the spatial comparisons turn it on (LiveAbComparisons)
     )
 
     /** EQ v1.1 with a virtual bass algorithm at [levelDb] ([PvbSettings.VB_LEVEL_OFF] = layer silent). */

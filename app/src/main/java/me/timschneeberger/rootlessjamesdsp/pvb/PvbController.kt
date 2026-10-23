@@ -163,7 +163,8 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
 
     private fun effective(b: PvbSettings): PvbSettings {
         if (!PvbRuntime.abActive) return PvbRuntime.devOverride ?: b
-        val c = PvbRuntime.abCondition ?: return b    // muted before the first trial, or waiting for the volume
+        // muted before the first trial, or waiting for the volume: the user's settings, spatial off like EQ v1.1
+        val c = PvbRuntime.abCondition ?: return b.copy(xtcMode = PvbSettings.XTC_OFF)
         val t = c.apply(b)
         return t.copy(outDb = t.outDb + c.trimDb)     // loudness trim of the condition
     }

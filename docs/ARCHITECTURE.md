@@ -22,7 +22,7 @@ out of date. Symbols are named so they can be searched; line numbers are left ou
 |---|---|---|
 | Normal listening | the home switch (`pvb_enable`) | Stored settings as played. |
 | Matched bypass ("끌 때 음량 맞춤") | `pvb_match_on_disable` | PVB off still plays the input at the matched loudness and the same latency. |
-| Blind comparison (s26u only) | `LiveAbView` via `PvbRuntime.setAb` / `endAb` | Conditions replace the settings; output gate for mute and headroom; spatial off; JamesDSP out of the path. |
+| Blind comparison (s26u only) | `LiveAbView` via `PvbRuntime.setAb` / `endAb` | Conditions replace the settings; output gate for mute and headroom; spatial only as the condition sets it (EQ v1.1: off; the spatial comparisons: the canceller or its matched M/S widener); JamesDSP out of the path. |
 | Measurement (s26u research) | `PvbMeasure.run` sets `PvbRuntime.measuring` | Spatial off, loudness estimator held, JamesDSP out of the path. |
 | Speaker calibration ("좌우 맞추기") | `SpatialBalanceActivity.previewBalance` / `clearOverride` | A temporary override (spatial on for the by-ear step, off and virtual bass off while measuring) and `PvbRuntime.calibrating` (JamesDSP out of the path). Nothing is stored before the by-ear "저장" or "값 지우기". |
 | Developer mode preview | `DevModeActivity` | Temporary override while a control is held; engine meters on while visible. |
@@ -35,7 +35,7 @@ The full owner table (who writes, who clears, who reads, on which thread) is the
 |---|---|---|
 | 1 | `xl/xr` | Input; non-finite samples become 0 (counted). |
 | 2 | `alignedL/R` | Input delayed by the generator latency, so the dry path lines up with the layer. |
-| 3 | `spatialL/R` | Spatial stage (`Xtc::tick`) on the delayed input: landscape cancel, or upright mono / two-way split; not run at all when off. |
+| 3 | `spatialL/R` | Spatial stage (`Xtc::tick`) on the delayed input: landscape cancel, or upright mono / two-way split, or (comparison only) the matched M/S widener, which adds 256 samples not reported as latency; not run at all when off. |
 | 4 | `eqL/R` | Protective high-pass (two stages), low-mid bell, high bell, high shelf. |
 | 5 | `layL/layR` | Virtual-bass layer: from the undelayed input (`xl/xr`) or, for models whose `VbModule::inputAfterEq()` is true (Bankstown), from `eqL/R`. Then the experimental trims. |
 | 6 | `layL/layR` | Upright only, input-based models only: `Xtc::routeLayer` sends the layer where the music's low part goes (split: the low channel, +3 dB; mono: both). Models generating from `eqL/R` already follow the split. |

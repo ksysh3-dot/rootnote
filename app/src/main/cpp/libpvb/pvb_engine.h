@@ -98,7 +98,8 @@ enum Param : int {
     P_D_RELEASE_MS,     // P1-family track life release (rounded to hops; model 6 hops = 32 ms)
     // Crosstalk cancellation ("공간감", pvb_xtc.h). P_XTC_MODE = 0: off and bit-identical to the engine without it.
     // It acts on the processed path only (the plain and the matched bypass stay unprocessed), first in the chain.
-    P_XTC_MODE,         // 0 off, 1 centre safe (side only), 2 full; held upright: 3 mono, 4/5 mono split, low to L / R
+    P_XTC_MODE,         // 0 off, 1 centre safe (side only), 2 full; held upright: 3 mono, 4/5 mono split, low to L / R;
+                        // 6/7 matched M/S widener for 1/2 (blind comparison only)
     P_XTC_STRENGTH_DB,  // loop gain g, dB (-6 gentle, -4.5 medium, -3 strong)
     P_XTC_DIST_CM,      // listening distance
     P_XTC_HAT_CM,       // head size as hat size (circumference), 57 = standard head

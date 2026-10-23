@@ -97,7 +97,7 @@ void sanitizeParams(float* v) {
     v[P_D_PERC_DB] = clampv(v[P_D_PERC_DB], -24.f, 12.f);
     v[P_D_ATTACK_MS] = clampv(v[P_D_ATTACK_MS], 1.f, 200.f);
     v[P_D_RELEASE_MS] = clampv(v[P_D_RELEASE_MS], 1.f, 1000.f);
-    v[P_XTC_MODE] = clampv(std::nearbyint(v[P_XTC_MODE]), 0.f, 5.f);
+    v[P_XTC_MODE] = clampv(std::nearbyint(v[P_XTC_MODE]), 0.f, static_cast<float>(Xtc::kModeMax));
     v[P_XTC_STRENGTH_DB] = clampv(v[P_XTC_STRENGTH_DB], -12.f, -1.f);
     v[P_XTC_DIST_CM] = clampv(v[P_XTC_DIST_CM], 20.f, 80.f);
     v[P_XTC_HAT_CM] = clampv(v[P_XTC_HAT_CM], 50.f, 64.f);

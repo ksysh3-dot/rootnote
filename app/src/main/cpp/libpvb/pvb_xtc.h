@@ -18,6 +18,13 @@
 // (RBJ peaking bells at ~775 Hz, Q 0.7 for 400-1500 Hz and ~3.5 kHz, Q 0.55 for 1.5-8 kHz): balance b dB ("the left
 // speaker is b dB louder") lowers the left by b/2 and raises the right by b/2. Only on the processed path.
 //
+// Matched M/S widener (MS_CENTRE / MS_FULL; blind comparison only, never a user setting): the mid and side get the
+// same magnitude response per frequency as CENTRE / FULL with the same settings, through linear-phase FIRs
+// (kFirLen taps, latency kFirDelay samples, not reported to the engine), without the crosstalk delay and its phase.
+// Heard against CENTRE / FULL it asks whether the effect comes from the cancellation timing or from the louder side
+// alone (review questions 1-2, 2026-10-23). The FIRs are designed by frequency sampling of |H| on a 2048-point grid
+// (Kaiser window, beta 6): within 0.3 dB per third octave 400 Hz-8 kHz at 44.1 and 48 kHz (test_xtc.py).
+//
 // Off (mode 0, no fade in progress): idle() is true and the engine does not call tick(), so the output is
 // bit-identical to the engine without this stage. Switching and setting changes crossfade with the plain input.
 //
@@ -25,7 +32,9 @@
 #pragma once
 
 #include <algorithm>
+#include <array>
 #include <cmath>
+#include <complex>
 
 namespace pvb {
 
@@ -37,7 +46,13 @@ public:
     // speaker (the bottom one, which has the bass) and the high part to the other (the earpiece), as a two-way speaker,
     // so the two speakers no longer play the same highs from two heights (comb filtering) and the earpiece is spared
     // the bass. Each part is played at +3 dB (sqrt 2): one speaker instead of two.
-    enum Mode { OFF = 0, CENTRE = 1, FULL = 2, PORTRAIT_MONO = 3, SPLIT_LOW_L = 4, SPLIT_LOW_R = 5 };
+    enum Mode { OFF = 0, CENTRE = 1, FULL = 2, PORTRAIT_MONO = 3, SPLIT_LOW_L = 4, SPLIT_LOW_R = 5,
+                MS_CENTRE = 6, MS_FULL = 7 };
+    static constexpr int kModeMax = MS_FULL;
+    static bool isPortrait(int m) { return m >= PORTRAIT_MONO && m <= SPLIT_LOW_R; }
+    static bool isMatchedMs(int m) { return m == MS_CENTRE || m == MS_FULL; }
+    static constexpr int kFirLen = 513;
+    static constexpr int kFirDelay = (kFirLen - 1) / 2;
     static constexpr double kSplitHz = 1000.0;
 
     struct Config {
@@ -102,6 +117,9 @@ public:
         for (auto* s : {&lA_, &lB_}) for (auto& f : s->f) f.z = 0.0;
         for (auto& st : sBal_) st = BiquadState{};
         for (auto& st : sSplit_) st = BiquadState{};
+        std::fill(std::begin(mBuf_), std::end(mBuf_), 0.0);
+        std::fill(std::begin(sBuf_), std::end(sBuf_), 0.0);
+        firPos_ = 0;
     }
 
     // After the engine dropped its audio (route change): forget the old signal and finish any switch at once.
@@ -132,7 +150,27 @@ public:
             return;
         }
         double pl, pr;
-        if (cur_.mode >= PORTRAIT_MONO) {
+        if (isMatchedMs(cur_.mode)) {
+            // ring buffer written twice (i and i + kFirLen) so a window of kFirLen is always contiguous
+            const double mid = 0.5 * (inL + inR), side = 0.5 * (inL - inR);
+            firPos_ = firPos_ == 0 ? kFirLen - 1 : firPos_ - 1;
+            mBuf_[firPos_] = mBuf_[firPos_ + kFirLen] = mid;
+            sBuf_[firPos_] = sBuf_[firPos_ + kFirLen] = side;
+            const double* mw = mBuf_ + firPos_;   // mw[n] = mid n samples ago
+            const double* sw = sBuf_ + firPos_;
+            const double m = cur_.mode == MS_FULL ? fir(hM_, mw) : mw[kFirDelay];
+            const double sd = fir(hS_, sw);
+            pl = m + sd;
+            pr = m - sd;
+            if (balOn_) {
+                pl = bal_[1].tick(sBal_[1], bal_[0].tick(sBal_[0], pl));
+                pr = bal_[3].tick(sBal_[3], bal_[2].tick(sBal_[2], pr));
+            }
+            outL = inL + x_ * (pl - inL);
+            outR = inR + x_ * (pr - inR);
+            return;
+        }
+        if (isPortrait(cur_.mode)) {
             const double mono = 0.5 * (inL + inR);
             if (cur_.mode == PORTRAIT_MONO) {
                 pl = pr = mono;
@@ -177,7 +215,7 @@ public:
     // the layer as it is. Follows the same crossfade as tick(); call after tick() for the same sample, and only for a
     // layer generated from the input before this stage (a layer made from the processed signal already follows it).
     inline void routeLayer(double& l, double& r) const {
-        if (cur_.mode < PORTRAIT_MONO || x_ == 0.0) return;
+        if (!isPortrait(cur_.mode) || x_ == 0.0) return;
         const double mono = 0.5 * (l + r);
         double pl, pr;
         if (cur_.mode == PORTRAIT_MONO) {
@@ -193,6 +231,9 @@ public:
 
     // Design numbers (also for the tests): crosstalk delay in samples and loop gain.
     double tauSamples() const { return tau_; }
+    // Matched M/S widener taps (tests): side, and mid (MS_FULL only; MS_CENTRE delays the mid by kFirDelay).
+    const double* sideTaps() const { return hS_; }
+    const double* midTaps() const { return hM_; }
     double loopGain() const { return g_; }
 
 private:
@@ -227,6 +268,60 @@ private:
     };
 
     static double loop(Loop& l, double x) { return l.f[2].tick(l.f[1].tick(l.f[0].tick(x))); }
+
+    // symmetric linear-phase FIR over w[0..kFirLen-1] (w[n] = the input n samples ago)
+    static inline double fir(const double* h, const double* w) {
+        double acc = h[kFirDelay] * w[kFirDelay];
+        for (int n = 0; n < kFirDelay; ++n) acc += h[n] * (w[n] + w[kFirLen - 1 - n]);
+        return acc;
+    }
+
+    // |H| of the canceller as built by apply() (same loop filters, the same fractional delay as delayRead), and the
+    // linear-phase FIR with that magnitude. Side: 1 / (1 - g L D) in both modes; mid: 1 / (1 + g L D) in FULL.
+    void designMatchedMs() {
+        constexpr int kGrid = 2048;
+        const double pi = 3.14159265358979323846;
+        static const std::array<double, kGrid> cosT = [] {   // built once, thread-safe (function-local static)
+            std::array<double, kGrid> t{};
+            for (int i = 0; i < kGrid; ++i) t[i] = std::cos(2 * 3.14159265358979323846 * i / kGrid);
+            return t;
+        }();
+        double aS[kGrid / 2 + 1], aM[kGrid / 2 + 1];
+        const int li = static_cast<int>(lag_);
+        const double fr = lag_ - li;
+        for (int k = 0; k <= kGrid / 2; ++k) {
+            const double w = 2 * pi * k / kGrid;
+            const std::complex<double> z1 = std::polar(1.0, -w);
+            std::complex<double> L(1.0, 0.0);
+            for (const auto& f : lA_.f) L *= (f.b0 + f.b1 * z1) / (1.0 + f.a1 * z1);
+            const std::complex<double> D = std::polar(1.0, -w * (1 + li)) * ((1.0 - fr) + fr * z1);
+            aS[k] = 1.0 / std::abs(1.0 - g_ * L * D);
+            aM[k] = 1.0 / std::abs(1.0 + g_ * L * D);
+        }
+        // Kaiser window, beta 6 (I0 by its series)
+        auto i0 = [](double x) {
+            double sum = 1.0, term = 1.0;
+            for (int j = 1; j < 30; ++j) { term *= (x / (2 * j)) * (x / (2 * j)); sum += term; }
+            return sum;
+        };
+        const double beta = 6.0, i0b = i0(beta);
+        for (int n = 0; n <= kFirDelay; ++n) {
+            const int m = kFirDelay - n;   // distance from the centre tap
+            double accS = aS[0], accM = aM[0];
+            for (int k = 1; k < kGrid / 2; ++k) {
+                const double c = 2.0 * cosT[(static_cast<long>(k) * m) % kGrid];
+                accS += aS[k] * c;
+                accM += aM[k] * c;
+            }
+            const double nyq = (m % 2 == 0) ? 1.0 : -1.0;
+            accS += aS[kGrid / 2] * nyq;
+            accM += aM[kGrid / 2] * nyq;
+            const double r = static_cast<double>(m) / kFirDelay;
+            const double win = i0(beta * std::sqrt(std::max(0.0, 1.0 - r * r))) / i0b;
+            hS_[n] = hS_[kFirLen - 1 - n] = accS / kGrid * win;
+            hM_[n] = hM_[kFirLen - 1 - n] = accM / kGrid * win;
+        }
+    }
 
     // EEL fractionalDelayLine semantics: the value fed back is the output of the previous sample (one sample of
     // delay already), read (tau - 1) samples behind the write position with linear interpolation.
@@ -274,6 +369,7 @@ private:
             split_[1].b0 = (1 + cw) / 2 / a0; split_[1].b1 = -(1 + cw) / a0; split_[1].b2 = (1 + cw) / 2 / a0;
             for (auto& b : split_) { b.a1 = -2 * cw / a0; b.a2 = (1 - al) / a0; }
         }
+        if (isMatchedMs(c.mode)) designMatchedMs();
         setBalance(c.balLoDb, c.balHiDb);
     }
 
@@ -307,6 +403,9 @@ private:
     bool balOn_ = false;
     Biquad split_[2];             // portrait crossover: Butterworth low-pass, high-pass (each run twice = LR4)
     BiquadState sSplit_[4];
+    double hS_[kFirLen] = {}, hM_[kFirLen] = {};
+    double mBuf_[2 * kFirLen] = {}, sBuf_[2 * kFirLen] = {};
+    int firPos_ = 0;
 };
 
 }  // namespace pvb

@@ -125,8 +125,9 @@ object PvbEngineParams {
         p[PvbParam.D_RELEASE_MS] = s.devReleaseMs
         // Crosstalk cancellation: the phone's own speakers only (designed for landscape, the two speakers left and
         // right of the listener; not tied to the screen rotation, which a locked rotation would misreport); never
-        // during a comparison or a measurement.
-        val spatialOn = s.xtcMode != PvbSettings.XTC_OFF && i.speaker && !i.abActive && !i.measuring
+        // during a measurement. During a comparison it follows the condition: EQ v1.1 has it off
+        // ([PvbAbConditions.v11]); only the spatial comparisons set a mode, including the M/S widener (6, 7).
+        val spatialOn = s.xtcMode != PvbSettings.XTC_OFF && i.speaker && !i.measuring
         // Held upright: no left/right to cancel; off, mono, or the two-way split (pvb_xtc.h PORTRAIT_*).
         val spatialMode = when {
             !spatialOn -> 0

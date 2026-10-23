@@ -49,15 +49,23 @@ fun main() {
         check(it.on(PvbParam.ENABLED) && it[PvbParam.XTC_MODE] == 0f) { "headphones processed, no spatial" }
     }
 
-    // blind comparison: tag and gate carried, matcher held, no developer values, no spatial, no solo monitor
+    // blind comparison: tag and gate carried, matcher held, no developer values, no solo monitor; spatial as the
+    // condition sets it (EQ v1.1 turns it off, the spatial comparisons turn it on)
     val dev = base.copy(devOn = true, xtcMode = PvbSettings.XTC_FULL)
     encode(dev, inputs(abActive = true, abTag = 42, gateDb = -10f, diagnosticSolo = true)).let {
         val p = it.params
         check(p[PvbParam.TAG] == 42f && p[PvbParam.GATE_DB] == -10f) { "comparison: tag and gate" }
-        check(p.on(PvbParam.MATCH_HOLD) && !p.on(PvbParam.DEV_ON) && p[PvbParam.XTC_MODE] == 0f) { "comparison holds" }
+        check(p.on(PvbParam.MATCH_HOLD) && !p.on(PvbParam.DEV_ON)) { "comparison holds" }
+        check(p[PvbParam.XTC_MODE] == PvbSettings.XTC_FULL.toFloat()) { "comparison: spatial follows the condition" }
         check(!it.diagnosticSolo && !p.on(PvbParam.DIAGNOSTIC_SOLO)) { "comparison drops the solo monitor" }
     }
     check(encode(base, inputs(abTag = 42)).params[PvbParam.TAG] == 0f) { "tag only during a comparison" }
+    check(encode(base.copy(xtcMode = PvbSettings.XTC_MS_FULL), inputs(abActive = true)).params[PvbParam.XTC_MODE] == 7f) {
+        "comparison: M/S widener mode passed through"
+    }
+    check(encode(base.copy(xtcMode = PvbSettings.XTC_OFF), inputs(abActive = true)).params[PvbParam.XTC_MODE] == 0f) {
+        "comparison with spatial off"
+    }
     // the comparison's hidden-bypass phase: no flat path
     check(!encode(base.copy(enabled = false), inputs(abHidden = true)).params.on(PvbParam.FLAT)) { "hidden bypass" }
     // a comparison's mute reaches the gate as is
