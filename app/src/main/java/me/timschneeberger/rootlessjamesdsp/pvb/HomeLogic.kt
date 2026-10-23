@@ -98,6 +98,22 @@ object HomeLogic {
     /** "+6 dB"-style strength label for the slider value. */
     fun levelLabel(level: Int): String = "+$level"
 
+    /** Limiter working share (%, PvbMeter.LIM_ACTIVE_PCT, ~3 s) at or above which the home suggests a lower strength. */
+    const val PRESSURE_ON_PCT = 30f
+    /** ... and below which the hint goes away again (hysteresis: no flicker around one value). */
+    const val PRESSURE_OFF_PCT = 15f
+
+    /**
+     * "지금 세기에서 소리가 눌리고 있어요": shown while virtual bass plays and the limiter works a large share of the
+     * time; [shown] is the previous answer.
+     */
+    fun limiterPressure(shown: Boolean, vbPlaying: Boolean, activePct: Float): Boolean = when {
+        !vbPlaying || !activePct.isFinite() -> false
+        activePct >= PRESSURE_ON_PCT -> true
+        activePct < PRESSURE_OFF_PCT -> false
+        else -> shown
+    }
+
     /**
      * Signed dB number for display: one decimal at most, "+" for positive, a real minus sign (U+2212) for negative,
      * "0" for zero (including -0.04 and the like).

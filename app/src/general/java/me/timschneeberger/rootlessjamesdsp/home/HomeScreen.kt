@@ -155,6 +155,8 @@ data class HomeUiState(
     /** Speaker balance (left louder, dB), 400-1500 Hz and 1.5-8 kHz; both 0 = not set. */
     val xtcBalLoDb: Float = 0f,
     val xtcBalHiDb: Float = 0f,
+    /** The limiter has been working much of the time with virtual bass on (HomeLogic.limiterPressure). */
+    val limiterPressure: Boolean = false,
 )
 
 class HomeActions(
@@ -389,6 +391,7 @@ private fun BassSection(state: HomeUiState, actions: HomeActions, modifier: Modi
                 Text(linkText(state.linkLine), color = c.textSecondary, fontSize = 13.sp, lineHeight = 18.sp)
             }
         }
+        if (state.limiterPressure && state.masterOn && state.level > 0) PressureTip(state, actions)
         HoldWithoutVbRow(enabled = state.masterOn && state.processingOn, onHold = actions.onHoldWithoutVb)
         // A phone without a measured profile: the EQ balance first, virtual bass as a spice on top.
         if (state.measuredDeviceName == null) SpiceTip(actions)
@@ -441,6 +444,36 @@ private fun HoldWithoutVbRow(enabled: Boolean, onHold: (Boolean) -> Unit) {
             stringResource(if (held) R.string.home_hold_novb_active else R.string.home_hold_novb_line),
             color = if (held) c.accentText else c.textSecondary, fontSize = 13.sp, lineHeight = 18.sp,
         )
+    }
+}
+
+/** "지금 세기에서 소리가 눌리고 있어요": the limiter works much of the time; one tap lowers the strength by one step. */
+@Composable
+private fun PressureTip(state: HomeUiState, actions: HomeActions) {
+    val c = LocalPalette.current
+    Column(
+        Modifier
+            .padding(start = 16.dp, end = 16.dp, top = 8.dp)
+            .fillMaxWidth()
+            .background(c.chipSelectedBg, RoundedCornerShape(12.dp))
+            .border(1.dp, c.chipSelectedBorder, RoundedCornerShape(12.dp))
+            .padding(start = 16.dp, end = 8.dp, top = 12.dp, bottom = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(
+            stringResource(R.string.home_pressure_title),
+            modifier = Modifier.padding(end = 8.dp).semantics { heading() },
+            color = c.textPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold, lineHeight = 22.sp,
+        )
+        Text(
+            stringResource(R.string.home_pressure_body),
+            modifier = Modifier.padding(end = 8.dp),
+            color = c.textSecondary, fontSize = 13.sp, lineHeight = 18.sp,
+        )
+        FlowRowActions {
+            BannerAction(stringResource(R.string.home_pressure_action), bold = true,
+                onClick = { actions.onLevel((state.level - 1).coerceAtLeast(0)) })
+        }
     }
 }
 

@@ -9,6 +9,9 @@
     <string name="home_hold_novb_line">EQ는 그대로 두고 가상 저음만 빼요. 손을 떼면 돌아와요.</string>
     <string name="home_hold_novb_active">지금 가상 저음 없이 듣는 중</string>
     <string name="home_hold_novb_a11y">5초 동안 가상 저음 빼고 듣기</string>
+    <string name="home_pressure_title">지금 세기에서 소리가 눌리고 있어요</string>
+    <string name="home_pressure_body">최근 몇 초 동안 리미터가 자주 작동했어요. 세기를 한두 칸 낮추면 버즈가 줄고 더 깨끗하게 들릴 수 있어요.</string>
+    <string name="home_pressure_action">한 칸 낮추기</string>
     <string name="home_spice_title">가상 저음은 양념이에요</string>
     <string name="home_spice_body">요리에서 맛은 재료와 간이 내고 향신료는 마지막에 조금 더하듯, 소리도 EQ로 균형부터 잡는 게 먼저예요. 저음이 약한 폰이라면 고급 설정에서 「저중역 보정 크기」를 올리고 「고역 감쇠 크기」로 고음을 조금 낮춘 다음, 가상 저음은 낮게 시작해 조금씩 올려 보세요. 많이 넣으면 오히려 탁해질 수 있어요.</string>
     <string name="home_spice_action">EQ 맞추러 가기</string>

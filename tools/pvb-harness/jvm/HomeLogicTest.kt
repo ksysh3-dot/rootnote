@@ -175,6 +175,15 @@ fun main(args: Array<String>) {
     expect(PvbSettings().xtcMode == PvbSettings.XTC_OFF, "spatial off by default")
     expect(ko["home_tab_bass"] == "가상 저음" && ko["home_tab_spatial"] == "공간감", "tab names")
 
+    // limiter pressure hint: on at 30 %, off below 15 %, kept in between, never without virtual bass playing
+    expect(!HomeLogic.limiterPressure(false, true, 29f) && HomeLogic.limiterPressure(false, true, 30f), "pressure on at 30 %")
+    expect(HomeLogic.limiterPressure(true, true, 20f) && !HomeLogic.limiterPressure(false, true, 20f), "pressure hysteresis")
+    expect(!HomeLogic.limiterPressure(true, true, 14.9f), "pressure off below 15 %")
+    expect(!HomeLogic.limiterPressure(true, false, 90f) && !HomeLogic.limiterPressure(true, true, Float.NaN), "pressure needs vb")
+    for (k in listOf("home_pressure_title", "home_pressure_body", "home_pressure_action", "home_hold_novb_title",
+            "home_hold_novb_line", "home_hold_novb_active", "home_hold_novb_a11y", "home_spice_title", "home_spice_body"))
+        expect(!ko[k].isNullOrBlank(), "ko string $k")
+
     println("Home screen: caps 0..9, chips derived from model + level (custom pinned), preset writes within caps, " +
         "master/headline with the first-run gate, volume-link line (60 % -> −4 dB, applied +2 dB), strings en/ko: OK")
 }

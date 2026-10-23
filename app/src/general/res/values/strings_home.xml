@@ -9,6 +9,9 @@
     <string name="home_hold_novb_line">The EQ stays; only virtual bass goes. Let go to bring it back.</string>
     <string name="home_hold_novb_active">Playing without virtual bass</string>
     <string name="home_hold_novb_a11y">Hear without virtual bass for 5 seconds</string>
+    <string name="home_pressure_title">The sound is being squeezed at this strength</string>
+    <string name="home_pressure_body">The limiter has been working much of the last few seconds. One or two steps lower can mean less buzz and a cleaner sound.</string>
+    <string name="home_pressure_action">One step lower</string>
     <string name="home_spice_title">Virtual bass is a spice</string>
     <string name="home_spice_body">In cooking, the ingredients and seasoning make the dish and spice goes in last, a little at a time. Sound is the same: set the balance with the EQ first. On a phone with weak bass, raise Low-mid boost and set a little more Treble cut in the advanced settings, then start virtual bass low and add a little at a time. Too much can make it muddy.</string>
     <string name="home_spice_action">Adjust the EQ</string>

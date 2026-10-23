@@ -34,6 +34,7 @@ import me.timschneeberger.rootlessjamesdsp.pvb.HomeLogic
 import me.timschneeberger.rootlessjamesdsp.pvb.KillWatch
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbBuild
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbGeneral
+import me.timschneeberger.rootlessjamesdsp.pvb.PvbMeter
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbRuntime
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbSettings
 import me.timschneeberger.rootlessjamesdsp.service.BaseAudioProcessorService
@@ -237,6 +238,13 @@ class HomeActivity : BaseActivity() {
         super.onResume()
         reduceMotion = animationsOff()
         refresh()
+        mainHandler.removeCallbacks(pressurePoll)
+        mainHandler.postDelayed(pressurePoll, 1000L)
+    }
+
+    override fun onPause() {
+        mainHandler.removeCallbacks(pressurePoll)
+        super.onPause()
     }
 
     override fun onStop() {
@@ -293,7 +301,26 @@ class HomeActivity : BaseActivity() {
             xtcHatCm = s.xtcHatCm.toInt(),
             xtcBalLoDb = s.xtcBalLoDb,
             xtcBalHiDb = s.xtcBalHiDb,
+            limiterPressure = limiterPressure,
         )
+    }
+
+    // Limiter pressure (HomeLogic.limiterPressure): the engine's meters once a second while this screen is in front.
+    // Reading the meters also restarts the peak meters and runs the phone limiter estimate for 3 s (display cost only).
+    private var limiterPressure = false
+    private val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private val meterBuf = FloatArray(PvbMeter.COUNT)
+    private val pressurePoll = object : Runnable {
+        override fun run() {
+            val s = if (::prefs.isInitialized) PvbSettings.load(prefs) else null
+            val running = BaseAudioProcessorService.activeServices > 0
+            val engine = PvbRuntime.engine
+            val pct = if (running && engine != null && engine.readMeters(meterBuf)) meterBuf[PvbMeter.LIM_ACTIVE_PCT] else 0f
+            val vbPlaying = s != null && running && s.enabled && s.vbOn && PvbRuntime.status.processing
+            val next = HomeLogic.limiterPressure(limiterPressure, vbPlaying, pct)
+            if (next != limiterPressure) { limiterPressure = next; refresh() }
+            mainHandler.postDelayed(this, 1000L)
+        }
     }
 
     private fun animationsOff(): Boolean = try {
