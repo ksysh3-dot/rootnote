@@ -81,7 +81,7 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
 
     /** Listen to the posture only while it can change something (spatial on). */
     private fun updatePostureListening() {
-        val want = started && settings.xtcMode != PvbSettings.XTC_OFF
+        val want = started && effectiveSettings.xtcMode != PvbSettings.XTC_OFF
         if (want == postureListening) return
         postureListening = want
         val sm = sensorManager ?: return
@@ -121,18 +121,20 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
     var onSealChanged: ((Boolean) -> Unit)? = null
 
     private fun updateSeal() {
-        val next = started && JdspChain.sealed(base, speaker)
+        val next = started && JdspChain.sealed(userSettings, speaker)
         if (next == sealJdsp) return
         sealJdsp = next
         onSealChanged?.invoke(next)
     }
 
-    private var base = PvbSettings()       // what the user set
+    /** What the user set, as loaded ([PvbSettings.load]: general-build caps and first-run gate applied). */
+    private var userSettings = PvbSettings()
     private var diagnosticSolo = false // session-only; never restored after restart
 
     fun setDiagnosticSolo(value: Boolean) {
         if (!started) return
-        val allowed = settings.enabled && settings.vbOn && (!settings.speakerOnly || speaker) &&
+        val s = effectiveSettings
+        val allowed = s.enabled && s.vbOn && (!s.speakerOnly || speaker) &&
             !PvbRuntime.abActive && !PvbRuntime.measuring
         val next = value && allowed
         if (diagnosticSolo == next) return
@@ -140,7 +142,8 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
         push(rampMs = EDIT_RAMP_MS)
     }
 
-    private var settings = PvbSettings()   // what the engine plays (base, or a blind-comparison condition)
+    /** What plays now: [userSettings], or a blind-comparison condition, or a temporary override ([effective]). */
+    private var effectiveSettings = PvbSettings()
 
     private val abPrefs: SharedPreferences = context.getSharedPreferences(PvbRuntime.AB_PREFS, Context.MODE_PRIVATE)
     // Separate preferences: saving a meter must not trigger a settings update or end an A/B trial.
@@ -149,7 +152,8 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
     private var matchSavePolls = 0
 
     private fun saveMatch() {
-        if (!isActive || PvbRuntime.abActive || PvbRuntime.measuring || (settings.speakerOnly && !speaker)) return
+        if (!isActive || PvbRuntime.abActive || PvbRuntime.measuring) return
+        if (effectiveSettings.speakerOnly && !speaker) return
         val measured = engine.matchDb()
         if (measured.isFinite()) {
             matchSeedDb = measured.coerceIn(-30f, 3f)
@@ -175,7 +179,7 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
     }
 
     private fun updateActive() {
-        isActive = JdspChain.pvbInPath(settings, PvbRuntime.abActive)
+        isActive = JdspChain.pvbInPath(effectiveSettings, PvbRuntime.abActive)
     }
 
     private var lastMuted = false
@@ -187,14 +191,14 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
         main.post {
             if (started) {
                 if (!PvbRuntime.abActive) abPrefs.edit().remove(PvbRuntime.AB_KEY_START_VOLUME).apply()
-                val next = effective(base)
+                val next = effective(userSettings)
                 val muted = PvbRuntime.abMuted
                 val gate = gateDb()
                 // Two calls in one tap (e.g. fade out, then end) arrive here reading the same final state: push once.
                 // A new tag alone is pushed too: the card waits for the engine to report that exact state as audible.
-                if (next != settings || muted != lastMuted || gate != lastGate || PvbRuntime.abTag != lastTag ||
-                    PvbRuntime.measuring != lastMeasuring) {
-                    settings = next
+                if (next != effectiveSettings || muted != lastMuted || gate != lastGate ||
+                    PvbRuntime.abTag != lastTag || PvbRuntime.measuring != lastMeasuring) {
+                    effectiveSettings = next
                     updateActive()
                     // fading in or out takes AB_FADE_MS; switching between A and B is the usual short glide
                     push(rampMs = if (muted != lastMuted || gate != lastGate) PvbRuntime.AB_FADE_MS else EDIT_RAMP_MS)
@@ -208,7 +212,7 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
     private val devListener: () -> Unit = {
         main.post {
             if (started) {
-                settings = effective(base)
+                effectiveSettings = effective(userSettings)
                 updateActive()
                 push(rampMs = EDIT_RAMP_MS)
             }
@@ -246,8 +250,8 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
         matchSeedDb = try {
             matchPrefs.getFloat("gain_db", -6f).takeIf { it.isFinite() }?.coerceIn(-30f, 3f) ?: -6f
         } catch (ignored: ClassCastException) { -6f }
-        base = PvbSettings.load(prefs)
-        settings = effective(base)
+        userSettings = PvbSettings.load(prefs)
+        effectiveSettings = effective(userSettings)
         updateActive()
         prefs.registerOnSharedPreferenceChangeListener(prefListener)
         PvbRuntime.addAbListener(abListener)
@@ -282,7 +286,7 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
             if (volume.index > saved) PvbRuntime.waitForVolumeReturn(saved)
             else abPrefs.edit().remove(PvbRuntime.AB_KEY_START_VOLUME).apply()
         }
-        settings = effective(base)
+        effectiveSettings = effective(userSettings)
         updateActive()
         lastMuted = PvbRuntime.abMuted
         updateRoute(push = false)
@@ -330,11 +334,11 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
     // ------------------------------------------------------------------------------------------ inputs
 
     private val prefListener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ ->
-        val old = settings
-        base = PvbSettings.load(prefs)
-        settings = effective(base)
+        val old = effectiveSettings
+        userSettings = PvbSettings.load(prefs)
+        effectiveSettings = effective(userSettings)
         updateActive()
-        if (old.volRefPct != settings.volRefPct) readVolume()
+        if (old.volRefPct != effectiveSettings.volRefPct) readVolume()
         push(rampMs = EDIT_RAMP_MS)
     }
 
@@ -394,7 +398,7 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
         val max = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC).coerceAtLeast(2)
         // Samsung's 150-step volume maps to index = fine / 10 + 1 (60 -> 7), so the reference percentage of the
         // fine scale lands on floor(pct * max) + 1.
-        val refIndex = (floor(settings.volRefPct / 100f * max).toInt() + 1).coerceIn(1, max)
+        val refIndex = (floor(effectiveSettings.volRefPct / 100f * max).toInt() + 1).coerceIn(1, max)
 
         // The platform's dB table for the speaker, read once per maximum index and used only when it
         // looks like a real volume curve (Samsung reports about 0 dB for every index).
@@ -471,7 +475,7 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
     // ------------------------------------------------------------------------------------------ output
 
     private fun currentLowDb(): Float {
-        val s = settings
+        val s = effectiveSettings
         return if (s.volLink) {
             VolumeCompensation.lowGainDb(s.lowDb, volume.dropDb, volume.riseAtMaxDb, s.volSlope, s.volCapDb, s.volMaxDb)
         } else {
@@ -483,108 +487,40 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
      * Level where quiet-passage bass starts, independent of the volume (unchanged).
      * Superseded 2026-10-21: UMIK-1 sweeps put the phone's bass limiter after the volume control, not before it.
      */
-    private fun dynRefNow(): Float = settings.dynRefDb
+    private fun dynRefNow(): Float = effectiveSettings.dynRefDb
 
+    /** Encodes what plays now ([PvbEngineParams.encode]), sends it to the engine and publishes the status. */
     private fun push(rampMs: Float) {
-        val s = settings
-        val processing = s.enabled && (!s.speakerOnly || speaker)
-        val routeAllowed = !s.speakerOnly || speaker
-        val flat = s.matchOnDisable && routeAllowed && !PvbRuntime.abHidden
+        updatePostureListening()   // spatial switched off clears [upright]: before the inputs are read
         val lowDb = currentLowDb()
-        // Alpha 3.2: the layer gets weaker as the volume rises (link on); applied here only, never stored. A volume not
-        // read yet (index 0) gives no reduction. Comparison conditions switch the link off (PvbAbConditions.v11).
-        val vbLevel = VolumeLevelLink.levelFor(s, volume.index, volume.max)
-        val p = FloatArray(PvbParam.COUNT)
-        p[PvbParam.ENABLED] = if (processing) 1f else 0f
-        p[PvbParam.HP_HZ] = s.hpHz
-        p[PvbParam.LOW_HZ] = s.lowHz
-        p[PvbParam.LOW_DB] = lowDb
-        p[PvbParam.LOW_Q] = s.lowQ
-        p[PvbParam.HI_HZ] = s.hiHz
-        p[PvbParam.HI_DB] = s.hiDb
-        p[PvbParam.HI_Q] = s.hiQ
-        p[PvbParam.OUT_DB] = s.outDb
-        p[PvbParam.CEIL_DB] = s.ceilDb
-        p[PvbParam.REL_MS] = s.releaseMs
-        p[PvbParam.RAMP_MS] = rampMs
-        p[PvbParam.DYN_ON] = if (s.dynOn) 1f else 0f
-        p[PvbParam.DYN_REF_DB] = dynRefNow()
-        p[PvbParam.DYN_DOWN_RATIO] = 0.5f
-        p[PvbParam.DYN_DOWN_MAX_DB] = 0f   // loud passages: no take-back (album study, 2026-10-16)
-        p[PvbParam.DYN_UP_RATIO] = 0.19f   // same equal-loudness slope as the volume link
-        p[PvbParam.DYN_UP_MAX_DB] = s.dynUpMaxDb
-        p[PvbParam.HS_HZ] = s.hsHz
-        p[PvbParam.HS_DB] = s.hsDb
-        val gate = gateDb()
-        p[PvbParam.GATE_DB] = gate
-        lastGate = gate
-        lastTag = PvbRuntime.abTag
-        p[PvbParam.TAG] = if (PvbRuntime.abActive) lastTag.toFloat() else 0f
-        // In matched bypass, retain the processed reference and equal delay, but only the flat path is audible.
-        // A route bypass still removes virtual bass and its delay.
-        p[PvbParam.VB_ON] = if (s.vbOn && (processing || flat)) 1f else 0f
-        p[PvbParam.VB_ALGO] = s.vbAlgo.toFloat()
-        p[PvbParam.VB_LEVEL_DB] = vbLevel
-        p[PvbParam.FLAT] = if (flat) 1f else 0f
-        p[PvbParam.MATCH_HOLD] = if (PvbRuntime.abActive || PvbRuntime.measuring || !routeAllowed) 1f else 0f
-        p[PvbParam.MATCH_SEED_DB] = matchSeedDb
-        if (!processing || !s.vbOn || PvbRuntime.abActive || PvbRuntime.measuring) diagnosticSolo = false
-        p[PvbParam.DIAGNOSTIC_SOLO] = if (diagnosticSolo) 1f else 0f
-        // Experimental layer options: only with virtual bass on (the engine also ignores them without it).
-        val vbIn = p[PvbParam.VB_ON] == 1f
-        p[PvbParam.X_SMOOTH] = if (vbIn && s.xSmooth) 1f else 0f
-        p[PvbParam.X_RISE] = if (vbIn && s.xRise) 1f else 0f
-        p[PvbParam.X_S1M] = if (vbIn && s.xS1m) 1f else 0f
-        p[PvbParam.X_DENSE] = if (vbIn && s.xDense) 1f else 0f
-        // Developer mode (general build only: PvbSettings.load keeps devOn false elsewhere). Off = every value ignored.
-        val dev = s.devOn && !PvbRuntime.abActive
-        p[PvbParam.DEV_ON] = if (dev) 1f else 0f
-        p[PvbParam.DEV_METER] = if (PvbRuntime.devMeter) 1f else 0f
-        p[PvbParam.D_BOUNDARY_HZ] = s.devBoundaryHz
-        p[PvbParam.D_OUT_LO_HZ] = s.devOutLoHz
-        p[PvbParam.D_OUT_HI_HZ] = s.devOutHiHz
-        p[PvbParam.D_H2_DB] = s.devH2Db
-        p[PvbParam.D_H3_DB] = s.devH3Db
-        p[PvbParam.D_H4_DB] = s.devH4Db
-        p[PvbParam.D_H5_DB] = s.devH5Db
-        p[PvbParam.D_ROLLOFF_DB_OCT] = s.devRolloffOffset
-        p[PvbParam.D_SUST_DB] = s.devSustDb
-        p[PvbParam.D_PERC_DB] = s.devPercDb
-        p[PvbParam.D_ATTACK_MS] = s.devAttackMs
-        p[PvbParam.D_RELEASE_MS] = s.devReleaseMs
-        // Crosstalk cancellation: the phone's own speakers only (designed for landscape, the two speakers left and
-        // right of the listener; not tied to the screen rotation, which a locked rotation would misreport); never
-        // during a comparison or a measurement.
-        updatePostureListening()
-        val xtcOn = s.xtcMode != PvbSettings.XTC_OFF && speaker && !PvbRuntime.abActive && !PvbRuntime.measuring
-        // Held upright: no left/right to cancel; off, mono, or the two-way split (pvb_xtc.h PORTRAIT_*).
-        val mode = when {
-            !xtcOn -> 0
-            !upright -> s.xtcMode
-            s.xtcPortrait == PvbSettings.XTC_PORTRAIT_MONO -> 3
-            s.xtcPortrait == PvbSettings.XTC_PORTRAIT_SPLIT -> if (s.xtcPortraitLowRight) 5 else 4
-            else -> 0
-        }
-        p[PvbParam.XTC_MODE] = mode.toFloat()
-        p[PvbParam.XTC_STRENGTH_DB] = s.xtcStrengthDb
-        p[PvbParam.XTC_DIST_CM] = s.xtcDistanceCm
-        p[PvbParam.XTC_HAT_CM] = s.xtcHatCm
-        p[PvbParam.XTC_SPACING_CM] = PvbSettings.XTC_SPACING_CM
-        p[PvbParam.XTC_LO_HZ] = PvbSettings.XTC_LO_HZ
-        p[PvbParam.XTC_HI_HZ] = PvbSettings.XTC_HI_HZ
-        // Speaker balance: set in one landscape rotation; turned round, the phone swaps its channels with the
-        // speakers, so the correction swaps sides too. Portrait and unknown rotations keep it as set.
-        val landscape = rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270
-        val sign = if (s.xtcBalRotation != 0 && landscape && rotation != s.xtcBalRotation) -1f else 1f
-        p[PvbParam.XTC_BAL_LO_DB] = if (upright) 0f else sign * s.xtcBalLoDb   // the balance is a sideways one
-        p[PvbParam.XTC_BAL_HI_DB] = if (upright) 0f else sign * s.xtcBalHiDb
-        engine.setParams(p)
+        val inputs = PvbEngineParams.Inputs(
+            rampMs = rampMs,
+            speaker = speaker,
+            upright = upright,
+            rotation = rotation,
+            volumeIndex = volume.index,
+            volumeMax = volume.max,
+            lowDb = lowDb,
+            matchSeedDb = matchSeedDb,
+            diagnosticSolo = diagnosticSolo,
+            abActive = PvbRuntime.abActive,
+            abHidden = PvbRuntime.abHidden,
+            abTag = PvbRuntime.abTag,
+            gateDb = gateDb(),
+            measuring = PvbRuntime.measuring,
+            devMeter = PvbRuntime.devMeter,
+        )
+        val encoded = PvbEngineParams.encode(effectiveSettings, inputs)
+        diagnosticSolo = encoded.diagnosticSolo
+        lastGate = inputs.gateDb
+        lastTag = inputs.abTag
+        engine.setParams(encoded.params)
         publish(lowDb)
     }
 
     private fun publish(lowDb: Float) {
         updateSeal()
-        val s = settings
+        val s = effectiveSettings
         val vbReduction = VolumeLevelLink.reductionFor(s, volume.index, volume.max)
         PvbRuntime.status = PvbRuntime.Status(
             enabled = s.enabled,

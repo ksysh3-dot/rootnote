@@ -63,6 +63,11 @@ java -cp "$OUTA:$KOTLIN_STDLIB" TrackLevelMemoryTestKt
 # Alpha 3.2 volume-linked virtual bass strength: volume %, reduction, effective level, settings (pure Kotlin).
 $KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/DevParams.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$HERE/VolumeLevelLinkTest.kt" -d "$OUTA"
 java -cp "$OUTA:$KOTLIN_STDLIB" VolumeLevelLinkTestKt
+# engine parameter encoding (PvbController.push's rules; pure Kotlin)
+OUTEP="$HERE/../build/jvm-engine-params"
+rm -rf "$OUTEP"; mkdir -p "$OUTEP"
+$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/DevParams.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/PvbEngine.kt" "$APP/PvbNative.kt" "$APP/PvbEngineParams.kt" "$HERE/PvbEngineParamsTest.kt" -d "$OUTEP"
+java -cp "$OUTEP:$KOTLIN_STDLIB" PvbEngineParamsTestKt
 # Alpha 3.3 live blind A/B: seeded shuffle, record JSON/CSV, tally, file store, comparison catalogue (pure Kotlin).
 $KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/DevParams.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/PvbNative.kt" "$APP/PvbEngine.kt" "$APP/PvbRuntime.kt" "$APP/PvbAbConditions.kt" "$APP/LiveAb.kt" "$APP/LiveAbComparisons.kt" "$HERE/LiveAbTest.kt" -d "$OUTA"
 java -cp "$OUTA:$KOTLIN_STDLIB" LiveAbTestKt

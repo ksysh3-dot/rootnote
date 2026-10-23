@@ -11,7 +11,7 @@ out of date. Symbols are named so they can be searched; line numbers are left ou
 | Stored settings | `pvb_settings` (SharedPreferences), keys in `PvbSettings` | Written by the screens (home, advanced, developer mode, balance). |
 | Settings as played | `PvbSettings.load` → `PvbBuild.finish` | Reads the stored values, applies the general build's caps (`SafeCaps.GENERAL`) and the first-run gate (nothing processes before the notice is confirmed). |
 | What plays now | `PvbController.effective` | A blind comparison (s26u) wins: its condition is applied to the settings. Otherwise a temporary override (`PvbRuntime.devOverride`: developer mode, the spatial story, the balance screen) replaces them. Otherwise the settings as played. |
-| Engine parameters | `PvbController.push` | Builds the `FloatArray` of `PvbParam` values: processing on this route, matched bypass, the volume-linked virtual-bass level (`VolumeLevelLink`), the spatial mode from posture (landscape cancel, upright mono or split), the balance sign for the rotation, the comparison gate. Sends them to the engine and publishes `PvbRuntime.status`. |
+| Engine parameters | `PvbController.push` → `PvbEngineParams.encode` | `push` reads the Android state once into `PvbEngineParams.Inputs` (output device, volume, posture, rotation, comparison, measurement). `encode` (pure, no Android classes) builds the `FloatArray` of `PvbParam` values: processing on this route, matched bypass, the volume-linked virtual-bass level (`VolumeLevelLink`), the spatial mode from posture (landscape cancel, upright mono or split), the balance sign for the rotation, the comparison gate; its KDoc names the states kept apart (enabled, in the path, route allowed, processing, matched bypass). `push` then sends the array and publishes `PvbRuntime.status`. |
 | Block route | `RootlessAudioProcessorService` audio loop, `JdspChain.route` | Per block: JamesDSP alone (PVB not in the path), PVB alone (no JamesDSP effect on, or a comparison, measurement, buzz diagnostics or speaker calibration runs), or JamesDSP effects then PVB. A test sound (`DevTestSound`) replaces the captured music before the route, so it takes the same path. |
 | JamesDSP while PVB processes | `JdspChain.sealed`, `JamesDspBaseEngine` | Dynamic bass boost and analog modelling are sent as off and the JamesDSP output stage as neutral (0 dB, limiter out of the way); the stored JamesDSP settings are not touched and apply again when PVB stops. |
 | Samples | `pvb_engine.cpp` `Engine::process` | Section 3. |
@@ -74,5 +74,4 @@ path, a real phone's microphones or listening.
   directly. No real phone has been checked.
 - `PvbRuntime.devOverride` has no owner token: the last screen to set or clear it wins (safe while only one such
   screen is visible at a time).
-- Not done from the 2026-10-23 refactor brief: separating `PvbController.push` into a pure parameter calculation
-  (R3) and tidying the service audio loop (R4).
+- Not done from the 2026-10-23 refactor brief: tidying the service audio loop (R4).
