@@ -29,6 +29,9 @@ enum class DevWarning(val hideable: Boolean) {
 }
 
 /** One meter reading of the developer-mode screen (engine dev meters + engine meters + controller status). */
+/** One held bass track of the developer display: fundamental and k = 2..8 at the output, dBFS. */
+class DevTrack(val f0Hz: Float, val harmonicDb: FloatArray)
+
 class DevSnapshot(
     val f0Hz: Float,
     /** k = 2..8 at the output, dBFS (-120 = none). */
@@ -46,6 +49,8 @@ class DevSnapshot(
     val volumeLink: Boolean,
     val volumeLinkReductionDb: Float,
     val thresholdDb: Float,
+    /** Quieter tracks held at the same time (bass notes together), each a fundamental and k = 2..8 dBFS. */
+    val extraTracks: List<DevTrack> = emptyList(),
 ) {
     /** Sum of the dry band and the layer band (power), dBFS. */
     val totalBandDb: Float get() = DevMath.sumDb(dryBandDb, layerBandDb)
@@ -68,6 +73,9 @@ class DevSnapshot(
                 binMs = m[PvbDevMeter.RING_BIN_MS].takeIf { it > 0f } ?: 5f,
                 outPeakDb = outPeakDb, limiterGrDb = limiterGrDb, ceilingDb = ceilingDb, volumePct = volumePct,
                 volumeLink = volumeLink, volumeLinkReductionDb = volumeLinkReductionDb, thresholdDb = thresholdDb,
+                extraTracks = listOf(PvbDevMeter.T2_F0 to PvbDevMeter.T2_H2_DB, PvbDevMeter.T3_F0 to PvbDevMeter.T3_H2_DB)
+                    .filter { (f, _) -> m[f] > 0f }
+                    .map { (f, h) -> DevTrack(m[f], FloatArray(7) { m[h + it] }) },
             )
         }
     }
@@ -96,6 +104,26 @@ object DevMath {
             val db = s.harmonicDb[i]
             if (db > PRESENT_DB && db >= loud - COUNT_RANGE_DB) Bar(i + 2, s.f0Hz * (i + 2), db) else null
         }
+    }
+
+    /**
+     * Bars of every held track (loudest first): the loudest track's bars as [bars]; a quieter track's harmonics count
+     * against the same loudest level, so a faint second note shows few bars or none.
+     */
+    fun trackBars(s: DevSnapshot): List<Pair<Float, List<Bar>>> {
+        if (s.f0Hz <= 0f) return emptyList()
+        val loud = s.harmonicDb.maxOrNull() ?: return emptyList()
+        val out = ArrayList<Pair<Float, List<Bar>>>()
+        bars(s).takeIf { it.isNotEmpty() }?.let { out += s.f0Hz to it }
+        for (t in s.extraTracks) {
+            if (t.f0Hz <= 0f) continue
+            val b = (0 until 7).mapNotNull { i ->
+                val db = t.harmonicDb[i]
+                if (db > PRESENT_DB && db >= loud - COUNT_RANGE_DB) Bar(i + 2, t.f0Hz * (i + 2), db) else null
+            }
+            if (b.isNotEmpty()) out += t.f0Hz to b
+        }
+        return out
     }
 
     /** "기음 55 Hz, 배음 4개, 가장 큰 배음 165 Hz, 여유 3 dB": the numbers of the harmonic summary. */

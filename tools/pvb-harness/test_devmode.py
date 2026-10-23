@@ -289,7 +289,7 @@ def t_meters(lib):
     sr = 48000
     n = lib.pvb_dev_meter_size()
     fields = lib.pvb_dev_meter_fields()
-    check('meter layout: 16 fields + 512 (dry, layer) pairs', n == 16 + 2 * 512 and fields == 16, size=n)
+    check('meter layout: 32 fields + 512 (dry, layer) pairs', n == 32 + 2 * 512 and fields == 32, size=n)
     e = Engine(lib, sr, vb_on=1, vb_algo=P1, vb_level_db=6, dev_on=1, dev_meter=1)
     out = np.zeros(n, np.float32)
     e.process(tone(sr, 3.0, 55.0), block=960)
@@ -316,6 +316,32 @@ def t_meters(lib):
           last_max=float(ring[-20:].max()))
     e.set(dev_meter=0)
     e.process(np.zeros((960, 2), np.float32))
+    e.close()
+    # the display reads about every 40 ms: on a steady tone the fundamental never blanks between reads
+    e = Engine(lib, sr, vb_on=1, vb_algo=P1, vb_level_db=6, dev_on=1, dev_meter=1)
+    x = tone(sr, 3.0, 55.0)
+    reads = []
+    for i in range(0, len(x), 1920):
+        e.process(x[i:i + 1920], block=960)
+        lib.pvb_copy_dev_meters(e.h, out.ctypes.data_as(FP), n)
+        reads.append(float(out[0]))
+    late = np.array(reads[25:])
+    check('meters read every 40 ms on a steady 55 Hz tone: fundamental shown at every read after 1 s',
+          (np.abs(late - 55) < 3).all(), blanks=int((late == 0).sum()), reads=len(late))
+    e.close()
+    # two bass notes at once: two held tracks, loudest first, the second in the T2 fields
+    e = Engine(lib, sr, vb_on=1, vb_algo=P1, vb_level_db=6, dev_on=1, dev_meter=1)
+    two = 0.5 * tone(sr, 3.0, 55.0) + 0.5 * tone(sr, 3.0, 82.0)
+    seen = 0
+    for i in range(0, len(two), 1920):
+        e.process(two[i:i + 1920], block=960)
+        lib.pvb_copy_dev_meters(e.h, out.ctypes.data_as(FP), n)
+        if i > sr:
+            fs = sorted(v for v in (float(out[0]), float(out[16]), float(out[24])) if v > 0)
+            if any(abs(v - 55) < 4 for v in fs) and any(abs(v - 82) < 5 for v in fs):
+                seen += 1
+    check('meters on 55 + 82 Hz together: both fundamentals held at most reads after 1 s', seen >= 30,
+          reads_with_both=seen)
     e.close()
     bad = Engine(lib, sr)
     check('copy_dev_meters rejects a short buffer', lib.pvb_copy_dev_meters(bad.h, out.ctypes.data_as(FP), n - 1) == 0)

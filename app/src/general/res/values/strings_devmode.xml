@@ -19,9 +19,10 @@
     <string name="dev_tab_size">Level</string>
     <string name="dev_graph_harm">Harmonic bars</string>
     <string name="dev_graph_harm_sub">fundamental %1$d Hz · %2$d harmonics</string>
+    <string name="dev_graph_harm_sub_more">fundamental %1$d Hz · %2$d harmonics · %3$d more</string>
     <string name="dev_graph_harm_none">No bass right now</string>
     <string name="dev_graph_time">Time graph</string>
-    <string name="dev_graph_time_sub">dry grey · layer teal</string>
+    <string name="dev_graph_time_sub">source bass (dry) grey · layer teal</string>
     <string name="dev_graph_gauge">Headroom gauge</string>
     <string name="dev_graph_gauge_sub">volume %1$d%% · %2$s</string>
     <string name="dev_zone_cannot">This phone cannot play</string>

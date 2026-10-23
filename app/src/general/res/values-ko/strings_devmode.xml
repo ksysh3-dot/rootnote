@@ -19,9 +19,10 @@
     <string name="dev_tab_size">크기</string>
     <string name="dev_graph_harm">배음 막대</string>
     <string name="dev_graph_harm_sub">기음 %1$d Hz · 배음 %2$d개</string>
+    <string name="dev_graph_harm_sub_more">기음 %1$d Hz · 배음 %2$d개 · 함께 %3$d음</string>
     <string name="dev_graph_harm_none">지금은 저음이 없어요</string>
     <string name="dev_graph_time">시간 그래프</string>
-    <string name="dev_graph_time_sub">원음 회색 · 생성층 틸</string>
+    <string name="dev_graph_time_sub">재료 저음(원음) 회색 · 생성층 틸</string>
     <string name="dev_graph_gauge">여유 게이지</string>
     <string name="dev_graph_gauge_sub">볼륨 %1$d%% · %2$s</string>
     <string name="dev_zone_cannot">이 폰이 못 내는 곳</string>

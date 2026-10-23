@@ -110,6 +110,7 @@ internal fun HarmonicPage(state: DevUiState) {
     val c = LocalDevPalette.current
     val snap = state.snapshot
     val bars = snap?.let { DevMath.bars(it) } ?: emptyList()
+    val notes = snap?.let { DevMath.trackBars(it).size } ?: 0
     val summary = snap?.let { DevMath.harmonicSummary(it) }
     val tm = rememberTextMeasurer()
     val zoneCannot = stringResource(R.string.dev_zone_cannot)
@@ -124,7 +125,8 @@ internal fun HarmonicPage(state: DevUiState) {
     val floor = state.speakerFloorHz
     Column(Modifier.fillMaxWidth()) {
         GraphHeader(stringResource(R.string.dev_graph_harm),
-            if (summary != null) stringResource(R.string.dev_graph_harm_sub, summary.f0Hz, summary.count)
+            if (summary != null && notes > 1) stringResource(R.string.dev_graph_harm_sub_more, summary.f0Hz, summary.count, notes - 1)
+            else if (summary != null) stringResource(R.string.dev_graph_harm_sub, summary.f0Hz, summary.count)
             else stringResource(R.string.dev_graph_harm_none))
         Spacer(Modifier.height(8.dp))
         Canvas(Modifier.fillMaxWidth().height(176.dp).clearAndSetSemantics { contentDescription = a11y }) {
@@ -152,33 +154,39 @@ internal fun HarmonicPage(state: DevUiState) {
                 drawLine(c.accentText, Offset(xb, top - 4.dp.toPx()), Offset(xb, axisY), strokeWidth = 2.dp.toPx(), pathEffect = Dash)
             }
             drawLine(c.chevron.copy(alpha = 0.6f), Offset(0f, axisY), Offset(size.width, axisY), strokeWidth = 1.dp.toPx())
-            val barW = 14.dp.toPx()
-            val tallest = bars.maxOfOrNull { DevMath.barHeight(it.db) } ?: 0f
-            // ghost fundamental: dashed outline (the note the speaker cannot play)
-            if (snap != null && snap.f0Hz > 0f && bars.isNotEmpty()) {
-                val h = max(0.35f, tallest) * plotH
-                val gx = x(snap.f0Hz)
-                drawRoundRect(if (hl == DevHighlight.FUNDAMENTAL) c.accentText else c.textSecondary,
-                    Offset(gx - barW / 2f, axisY - h), Size(barW, h), CornerRadius(4.dp.toPx()),
-                    style = Stroke(width = (if (hl == DevHighlight.FUNDAMENTAL) 2.5f else 1.5f).dp.toPx(), pathEffect = Dash))
-            }
-            for (b in bars) {
-                val h = max(2.dp.toPx(), DevMath.barHeight(b.db) * plotH)
-                val bx = x(b.hz)
-                drawRoundRect(c.fill, Offset(bx - barW / 2f, axisY - h), Size(barW, h), CornerRadius(4.dp.toPx()))
-                val marked = when (hl) {
-                    DevHighlight.H2 -> b.k == 2
-                    DevHighlight.H3 -> b.k == 3
-                    DevHighlight.H4 -> b.k == 4
-                    DevHighlight.H5_UP -> b.k >= 5
-                    DevHighlight.UPPER -> b.hz > DevMath.BUZZ_LO_HZ
-                    DevHighlight.ALL_BARS, DevHighlight.LAYER -> true
-                    else -> false
-                }
-                if (marked) {
-                    val p = 4.dp.toPx()
-                    drawRoundRect(c.textPrimary, Offset(bx - barW / 2f - p, axisY - h - p), Size(barW + 2 * p, h + p),
-                        CornerRadius(7.dp.toPx()), style = Stroke(width = 2.dp.toPx()))
+            // thin bars so two or three bass notes held together fit side by side; quieter notes drawn lighter, first
+            val barW = 6.dp.toPx()
+            val tracks = snap?.let { DevMath.trackBars(it) } ?: emptyList()
+            val tallest = tracks.flatMap { it.second }.maxOfOrNull { DevMath.barHeight(it.db) } ?: 0f
+            for ((i, t) in tracks.withIndex().reversed()) {
+                val (f0, tb) = t
+                val main = i == 0
+                // ghost fundamental: dashed outline (the note the speaker cannot play)
+                val h = max(0.35f, tallest) * (if (main) 1f else 0.8f) * plotH
+                val gx = x(f0)
+                val ghostHl = main && hl == DevHighlight.FUNDAMENTAL
+                drawRoundRect((if (ghostHl) c.accentText else c.textSecondary).copy(alpha = if (main) 1f else 0.55f),
+                    Offset(gx - barW / 2f, axisY - h), Size(barW, h), CornerRadius(3.dp.toPx()),
+                    style = Stroke(width = (if (ghostHl) 2f else 1.2f).dp.toPx(), pathEffect = Dash))
+                for (b in tb) {
+                    val bh = max(2.dp.toPx(), DevMath.barHeight(b.db) * plotH)
+                    val bx = x(b.hz)
+                    drawRoundRect(if (main) c.fill else c.fill.copy(alpha = 0.45f), Offset(bx - barW / 2f, axisY - bh),
+                        Size(barW, bh), CornerRadius(3.dp.toPx()))
+                    val marked = when (hl) {
+                        DevHighlight.H2 -> b.k == 2
+                        DevHighlight.H3 -> b.k == 3
+                        DevHighlight.H4 -> b.k == 4
+                        DevHighlight.H5_UP -> b.k >= 5
+                        DevHighlight.UPPER -> b.hz > DevMath.BUZZ_LO_HZ
+                        DevHighlight.ALL_BARS, DevHighlight.LAYER -> true
+                        else -> false
+                    }
+                    if (marked) {
+                        val p = 3.dp.toPx()
+                        drawRoundRect(c.textPrimary, Offset(bx - barW / 2f - p, axisY - bh - p), Size(barW + 2 * p, bh + p),
+                            CornerRadius(5.dp.toPx()), style = Stroke(width = 1.5f.dp.toPx()))
+                    }
                 }
             }
             // axis labels: fundamental, speaker floor, 220, 400 Hz (skipped where they would overlap)

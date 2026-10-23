@@ -147,7 +147,7 @@ void defaultParams(float* out);  // fills P_COUNT values
 
 // Developer-mode meters (Engine::copyDevMeters): kDevFields values, then kDevRing (dry, layer) pairs, oldest first.
 enum DevMeter : int {
-    DM_F0 = 0,          // fundamental of the loudest rendered track, Hz (0 = none)
+    DM_F0 = 0,          // fundamental of the loudest held track, Hz (0 = none); held 0.15 s, then falls 30 dB/s
     DM_H2_DB,           // k = 2..8 at the output (output band, imposition gain, level and output gain applied), dBFS
     DM_H8_DB = DM_H2_DB + 6,
     DM_DRY_BAND_DB,     // processed music without the layer, 150-400 Hz band, sine-equivalent dBFS (50 ms)
@@ -158,7 +158,11 @@ enum DevMeter : int {
     DM_BOUNDARY_HZ,     // generator input edge in use
     DM_OUT_LO_HZ,
     DM_OUT_HI_HZ,
-    DM_FIELDS
+    DM_T2_F0,           // second and third held tracks (quieter), same layout as DM_F0 and DM_H2_DB..DM_H8_DB
+    DM_T2_H2_DB,
+    DM_T3_F0 = DM_T2_H2_DB + 7,
+    DM_T3_H2_DB,
+    DM_FIELDS = DM_T3_H2_DB + 7
 };
 
 class Engine {
@@ -343,6 +347,10 @@ private:
     int devBinLen_ = 240, devBinN_ = 0;
     uint32_t devRingCount_ = 0;
     std::atomic<float> devFields_[kDevFields];
+    // Developer display only: the held tracks behind DM_F0 / DM_T2_* / DM_T3_* (hold, then fall; audio time).
+    struct DevSlot { double f = 0; double db[7] = {}; double hold = 0; };
+    DevSlot devSlots_[DevHarmonics::kTracks];
+    void devUpdateSlots(const DevHarmonics& h, bool have, double level, double blockS);
     std::atomic<float> devRingDry_[kDevRing], devRingLay_[kDevRing];
     std::atomic<uint32_t> devRingPub_{0};
 

@@ -26,6 +26,8 @@
 // Copyright (C) 2026 PVB project. Licensed under the GNU GPL v3 (same as RootlessJamesDSP).
 #pragma once
 
+#include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include "pvb_dsp.h"
 #include "pvb_vb_policy.h"
@@ -89,9 +91,33 @@ struct DevVoicing {
 // Developer-mode display snapshot of one module: the loudest rendered track of the last vocoder frame (sustained
 // path, before the output band filter), its k = 2..8 harmonic amplitudes and the envelope-imposition gain.
 struct DevHarmonics {
-    double f0 = 0;          // Hz, 0 = no track
-    double amp[7] = {};     // linear, at layer level 0 dB, before the output filter and the imposition gain
-    double gain = 0;        // envelope-imposition gain applied to the sustained path (last core sample)
+    static constexpr int kTracks = 3;
+    int n = 0;                     // tracks held (loudest rendered tracks since the last read), 0 = none
+    double f[kTracks] = {};        // Hz
+    double amp[kTracks][7] = {};   // linear, at layer level 0 dB, before the output filter and the imposition gain
+    double sum[kTracks] = {};      // sum of amp (ranking)
+    double gain = 0;               // envelope-imposition gain applied to the sustained path (last core sample)
+    // Keeps the [kTracks] loudest: a track within 10 % of a held one merges into it (largest amplitude per harmonic).
+    void add(double hz, const double* a, double s) {
+        if (!(hz > 0) || !(s > 0)) return;
+        for (int i = 0; i < n; ++i) {
+            if (std::fabs(hz - f[i]) <= 0.10 * f[i]) {
+                for (int k = 0; k < 7; ++k) amp[i][k] = std::max(amp[i][k], a[k]);
+                if (s > sum[i]) { sum[i] = s; f[i] = hz; }
+                return;
+            }
+        }
+        int slot = n < kTracks ? n++ : -1;
+        if (slot < 0) {
+            int lo = 0;
+            for (int i = 1; i < n; ++i) if (sum[i] < sum[lo]) lo = i;
+            if (s <= sum[lo]) return;
+            slot = lo;
+        }
+        f[slot] = hz; sum[slot] = s;
+        for (int k = 0; k < 7; ++k) amp[slot][k] = a[k];
+    }
+    void clearTracks() { n = 0; }
 };
 struct VbResearchStats {
     int scene = VB_SCENE_UNKNOWN;
@@ -119,7 +145,8 @@ public:
     // Developer mode (audio thread only). Modules without support ignore the voicing and report no harmonics.
     virtual void setDev(const DevVoicing&) {}
     virtual void setDevMeter(bool) {}
-    virtual bool devHarmonics(DevHarmonics&) const { return false; }
+    // Takes the tracks held since the last call (developer meter; audio thread, once per block).
+    virtual bool devHarmonics(DevHarmonics&) { return false; }
     // |output filter| at f Hz (the module's own output band), 1 when it has none.
     virtual double devOutResponse(double) const { return 1.0; }
 };
@@ -184,7 +211,10 @@ public:
     // Developer mode (masked modules only; ignored by the legacy hpv). No allocation; filter memory is kept.
     void setDev(const DevVoicing& d) override;
     void setDevMeter(bool on) override { devMeter_ = on; if (!on) devSnap_ = DevHarmonics{}; }
-    bool devHarmonics(DevHarmonics& out) const override { if (!masked_) return false; out = devSnap_; return true; }
+    bool devHarmonics(DevHarmonics& out) override {
+        if (!masked_) { devSnap_.clearTracks(); return false; }
+        out = devSnap_; devSnap_.clearTracks(); return true;
+    }
     double devOutResponse(double f) const override;
 
     // Audio-thread-owned EQ, including coefficient glides and dynamic bass. A standalone module uses the
@@ -386,10 +416,9 @@ private:
     double devGain_=0;   // developer release: envelope-imposition gain follower
     double devAttM_=0, devAttS_=0;   // developer attack: layer level and its attack-limited follower
     bool devMeter_=false;
-    DevHarmonics devFrame_, devSnap_;
-    double devFrameSum_=0;
-    void devBeginFrame() { devFrame_=DevHarmonics{}; devFrameSum_=0; }
-    void devEndFrame() { const double g=devSnap_.gain; devSnap_=devFrame_; devSnap_.gain=g; }
+    DevHarmonics devFrame_, devSnap_;   // this frame's loudest tracks; tracks gathered since the engine's last read
+    void devBeginFrame() { devFrame_.clearTracks(); }
+    void devEndFrame() { for(int i=0;i<devFrame_.n;++i) devSnap_.add(devFrame_.f[i],devFrame_.amp[i],devFrame_.sum[i]); }
 };
 
 // ------------------------------------------------------------------------------------------------ Bankstown

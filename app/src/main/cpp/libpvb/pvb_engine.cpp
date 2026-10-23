@@ -289,6 +289,7 @@ void Engine::applyDev(const float* v) {
         sDevLp_.reset(); sDevBpDry_.reset(); sDevBpLay_.reset();
         devBinDry_ = devBinLay_ = devPowDry_ = devPowLay_ = 0.0;
         devBinN_ = 0;
+        for (auto& sl : devSlots_) sl = DevSlot{};
     }
     if (meter) {
         SvfCoef lp;
@@ -828,13 +829,9 @@ void Engine::process(float* io, int frames) {
         if (devPowDry_ < 1e-24) devPowDry_ = 0.0;
         if (devPowLay_ < 1e-24) devPowLay_ = 0.0;
         DevHarmonics h;
-        const bool have = vbCur_ >= 0 && vbMods_[vbCur_]->devHarmonics(h) && h.f0 > 0.0;
-        devFields_[DM_F0].store(have ? static_cast<float>(h.f0) : 0.f, std::memory_order_relaxed);
+        const bool have = vbCur_ >= 0 && vbMods_[vbCur_]->devHarmonics(h);
         const double level = vbGain_.value() * outGain_.value() * (genCur_ ? s1mTrim : 1.0);
-        for (int k = 2; k <= 8; ++k) {
-            const double a = have ? h.amp[k - 2] * h.gain * vbMods_[vbCur_]->devOutResponse(k * h.f0) * level : 0.0;
-            devFields_[DM_H2_DB + k - 2].store(dbOrFloor(a), std::memory_order_relaxed);
-        }
+        devUpdateSlots(h, have, level, static_cast<double>(frames) / sr_);
         devFields_[DM_DRY_BAND_DB].store(dbOrFloor(std::sqrt(2.0 * devPowDry_)), std::memory_order_relaxed);
         devFields_[DM_LAYER_BAND_DB].store(dbOrFloor(std::sqrt(2.0 * devPowLay_)), std::memory_order_relaxed);
         devFields_[DM_RING_BIN_MS].store(static_cast<float>(1000.0 * devBinLen_ / sr_), std::memory_order_relaxed);
@@ -916,6 +913,67 @@ bool Engine::copyDiagnostic(float* generated, float* fullMix, int samples, float
     std::copy_n(diagnosticFull_, samples, fullMix);
     std::copy_n(diagnosticTrace_, fields, trace);
     return true;
+}
+
+// Developer display only. The module hands over the loudest tracks rendered since the last block; each one feeds the
+// slot within 10 % of its fundamental (largest level per harmonic) or takes a free or quieter slot. A slot holds for
+// kDevHoldS and then falls kDevFallDbPerS, so a note shows for as long as it plays and a short gap between two
+// analysis frames does not blank the picture. Published loudest first: DM_F0.., DM_T2_*, DM_T3_*.
+void Engine::devUpdateSlots(const DevHarmonics& h, bool have, double level, double blockS) {
+    constexpr double kDevHoldS = 0.15, kDevFallDbPerS = 30.0, kDevGoneDb = -80.0;
+    constexpr int kT = DevHarmonics::kTracks;
+    for (auto& sl : devSlots_) {
+        if (sl.f <= 0) continue;
+        if (sl.hold > 0) { sl.hold -= blockS; continue; }
+        double peak = -120.0;
+        for (double& d : sl.db) { d = std::max(-120.0, d - kDevFallDbPerS * blockS); peak = std::max(peak, d); }
+        if (peak < kDevGoneDb) sl = DevSlot{};
+    }
+    if (have) {
+        for (int i = 0; i < h.n; ++i) {
+            const double f = h.f[i];
+            if (!(f > 0)) continue;
+            double db[7], peak = -120.0;
+            for (int k = 2; k <= 8; ++k) {
+                db[k - 2] = dbOrFloor(h.amp[i][k - 2] * h.gain * vbMods_[vbCur_]->devOutResponse(k * f) * level);
+                peak = std::max(peak, db[k - 2]);
+            }
+            if (peak < kDevGoneDb) continue;
+            int slot = -1;
+            for (int j = 0; j < kT; ++j) if (devSlots_[j].f > 0 && std::fabs(f - devSlots_[j].f) <= 0.10 * devSlots_[j].f) { slot = j; break; }
+            if (slot < 0) for (int j = 0; j < kT; ++j) if (devSlots_[j].f <= 0) { slot = j; break; }
+            if (slot < 0) {
+                int lo = 0; double loPeak = 1e9;
+                for (int j = 0; j < kT; ++j) {
+                    double p = -120.0; for (double d : devSlots_[j].db) p = std::max(p, d);
+                    if (p < loPeak) { loPeak = p; lo = j; }
+                }
+                if (peak <= loPeak) continue;
+                slot = lo;
+                devSlots_[slot] = DevSlot{};
+            }
+            DevSlot& sl = devSlots_[slot];
+            const bool fresh = sl.f <= 0;
+            for (int k = 0; k < 7; ++k) sl.db[k] = fresh ? db[k] : std::max(sl.db[k], db[k]);
+            sl.f = f;
+            sl.hold = kDevHoldS;
+        }
+    }
+    int order[kT]; double peaks[kT];
+    for (int j = 0; j < kT; ++j) {
+        order[j] = j; peaks[j] = -1e9;
+        if (devSlots_[j].f > 0) for (double d : devSlots_[j].db) peaks[j] = std::max(peaks[j], d);
+    }
+    std::sort(order, order + kT, [&](int a, int b) { return peaks[a] > peaks[b]; });
+    const int f0Field[kT] = {DM_F0, DM_T2_F0, DM_T3_F0};
+    const int hField[kT] = {DM_H2_DB, DM_T2_H2_DB, DM_T3_H2_DB};
+    for (int r = 0; r < kT; ++r) {
+        const DevSlot& sl = devSlots_[order[r]];
+        const bool on = sl.f > 0;
+        devFields_[f0Field[r]].store(on ? static_cast<float>(sl.f) : 0.f, std::memory_order_relaxed);
+        for (int k = 0; k < 7; ++k)
+            devFields_[hField[r] + k].store(on ? static_cast<float>(sl.db[k]) : -120.f, std::memory_order_relaxed);
+    }
 }
 
 int Engine::copyDevMeters(float* out, int capacity) const {

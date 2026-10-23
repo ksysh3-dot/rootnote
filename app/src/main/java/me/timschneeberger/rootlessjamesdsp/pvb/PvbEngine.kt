@@ -121,7 +121,12 @@ object PvbDevMeter {
     const val BOUNDARY_HZ = 13
     const val OUT_LO_HZ = 14
     const val OUT_HI_HZ = 15
-    const val FIELDS = 16
+    /** Second and third held tracks (quieter), each a fundamental then k = 2..8 like [F0] / [H2_DB]. */
+    const val T2_F0 = 16
+    const val T2_H2_DB = 17
+    const val T3_F0 = 24
+    const val T3_H2_DB = 25
+    const val FIELDS = 32
     const val RING = 512
     const val SIZE = FIELDS + 2 * RING
 }

@@ -206,9 +206,9 @@ void VbHpv::renderTrack52(Track52& tr,const double src[2][256],const int ns[2],
     }
 
     if(devMeter_) {
-        // Developer-mode display: the loudest rendered track of this frame.
+        // Developer-mode display: the loudest rendered tracks of this frame.
         double sum=0; for(double v:devH) sum+=v;
-        if(sum>devFrameSum_) { devFrameSum_=sum; devFrame_.f0=tr.f; std::copy(devH,devH+7,devFrame_.amp); }
+        devFrame_.add(tr.f,devH,sum);
     }
     // S1: rendered level relative to the current target sum; nominal and removal use it.
     const double envPeak=refSum>1e-12?envSum/refSum:(envSum>0?1.:0.);

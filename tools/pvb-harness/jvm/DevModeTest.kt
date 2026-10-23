@@ -179,7 +179,19 @@ fun main(args: Array<String>) {
         dp[PvbParam.D_BOUNDARY_HZ] == 190f && dp[PvbParam.D_OUT_LO_HZ] == 150f && dp[PvbParam.D_OUT_HI_HZ] == 600f &&
         (PvbParam.D_H2_DB..PvbParam.D_PERC_DB).all { dp[it] == 0f } && dp[PvbParam.D_ATTACK_MS] == 32f / 3f &&
         dp[PvbParam.D_RELEASE_MS] == 32f, "defaultParams: developer mode off, model values")
-    check(PvbDevMeter.SIZE == 16 + 2 * 512, "meter layout 16 + 2 x 512")
+    check(PvbDevMeter.SIZE == 32 + 2 * 512 && PvbDevMeter.T3_H2_DB + 7 == PvbDevMeter.FIELDS, "meter layout 32 + 2 x 512")
+    run {
+        // two bass notes held together: both drawn, the quieter one's harmonics judged against the loudest level
+        val m = FloatArray(PvbDevMeter.SIZE) { -120f }
+        m[PvbDevMeter.F0] = 82f; m[PvbDevMeter.H2_DB + 1] = -20f; m[PvbDevMeter.H2_DB + 2] = -25f
+        m[PvbDevMeter.T2_F0] = 55f; m[PvbDevMeter.T2_H2_DB + 1] = -30f; m[PvbDevMeter.T2_H2_DB + 3] = -70f
+        m[PvbDevMeter.T3_F0] = 0f
+        val s = DevSnapshot.fromMeters(m, -6f, 0f, -1f, 50f, true, 0f, -15f)
+        val t = DevMath.trackBars(s)
+        check(s.extraTracks.size == 1 && t.size == 2 && t[0].first == 82f && t[1].first == 55f &&
+            t[1].second.map { it.k } == listOf(3), "two held tracks: ${t.map { it.first to it.second.map { b -> b.k } }}")
+        check(DevMath.bars(s).size == 2 && DevMath.harmonicSummary(s)?.f0Hz == 82, "summary stays on the loudest track")
+    }
 
     // ---------------------------------------------------------------------------------------- settings
     PvbBuild.reset()
