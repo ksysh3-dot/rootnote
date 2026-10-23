@@ -18,6 +18,16 @@ import kotlin.math.sqrt
  * the microphones' own responses and the distances cancel. If both channels carry the same microphone
  * ([Result.distinctMics] false) the path does not cancel and the result is only indicative.
  *
+ * Limits (code review 2026-10-23, F1/F2): the cancellation needs the two path ratios to be exact inverses, which a
+ * real phone only approximates (mic port placement, directivity, the hand). The leftover is
+ * 10·log10((H_L0·H_L1)/(H_R0·H_R1)) dB for amplitude transfers H and cannot be seen in the recordings (three
+ * unknowns, two equations). So the result is an estimate for this grip: [Result.reliable] only says the recording was
+ * sound (two microphones positively told apart, the runs agree, enough signal), never that the path assumption holds,
+ * and the screen asks the listener to confirm it by ear. Two microphones are established positively: the per-mic
+ * left/right ratios must differ clearly ([MIN_MIC_SPREAD_DB]); one microphone copied to both channels with any gain,
+ * delay or filter gives the same ratio on both channels, and the recorder's own microphone list
+ * (AudioRecord.getActiveMicrophones, [analyze] micsReported) overrides when it reports a single microphone.
+ *
  * Result: "the left speaker is this many dB louder" per third-octave band, and the two averages the engine takes
  * (400-1250 Hz -> P_XTC_BAL_LO_DB, 1.6-8 kHz -> P_XTC_BAL_HI_DB).
  */
@@ -28,6 +38,14 @@ object SpatialBalance {
     const val SPLIT_HZ = 1500.0
     /** Band power at least this much above the noise floor (dB) to count. */
     const val MIN_SNR_DB = 10.0
+    /** The two microphones' left/right ratios differ at least this much on average (dB) for two microphones. */
+    const val MIN_MIC_SPREAD_DB = 4.0
+    /** ...with the same sign in at least this share of the valid bands. */
+    const val MIN_SPREAD_AGREEMENT = 0.8
+    /** The repeated runs agree within this (median over bands, mics and sides, dB) for a reliable result. */
+    const val MAX_REPEAT_DB = 1.0
+    /** Lags (samples, either way) tried when looking for one microphone copied to both channels. */
+    const val CLONE_MAX_LAG = 48
 
     /** A stereo recording: interleaved samples of the two microphone channels. */
     class Recording(val samples: FloatArray, val frames: Int)
@@ -37,11 +55,26 @@ object SpatialBalance {
         val hiDb: Float,
         /** Per band (left louder, dB), NaN where the band was too close to the noise. */
         val bandsDb: List<Double>,
-        /** The two channels are different microphones (the cross method holds). */
+        /**
+         * Two different microphones, established positively: not a copy of one channel, the two hear the speakers
+         * clearly differently ([micSpreadDb]), and the recorder did not report a single microphone.
+         */
         val distinctMics: Boolean,
         /** Enough bands above the noise on both sides of [SPLIT_HZ]. */
         val usable: Boolean,
-    )
+        /** Mean over the valid bands of mic 0's left/right ratio minus mic 1's (dB); 0 for one microphone. */
+        val micSpreadDb: Double = Double.NaN,
+        /** Difference between the first two runs of each side (dB, the worse side's median); NaN with one run per side. */
+        val repeatDb: Double = Double.NaN,
+        /** Microphones the recorder reported (AudioRecord.getActiveMicrophones); -1 when unknown. */
+        val micsReported: Int = -1,
+    ) {
+        /**
+         * The recording itself was sound: usable, two microphones, repeatable. Not a proof that the paths cancel
+         * (see the class notes): the value is still offered as an estimate to confirm by ear.
+         */
+        val reliable: Boolean get() = usable && distinctMics && !(repeatDb > MAX_REPEAT_DB)
+    }
 
     /** Band powers (mean square) of channel [ch] of [r] for every band in [BANDS] (two cascaded RBJ band-passes). */
     fun bandPowers(r: Recording, ch: Int, sampleRate: Int): DoubleArray {
@@ -73,44 +106,88 @@ object SpatialBalance {
         return out
     }
 
-    /** True if the two channels are (nearly) the same signal: one microphone copied to both. */
+    /**
+     * True if the two channels are one signal: one microphone copied to both, at any level and up to
+     * [CLONE_MAX_LAG] samples apart (normalised cross-correlation, so a gain difference does not hide it).
+     */
     fun sameChannels(r: Recording): Boolean {
-        var ab = 0.0; var aa = 0.0; var bb = 0.0
+        var aa = 0.0; var bb = 0.0
         for (n in 0 until r.frames) {
             val a = r.samples[2 * n].toDouble()
             val b = r.samples[2 * n + 1].toDouble()
-            ab += a * b; aa += a * a; bb += b * b
+            aa += a * a; bb += b * b
         }
         if (aa <= 0.0 || bb <= 0.0) return false
-        val corr = ab / sqrt(aa * bb)
-        return corr > 0.999 && abs(10 * log10(aa / bb)) < 0.3
+        val norm = sqrt(aa * bb)
+        for (lag in -CLONE_MAX_LAG..CLONE_MAX_LAG) {
+            var ab = 0.0
+            val from = maxOf(0, -lag)
+            val to = minOf(r.frames, r.frames - lag)
+            for (n in from until to) ab += r.samples[2 * n].toDouble() * r.samples[2 * (n + lag) + 1].toDouble()
+            if (abs(ab) / norm > 0.999) return true
+        }
+        return false
     }
 
     /**
      * [noise]: a recording of the room with nothing playing; [left] / [right]: recordings made while the left /
      * right sweep played (several each are summed).
      */
-    fun analyze(noise: Recording, left: List<Recording>, right: List<Recording>, sampleRate: Int): Result {
+    fun analyze(
+        noise: Recording,
+        left: List<Recording>,
+        right: List<Recording>,
+        sampleRate: Int,
+        micsReported: Int = -1,
+    ): Result {
         val nz = Array(2) { bandPowers(noise, it, sampleRate) }
-        fun mean(recs: List<Recording>, ch: Int): DoubleArray {
+        val lRuns = left.map { rec -> Array(2) { bandPowers(rec, it, sampleRate) } }
+        val rRuns = right.map { rec -> Array(2) { bandPowers(rec, it, sampleRate) } }
+        fun mean(runs: List<Array<DoubleArray>>, ch: Int): DoubleArray {
             val acc = DoubleArray(BANDS.size)
-            for (r in recs) bandPowers(r, ch, sampleRate).forEachIndexed { i, p -> acc[i] += p / recs.size }
+            for (run in runs) run[ch].forEachIndexed { i, p -> acc[i] += p / runs.size }
             return acc
         }
-        val l = Array(2) { mean(left, it) }
-        val r = Array(2) { mean(right, it) }
+        val l = Array(2) { mean(lRuns, it) }
+        val r = Array(2) { mean(rRuns, it) }
+        fun above(p: Double, m: Int, i: Int): Boolean {
+            val e = p - nz[m][i]
+            return !e.isNaN() && e > nz[m][i] * Math.pow(10.0, MIN_SNR_DB / 10)
+        }
+        // per band: each mic's left/right ratio (dB), NaN where either side is too close to the noise
+        val perMic = Array(2) { DoubleArray(BANDS.size) { Double.NaN } }
         val bands = BANDS.indices.map { i ->
             var sum = 0.0
             for (m in 0..1) {
-                val el = l[m][i] - nz[m][i]
-                val er = r[m][i] - nz[m][i]
-                val floor = nz[m][i] * Math.pow(10.0, MIN_SNR_DB / 10)
-                if (!(el > floor && er > floor) || el.isNaN() || er.isNaN()) return@map Double.NaN
-                sum += 10 * log10(el / er)
+                if (!above(l[m][i], m, i) || !above(r[m][i], m, i)) return@map Double.NaN
+                val d = 10 * log10((l[m][i] - nz[m][i]) / (r[m][i] - nz[m][i]))
+                perMic[m][i] = d
+                sum += d
             }
             sum / 2   // geometric mean of the two mics' power ratios, in dB
         }
-        val distinct = (left + right).none { sameChannels(it) }
+        // two microphones, positively: the two hear the speakers clearly differently, in the same direction across
+        // the bands (one mic copied to both channels gives equal ratios whatever its gain, delay or filter)
+        val spreads = BANDS.indices.filter { !bands[it].isNaN() }.map { perMic[0][it] - perMic[1][it] }
+        val spread = if (spreads.isEmpty()) Double.NaN else spreads.average()
+        val agree = if (spreads.isEmpty()) 0.0 else spreads.count { it * spread > 0 }.toDouble() / spreads.size
+        val copied = (left + right).any { sameChannels(it) }
+        val distinct = !copied && micsReported != 1 && !spread.isNaN() &&
+            abs(spread) >= MIN_MIC_SPREAD_DB && agree >= MIN_SPREAD_AGREEMENT
+        // repeatability: the first two runs of each side, per band and mic where both are clear of the noise; the
+        // worse side's median
+        var repeat = Double.NaN
+        for (runs in listOf(lRuns, rRuns)) {
+            if (runs.size < 2) continue
+            val diffs = ArrayList<Double>()
+            for (m in 0..1) for (i in BANDS.indices) {
+                val a = runs[0][m][i]; val b = runs[1][m][i]
+                if (above(a, m, i) && above(b, m, i)) diffs += abs(10 * log10((a - nz[m][i]) / (b - nz[m][i])))
+            }
+            if (diffs.isEmpty()) continue
+            val median = diffs.sorted()[diffs.size / 2]
+            if (repeat.isNaN() || median > repeat) repeat = median
+        }
         fun avg(sel: (Double) -> Boolean): Double? {
             val v = BANDS.indices.filter { sel(BANDS[it]) }.map { bands[it] }.filter { !it.isNaN() }
             return if (v.size >= 3) v.average() else null
@@ -123,6 +200,9 @@ object SpatialBalance {
             bandsDb = bands,
             distinctMics = distinct,
             usable = lo != null && hi != null,
+            micSpreadDb = spread,
+            repeatDb = repeat,
+            micsReported = micsReported,
         )
     }
 }

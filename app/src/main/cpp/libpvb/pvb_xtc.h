@@ -167,6 +167,26 @@ public:
         outR = inR + x_ * (pr - inR);
     }
 
+    // The virtual-bass layer while the phone is upright (code review 2026-10-23, F3): the layer is generated beside
+    // this stage and added after it, so without this it would reach both speakers whatever the portrait mode. MONO:
+    // both get the mono layer; SPLIT_*: all of it goes to the low channel at +3 dB like the music's low part (the
+    // layer is harmonics of the bass, at most a few hundred hertz), nothing to the earpiece. Landscape modes leave
+    // the layer as it is. Follows the same crossfade as tick(); call after tick() for the same sample.
+    inline void routeLayer(double& l, double& r) const {
+        if (cur_.mode < PORTRAIT_MONO || x_ == 0.0) return;
+        const double mono = 0.5 * (l + r);
+        double pl, pr;
+        if (cur_.mode == PORTRAIT_MONO) {
+            pl = pr = mono;
+        } else {
+            const double low = mono * 1.4142135623730951;
+            pl = cur_.mode == SPLIT_LOW_L ? low : 0.0;
+            pr = cur_.mode == SPLIT_LOW_L ? 0.0 : low;
+        }
+        l += x_ * (pl - l);
+        r += x_ * (pr - r);
+    }
+
     // Design numbers (also for the tests): crosstalk delay in samples and loop gain.
     double tauSamples() const { return tau_; }
     double loopGain() const { return g_; }
@@ -237,7 +257,9 @@ private:
         for (auto* l : {&lA_, &lB_}) {
             k = std::tan(pi * c.loHz / sr_);
             l->f[0].set(1, -1, 1 + k, k - 1);
-            k = std::tan(pi * c.hiHz / sr_);
+            // kept below Nyquist (a host or a future caller at a low rate: past pi/2 tan() turns negative and the
+            // pole leaves the unit circle)
+            k = std::tan(pi * std::min(c.hiHz, 0.45 * sr_) / sr_);
             l->f[1].set(k, k, 1 + k, k - 1);
             l->f[2].set(1 + bS, 1 - bS, 1 + aS, 1 - aS);
         }

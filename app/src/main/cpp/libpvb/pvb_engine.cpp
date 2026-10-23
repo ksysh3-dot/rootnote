@@ -661,6 +661,8 @@ void Engine::process(float* io, int frames) {
                 }
             }
         }
+        // Upright split or mono: the layer goes where the music's low part goes (not to the earpiece).
+        if (!xtc_.idle()) xtc_.routeLayer(layL, layR);
         if (devMeterOn_) {
             // Developer-mode display only (nothing here reaches the output): dry low band (aligned with the layer),
             // layer, and both in the 150-400 Hz band where the phone's protection acts.
@@ -744,7 +746,8 @@ void Engine::process(float* io, int frames) {
         // No bypass leaks into a settled solo monitor; VB-off/zero-layer means silence.
         const double yl = (sx == 0.0 ? normalL : (1.0 - sx) * normalL + sx * mix * sl) * fade * gate * vbx;
         const double yr = (sx == 0.0 ? normalR : (1.0 - sx) * normalR + sx * mix * sr) * fade * gate * vbx;
-        if (!isFiniteBits(yl) || !isFiniteBits(yr)) badOutput = true;
+        // checked as written (float): a finite double past the float range would still leave as Inf
+        if (!isFiniteBits(static_cast<float>(yl)) || !isFiniteBits(static_cast<float>(yr))) badOutput = true;
 
         if (capture) {
             const double sharedGate = mix * fade * gate * vbx * lim_.currentGain();

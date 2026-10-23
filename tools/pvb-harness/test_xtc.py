@@ -150,6 +150,35 @@ def main():
               lo_l[low_ch] - lo_l[hi_ch] > 20 and hi_h[hi_ch] - hi_h[low_ch] > 20 and flat < 0.5,
               f'low {lo_l[low_ch] - lo_l[hi_ch]:.1f} dB, high {hi_h[hi_ch] - hi_h[low_ch]:.1f} dB, sum within {flat:.2f} dB')
 
+    # Upright with virtual bass (code review 2026-10-23, F3): the layer is added after this stage, so it must be routed
+    # like the music: split -> only the low channel (nothing to the earpiece), mono -> the same on both.
+    t = np.arange(sr * 6) / sr
+    bass = np.repeat((0.2 * np.sin(2 * np.pi * 80 * t))[:, None], 2, axis=1).astype(np.float32)
+    k2 = 2 * sr
+    for mode, low_ch in ((4, 0), (5, 1)):
+        y = te.Engine(lib, sr, xtc_mode=mode, vb_on=1, vb_algo=6, vb_level_db=4).process(bass)[k2:]
+        lay = band_db(y, 150, 800)
+        check(f'upright split {mode} + virtual bass (P1): the layer only on the low channel (earpiece >= 40 dB lower)',
+              lay[low_ch] - lay[1 - low_ch] >= 40 and np.all(np.isfinite(y)),
+              f'low {lay[low_ch]:.1f} dBFS, earpiece {lay[1 - low_ch]:.1f} dBFS')
+    left_bass = bass.copy(); left_bass[:, 1] = 0
+    y = te.Engine(lib, sr, xtc_mode=3, vb_on=1, vb_algo=6, vb_level_db=4).process(left_bass)[k2:]
+    lay = band_db(y, 150, 800)
+    check('upright mono + virtual bass: the layer is mono too (bass on one input channel, same on both speakers)',
+          abs(lay[0] - lay[1]) < 0.1 and lay[0] > -60, f'L {lay[0]:.2f} R {lay[1]:.2f} dBFS')
+
+    # Low sample rates (the app runs at 44.1/48 kHz; the engine accepts 8-192): the feedback low-pass stays below
+    # Nyquist, so the canceller stays stable and finite.
+    for rate in (8000, 11025, 12000, 14000, 16000, 22050):
+        tt = np.arange(rate * 2) / rate
+        xl = np.column_stack((.01 * np.sin(2 * np.pi * 700 * tt), .006 * np.sin(2 * np.pi * 1100 * tt))).astype(np.float32)
+        ok = True
+        for mode in (1, 2):
+            e = te.Engine(lib, rate, xtc_mode=mode)
+            yy = e.process(xl, block=128)
+            ok = ok and bool(np.all(np.isfinite(yy))) and float(np.max(np.abs(yy))) < 1.0 and e.meters()[te.M['NAN_EVENTS']] == 0
+        check(f'{rate} Hz, centre and full: finite, no recovery events', ok)
+
     z = te.Engine(lib, sr, xtc_mode=2, xtc_strength_db=-3).process(np.zeros((sr, 2), np.float32))
     check('silence in, silence out (no self-oscillation)', np.max(np.abs(z)) == 0.0)
     loud = noise(sr, 5, -3, seed=4)

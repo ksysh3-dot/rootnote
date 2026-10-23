@@ -1070,8 +1070,9 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
                 }
 
                 // Route of this block: JamesDSP alone (PVB not in the path), PVB alone (no JamesDSP effect on, or a
-                // research mode: blind comparison, measurement, buzz diagnostics), or JamesDSP effects -> PVB.
-                val research = PvbRuntime.abActive || PvbRuntime.measuring || buzzDiagnostics.armed
+                // research mode: blind comparison, measurement, buzz diagnostics, speaker calibration), or JamesDSP
+                // effects -> PVB.
+                val research = PvbRuntime.abActive || PvbRuntime.measuring || PvbRuntime.calibrating || buzzDiagnostics.armed
                 val route = JdspChain.route(
                     pvbInPath = pvbController.isActive,
                     research = research,

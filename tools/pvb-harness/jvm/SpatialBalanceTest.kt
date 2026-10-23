@@ -25,6 +25,8 @@ private fun peaking(x: DoubleArray, sr: Int, f0: Double, q: Double, db: Double) 
     for (i in x.indices) { val y = b0 * x[i] + z1; z1 = b1 * x[i] - a1 * y + z2; z2 = b2 * x[i] - a2 * y; x[i] = y }
 }
 
+private data class Quad(val name: String, val gain: Double, val lag: Int, val filtered: Boolean)
+
 private fun delayed(x: DoubleArray, d: Int, g: Double) = DoubleArray(x.size) { if (it >= d) g * x[it - d] else 0.0 }
 
 fun main() {
@@ -83,6 +85,50 @@ fun main() {
 
     val mono = SpatialBalance.analyze(noise, listOf(record(pl, true, oneMic = true)), listOf(record(pr, false, oneMic = true)), sr)
     check("one microphone on both channels: flagged", !mono.distinctMics)
+
+    check("two real microphones, steady runs: reliable", res.reliable, "spread=${"%.1f".format(res.micSpreadDb)} repeat=${"%.2f".format(res.repeatDb)}")
+
+    // --- code review 2026-10-23 (F1): one microphone copied with a different gain, a delay or a filter ---
+    fun copied(play: DoubleArray, fromLeft: Boolean, gain: Double, lag: Int, filtered: Boolean): SpatialBalance.Recording {
+        val heard = mic0(delayed(play, 2400 + if (fromLeft) 4 else 21, if (fromLeft) 1.0 else 0.35))
+        val other = delayed(heard, lag, gain).let { if (filtered) it.copyOf().also { x -> peaking(x, sr, 2000.0, 0.7, 4.0) } else it }
+        val out = FloatArray(2 * n)
+        for (i in 0 until n) {
+            out[2 * i] = (heard[i] + 1e-4 * rng.nextGaussian()).toFloat()
+            out[2 * i + 1] = (other[i] + 1e-4 * rng.nextGaussian()).toFloat()
+        }
+        return SpatialBalance.Recording(out, n)
+    }
+    for ((name, g, lag, f) in listOf(
+        Quad("half gain", 0.5, 0, false), Quad("one sample later", 1.0, 1, false),
+        Quad("half gain, 20 samples later", 0.5, 20, false), Quad("through a different filter", 0.8, 0, true),
+    )) {
+        val one = SpatialBalance.analyze(noise, listOf(copied(pl, true, g, lag, f), copied(pl, true, g, lag, f)),
+            listOf(copied(pr, false, g, lag, f), copied(pr, false, g, lag, f)), sr)
+        check("one microphone copied ($name): not two microphones, not reliable", !one.distinctMics && !one.reliable,
+            "spread=${"%.2f".format(one.micSpreadDb)}")
+    }
+    val reported = SpatialBalance.analyze(noise, listOf(record(pl, true), record(pl, true)),
+        listOf(record(pr, false), record(pr, false)), sr, micsReported = 1)
+    check("recorder reports one microphone: not two microphones", !reported.distinctMics && !reported.reliable)
+
+    // --- F2: the path assumption. Equal speakers, mirror-asymmetric paths: the bias is the documented term and the
+    // recording alone cannot reveal it (the screen therefore always asks to confirm by ear) ---
+    fun pathRec(play: DoubleArray, g0: Double, g1: Double): SpatialBalance.Recording {
+        val c0 = delayed(play, 2404, g0); val c1 = delayed(play, 2421, g1)
+        return SpatialBalance.Recording(FloatArray(2 * n) { i ->
+            ((if (i % 2 == 0) c0[i / 2] else c1[i / 2]) + 1e-4 * rng.nextGaussian()).toFloat() }, n)
+    }
+    val asym = SpatialBalance.analyze(noise, listOf(pathRec(sl, 1.0, 0.2), pathRec(sl, 1.0, 0.2)),
+        listOf(pathRec(sr2, 0.4, 1.0), pathRec(sr2, 0.4, 1.0)), sr)
+    val expected = 10 * kotlin.math.log10((1.0 * 0.2) / (0.4 * 1.0))
+    check("asymmetric paths: bias equals 10*log10(HL0*HL1/(HR0*HR1)) (a known limit, not detectable)",
+        abs(asym.loDb - expected) < 0.3 && abs(asym.hiDb - expected) < 0.3, "lo=${asym.loDb} hi=${asym.hiDb} expected=${"%.2f".format(expected)}")
+
+    // repeatability: the second left run 3 dB louder (the phone moved, a noise burst) -> not reliable
+    val unsteady = SpatialBalance.analyze(noise, listOf(record(pl, true), record(pl.map { it * 1.41 }.toDoubleArray(), true)),
+        listOf(record(pr, false), record(pr, false)), sr)
+    check("runs that disagree by 3 dB: not reliable", !unsteady.reliable, "repeat=${"%.2f".format(unsteady.repeatDb)}")
 
     val silent = SpatialBalance.analyze(noise, listOf(noise), listOf(noise), sr)
     check("nothing played (noise only): not usable, balance 0", !silent.usable && silent.loDb == 0f && silent.hiDb == 0f)

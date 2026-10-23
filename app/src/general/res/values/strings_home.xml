@@ -122,9 +122,11 @@
     <string name="balance_measuring_note">Keep the phone still and the microphone holes free.</string>
     <string name="balance_result_title">Result</string>
     <string name="balance_result_body">Low-mid (400-1500 Hz): %1$s. High (1.5-8 kHz): %2$s. The louder side is lowered by that much.</string>
-    <string name="balance_result_one_mic">This phone gives only one microphone for recording, so the result is rough. Fine-tuning by ear is recommended.</string>
+    <string name="balance_result_one_mic">This recording could not tell two microphones apart, so the measured value is not used. Please set it by ear.</string>
+    <string name="balance_result_estimate">An estimate for how you hold the phone now: it assumes the two microphones sit evenly between the speakers. Check it by ear before saving.</string>
+    <string name="balance_result_unsteady">The two runs did not agree (the phone moved or there was noise), so the measured value is not used. Measure again or set it by ear.</string>
+    <string name="balance_check_ear">Check by ear</string>
     <string name="balance_apply">Save this</string>
-    <string name="balance_refine">Fine-tune by ear</string>
     <string name="balance_ear_lo_title">1/2 · Low-mid</string>
     <string name="balance_ear_hi_title">2/2 · High</string>
     <string name="balance_ear_body">You will hear a hiss. Hold the phone sideways as usual and move the bar until the sound is right in front of you, in the middle.</string>

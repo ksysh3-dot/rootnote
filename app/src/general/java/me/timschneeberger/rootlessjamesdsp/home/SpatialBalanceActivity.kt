@@ -38,13 +38,17 @@ import me.timschneeberger.rootlessjamesdsp.service.BaseAudioProcessorService
  * Spatial "좌우 맞추기": makes the two phone speakers even for the crosstalk canceller (P_XTC_BAL_*), landscape.
  *
  * - Automatic: the phone plays a sweep from the left channel, then the right (twice each) and records its own two
- *   microphones; SpatialBalance cancels the microphones and the distances (cross method). Spatial is held off while
- *   measuring, so the raw speakers are compared.
+ *   microphones; SpatialBalance cancels the microphones and the distances (cross method). Spatial and virtual bass
+ *   are held off while measuring, so the raw speakers are compared. The result is an estimate for this grip (the
+ *   path assumption cannot be checked, SpatialBalance notes): a sound recording is offered with "귀로 확인하기" first,
+ *   an unsound one (one microphone, runs that disagree) only leads to tuning by ear from the stored values.
  * - By ear: band noise (400-1500 Hz, then 1.5-8 kHz) in both channels with spatial on; the listener moves it to the
- *   centre. Starts from the automatic result if there is one, so the ear only fine-tunes it.
+ *   centre. Starts from a sound automatic result, so the ear only confirms or fine-tunes it.
  *
- * Everything plays through the normal engine and speaker path (DevTestSound replaces the captured music) and through
- * PvbRuntime.setDevOverride, never stored until "저장"; leaving the screen stops the sound and clears the override.
+ * Everything plays through the speaker path with JamesDSP held out (PvbRuntime.calibrating: a crossfeed or widening
+ * would carry one channel into the other; DevTestSound replaces the captured music) and through
+ * PvbRuntime.setDevOverride. Nothing is stored before "저장" / "이대로 저장"; leaving the screen or a step stops the
+ * sound, clears the override and goes back to the stored values.
  * The rotation it was set in is stored: turned round, the controller swaps the correction with the speakers.
  */
 class SpatialBalanceActivity : BaseActivity() {
@@ -78,6 +82,7 @@ class SpatialBalanceActivity : BaseActivity() {
                     onEarValue = { v -> setEarValue(v) },
                     onEarNext = { earNext() },
                     onApplyAuto = { r -> applyAuto(r) },
+                    onRefine = { r -> refine(r) },
                     onSave = { save() },
                     onReset = { reset() },
                     onClose = { finish() },
@@ -96,8 +101,10 @@ class SpatialBalanceActivity : BaseActivity() {
 
     override fun onStop() {
         stopAll()
-        if (ui.step == BalanceStep.MEASURING || ui.step == BalanceStep.EAR_LO || ui.step == BalanceStep.EAR_HI)
+        if (ui.step == BalanceStep.MEASURING || ui.step == BalanceStep.EAR_LO || ui.step == BalanceStep.EAR_HI) {
+            restoreStored()
             ui = ui.copy(step = BalanceStep.INTRO)
+        }
         super.onStop()
     }
 
@@ -109,8 +116,19 @@ class SpatialBalanceActivity : BaseActivity() {
         worker = null
         try { recorder?.stop() } catch (_: Exception) {}   // unblocks a read in progress
         DevTestSound.stop()
-        PvbRuntime.setDevOverride(null)
+        clearOverride()
         unlockRotation()
+    }
+
+    private fun clearOverride() {
+        PvbRuntime.setDevOverride(null)
+        PvbRuntime.calibrating = false
+    }
+
+    /** The stored values on screen again (leaving a measurement or the by-ear steps without saving). */
+    private fun restoreStored() {
+        val s = PvbSettings.load(prefs)
+        ui = ui.copy(loDb = s.xtcBalLoDb, hiDb = s.xtcBalHiDb, source = prefs.getString(PvbSettings.KEY_XTC_BAL_SOURCE, "") ?: "")
     }
 
     /** Hold the screen in the rotation calibration started in (a 180-degree turn would swap the speakers). */
@@ -123,8 +141,9 @@ class SpatialBalanceActivity : BaseActivity() {
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
     }
 
-    private fun override(xtcOn: Boolean, lo: Float, hi: Float) {
+    private fun override(xtcOn: Boolean, lo: Float, hi: Float, measuring: Boolean = false) {
         val s = PvbSettings.load(prefs)
+        PvbRuntime.calibrating = true
         val mode = when {
             !xtcOn -> PvbSettings.XTC_OFF
             s.xtcMode != PvbSettings.XTC_OFF -> s.xtcMode
@@ -132,8 +151,9 @@ class SpatialBalanceActivity : BaseActivity() {
         }
         val strength = if (xtcOn && s.xtcMode == PvbSettings.XTC_OFF) HomeLogic.XtcPreset.BALANCED.strengthDb else s.xtcStrengthDb
         // set in the rotation the screen is in now, so no swap applies while calibrating
+        // measuring: the virtual bass layer is added to both speakers, so it is held off too
         PvbRuntime.setDevOverride(s.copy(xtcMode = mode, xtcStrengthDb = strength, xtcBalLoDb = lo, xtcBalHiDb = hi,
-            xtcBalRotation = calRotation))
+            xtcBalRotation = calRotation, vbOn = s.vbOn && !measuring))
     }
 
     @Suppress("DEPRECATION")
@@ -155,15 +175,15 @@ class SpatialBalanceActivity : BaseActivity() {
         stopAll()
         lockRotation()
         val token = ++run
-        override(xtcOn = false, lo = 0f, hi = 0f)
+        override(xtcOn = false, lo = 0f, hi = 0f, measuring = true)
         ui = ui.copy(step = BalanceStep.MEASURING, progress = 0f, measuring = MeasurePhase.QUIET)
         worker = Thread({ measureAll(token) }, "spatial-balance").also { it.start() }
     }
 
     /**
      * Microphone sources in order of preference: UNPROCESSED (no noise suppression or gain control) where offered,
-     * then CAMCORDER (usually a real stereo pair), then VOICE_RECOGNITION. A run whose two channels turn out to be one
-     * microphone is repeated with the next source; the first result with two microphones wins.
+     * then CAMCORDER (usually a real stereo pair), then VOICE_RECOGNITION. A run that is not sound (one microphone,
+     * runs that disagree) is repeated with the next source; the first sound result wins, else the best one.
      */
     private fun measureAll(token: Int) {
         val am = getSystemService(AudioManager::class.java)
@@ -172,17 +192,23 @@ class SpatialBalanceActivity : BaseActivity() {
             add(MediaRecorder.AudioSource.CAMCORDER)
             add(MediaRecorder.AudioSource.VOICE_RECOGNITION)
         }
+        fun rank(r: SpatialBalance.Result) = when {
+            r.reliable -> 3
+            r.usable && r.distinctMics -> 2
+            r.usable -> 1
+            else -> 0
+        }
         var best: SpatialBalance.Result? = null
         for ((i, source) in sources.withIndex()) {
             if (token != run) return
             val r = measure(token, source, i, sources.size) ?: continue
-            if (r.usable && (best == null || (!best.distinctMics && r.distinctMics))) best = r
-            if (r.usable && r.distinctMics) break
+            if (r.usable && (best == null || rank(r) > rank(best))) best = r
+            if (r.reliable) break
         }
         post {
             if (token != run) return@post
             DevTestSound.stop()
-            PvbRuntime.setDevOverride(null)
+            clearOverride()
             val b = best
             ui = when {
                 b != null -> ui.copy(step = BalanceStep.RESULT, result = b)
@@ -204,11 +230,14 @@ class SpatialBalanceActivity : BaseActivity() {
             return null
         }
         recorder = rec
+        var micsReported = -1
         val period = DevTestSignal.XTC_SWEEP_PERIOD
         val total = 1.3 + 4 * (period + 0.3)
         var done = 0.0
         try {
             rec.startRecording()
+            // the recorder's own list of the microphones in use (empty or failing on some phones: unknown)
+            micsReported = try { rec.activeMicrophones.size.takeIf { it > 0 } ?: -1 } catch (_: Exception) { -1 }
             // short reads: a cancelled run notices within 0.1 s, and the progress moves smoothly
             fun take(seconds: Double): SpatialBalance.Recording? {
                 val frames = (seconds * sr).toInt()
@@ -241,7 +270,7 @@ class SpatialBalanceActivity : BaseActivity() {
                 take(0.3) ?: return null
                 if (k == DevTestKind.XTC_SWEEP_L) left.add(r) else right.add(r)
             }
-            return SpatialBalance.analyze(noise, left, right, sr)
+            return SpatialBalance.analyze(noise, left, right, sr, micsReported)
         } catch (e: Exception) {
             return null
         } finally {
@@ -254,9 +283,21 @@ class SpatialBalanceActivity : BaseActivity() {
 
     private fun post(block: () -> Unit) { main.post { if (!isFinishing) block() } }
 
+    /** "이대로 저장": only offered for a sound result. */
     private fun applyAuto(r: SpatialBalance.Result) {
+        if (!r.reliable) return
         ui = ui.copy(loDb = r.loDb, hiDb = r.hiDb, source = "mic")
         save()
+    }
+
+    /**
+     * "귀로 확인하기" / "귀로 맞추기": the by-ear steps start from a sound result, otherwise from the stored values.
+     * Nothing is stored here; "저장" at the end of the by-ear steps does (code review 2026-10-23, F5).
+     */
+    private fun refine(r: SpatialBalance.Result) {
+        if (r.reliable) ui = ui.copy(loDb = r.loDb, hiDb = r.hiDb, source = "mic")
+        else restoreStored()
+        startEar()
     }
 
     // ------------------------------------------------------------------------------------------------ by ear
@@ -264,7 +305,7 @@ class SpatialBalanceActivity : BaseActivity() {
     private fun startEar() {
         if (!engineReady()) { ui = ui.copy(ready = false); return }
         if (ui.step != BalanceStep.RESULT) lockRotation()   // after a measurement the screen is already held
-        ui = ui.copy(step = BalanceStep.EAR_LO, source = if (ui.source == "mic") "mic+ear" else "ear")
+        ui = ui.copy(step = BalanceStep.EAR_LO, source = if (ui.source == "mic" || ui.source == "mic+ear") "mic+ear" else "ear")
         override(xtcOn = true, lo = ui.loDb, hi = ui.hiDb)
         DevTestSound.start(DevTestKind.XTC_BAND_LO)
     }

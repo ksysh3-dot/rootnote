@@ -154,6 +154,14 @@ object PvbRuntime {
             abListeners.forEach { it() } // also refresh the controller's loudness-estimator hold
         }
 
+    /**
+     * Speaker calibration ("좌우 맞추기") is playing its test sounds: JamesDSP stays out of the path, so a crossfeed,
+     * stereo widening, reverb or script cannot carry the left-only sweep into the right speaker (code review
+     * 2026-10-23, F4). Unlike [measuring] this keeps PVB itself as configured (the by-ear step needs spatial on).
+     */
+    @Volatile
+    var calibrating: Boolean = false
+
     @Volatile
     var engine: PvbEngine? = null
 

@@ -18,8 +18,11 @@ built-in speaker of a phone (`app/src/main/cpp/libpvb`):
 - output level and a true-peak limiter,
 - safe limits in the general build (output at most -3 dB, limiter ceiling at most -1 dBTP, bounded EQ).
 
-While the speaker correction is on, it processes the captured audio instead of the JamesDSP engine. When it
-is off, the JamesDSP features of the original app work as before. Processing applies to the built-in speaker
+While the speaker correction is on, it runs after the JamesDSP effects: captured audio goes through the
+JamesDSP effects you have turned on, then through this engine, whose limiter is the last step. A few JamesDSP
+effects that clash with it (dynamic bass boost, analog modelling, the JamesDSP output gain and limiter) are held off
+while it processes and come back when it is off. When it is off, the JamesDSP features of the original app work as
+before. Processing applies to the built-in speaker
 only; headphones and Bluetooth are bypassed.
 
 ## Status
@@ -27,8 +30,10 @@ only; headphones and Bluetooth are bypassed.
 **Beta** (`0.9.0-beta.1`, Android 10 or later, arm64).
 
 - The default settings were measured on a **Galaxy S26 Ultra** (model `SM-S948*`). Every other phone starts
-  with a conservative neutral profile (100 Hz protective low cut, flat EQ, output -3 dB, limiter -1 dBTP,
-  virtual bass off) and a one-time notice that it has not been measured. Adjust by ear.
+  with a conservative neutral profile (100 Hz protective low cut, flat EQ, output -3 dB, limiter -1 dBTP) and a
+  one-time notice that it has not been measured. Adjust by ear.
+- Nothing is processed before you confirm the first-run notice. Confirming it turns the speaker correction **and
+  virtual bass** on (the notice carries the virtual-bass warning); the home screen switch turns processing off.
 - Virtual bass is experimental: it adds about 0.15 s of delay, and the effect (and any buzzing) depends on
   the song and the phone.
 - Apps that block audio capture (for example Spotify, Chrome, SoundCloud) play unprocessed. This limitation
@@ -135,7 +140,10 @@ RootlessJamesDSP의 루트 없는 시스템 오디오 캡처는 그대로 쓰고
 - 출력 레벨과 true-peak 리미터
 - 일반 빌드의 안전 상한(출력 −3 dB 이하, 리미터 −1 dBTP 이하, EQ 범위 제한)
 
-스피커 보정을 켜면 JamesDSP 엔진 대신 이 엔진이 소리를 처리하고, 끄면 원래 JamesDSP 기능이 그대로 동작합니다.
+스피커 보정을 켜면 JamesDSP 효과 뒤에 이 엔진이 이어집니다. 캡처한 소리는 켜 둔 JamesDSP 효과를 먼저 거치고, 이 엔진을
+지나며, 마지막 단계는 이 엔진의 리미터입니다. 이 엔진과 부딪히는 몇 가지 JamesDSP 효과(다이나믹 베이스 부스트, 아날로그
+모델링, JamesDSP 출력 게인·리미터)는 처리하는 동안 멈췄다가 끄면 다시 적용됩니다. 끄면 원래 JamesDSP 기능이 그대로
+동작합니다.
 내장 스피커에서만 적용되며 이어폰·블루투스에서는 우회합니다.
 
 ### 상태
@@ -143,8 +151,10 @@ RootlessJamesDSP의 루트 없는 시스템 오디오 캡처는 그대로 쓰고
 **베타**(`0.9.0-beta.1`, Android 10 이상, arm64)입니다.
 
 - 기본 설정은 **갤럭시 S26 Ultra**(모델 `SM-S948*`)에서 측정했습니다. 다른 폰은 보수적인 중립 설정(보호용 저역 차단
-  100 Hz, 평탄한 EQ, 출력 −3 dB, 리미터 −1 dBTP, 가상 저음 꺼짐)으로 시작하고 "측정되지 않은 기기" 안내를 한 번
-  띄웁니다. 들으면서 조정해 주세요.
+  100 Hz, 평탄한 EQ, 출력 −3 dB, 리미터 −1 dBTP)으로 시작하고 "측정되지 않은 기기" 안내를 한 번 띄웁니다. 들으면서
+  조정해 주세요.
+- 처음 안내를 확인하기 전에는 아무것도 처리하지 않습니다. 안내를 확인하면 스피커 보정과 **가상 저음**이 함께 켜집니다
+  (안내에 가상 저음 경고가 들어 있습니다). 홈 화면 스위치로 처리를 끌 수 있습니다.
 - 가상 저음은 실험 기능입니다. 약 0.15초 지연이 있고, 효과(와 윙윙거림)는 곡과 기기에 따라 다릅니다.
 - 오디오 캡처를 막는 앱(예: Spotify, Chrome, SoundCloud)의 소리는 처리되지 않습니다(안드로이드 제약, 원본과 같음).
 

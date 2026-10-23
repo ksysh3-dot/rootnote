@@ -122,9 +122,11 @@
     <string name="balance_measuring_note">폰을 움직이지 말고, 마이크 구멍을 막지 마세요.</string>
     <string name="balance_result_title">측정 결과</string>
     <string name="balance_result_body">중저역(400~1500 Hz): %1$s. 고역(1.5~8 kHz): %2$s. 큰 쪽을 그만큼 줄여 맞춰요.</string>
-    <string name="balance_result_one_mic">이 폰은 녹음에 마이크 하나만 내줘서 결과가 대략적이에요. 귀로 다듬는 걸 권해요.</string>
+    <string name="balance_result_one_mic">이 녹음에서는 마이크 두 개를 구분하지 못해서 측정값을 쓰지 않아요. 귀로 맞춰 주세요.</string>
+    <string name="balance_result_estimate">지금 쥔 자세에서의 추정값이에요. 두 마이크가 스피커 사이에 고르게 놓였다고 보고 계산해서, 저장하기 전에 귀로 확인하는 걸 권해요.</string>
+    <string name="balance_result_unsteady">두 번 잰 값이 서로 달라서(폰이 움직였거나 주변 소리) 측정값을 쓰지 않아요. 다시 재거나 귀로 맞춰 주세요.</string>
+    <string name="balance_check_ear">귀로 확인하기</string>
     <string name="balance_apply">이대로 저장</string>
-    <string name="balance_refine">귀로 다듬기</string>
     <string name="balance_ear_lo_title">1/2 · 중저역</string>
     <string name="balance_ear_hi_title">2/2 · 고역</string>
     <string name="balance_ear_body">쉬익 하는 소리가 나요. 폰을 평소처럼 가로로 들고, 소리가 얼굴 정면 가운데에서 들릴 때까지 막대를 옮겨 주세요.</string>
