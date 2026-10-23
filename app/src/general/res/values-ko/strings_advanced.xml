@@ -23,4 +23,7 @@
     <string name="rn_files_all">전체</string>
     <string name="rn_files_delete_confirm">\'%1$s\' 파일을 삭제할까요?</string>
     <string name="rn_files_name_empty">이름을 입력하세요</string>
+    <string name="about_copy_settings_title">내 설정 복사</string>
+    <string name="about_copy_settings_summary">피드백을 보낼 때 붙여 넣어 주세요. 앱 버전, 기기 모델, 소리 설정값만 담겨요.</string>
+    <string name="about_copy_settings_done">복사했어요. 아래 내용이 그대로 들어가요.</string>
 </resources>

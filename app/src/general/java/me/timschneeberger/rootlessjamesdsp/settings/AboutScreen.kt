@@ -30,6 +30,10 @@ import me.timschneeberger.rootlessjamesdsp.R
 import me.timschneeberger.rootlessjamesdsp.model.Translator
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbBuild
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbGeneral
+import me.timschneeberger.rootlessjamesdsp.pvb.PvbSettings
+import me.timschneeberger.rootlessjamesdsp.pvb.DevParams
+import me.timschneeberger.rootlessjamesdsp.pvb.DevShareCode
+import me.timschneeberger.rootlessjamesdsp.pvb.SettingsSummary
 import me.timschneeberger.rootlessjamesdsp.ui.LocalRn
 import me.timschneeberger.rootlessjamesdsp.ui.RnBand
 import me.timschneeberger.rootlessjamesdsp.ui.RnChoice
@@ -53,6 +57,7 @@ fun AboutPage(host: RnSettingsActivity) {
     var research by remember { mutableStateOf(PvbBuild.researchUnlocked) }
     var assetText by remember { mutableStateOf<Pair<String, String>?>(null) }
     var privacy by remember { mutableStateOf(false) }
+    var summaryShown by remember { mutableStateOf<Pair<String, String>?>(null) }
     var thirdParty by remember { mutableStateOf(false) }
     var translatorPick by remember { mutableStateOf<Pair<String, List<Translator>>?>(null) }
     val translators = remember { Translator.readLanguageMap(host) }
@@ -79,6 +84,17 @@ fun AboutPage(host: RnSettingsActivity) {
         val source = stringResource(R.string.source_url)
         RnNavRow(stringResource(R.string.about_source_title), source) { openUrl(source) }
         RnNavRow(stringResource(R.string.about_privacy_title), stringResource(R.string.about_privacy_summary)) { privacy = true }
+        val copied = stringResource(R.string.about_copy_settings_done)
+        RnNavRow(stringResource(R.string.about_copy_settings_title), stringResource(R.string.about_copy_settings_summary)) {
+            val s = PvbSettings.load(host.getSharedPreferences(PvbSettings.PREFS_NAME, android.content.Context.MODE_PRIVATE))
+            val values = DevParams.read(s)
+            val code = DevShareCode.encode(android.os.Build.MODEL ?: "", BuildConfig.VERSION_NAME, values,
+                DevParams.defaults(PvbGeneral.profile(host).settings))
+            val text = SettingsSummary.text(s, android.os.Build.MODEL ?: "", BuildConfig.VERSION_NAME, code)
+            (host.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager)
+                ?.setPrimaryClip(android.content.ClipData.newPlainText("Rootnote", text))
+            summaryShown = copied to text
+        }
         RnNavRow(stringResource(R.string.about_third_party_title), stringResource(R.string.about_third_party_summary)) { thirdParty = true }
         RnNavRow(stringResource(R.string.credits_version), BuildConfig.VERSION_NAME, chevron = false) {
             if (PvbGeneral.onVersionTapped(host)) research = true
@@ -117,6 +133,13 @@ fun AboutPage(host: RnSettingsActivity) {
 
     assetText?.let { (title, text) ->
         RnDialog(title, "", onConfirm = { assetText = null }) {
+            SelectionContainer {
+                Text(text, color = c.textPrimary, fontSize = 12.sp, lineHeight = 16.sp)
+            }
+        }
+    }
+    summaryShown?.let { (title, text) ->
+        RnDialog(title, "", onConfirm = { summaryShown = null }) {
             SelectionContainer {
                 Text(text, color = c.textPrimary, fontSize = 12.sp, lineHeight = 16.sp)
             }

@@ -219,6 +219,12 @@ fun main(args: Array<String>) {
 
     // ---------------------------------------------------------------------------------------- share code
     val code = DevShareCode.encode("SM-S948N", "0.9.0-beta.1", vals, defaults)
+    // "내 설정 복사": readable EQ/virtual bass/spatial lines plus the share code; nothing but the model and settings
+    val summary = me.timschneeberger.rootlessjamesdsp.pvb.SettingsSummary.text(
+        PvbSettings(lowDb = 3f, hiDb = -3f, vbOn = true, vbLevelDb = 2f), "SM-S936N", "0.9.0-beta.3", code)
+    check(summary.startsWith("Rootnote 0.9.0-beta.3 · SM-S936N") && "low-mid +3.0 dB @ 220 Hz" in summary &&
+        "treble -3.0 dB @ 4500 Hz" in summary && "virtual bass: true" in summary && "+2.0 dB" in summary &&
+        summary.endsWith("code: $code"), "settings summary: $summary")
     println("share code: $code")
     check(code.startsWith("RN1-SM-S948N-0.9.0-beta.1-") && Regex("^[A-Za-z0-9._+\\-]+$").matches(code),
         "format RN1-model-version-groups")

@@ -116,5 +116,5 @@ java -Djava.library.path="$HERE/../build" -cp "$OUTC:$KOTLIN_STDLIB" JdspChainTe
 # the device profile, test sounds, en/ko strings, and the engine's developer-mode meters through JNI.
 OUTV="$HERE/../build/jvm-devmode"
 rm -rf "$OUTV"; mkdir -p "$OUTV"
-$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/DevParams.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/DeviceProfiles.kt" "$APP/PvbNative.kt" "$APP/PvbEngine.kt" "$APP/DevShareCode.kt" "$APP/DevWarnings.kt" "$APP/DevTestSound.kt" "$HERE/DevModeTest.kt" -d "$OUTV"
+$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/DevParams.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/DeviceProfiles.kt" "$APP/PvbNative.kt" "$APP/PvbEngine.kt" "$APP/DevShareCode.kt" "$APP/SettingsSummary.kt" "$APP/DevWarnings.kt" "$APP/DevTestSound.kt" "$HERE/DevModeTest.kt" -d "$OUTV"
 java -Djava.library.path="$HERE/../build" -cp "$OUTV:$KOTLIN_STDLIB" DevModeTestKt "$HERE/../../.." --jni

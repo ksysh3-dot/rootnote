@@ -24,4 +24,7 @@
     <string name="rn_files_all">All</string>
     <string name="rn_files_delete_confirm">Delete \'%1$s\'?</string>
     <string name="rn_files_name_empty">Enter a name</string>
+    <string name="about_copy_settings_title">Copy my settings</string>
+    <string name="about_copy_settings_summary">Paste it into your feedback. It holds the app version, the phone model and the sound settings only.</string>
+    <string name="about_copy_settings_done">Copied. This is exactly what was copied.</string>
 </resources>
