@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Pause fully while an excluded app is in front (service/ForegroundPause.kt) -->
+    <string name="exclusions_pause_title">Pause fully while an excluded app is in front</string>
+    <string name="exclusions_pause_summary">While an excluded app is the main window, processing and capture both stop. They come back when you switch to another app.</string>
+    <string name="exclusions_pause_needs_access">This needs usage access to know which app is the main window. Turning it on grants it at once when Shizuku is connected, or opens the settings page.</string>
+    <string name="exclusions_pause_rule_open">Which app does it go by?</string>
+    <string name="exclusions_pause_rule_title">The main window counts</string>
+    <string name="exclusions_pause_rule">It goes by the app in the main window.\n\n• YouTube (excluded) in the main window: paused. Spotify or YouTube Music playing behind it then also plays unprocessed, as it is.\n• YouTube in picture-in-picture or a floating window, another app in the main window: not paused. The music keeps being processed; YouTube\'s own sound is excluded and plays as it is.\n• Split screen: the app opened last counts as the main window, because which window has focus cannot be known.\n• Screen off: not paused.\n\nWhy: this app captures other apps\' sound and processes it, and the capture happens before each app\'s own volume. So a video an app mutes in-app (Instagram, YouTube) can be heard through Rootnote. Excluding that app already lets its sound play as it is and keeps its in-app mute. This option stops Rootnote as a whole while you use that app, so other apps play unprocessed too.\n\nLimits: app switches are checked once a second, so pausing and resuming take up to 1-2 seconds; the sound may cut out or overlap briefly meanwhile.</string>
+    <string name="exclusions_pause_active">Paused: %1$s in front</string>
+</resources>

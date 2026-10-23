@@ -38,6 +38,7 @@
     <string name="key_autostart_prompt_at_boot" translatable="false">autostart_prompt_at_boot</string>
     <string name="key_powersave_suspend" translatable="false">powersave_suspend</string>
     <string name="key_powersave_deep" translatable="false">powersave_deep</string>
+    <string name="key_exclusions_pause_foreground" translatable="false">exclusions_pause_foreground</string>
     <string name="key_powersave_hold" translatable="false">powersave_hold</string>
     <string name="key_audioformat_encoding" translatable="false">audioformat_encoding</string>
     <string name="key_audioformat_buffersize" translatable="false">audioformat_buffersize</string>

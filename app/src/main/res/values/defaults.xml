@@ -31,6 +31,7 @@
     <bool name="default_exclude_app_from_recents" translatable="false">false</bool>
     <bool name="default_autostart_prompt_at_boot" translatable="false">true</bool>
     <bool name="default_powersave_suspend" translatable="false">true</bool>
+    <bool name="default_exclusions_pause_foreground" translatable="false">false</bool>
     <string name="default_powersave_deep" translatable="false">0</string>
     <string name="default_powersave_hold" translatable="false">2</string>
     <string name="default_audioformat_encoding" translatable="false">1</string>

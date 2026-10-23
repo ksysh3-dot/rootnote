@@ -36,6 +36,8 @@ object ServiceNotificationHelper: KoinComponent {
     @Volatile var buzzState = "버즈 진단 꺼짐"
     /** Battery state shown after the status text (empty = nothing, e.g. "deep sleep" while the capture sleeps). */
     @Volatile var powerState = ""
+    /** "paused while <app> is in front" (ForegroundPause), shown before [powerState]; empty = not paused. */
+    @Volatile var appPauseState = ""
     @Volatile var buzzServiceActive = false
     private var buzzLastResult = ""
 
@@ -161,8 +163,7 @@ object ServiceNotificationHelper: KoinComponent {
         title: String,
         message: String
     ): Notification {
-        val power = powerState
-        val shown = if (power.isEmpty()) message else "$message · $power"
+        val shown = listOf(message, appPauseState, powerState).filter { it.isNotEmpty() }.joinToString(" · ")
         return createServiceNotificationShown(context, title, shown)
     }
 

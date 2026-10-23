@@ -33,9 +33,24 @@ abstract class BaseSessionDatabase(protected val context: Context) {
         sessionList.clear()
     }
 
+    /**
+     * Rootnote fully paused (an excluded app is the main window, ForegroundPause): every session is released (its
+     * source plays its own sound again) and none is added until this is false; the next poll adds them back.
+     */
+    var suspended = false
+        set(value) {
+            if (field == value) return
+            field = value
+            if (value) {
+                val had = sessionList.isNotEmpty()
+                clearSessions()
+                if (had) changeCallbacks.forEach { it.onSessionChanged(sessionList) }
+            }
+        }
+
     fun update(dump: ISessionInfoDump)
     {
-        if(isDisposing) {
+        if(isDisposing || suspended) {
             Timber.d("update: SessionDatabase is disposing; ignoring dump")
             return
         }
@@ -69,7 +84,7 @@ abstract class BaseSessionDatabase(protected val context: Context) {
     }
 
     fun addSession(sid: Int, uid: Int, packageName: String, replace: Boolean = false){
-        if(!shouldAddSession(sid, uid, packageName)) {
+        if(suspended || !shouldAddSession(sid, uid, packageName)) {
             return
         }
 

@@ -68,6 +68,11 @@ OUTEP="$HERE/../build/jvm-engine-params"
 rm -rf "$OUTEP"; mkdir -p "$OUTEP"
 $KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/DevParams.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/PvbEngine.kt" "$APP/PvbNative.kt" "$APP/PvbEngineParams.kt" "$HERE/PvbEngineParamsTest.kt" -d "$OUTEP"
 java -cp "$OUTEP:$KOTLIN_STDLIB" PvbEngineParamsTestKt
+# "pause fully while an excluded app is in front": main-window rule (pure Kotlin)
+OUTFP="$HERE/../build/jvm-foreground-pause"
+rm -rf "$OUTFP"; mkdir -p "$OUTFP"
+$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/../../../app/src/main/java/me/timschneeberger/rootlessjamesdsp/service/ForegroundPause.kt" "$HERE/ForegroundPauseTest.kt" -d "$OUTFP"
+java -cp "$OUTFP:$KOTLIN_STDLIB" ForegroundPauseTestKt
 # Alpha 3.3 live blind A/B: seeded shuffle, record JSON/CSV, tally, file store, comparison catalogue (pure Kotlin).
 $KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/DevParams.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/PvbNative.kt" "$APP/PvbEngine.kt" "$APP/PvbRuntime.kt" "$APP/PvbAbConditions.kt" "$APP/LiveAb.kt" "$APP/LiveAbComparisons.kt" "$HERE/LiveAbTest.kt" -d "$OUTA"
 java -cp "$OUTA:$KOTLIN_STDLIB" LiveAbTestKt

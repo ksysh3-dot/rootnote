@@ -141,6 +141,40 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
         }
     }
 
+    // Excluded app as the main window: full pause, no processing and no capture (ForegroundPause). Main thread.
+    private var pauseForegroundSetting = false
+    @Volatile
+    private var pausedForApp = false
+    private val foregroundWatcher by lazy { ForegroundAppWatcher(this) { evaluateForegroundPause() } }
+
+    private fun updateForegroundWatching() {
+        val want = pauseForegroundSetting && !blockedApps.value.isNullOrEmpty() && ForegroundAppWatcher.hasAccess(this)
+        if (want) foregroundWatcher.start() else foregroundWatcher.stop()
+        evaluateForegroundPause()
+    }
+
+    private fun evaluateForegroundPause() {
+        if (isServiceDisposing) return
+        val excluded = blockedApps.value.orEmpty().mapNotNull { it.packageName }.toSet()
+        val research = PvbRuntime.abActive || PvbRuntime.measuring || PvbRuntime.calibrating || buzzDiagnostics.armed
+        val main = foregroundWatcher.main
+        val next = ForegroundPause.shouldPause(pauseForegroundSetting, main, excluded, foregroundWatcher.interactive, research)
+        if (next == pausedForApp) return
+        pausedForApp = next
+        Timber.d("Foreground pause: $next (main window $main)")
+        // released sessions: every source plays its own sound again; they are muted again on the next poll
+        sessionManager.sessionDatabase.suspended = next
+        if (!next) sessionManager.pollOnce(false)
+        ServiceNotificationHelper.appPauseState = if (next) getString(R.string.exclusions_pause_active,
+            main?.let { getAppNameFromPackageSafe(it) } ?: "") else ""
+        ServiceNotificationHelper.pushServiceNotification(this, notificationSessions)
+        worker?.wake()
+    }
+
+    private fun getAppNameFromPackageSafe(pkg: String): String = try {
+        packageManager.getApplicationLabel(packageManager.getApplicationInfo(pkg, 0)).toString()
+    } catch (_: Exception) { pkg }
+
     /** Shows or clears "deep sleep" in the status notification (called from the audio thread). */
     private fun showDeepSleep(on: Boolean) {
         mainHandler.post {
@@ -169,6 +203,7 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
         Timber.d("blockedAppObserver: Database changed; ignored=${!isRunning}")
         if(isRunning)
             recreateRecorderRequested = true
+        updateForegroundWatching()
     }
 
     override fun onCreate() {
@@ -225,6 +260,7 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
         preferences.registerOnSharedPreferenceChangeListener(preferencesListener)
         loadFromPreferences(getString(R.string.key_powersave_suspend))
         loadFromPreferences(getString(R.string.key_powersave_deep))
+        loadFromPreferences(getString(R.string.key_exclusions_pause_foreground))
         loadFromPreferences(getString(R.string.key_powersave_hold))
         audioManager.registerAudioPlaybackCallback(playbackCallback, Handler(Looper.getMainLooper()))
         loadFromPreferences(getString(R.string.key_session_exclude_restricted))
@@ -347,6 +383,8 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
 
         // Unregister database observer
         blockedApps.removeObserver(blockedAppObserver)
+        foregroundWatcher.stop()
+        ServiceNotificationHelper.appPauseState = ""
 
         // Unregister receivers and release resources
         unregisterLocalReceiver(broadcastReceiver)
@@ -506,6 +544,11 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
                 suspendOnIdle = preferences.get<Boolean>(R.string.key_powersave_suspend)
                 Timber.d("Suspend on idle set to $suspendOnIdle")
                 worker?.wake()
+            }
+            getString(R.string.key_exclusions_pause_foreground) -> {
+                pauseForegroundSetting = preferences.get<Boolean>(R.string.key_exclusions_pause_foreground)
+                Timber.d("Pause while an excluded app is in front: $pauseForegroundSetting")
+                updateForegroundWatching()
             }
             getString(R.string.key_powersave_deep) -> {
                 deepSleepSetting = preferences.get<String>(R.string.key_powersave_deep)
@@ -995,8 +1038,10 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
                     carry = 0
                 }
 
-                // Suspend core while idle (not while a developer-mode test sound plays: it needs the loop running)
-                if(isProcessorIdle && suspendOnIdle && !me.timschneeberger.rootlessjamesdsp.pvb.DevTestSound.playing) {
+                // Suspend core while idle (not while a developer-mode test sound plays: it needs the loop running),
+                // or fully paused while an excluded app is the main window (ForegroundPause; its sessions are released)
+                if((isProcessorIdle && suspendOnIdle || pausedForApp) &&
+                    !me.timschneeberger.rootlessjamesdsp.pvb.DevTestSound.playing) {
                     if (!historySuspended) buzzDiagnostics.audioDiscontinuity("capture_suspended_idle")
                     historySuspended = true
                     synchronized(ioLock) {

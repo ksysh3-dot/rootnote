@@ -68,6 +68,15 @@ import me.timschneeberger.rootlessjamesdsp.ui.RnSectionTitle
 import me.timschneeberger.rootlessjamesdsp.ui.RnSheet
 import me.timschneeberger.rootlessjamesdsp.ui.RnTopBar
 import me.timschneeberger.rootlessjamesdsp.ui.RnCheckMark
+import me.timschneeberger.rootlessjamesdsp.ui.RnSwitchRow
+import me.timschneeberger.rootlessjamesdsp.ui.rememberAppPrefs
+import me.timschneeberger.rootlessjamesdsp.service.ForegroundAppWatcher
+import me.timschneeberger.hiddenapi_impl.ShizukuSystemServerApi
+import rikka.shizuku.Shizuku
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.provider.Settings
+import timber.log.Timber
 import me.timschneeberger.rootlessjamesdsp.utils.Constants
 import me.timschneeberger.rootlessjamesdsp.utils.extensions.CompatExtensions.getApplicationInfoCompat
 import me.timschneeberger.rootlessjamesdsp.utils.extensions.CompatExtensions.getInstalledApplicationsCompat
@@ -91,6 +100,11 @@ import androidx.compose.foundation.layout.height
 class RnExclusionsActivity : RnActivity() {
     private val dumpManager: DumpManager by inject()
     private var unsupported by mutableStateOf(listOf<String>())
+    /** Usage access (needed by "pause while an excluded app is in front"); refreshed on resume. */
+    var usageAccess by mutableStateOf(false)
+        private set
+    /** The user turned the pause on before granting access: switch it on when access comes back granted. */
+    var pendingPause = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -100,6 +114,33 @@ class RnExclusionsActivity : RnActivity() {
     override fun onResume() {
         super.onResume()
         refreshUnsupported()
+        usageAccess = ForegroundAppWatcher.hasAccess(this)
+        if (pendingPause && usageAccess) setPause(true)
+        pendingPause = false
+    }
+
+    private val pauseKey get() = getString(R.string.key_exclusions_pause_foreground)
+
+    fun setPause(on: Boolean) {
+        getSharedPreferences(Constants.PREF_APP, MODE_PRIVATE).edit().putBoolean(pauseKey, on).apply()
+    }
+
+    /** Usage access: through Shizuku when it is connected and allowed, else the system settings page. */
+    fun requestUsageAccess() {
+        try {
+            if (Shizuku.pingBinder() && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
+                ShizukuSystemServerApi.exec("appops set $packageName GET_USAGE_STATS allow")
+                usageAccess = ForegroundAppWatcher.hasAccess(this)
+                if (usageAccess) { setPause(true); return }
+            }
+        } catch (ex: Exception) {
+            Timber.w(ex, "usage access through Shizuku")
+        }
+        pendingPause = true
+        val withPkg = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS, Uri.parse("package:$packageName"))
+        try { startActivity(withPkg) } catch (_: Exception) {
+            try { startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)) } catch (_: Exception) { pendingPause = false }
+        }
     }
 
     val unsupportedApps: List<String> get() = unsupported
@@ -162,6 +203,7 @@ private fun ExclusionsPage(host: RnExclusionsActivity) {
                 Box(Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
                     RnFilledButton(stringResource(R.string.firstweek_exclude_quick_button)) { openQuick() }
                 }
+                PauseSection(host)
                 if (host.unsupportedApps.isNotEmpty()) RnNote(
                     pluralStringResource(R.plurals.unsupported_apps, host.unsupportedApps.size, host.unsupportedApps.size),
                     warning = true, onClick = { unsupportedOpen = true },
@@ -313,3 +355,25 @@ private fun AppPickerSheet(excluded: Set<Int>, onDismiss: () -> Unit, onPick: (A
     }
 }
 
+
+/**
+ * "제외한 앱을 쓰는 동안 완전히 멈추기" (service/ForegroundPause.kt): the switch, what it does and its rule (the main
+ * window counts, not a picture-in-picture or floating window), and the usage access it needs.
+ */
+@Composable
+private fun PauseSection(host: RnExclusionsActivity) {
+    val app = rememberAppPrefs()
+    val key = host.getString(R.string.key_exclusions_pause_foreground)
+    val on = app.bool(key, false) && host.usageAccess
+    var explain by remember { mutableStateOf(false) }
+    RnBand()
+    RnSwitchRow(stringResource(R.string.exclusions_pause_title), on, { want ->
+        if (!want) host.setPause(false)
+        else if (host.usageAccess) host.setPause(true)
+        else host.requestUsageAccess()
+    }, line = stringResource(R.string.exclusions_pause_summary))
+    if (!host.usageAccess) RnNote(stringResource(R.string.exclusions_pause_needs_access))
+    RnNote(stringResource(R.string.exclusions_pause_rule_open), onClick = { explain = true })
+    if (explain) RnDialog(stringResource(R.string.exclusions_pause_rule_title), stringResource(R.string.exclusions_pause_rule),
+        onConfirm = { explain = false })
+}
