@@ -83,3 +83,19 @@ these are probably recorded-playback comparisons rather than measured curves. Lo
 
 Because of these blocks, the Chinese video ecosystem was searched only through search-engine titles.
 A manual browser pass over WekiHome's Bilibili space is the one step most likely to change this result.
+
+## Follow-up: WekiHome (微机分) checked in a browser (2026-10-23)
+
+Method: the uploader's own space search (三星) lists teardown videos only: Z Fold8, Z Fold7, S25 Edge, S25 Ultra,
+S24 Ultra, S23 series, S22 Ultra, Z Fold4. Two of them (S25 Ultra BV1bHXKYqEER, S25 Edge BV1b6MczWENj) were scanned
+by sampling frames (every ~20-40 s, denser around the speaker section). No subtitles without login.
+
+Result: **no speaker frequency-response curve** in either video. The speaker segment shows module cards only:
+
+| Phone | Speaker module card (as shown in the video) | Notes |
+|---|---|---|
+| Galaxy S25 Ultra | Goertek 1016E (10x16 mm class) | Caption: top and bottom speakers both filled with "N'Bass" acoustic enhancement material (adsorbent). The AAC SLA0620 card in the same video is the X-axis linear vibration motor, not a speaker. |
+| Galaxy S25 Edge | AAC 1016M, replacing the Ultra's Goertek 1016E | Caption: the unit's thickness drops from 2.35 mm to 1.75 mm. Consistent with the S25 Edge's weaker bass in the NotebookCheck data (-3.5 dB vs the S26 Ultra). |
+
+Conclusion: WekiHome is useful for module maker and size (part F), not for response curves. The candidate is closed
+for curve data; the remaining Chinese leads (BV1rJsbzbEsH, BV1hoc2e5EaQ) contain no Samsung phone.
