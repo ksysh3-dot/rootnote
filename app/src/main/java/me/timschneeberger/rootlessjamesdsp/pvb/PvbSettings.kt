@@ -165,6 +165,9 @@ data class PvbSettings(
          *  [load] never returns them. */
         const val XTC_MS_CENTRE = 6
         const val XTC_MS_FULL = 7
+        /** [XTC_CENTRE] / [XTC_FULL] with the widener's latency (comparison only, pvb_xtc.h *_ALIGNED). */
+        const val XTC_CENTRE_ALIGNED = 8
+        const val XTC_FULL_ALIGNED = 9
         const val XTC_STRENGTH_DEFAULT = -6f
         const val XTC_DISTANCE_DEFAULT = 40f
         const val XTC_DISTANCE_MIN = 25f

@@ -45,7 +45,7 @@ private fun sealOf(policy: JdspChain.Policy?, sealed: Boolean): Seal = when {
 }
 
 @Composable
-fun JamesDspModules(host: RnAdvancedActivity, sealed: Boolean, showIcons: Boolean) {
+fun JamesDspModules(host: RnAdvancedActivity, sealed: Boolean, spatialSealed: Boolean, showIcons: Boolean) {
     val brand = stringResource(R.string.app_brand_name)
     val lockedNote = stringResource(R.string.pvb_jamesdsp_sealed, brand)
     val eqNote = stringResource(R.string.pvb_jamesdsp_eq_info, brand)
@@ -164,10 +164,11 @@ fun JamesDspModules(host: RnAdvancedActivity, sealed: Boolean, showIcons: Boolea
         PrefSlider(tube, k(R.string.key_tube_drive), stringResource(R.string.tube_drive), 2f, -3f..12f, 0.5f, "dB", 2)
     }
 
-    // 음장 넓이
+    // 음장 넓이: off while PVB's spatial effect plays (JdspChain.Policy.SPATIAL)
     val wide = rememberDspFile(Constants.PREF_STEREOWIDE, host)
     DspModule(stringResource(R.string.stereowide_enable), R.drawable.ic_baseline_cone_24dp, showIcons, wide,
-        k(R.string.key_stereowide_enable), Seal.NONE, null) {
+        k(R.string.key_stereowide_enable), if (spatialSealed) Seal.LOCKED else Seal.NONE,
+        stringResource(R.string.pvb_jamesdsp_stereowide_spatial, brand)) {
         val none = stringResource(R.string.stereowide_level_none)
         val veryWide = stringResource(R.string.stereowide_level_very_wide)
         val wideL = stringResource(R.string.stereowide_level_wide)

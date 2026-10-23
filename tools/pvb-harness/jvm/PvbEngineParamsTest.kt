@@ -3,8 +3,9 @@ import me.timschneeberger.rootlessjamesdsp.pvb.PvbParam
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbSettings
 import me.timschneeberger.rootlessjamesdsp.pvb.VolumeLevelLink
 
-// PvbEngineParams.encode: the rules PvbController.push used to apply inline, one case per rule. The extraction itself
-// was checked against the previous push body (200 000 random states, all 56 slots bit-identical) and is not repeated.
+// PvbEngineParams.encode: the rules PvbController.push used to apply inline, one case per rule. The extraction was
+// checked once against the previous push body (commit 845aac9 message); that one-off oracle is not kept here, so
+// these cases pin the rules, not the equivalence.
 
 private const val ROT_0 = 0
 private const val ROT_90 = 1

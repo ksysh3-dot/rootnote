@@ -394,21 +394,21 @@ def t_meters(lib, sr=48000):
     pts = [(-40, 0.0), (-34, 0.0), (-25, 1.19), (-16, 6.02), (-13, 10.19), (-1, 19.9)]
     err = max(abs(lib.pvb_estimate_phone_gr(l) - g) for l, g in pts)
     check('phone processor static curve hits the measured points', err < 1e-9, max_err=err)
-    # limiter working time (review question 14): quiet -> 0 %; loud for 1 of 2 s -> about half plus the recovery
-    # (release) after it; reading restarts it
-    quiet = stereo(0.01 * np.sin(2 * np.pi * 1000 * t))
-    loud = stereo(np.where(t < 1.0, 0.9, 0.01) * np.sin(2 * np.pi * 1000 * t))
+    # limiter working time (review question 14): smoothed over ~3 s of audio, not reset by reads (several readers)
+    tt = np.arange(8 * sr) / sr
+    quiet = stereo(0.01 * np.sin(2 * np.pi * 1000 * tt))
+    loud = stereo(0.9 * np.sin(2 * np.pi * 1000 * tt[:4 * sr]))
     e = Engine(lib, sr, out_db=6, ceil_db=-1)   # the loud part is driven 6 dB into the limiter
-    e.process(quiet)
+    e.process(quiet[:2 * sr])
     q = float(e.meters()[M['LIM_ACTIVE_PCT']])
     e.process(loud)
-    m1 = e.meters()
-    again = float(e.meters()[M['LIM_ACTIVE_PCT']])
+    hi1 = float(e.meters()[M['LIM_ACTIVE_PCT']])
+    hi2 = float(e.meters()[M['LIM_ACTIVE_PCT']])
+    e.process(quiet)
+    lo = float(e.meters()[M['LIM_ACTIVE_PCT']])
     e.close()
-    half = float(m1[M['LIM_ACTIVE_PCT']])
-    check('meters: limiter working time (quiet 0 %, loud half the time 50-70 % with recovery, restarts after a read)',
-          q == 0.0 and 50 <= half < 70 and m1[M['LIM_GR_DB']] > 0.5 and again == 0.0,
-          quiet_pct=q, half_pct=half, max_gr_db=float(m1[M['LIM_GR_DB']]), after_read=again)
+    check('meters: limiter working time (quiet 0 %, 4 s loud > 70 %, a second read gives the same value, 8 s quiet < 10 %)',
+          q == 0.0 and hi1 > 70 and hi1 == hi2 and lo < 10, quiet_pct=q, loud_pct=hi1, reread_pct=hi2, after_quiet_pct=lo)
 
 
 def rbj_high_shelf(fs, f, g, q=1 / np.sqrt(2)):

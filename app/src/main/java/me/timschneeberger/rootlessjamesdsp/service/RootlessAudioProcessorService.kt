@@ -196,7 +196,10 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
         pvbEngine = PvbEngine(48000)
         pvbController = PvbController(this, pvbEngine)
         // JamesDSP -> PVB chain: seal the overlapping JamesDSP modules while PVB processes (never written to prefs)
-        pvbController.onSealChanged = { sealed -> engine.pvbSeal = sealed }
+        pvbController.onSealChanged = { sealed, spatial ->
+            engine.pvbSeal = sealed
+            engine.pvbSpatialSeal = spatial
+        }
         pvbController.start()
         trackLevelWatcher = TrackLevelWatcher(this, sessionManager)
         // Per-song memory reads track titles: it does not exist in the general build (RECORD_FEATURES = false).

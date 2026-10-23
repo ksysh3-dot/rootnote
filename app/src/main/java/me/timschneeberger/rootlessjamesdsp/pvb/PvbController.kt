@@ -115,16 +115,22 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
      * PVB processes audibly with the user's own settings ([JdspChain.sealed]): JamesDSP bass boost, analog modelling
      * and output control are then sealed. Main thread; [onSealChanged] is called whenever it changes (also once from
      * [start]). Uses the user's settings, not a blind-comparison condition (JamesDSP is out of the path then anyway).
+     * [sealSpatial]: PVB's spatial effect plays ([JdspChain.spatialSealed]), so the JamesDSP stereo widener is off.
+     * [onSealChanged] gets both.
      */
     var sealJdsp: Boolean = false
         private set
-    var onSealChanged: ((Boolean) -> Unit)? = null
+    var sealSpatial: Boolean = false
+        private set
+    var onSealChanged: ((sealed: Boolean, spatial: Boolean) -> Unit)? = null
 
     private fun updateSeal() {
         val next = started && JdspChain.sealed(userSettings, speaker)
-        if (next == sealJdsp) return
+        val nextSpatial = started && JdspChain.spatialSealed(userSettings, speaker)
+        if (next == sealJdsp && nextSpatial == sealSpatial) return
         sealJdsp = next
-        onSealChanged?.invoke(next)
+        sealSpatial = nextSpatial
+        onSealChanged?.invoke(next, nextSpatial)
     }
 
     /** What the user set, as loaded ([PvbSettings.load]: general-build caps and first-run gate applied). */

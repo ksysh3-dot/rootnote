@@ -36,15 +36,15 @@
     <string name="home_tab_on">On</string>
     <string name="home_tab_off">Off</string>
     <string name="home_xtc_title">Spatial</string>
-    <string name="home_xtc_line_on">Left and right speakers blend less, so the sound spreads wider</string>
+    <string name="home_xtc_line_on">Widens left and right. Works only sideways, at the set distance, facing the screen</string>
     <string name="home_xtc_line_off">Widens left and right while you hold the phone sideways</string>
     <string name="home_xtc_chip_subtle">Subtle</string>
     <string name="home_xtc_chip_balanced">Balanced</string>
     <string name="home_xtc_chip_clear">Clear</string>
     <string name="home_xtc_chip_custom">Custom</string>
-    <string name="home_xtc_hint_subtle">Widens left and right and leaves the vocals as they are.</string>
+    <string name="home_xtc_hint_subtle">Widens left and right; the vocals change little.</string>
     <string name="home_xtc_hint_balanced">Wider; the vocals change a little.</string>
-    <string name="home_xtc_hint_clear">The widest. Best when your head is where it is set for.</string>
+    <string name="home_xtc_hint_clear">The widest. The most sensitive to posture and distance; off position it can sound odd.</string>
     <string name="home_xtc_hint_off">Turn it on to widen left and right with the chosen preset.</string>
     <string name="home_xtc_hint_custom">A combination chosen in the advanced settings.</string>
     <string name="home_xtc_distance">Listening distance</string>
@@ -67,17 +67,17 @@
         <item>Why it asks for distance and head size</item>
         <item>To cancel well, the inverted sound has to come at the right moment. The left speaker reaches the right ear about 0.1 ms after the left ear, and that time depends on the distance to the phone and the size of your head.\n\nNo need to measure your head: a standard head (hat about 57 cm) is the default, and small / medium / large by hat size is enough. The distance matters much more than the head size.</item>
         <item>Where it sounds best</item>
-        <item>The inverted sound has to meet the leak right at your ears, so the best spot is small. Hold the phone sideways with your face in front of the screen. Turning your head or tilting the phone only weakens the effect; it does not break the sound.</item>
+        <item>The inverted sound has to meet the leak right at your ears, so the best spot is small. Hold the phone sideways, at the set distance, with your face in front of the screen.\n\nUnlike common wideners, spatial depends heavily on how you move and how far away you are. With an inexact posture or a lot of movement it does not just fade: it is likely to backfire, pulling the sound to one side or making the tone odd. If you listen lying down or on the move, switch it off, or try a common widener such as Soundstage wideness in the advanced settings.</item>
         <item>It leaves the bass alone</item>
         <item>Low notes have long wavelengths; cancelling them would need a lot of boost, which strains the speakers and fights the virtual bass. So spatial works only from about 400 Hz to 8 kHz, where voices and instruments get their place. Virtual bass and spatial each look after their own range.</item>
         <item>Presets</item>
-        <item>Subtle: only the parts that differ left and right, so the vocals in the centre keep their tone.\nBalanced: the centre too, so it gets wider; the vocals change a little.\nClear: the strongest. In the right spot the sound spreads out to beside your ears.</item>
+        <item>Subtle: only the parts that differ left and right, so the vocals in the centre change little (they still pass the speaker balance, the limiter and the phone speakers).\nBalanced: the centre too, so it gets wider; the vocals change a little.\nClear: the strongest. In the right spot the sound spreads out to beside your ears.</item>
         <item>Held upright</item>
         <item>Upright, the two speakers sit above each other instead of left and right. Both then reach both ears almost equally, so there is no leak to cancel, and spatial does not work.\n\nYou can choose instead (advanced settings, Held upright): leave it and only spatial switches off, stereo as it is; mono plays the same sound from both; two-way lets the bottom speaker take the bass and the top one the highs, so the two no longer play the same highs from two heights and the small top speaker is spared the bass. It changes after a second upright, and spatial comes back when you turn the phone sideways.</item>
         <item>Honest limits</item>
-        <item>How much less the sides blend is calculated with a computer model (about 3-10 dB in the mid range). Ears and heads differ, so the feel differs too. Videos and calls with everything in the centre change little.\n\nIt switches off by itself on earphones or Bluetooth and during blind comparisons and measurements.</item>
+        <item>How much less the sides blend at real ears has not been measured. The 3-10 dB is a standard-head model; no measurement with microphones at the ears was made. Ears and heads differ, so results differ too.\n\nIn level alone, the current settings raise the left-right difference by up to 4-6 dB between 400 Hz and 8 kHz. So how much of the width comes from less blending and how much from a larger difference is not known yet; a blind comparison against the same raise alone will tell.\n\nA wrong posture or distance can backfire (see Where it sounds best). Videos and calls with everything in the centre change little.\n\nIt switches off by itself on earphones or Bluetooth and during measurements. In blind comparisons it is on only in the spatial comparisons.</item>
         <item>How is it different from other wideners?</item>
-        <item>Most widening effects make the difference between left and right larger, or twist the phase a little, to give a sense of width. That suits headphones well. On phone speakers, though, both speakers reach both ears from the start, so the larger difference tends to blend back in.\n\nRootnote’s spatial works on the blending itself: it calculates the leak and reduces it. That is why it asks for the distance and the head size, and why you can even out the top and bottom speakers of your own phone. The bass, and if you like the vocals in the centre, are left as they are. Which sounds better is a matter of taste: compare with “Hear it yourself” on the previous page.</item>
+        <item>Most widening effects make the difference between left and right larger, or twist the phase a little, to give a sense of width. That suits headphones well. On phone speakers, though, both speakers reach both ears from the start, so the larger difference tends to blend back in.\n\nRootnote’s spatial is designed to work on the blending itself: it calculates the leak and reduces it. That is why it asks for the distance and the head size, and why you can even out the top and bottom speakers of your own phone. In exchange it is far more sensitive to posture and distance than a common widener, and whether it reduces the leak better at real ears has not been checked.\n\nFor a common widener, try JamesDSP Soundstage wideness in the advanced settings. Both widen, so only one is on at a time. Which sounds better is a matter of taste: compare with “Hear it yourself” on the previous page.</item>
     </string-array>
     <string name="story_prev">Back</string>
     <string name="story_next">Next</string>
@@ -93,7 +93,7 @@
         <item>On its way from the left speaker to the right ear, the right speaker sends an inverted wave. Added together, the two waves make a flat line.</item>
         <item>Two loudspeakers far away move in and become the phone, seen from the head at the same angle. Below, a timeline: the 1960s, 2007, Rootnote.</item>
         <item>Change the distance to the phone and the head size. The numbers below show the angle and how much later the sound arrives.</item>
-        <item>The best spot glows in front of the face. As the head moves sideways the lines misalign and the glow fades, but the sound stays.</item>
+        <item>The best spot glows in front of the face. As the head moves sideways the lines misalign and the glow fades; far off, it can sound worse than off.</item>
         <item>On a strip from 20 Hz to 20 kHz, below 400 Hz is teal (virtual bass) and 400 Hz to 8 kHz is purple (spatial).</item>
         <item>Choosing a preset changes how far the centre dot (vocals) and the side dots (instruments) spread.</item>
         <item>The phone held upright, seen from the front. Both speakers are as far from either ear; then thick bass waves spread from the bottom speaker and fine treble waves from the top one.</item>

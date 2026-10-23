@@ -70,6 +70,7 @@ fun AdvancedScreen(host: RnAdvancedActivity) {
     // the same conditions as the audio path (PvbController): PVB in the path, and PVB processing on this route
     val inPath = JdspChain.pvbInPath(s, abActive = false)
     val sealed = JdspChain.sealed(s, PvbRuntime.status.speaker)
+    val spatialSealed = JdspChain.spatialSealed(s, PvbRuntime.status.speaker)
     val brand = stringResource(R.string.app_brand_name)
 
     var presets by remember { mutableStateOf(false) }
@@ -104,7 +105,7 @@ fun AdvancedScreen(host: RnAdvancedActivity) {
         if (profilesOn) DeviceProfiles(host)
         RnBand()
         RnSectionTitle(stringResource(R.string.rn_adv_section_jdsp))
-        JamesDspModules(host, sealed, showIcons)
+        JamesDspModules(host, sealed, spatialSealed, showIcons)
         RnEndSpace()
     }
 

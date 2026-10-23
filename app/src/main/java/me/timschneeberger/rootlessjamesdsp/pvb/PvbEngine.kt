@@ -104,7 +104,7 @@ object PvbMeter {
     const val VB_UPPER_TRANSITIONS = 23
     const val DIAGNOSTIC_SOLO_BLEND = 24
     const val DIAGNOSTIC_SOLO_EXTRA_GR_DB = 25
-    /** Share of audio time since the last read in blocks where the limiter took off more than 0.5 dB, %. */
+    /** Share of the last few seconds (3 s smoothing) the limiter took off more than 0.5 dB, %; reads do not reset it. */
     const val LIM_ACTIVE_PCT = 26
     const val COUNT = 27
 }

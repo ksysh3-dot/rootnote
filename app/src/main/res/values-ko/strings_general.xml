@@ -35,6 +35,8 @@
     <string name="pvb_jamesdsp_sealed">%1$s 가상 저음이 켜져 있어 잠겨 있어요. 설정은 그대로 보관되고 %1$s를 끄면 다시 적용됩니다.</string>
     <string name="pvb_jamesdsp_output_sealed">%1$s 가상 저음이 켜져 있어 잠겨 있어요. 지금은 JamesDSP 출력 0 dB, 리미터 꺼짐으로 동작하고 마지막 단계인 %1$s 리미터가 보호합니다. 설정은 그대로 보관되고 %1$s를 끄면 다시 적용됩니다.</string>
     <string name="pvb_jamesdsp_compressor_info">%1$s 앞에서 적용됩니다. 컴프레서는 %1$s 가상 저음이 반응하는 음량을 바꿀 수 있어요.</string>
+    <string name="pvb_jamesdsp_stereowide_spatial">%1$s 공간감이 켜져 있어 꺼 뒀어요. 둘 다 좌우를 넓혀서 함께 쓰면 두 번 넓어져요. 설정은 그대로 보관되고 공간감을 끄면 다시 적용돼요.</string>
+    <string name="pvb_xtc_try_widener">공간감은 일반적인 넓히기와 달리 자세·거리·움직임에 아주 민감해서, 어긋나면 역효과가 날 수 있어요. 실제 귀에서의 효과는 측정하지 않았어요. 일반적인 좌우 넓히기를 원하면 아래 JamesDSP 「음장 넓이」를 써 보세요. 둘 중 하나만 켜져요(공간감이 켜져 있으면 음장 넓이는 꺼져요).</string>
     <string name="pvb_jamesdsp_eq_info">%1$s EQ 위에 더해집니다. 저음을 크게 올리면 %1$s 리미터가 더 자주 작동해요.</string>
 
     <string name="vb_preset_fullness_title">풍성함 증가 (권장)</string>

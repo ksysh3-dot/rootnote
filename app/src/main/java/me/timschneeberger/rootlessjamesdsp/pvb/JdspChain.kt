@@ -38,6 +38,12 @@ object JdspChain {
         INFO,
         /** Applied before PVB without a note. */
         ALLOWED,
+        /**
+         * Forced off while PVB's own spatial effect plays ([spatialSealed]) and shown locked: both raise the side
+         * signal, so together they raise it twice (more limiting, a harsher tone). One at a time; the user's
+         * setting is kept and applies again when the spatial effect is off.
+         */
+        SPATIAL,
     }
 
     /** The JamesDSP effect modules (each has its own enable switch; the output control has none, see [output]). */
@@ -52,7 +58,7 @@ object JdspChain {
         DDC(Policy.ALLOWED),
         LIVEPROG(Policy.ALLOWED),
         CROSSFEED(Policy.ALLOWED),   // mostly for headphones
-        STEREO_WIDE(Policy.ALLOWED), // mostly for headphones
+        STEREO_WIDE(Policy.SPATIAL), // a general stereo widener; off while PVB's spatial effect plays
         REVERB(Policy.ALLOWED),
     }
 
@@ -75,12 +81,20 @@ object JdspChain {
      */
     fun sealed(s: PvbSettings, speaker: Boolean): Boolean = s.enabled && (!s.speakerOnly || speaker)
 
+    /**
+     * PVB's spatial effect plays: PVB processes on this route ([sealed]), spatial is on, and the output is the phone's
+     * speaker (the only route spatial acts on, PvbEngineParams). Seals the [Policy.SPATIAL] modules.
+     */
+    fun spatialSealed(s: PvbSettings, speaker: Boolean): Boolean =
+        sealed(s, speaker) && speaker && s.xtcMode != PvbSettings.XTC_OFF
+
     /** The module may run in JamesDSP: the user enabled it and it is not sealed. */
-    fun allowed(m: Module, enabled: Boolean, sealed: Boolean): Boolean =
-        enabled && !(sealed && m.policy == Policy.SEALED)
+    fun allowed(m: Module, enabled: Boolean, sealed: Boolean, spatialSealed: Boolean = false): Boolean =
+        enabled && !(sealed && m.policy == Policy.SEALED) && !(spatialSealed && m.policy == Policy.SPATIAL)
 
     /** At least one enabled module still runs with this seal state ("JamesDSP on" for the chain). */
-    fun hasEffects(enabled: Set<Module>, sealed: Boolean): Boolean = enabled.any { allowed(it, true, sealed) }
+    fun hasEffects(enabled: Set<Module>, sealed: Boolean, spatialSealed: Boolean = false): Boolean =
+        enabled.any { allowed(it, true, sealed, spatialSealed) }
 
     /** Output control sent to JamesDSP: the user's values, or 0 dB and a neutral limiter while sealed. */
     fun output(user: Output, sealed: Boolean): Output =

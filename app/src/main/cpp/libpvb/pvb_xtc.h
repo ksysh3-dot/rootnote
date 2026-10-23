@@ -23,7 +23,11 @@
 // (kFirLen taps, latency kFirDelay samples, not reported to the engine), without the crosstalk delay and its phase.
 // Heard against CENTRE / FULL it asks whether the effect comes from the cancellation timing or from the louder side
 // alone (review questions 1-2, 2026-10-23). The FIRs are designed by frequency sampling of |H| on a 2048-point grid
-// (Kaiser window, beta 6): within 0.3 dB per third octave 400 Hz-8 kHz at 44.1 and 48 kHz (test_xtc.py).
+// (Kaiser window, beta 6): within 0.4 dB per third octave 400 Hz-8 kHz at 44.1 and 48 kHz (test_xtc.py); the
+// fixed length resolves less at higher rates (about 1 dB at 96 kHz, 2.3 dB at 192 kHz near 450 Hz). The design runs
+// when the mode or a setting changes (audio thread, under 1 ms) and is reused while they stay the same.
+// CENTRE_ALIGNED / FULL_ALIGNED: the canceller after the same kFirDelay input delay, so both sides of a comparison
+// have the same latency (switching neither jumps in time nor reveals the side).
 //
 // Off (mode 0, no fade in progress): idle() is true and the engine does not call tick(), so the output is
 // bit-identical to the engine without this stage. Switching and setting changes crossfade with the plain input.
@@ -47,10 +51,11 @@ public:
     // so the two speakers no longer play the same highs from two heights (comb filtering) and the earpiece is spared
     // the bass. Each part is played at +3 dB (sqrt 2): one speaker instead of two.
     enum Mode { OFF = 0, CENTRE = 1, FULL = 2, PORTRAIT_MONO = 3, SPLIT_LOW_L = 4, SPLIT_LOW_R = 5,
-                MS_CENTRE = 6, MS_FULL = 7 };
-    static constexpr int kModeMax = MS_FULL;
+                MS_CENTRE = 6, MS_FULL = 7, CENTRE_ALIGNED = 8, FULL_ALIGNED = 9 };
+    static constexpr int kModeMax = FULL_ALIGNED;
     static bool isPortrait(int m) { return m >= PORTRAIT_MONO && m <= SPLIT_LOW_R; }
     static bool isMatchedMs(int m) { return m == MS_CENTRE || m == MS_FULL; }
+    static bool isAligned(int m) { return m == CENTRE_ALIGNED || m == FULL_ALIGNED; }
     static constexpr int kFirLen = 513;
     static constexpr int kFirDelay = (kFirLen - 1) / 2;
     static constexpr double kSplitHz = 1000.0;
@@ -150,14 +155,21 @@ public:
             return;
         }
         double pl, pr;
-        if (isMatchedMs(cur_.mode)) {
+        double xl = inL, xr = inR;   // the canceller's input (delayed by kFirDelay in the aligned modes)
+        if (isMatchedMs(cur_.mode) || isAligned(cur_.mode)) {
             // ring buffer written twice (i and i + kFirLen) so a window of kFirLen is always contiguous
             const double mid = 0.5 * (inL + inR), side = 0.5 * (inL - inR);
             firPos_ = firPos_ == 0 ? kFirLen - 1 : firPos_ - 1;
             mBuf_[firPos_] = mBuf_[firPos_ + kFirLen] = mid;
             sBuf_[firPos_] = sBuf_[firPos_ + kFirLen] = side;
-            const double* mw = mBuf_ + firPos_;   // mw[n] = mid n samples ago
-            const double* sw = sBuf_ + firPos_;
+        }
+        const double* mw = mBuf_ + firPos_;   // mw[n] = mid n samples ago
+        const double* sw = sBuf_ + firPos_;
+        if (isAligned(cur_.mode)) {
+            xl = mw[kFirDelay] + sw[kFirDelay];
+            xr = mw[kFirDelay] - sw[kFirDelay];
+        }
+        if (isMatchedMs(cur_.mode)) {
             const double m = cur_.mode == MS_FULL ? fir(hM_, mw) : mw[kFirDelay];
             const double sd = fir(hS_, sw);
             pl = m + sd;
@@ -185,15 +197,15 @@ public:
             outR = inR + x_ * (pr - inR);
             return;
         }
-        if (cur_.mode == FULL) {
+        if (cur_.mode == FULL || cur_.mode == FULL_ALIGNED) {
             const double fbR = loop(lB_, delayRead(dB_));
             const double fbL = loop(lA_, delayRead(dA_));
-            yA_ = inL - g_ * fbR;
-            yB_ = inR - g_ * fbL;
+            yA_ = xl - g_ * fbR;
+            yB_ = xr - g_ * fbL;
             pl = yA_;
             pr = yB_;
         } else {
-            const double mid = 0.5 * (inL + inR), side = 0.5 * (inL - inR);
+            const double mid = 0.5 * (xl + xr), side = 0.5 * (xl - xr);
             yA_ = side + g_ * loop(lA_, delayRead(dA_));
             pl = mid + yA_;
             pr = mid - yA_;
@@ -279,6 +291,11 @@ private:
     // |H| of the canceller as built by apply() (same loop filters, the same fractional delay as delayRead), and the
     // linear-phase FIR with that magnitude. Side: 1 / (1 - g L D) in both modes; mid: 1 / (1 + g L D) in FULL.
     void designMatchedMs() {
+        const double key[] = {static_cast<double>(sr_), g_, lag_, cur_.loHz, cur_.hiHz, cur_.hatCm, cur_.distanceCm,
+                              cur_.spacingCm};
+        if (designed_ && std::equal(std::begin(key), std::end(key), std::begin(designKey_))) return;
+        std::copy(std::begin(key), std::end(key), std::begin(designKey_));
+        designed_ = true;
         constexpr int kGrid = 2048;
         const double pi = 3.14159265358979323846;
         static const std::array<double, kGrid> cosT = [] {   // built once, thread-safe (function-local static)
@@ -404,6 +421,8 @@ private:
     Biquad split_[2];             // portrait crossover: Butterworth low-pass, high-pass (each run twice = LR4)
     BiquadState sSplit_[4];
     double hS_[kFirLen] = {}, hM_[kFirLen] = {};
+    double designKey_[8] = {};    // the settings hS_ / hM_ were designed for
+    bool designed_ = false;
     double mBuf_[2 * kFirLen] = {}, sBuf_[2 * kFirLen] = {};
     int firPos_ = 0;
 };

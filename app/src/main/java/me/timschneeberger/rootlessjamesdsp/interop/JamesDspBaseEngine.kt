@@ -48,18 +48,29 @@ abstract class JamesDspBaseEngine(val context: Context, val callbacks: JamesDspW
             syncWithPreferences(SEALED_NAMESPACES)
         }
 
+    /**
+     * PVB's spatial effect plays ([JdspChain.spatialSealed]): the stereo widener is sent as off, the saved setting
+     * untouched (one widener at a time). Changing it re-sends the widener.
+     */
+    @Volatile
+    var pvbSpatialSeal: Boolean = false
+        set(value) {
+            if (field == value) return
+            field = value
+            syncWithPreferences(arrayOf(Constants.PREF_STEREOWIDE))
+        }
+
     /** Effect modules the user enabled, as of the last sync (audio thread reads [hasEffects]). */
     @Volatile
     var enabledEffects: Set<JdspChain.Module> = emptySet()
         private set
+    /** [JdspChain.hasEffects] for each seal state, index (pvbSeal ? 1 : 0) + (pvbSpatialSeal ? 2 : 0). */
     @Volatile
-    private var effectsOpen = false
-    @Volatile
-    private var effectsSealed = false
+    private var effectsBySeal = BooleanArray(4)
 
     /** At least one JamesDSP effect runs with the current seal: the chain puts JamesDSP in front of PVB. */
     val hasEffects: Boolean
-        get() = if (pvbSeal) effectsSealed else effectsOpen
+        get() = effectsBySeal[(if (pvbSeal) 1 else 0) + (if (pvbSpatialSeal) 2 else 0)]
 
     override fun close() {
         Timber.d("Closing engine")
@@ -89,6 +100,7 @@ abstract class JamesDspBaseEngine(val context: Context, val callbacks: JamesDspW
         syncMutex.withLock {
             // Read once: the values below and the forced namespaces then agree on one seal state.
             val sealed = pvbSeal
+            val spatialSealed = pvbSpatialSeal
             cache.select(Constants.PREF_OUTPUT)
             val userOutput = JdspChain.Output(
                 thresholdDb = cache.get(R.string.key_limiter_threshold, -0.1f),
@@ -173,6 +185,7 @@ abstract class JamesDspBaseEngine(val context: Context, val callbacks: JamesDspW
             }
             val bassOn = JdspChain.allowed(JdspChain.Module.BASS, bassEnabled, sealed)
             val tubeOn = JdspChain.allowed(JdspChain.Module.TUBE, tubeEnabled, sealed)
+            val swOn = JdspChain.allowed(JdspChain.Module.STEREO_WIDE, swEnabled, sealed, spatialSealed)
 
             val targets = cache.changedNamespaces.toTypedArray() + (forceUpdateNamespaces ?: arrayOf())
             targets.forEach {
@@ -186,7 +199,7 @@ abstract class JamesDspBaseEngine(val context: Context, val callbacks: JamesDspW
                     Constants.PREF_GEQ -> setGraphicEqCombined(geqEnabled, geqBands, peqEnabled, peqBandsStr, peqPreamp)
                     Constants.PREF_PEQ -> setGraphicEqCombined(geqEnabled, geqBands, peqEnabled, peqBandsStr, peqPreamp)
                     Constants.PREF_REVERB -> setReverb(reverbEnabled, reverbPreset)
-                    Constants.PREF_STEREOWIDE -> setStereoEnhancement(swEnabled, swMode)
+                    Constants.PREF_STEREOWIDE -> setStereoEnhancement(swOn, swMode)
                     Constants.PREF_CROSSFEED -> setCrossfeed(crossfeedEnabled, crossfeedMode)
                     Constants.PREF_TUBE -> setVacuumTube(tubeOn, tubeDrive)
                     Constants.PREF_DDC -> setVdc(ddcEnabled, ddcFile)
@@ -212,9 +225,8 @@ abstract class JamesDspBaseEngine(val context: Context, val callbacks: JamesDspW
 
             cache.markChangesAsCommitted()
             enabledEffects = enabled
-            effectsOpen = JdspChain.hasEffects(enabled, false)
-            effectsSealed = JdspChain.hasEffects(enabled, true)
-            Timber.i("Preferences synchronized (PVB seal: $sealed)")
+            effectsBySeal = BooleanArray(4) { JdspChain.hasEffects(enabled, it and 1 != 0, it and 2 != 0) }
+            Timber.i("Preferences synchronized (PVB seal: $sealed, spatial seal: $spatialSealed)")
         }
     }
 

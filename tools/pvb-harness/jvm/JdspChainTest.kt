@@ -92,15 +92,26 @@ fun main(args: Array<String>) {
         Module.BASS to Policy.SEALED, Module.TUBE to Policy.SEALED,
         Module.COMPRESSOR to Policy.INFO, Module.EQ to Policy.INFO, Module.PEQ to Policy.INFO, Module.GEQ to Policy.INFO,
         Module.CONVOLVER to Policy.ALLOWED, Module.DDC to Policy.ALLOWED, Module.LIVEPROG to Policy.ALLOWED,
-        Module.CROSSFEED to Policy.ALLOWED, Module.STEREO_WIDE to Policy.ALLOWED, Module.REVERB to Policy.ALLOWED,
+        Module.CROSSFEED to Policy.ALLOWED, Module.STEREO_WIDE to Policy.SPATIAL, Module.REVERB to Policy.ALLOWED,
     )
     check("every module has the approved policy", Module.values().all { expectedPolicy[it] == it.policy },
         Module.values().joinToString { "${it.name}=${it.policy}" })
-    for (m in Module.values()) for (enabled in listOf(false, true)) for (sealed in listOf(false, true)) {
-        val expected = enabled && !(sealed && expectedPolicy[m] == Policy.SEALED)
-        if (JdspChain.allowed(m, enabled, sealed) != expected) check("allowed $m enabled=$enabled sealed=$sealed", false)
-    }
-    check("allowed(): 12 modules x enabled x sealed", true)
+    for (m in Module.values()) for (enabled in listOf(false, true)) for (sealed in listOf(false, true))
+        for (spatial in listOf(false, true)) {
+            val expected = enabled && !(sealed && expectedPolicy[m] == Policy.SEALED) &&
+                !(spatial && expectedPolicy[m] == Policy.SPATIAL)
+            if (JdspChain.allowed(m, enabled, sealed, spatial) != expected)
+                check("allowed $m enabled=$enabled sealed=$sealed spatial=$spatial", false)
+        }
+    check("allowed(): 12 modules x enabled x sealed x spatial", true)
+    // one widener at a time: the stereo widener is off while PVB's spatial effect plays, and only then
+    val sp = PvbSettings(enabled = true, speakerOnly = true, xtcMode = PvbSettings.XTC_CENTRE)
+    check("spatial seal: on, speaker, spatial on", JdspChain.spatialSealed(sp, speaker = true))
+    check("spatial seal: not on headphones", !JdspChain.spatialSealed(sp.copy(speakerOnly = false), speaker = false))
+    check("spatial seal: not with spatial off", !JdspChain.spatialSealed(sp.copy(xtcMode = PvbSettings.XTC_OFF), true))
+    check("spatial seal: not while PVB is off", !JdspChain.spatialSealed(sp.copy(enabled = false), true))
+    check("only the widener, spatial sealed -> PVB alone", !JdspChain.hasEffects(setOf(Module.STEREO_WIDE), true, true))
+    check("only the widener, spatial off -> JamesDSP runs", JdspChain.hasEffects(setOf(Module.STEREO_WIDE), true, false))
 
     // "JamesDSP on" for the chain: any module that still runs
     check("nothing enabled -> no effects", !JdspChain.hasEffects(emptySet(), false) && !JdspChain.hasEffects(emptySet(), true))
@@ -108,7 +119,7 @@ fun main(args: Array<String>) {
     check("only bass boost + tube, sealed -> PVB alone", !JdspChain.hasEffects(setOf(Module.BASS, Module.TUBE), true))
     check("only bass boost, not sealed -> JamesDSP runs", JdspChain.hasEffects(setOf(Module.BASS), false))
     check("bass boost + EQ, sealed -> JamesDSP runs (EQ only)", JdspChain.hasEffects(setOf(Module.BASS, Module.EQ), true))
-    for (m in Module.values().filter { it.policy != Policy.SEALED })
+    for (m in Module.values().filter { it.policy != Policy.SEALED })   // the spatial seal is off here
         check("$m alone, sealed -> JamesDSP runs", JdspChain.hasEffects(setOf(m), true))
 
     // --- output control and the restore of the user's values ---
@@ -194,7 +205,8 @@ fun main(args: Array<String>) {
     val en = strings("values")
     val ko = strings("values-ko")
     val keys = setOf("pvb_jamesdsp_chain_note", "pvb_jamesdsp_chain_research", "pvb_jamesdsp_sealed",
-        "pvb_jamesdsp_output_sealed", "pvb_jamesdsp_compressor_info", "pvb_jamesdsp_eq_info")
+        "pvb_jamesdsp_output_sealed", "pvb_jamesdsp_compressor_info", "pvb_jamesdsp_eq_info",
+        "pvb_jamesdsp_stereowide_spatial")
     check("chain strings: en and ko have exactly the used keys", en.keys == keys && ko.keys == keys,
         "en ${en.keys}, ko ${ko.keys}")
     val placeholder = Regex("%(\\d+\\$)?[sdf]")

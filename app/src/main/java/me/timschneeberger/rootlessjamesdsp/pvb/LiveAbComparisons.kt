@@ -80,19 +80,20 @@ object LiveAbComparisons {
 
     // Spatial (review 2026-10-23, questions 1-2): the canceller against the M/S widener with the same mid and side
     // magnitude per frequency (pvb_xtc.h MS_*), at the user's strength, distance and head size, virtual bass off.
-    // Equal level by construction (test_xtc.py: within 0.3 dB per third octave, total within 0.2 dB), so 0 dB trim.
+    // Equal level by construction (test_xtc.py: within 0.4 dB per third octave, total within 0.2 dB), so 0 dB trim;
+    // equal latency (the canceller runs with the widener's 256-sample delay).
     // Upright is off on both sides: the comparison is for the phone held sideways.
     private fun spatial(s: PvbSettings, mode: Int) =
         PvbAbConditions.v11(s).copy(xtcMode = mode, xtcPortrait = PvbSettings.XTC_PORTRAIT_OFF)
 
     val XTC_CENTRE = Side("xtc_centre", UNMEASURED, false, { "공간감 중앙 보존 (크로스토크 제거)" }) {
-        spatial(it, PvbSettings.XTC_CENTRE)
+        spatial(it, PvbSettings.XTC_CENTRE_ALIGNED)   // same latency as the widener side
     }
     val MS_CENTRE = Side("ms_centre", UNMEASURED, false, { "같은 크기의 좌우 넓히기 (지연 없음)" }) {
         spatial(it, PvbSettings.XTC_MS_CENTRE)
     }
     val XTC_FULL = Side("xtc_full", UNMEASURED, false, { "공간감 완전 (크로스토크 제거)" }) {
-        spatial(it, PvbSettings.XTC_FULL)
+        spatial(it, PvbSettings.XTC_FULL_ALIGNED)
     }
     val MS_FULL = Side("ms_full", UNMEASURED, false, { "같은 크기의 좌우 넓히기 (지연 없음, 완전 기준)" }) {
         spatial(it, PvbSettings.XTC_MS_FULL)

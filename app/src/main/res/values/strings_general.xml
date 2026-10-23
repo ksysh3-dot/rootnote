@@ -44,6 +44,8 @@
     <string name="pvb_jamesdsp_sealed">Locked while %1$s virtual bass is on. Your settings are kept and apply again when %1$s is off.</string>
     <string name="pvb_jamesdsp_output_sealed">Locked while %1$s virtual bass is on: the JamesDSP output runs at 0 dB with its limiter off, and the %1$s limiter is the last stage. Your settings are kept and apply again when %1$s is off.</string>
     <string name="pvb_jamesdsp_compressor_info">Applied before %1$s. The compressor changes the levels the %1$s virtual bass reacts to.</string>
+    <string name="pvb_jamesdsp_stereowide_spatial">Off while %1$s spatial sound is on: both widen the stereo image, so together they would widen it twice. Your setting is kept and applies again when spatial sound is off.</string>
+    <string name="pvb_xtc_try_widener">Unlike common wideners, spatial is very sensitive to posture, distance and movement, and can backfire when they are off. Its effect at real ears has not been measured. For a common stereo widener, try JamesDSP Soundstage wideness further down. Only one is on at a time (it stays off while spatial is on).</string>
     <string name="pvb_jamesdsp_eq_info">Adds to the %1$s EQ. Large low boosts make the %1$s limiter work harder.</string>
 
     <!-- Virtual bass presets of the general build (the model codenames appear only in the research section) -->

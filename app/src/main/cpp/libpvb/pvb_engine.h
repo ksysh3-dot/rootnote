@@ -139,7 +139,7 @@ enum Meter : int {
     M_VB_UPPER_TRANSITIONS,
     M_DIAGNOSTIC_SOLO_BLEND,
     M_DIAGNOSTIC_SOLO_EXTRA_GR_DB,
-    M_LIM_ACTIVE_PCT,  // share of audio time since last read in blocks where the limiter took off > 0.5 dB, %
+    M_LIM_ACTIVE_PCT,  // share of the last few seconds (3 s time constant) the limiter took off > 0.5 dB, %; not reset by reads
     M_COUNT
 };
 
@@ -356,7 +356,8 @@ private:
     std::atomic<int> srMeter_{48000};
     std::atomic<bool> resetRequested_{false};
     std::atomic<uint32_t> mBlocks_{0}, mNan_{0};
-    std::atomic<uint64_t> mLimFrames_{0}, mLimActiveFrames_{0};   // M_LIM_ACTIVE_PCT, since last read
+    double limActive_ = 0.0;                    // audio thread: M_LIM_ACTIVE_PCT state, 0..1
+    std::atomic<float> mLimActive_{0.f};        // its published value, %
 
     // Analysis tap: a single-producer ring the reader never blocks. Before writing a block the audio thread
     // announces its end in tapWriteEnd_ (then a release fence); it writes frame t at index t % kAnaRing with

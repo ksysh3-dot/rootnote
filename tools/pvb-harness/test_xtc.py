@@ -196,8 +196,8 @@ def main():
                 em, es = np.max(np.abs(mm - mr)), np.max(np.abs(sm - sr_))
                 tot = 10 * np.log10(np.mean(ym[rate:] ** 2) / np.mean(yr[rate:] ** 2))
                 check(f'{rate} Hz M/S widener {ms} vs canceller {base}, g {gdb} {dist} cm hat {hat}: mid and side within '
-                      f'0.5 dB per third octave 400 Hz-8 kHz, total level within 0.2 dB',
-                      em < 0.5 and es < 0.5 and abs(tot) < 0.2 and np.all(np.isfinite(ym)),
+                      f'0.4 dB per third octave 400 Hz-8 kHz, total level within 0.2 dB',
+                      em < 0.4 and es < 0.4 and abs(tot) < 0.2 and np.all(np.isfinite(ym)),
                       f'mid {em:.2f} side {es:.2f} total {tot:+.2f} dB, side boost up to {np.max(sr_ - ms_bands(xm, rate)[1]):.1f} dB')
     # it is a different signal from the canceller (no crosstalk delay), not the canceller relabelled
     yr = te.Engine(lib, sr, **NEUTRAL, xtc_mode=2, xtc_strength_db=-3).process(x[:sr * 2])
@@ -223,9 +223,27 @@ def main():
           np.all(np.isfinite(y)) and hf_out <= hf_in * 10 ** (1 / 20), f'hf_out={hf_out:.4g} hf_in={hf_in:.4g}')
     z = te.Engine(lib, sr, xtc_mode=7, xtc_strength_db=-3).process(np.zeros((sr, 2), np.float32))
     check('M/S widener: silence in, silence out', np.max(np.abs(z)) == 0.0)
-    ya = te.Engine(lib, sr, **NEUTRAL, xtc_mode=9).process(x[:sr])
-    yb = te.Engine(lib, sr, **NEUTRAL, xtc_mode=7).process(x[:sr])
-    check('mode above 7 is clamped to 7', np.array_equal(ya, yb))
+    ya = te.Engine(lib, sr, **NEUTRAL, xtc_mode=12).process(x[:sr])
+    yb = te.Engine(lib, sr, **NEUTRAL, xtc_mode=9).process(x[:sr])
+    check('mode above 9 is clamped to 9', np.array_equal(ya, yb))
+    # Aligned canceller (8 = centre, 9 = full; comparison only): the canceller after the widener's 256-sample delay,
+    # so both comparison sides have the same latency.
+    D = 256
+    xa = noise(sr, 2, -30, seed=13)
+    for base, al, ms in ((1, 8, 6), (2, 9, 7)):
+        yc = te.Engine(lib, sr, **NEUTRAL, xtc_mode=base, xtc_strength_db=-3).process(xa)
+        yal = te.Engine(lib, sr, **NEUTRAL, xtc_mode=al, xtc_strength_db=-3).process(xa)
+        ym = te.Engine(lib, sr, **NEUTRAL, xtc_mode=ms, xtc_strength_db=-3).process(xa)
+        k = int(0.1 * sr)
+        err = np.max(np.abs(yal[k + D:] - yc[k:-D])) / np.max(np.abs(yc))
+        # latency: the widener and the aligned canceller line up at lag 0 (mid channel cross-correlation peak)
+        def lag(a, b):
+            ma, mb = a[k:, 0] + a[k:, 1], b[k:, 0] + b[k:, 1]
+            c = np.correlate(ma[:sr], mb[:sr], 'full')[sr - 1 - 400: sr + 400]
+            return int(np.argmax(c)) - 400
+        check(f'aligned canceller {al} = canceller {base} delayed by {D} samples; same latency as widener {ms}',
+              err < 1e-4 and lag(yal, ym) == 0 and lag(yc, ym) == -D,
+              f'max_rel_err={err:.1e} lag(aligned, widener)={lag(yal, ym)} lag(canceller, widener)={lag(yc, ym)}')
 
     # Low sample rates (the app runs at 44.1/48 kHz; the engine accepts 8-192): the feedback low-pass stays below
     # Nyquist, so the canceller stays stable and finite.
@@ -233,7 +251,7 @@ def main():
         tt = np.arange(rate * 2) / rate
         xl = np.column_stack((.01 * np.sin(2 * np.pi * 700 * tt), .006 * np.sin(2 * np.pi * 1100 * tt))).astype(np.float32)
         ok = True
-        for mode in (1, 2, 6, 7):
+        for mode in (1, 2, 6, 7, 8, 9):
             e = te.Engine(lib, rate, xtc_mode=mode)
             yy = e.process(xl, block=128)
             ok = ok and bool(np.all(np.isfinite(yy))) and float(np.max(np.abs(yy))) < 1.0 and e.meters()[te.M['NAN_EVENTS']] == 0

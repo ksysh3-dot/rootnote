@@ -30,6 +30,7 @@ import me.timschneeberger.rootlessjamesdsp.ui.RnChoiceRow
 import me.timschneeberger.rootlessjamesdsp.ui.RnDialog
 import me.timschneeberger.rootlessjamesdsp.ui.RnDivider
 import me.timschneeberger.rootlessjamesdsp.ui.RnNavRow
+import me.timschneeberger.rootlessjamesdsp.ui.RnNote
 import me.timschneeberger.rootlessjamesdsp.ui.RnParagraph
 import me.timschneeberger.rootlessjamesdsp.ui.RnPrefsFile
 import me.timschneeberger.rootlessjamesdsp.ui.RnSectionTitle
@@ -160,6 +161,7 @@ fun PvbSection(host: RnAdvancedActivity, showIcons: Boolean) {
             })
         PrefChoice(p, P.KEY_XTC_MODE, stringResource(R.string.pvb_xtc_mode), "0",
             R.array.pvb_xtc_mode_entries, R.array.pvb_xtc_mode_values)
+        RnNote(stringResource(R.string.pvb_xtc_try_widener))
         if (s.xtcMode != P.XTC_OFF) {
             PrefChoice(p, P.KEY_XTC_STRENGTH, stringResource(R.string.pvb_xtc_strength), "-6",
                 R.array.pvb_xtc_strength_entries, R.array.pvb_xtc_strength_values)

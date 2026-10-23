@@ -161,7 +161,8 @@ private fun catalogue() {
     val ids = C.ALL.map { it.id }
     check(ids.toSet().size == ids.size)
     check(C.ALL.size >= 4 && C.ALL.any { it.sides.size == 3 })
-    val user = PvbSettings(xtcMode = PvbSettings.XTC_FULL, xtcStrengthDb = -4.5f, vbOn = false, vbAlgo = PvbModels.GENTLE12, vbLevelDb = 7f, vbVolLink = true,
+    val user = PvbSettings(xtcMode = PvbSettings.XTC_FULL, xtcStrengthDb = -4.5f, xtcPortrait = PvbSettings.XTC_PORTRAIT_MONO,
+        xtcDistanceCm = 33f, xtcHatCm = 60f, vbOn = false, vbAlgo = PvbModels.GENTLE12, vbLevelDb = 7f, vbVolLink = true,
         vbVolRefPct = 30f, vbVolSlope = 0.3f, vbVolMaxDb = 9f, outDb = -9f, hsDb = -4f, hpHz = 150f, dynOn = true, volLink = true)
     for (cmp in C.ALL) {
         check(cmp.sides.size in 2..3)
@@ -174,11 +175,11 @@ private fun catalogue() {
                 val s = side.apply(user)
                 check(s.copy(xtcMode = ref.xtcMode, xtcPortrait = ref.xtcPortrait) == ref) { side.id }
                 check(!s.vbOn && s.xtcPortrait == PvbSettings.XTC_PORTRAIT_OFF && !side.trimMeasured && side.trimDb == 0f)
-                check(s.xtcStrengthDb == user.xtcStrengthDb && s.xtcDistanceCm == user.xtcDistanceCm)
+                check(s.xtcStrengthDb == user.xtcStrengthDb && s.xtcDistanceCm == user.xtcDistanceCm && s.xtcHatCm == user.xtcHatCm)
                 s.xtcMode
             }
-            check(modes == listOf(PvbSettings.XTC_CENTRE, PvbSettings.XTC_MS_CENTRE) ||
-                modes == listOf(PvbSettings.XTC_FULL, PvbSettings.XTC_MS_FULL)) { "${cmp.id}: $modes" }
+            check(modes == listOf(PvbSettings.XTC_CENTRE_ALIGNED, PvbSettings.XTC_MS_CENTRE) ||
+                modes == listOf(PvbSettings.XTC_FULL_ALIGNED, PvbSettings.XTC_MS_FULL)) { "${cmp.id}: $modes" }
             check(cmp.headroomDb == PvbAbConditions.HEADROOM_DB)
             continue
         }

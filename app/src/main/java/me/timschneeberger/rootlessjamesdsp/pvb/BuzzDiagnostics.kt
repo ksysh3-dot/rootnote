@@ -222,8 +222,10 @@ class BuzzDiagnostics(
         val names = arrayOf("in_peak_db", "out_peak_db", "limiter_gr_db", "low_db_now", "mix", "load_pct", "sample_rate_hz",
             "latency_frames", "blocks", "nan_events", "estimated_level_db", "estimated_gr_db", "dyn_db", "dyn_level_db",
             "vb_meter_id", "match_db", "vb_scene", "unknown_frames", "steady_frames", "transient_frames", "complex_frames",
-            "upper_blend", "upper_target", "upper_transitions", "diagnostic_solo_blend", "diagnostic_solo_extra_gr_db")
-        meters.forEachIndexed { i, value -> obj.put(names[i], finite(value)) }
+            "upper_blend", "upper_target", "upper_transitions", "diagnostic_solo_blend", "diagnostic_solo_extra_gr_db",
+            "limiter_active_pct")
+        // one name per meter (PvbMeter.COUNT); an unnamed future meter is kept by index instead of crashing the report
+        meters.forEachIndexed { i, value -> obj.put(names.getOrElse(i) { "meter_$it" }, finite(value)) }
         return obj.put("available", true).put("peak_window", "since previous native meter read, including other UI readers")
     }
 

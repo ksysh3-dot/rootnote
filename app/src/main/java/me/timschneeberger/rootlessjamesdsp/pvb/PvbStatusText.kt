@@ -111,7 +111,7 @@ class PvbStatusText(private val context: Context) {
         }
 
         if (flowing) {
-            lines += "피크: 입력 ${fmt(meters[PvbMeter.IN_PEAK_DB])} → 출력 ${fmt(meters[PvbMeter.OUT_PEAK_DB])} dBFS · 앱 리미터 감쇠 최대 ${fmt(meters[PvbMeter.LIM_GR_DB])} dB, 작동 ${fmt(meters[PvbMeter.LIM_ACTIVE_PCT])}%"
+            lines += "피크: 입력 ${fmt(meters[PvbMeter.IN_PEAK_DB])} → 출력 ${fmt(meters[PvbMeter.OUT_PEAK_DB])} dBFS · 앱 리미터 감쇠 최대 ${fmt(meters[PvbMeter.LIM_GR_DB])} dB, 최근 작동 ${fmt(meters[PvbMeter.LIM_ACTIVE_PCT])}%"
             if (research && phoneModel)
                 lines += "폰이 저음 대역(250 Hz)을 누르는 양: 약 ${fmt(meters[PvbMeter.EST_GR_DB])} dB (측정 기반 추정)"
             val rate = meters[PvbMeter.SAMPLE_RATE]
