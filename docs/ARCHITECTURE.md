@@ -75,4 +75,4 @@ path, a real phone's microphones or listening.
 - `PvbRuntime.devOverride` has no owner token: the last screen to set or clear it wins (safe while only one such
   screen is visible at a time).
 - Not done from the 2026-10-23 refactor brief: separating `PvbController.push` into a pure parameter calculation
-  (R3), tidying the service audio loop (R4), naming the engine's signals stage by stage (R5).
+  (R3) and tidying the service audio loop (R4).

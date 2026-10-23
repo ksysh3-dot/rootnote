@@ -554,6 +554,11 @@ void Engine::process(float* io, int frames) {
         float fl = io[2 * n], fr = io[2 * n + 1];
         if (!isFiniteBits(fl)) { fl = 0.f; badInput = true; }
         if (!isFiniteBits(fr)) { fr = 0.f; badInput = true; }
+        // Signals of one sample, in order (docs/ARCHITECTURE.md section 3): xl/xr the input; alignedL/R the input
+        // delayed by the generator latency (vbDelay_ samples) so the dry path lines up with the layer; spatialL/R
+        // after the spatial stage; eqL/R after the EQ; layL/R the generated layer; preLimitL/R the mix before the
+        // limiter; limitedL/R after it; dryDelayedL/R the input delayed by the limiter latency (lat) for the
+        // bypass and the matcher; yl/yr the output. Linear amplitude throughout.
         const double xl = fl, xr = fr;
         inPeak = std::max(inPeak, std::max(std::fabs(xl), std::fabs(xr)));
 
@@ -583,11 +588,12 @@ void Engine::process(float* io, int frames) {
         // The input delay line always records, so a switch while silent finds recent music in it.
         vbDL_[vbPos_] = fl;
         vbDR_[vbPos_] = fr;
-        double xdl = xl, xdr = xr;
+        // no generator (or no latency): the input itself
+        double alignedL = xl, alignedR = xr;
         if (vbCur_ >= 0 && vbDelay_ > 0) {
             const int rd = (vbPos_ - vbDelay_ + kVbDelayLen) & (kVbDelayLen - 1);
-            xdl = vbDL_[rd];
-            xdr = vbDR_[rd];
+            alignedL = vbDL_[rd];
+            alignedR = vbDR_[rd];
         }
         if (++vbPos_ >= kVbDelayLen) vbPos_ = 0;
         const double vg = vbGain_.next();
@@ -614,7 +620,7 @@ void Engine::process(float* io, int frames) {
                 dynCount_ = kDynStep;
             }
             --dynCount_;
-            const double dl = dynHp_.tick(sDyn_[0], xdl), dr = dynHp_.tick(sDyn_[1], xdr);
+            const double dl = dynHp_.tick(sDyn_[0], alignedL), dr = dynHp_.tick(sDyn_[1], alignedR);
             const double p = 0.5 * (dl * dl + dr * dr);
             dynEnv_ += (p - dynEnv_) * dynEnvCoef_;
         }
@@ -631,23 +637,23 @@ void Engine::process(float* io, int frames) {
         if (gate == gateTarget_ && gateTarget_ >= kOpenMinLin && mix == 1.0 && fade == 1.0 && vbx == 1.0) ++openBlock;
 
         // Crosstalk cancellation first in the processed path (off: not run at all, bit-identical).
-        double cl = xdl, cr = xdr;
-        if (!xtc_.idle()) xtc_.tick(xdl, xdr, cl, cr);
-        double wl = hp_.tick(sHp2_[0], hp_.tick(sHp1_[0], cl));
-        double wr = hp_.tick(sHp2_[1], hp_.tick(sHp1_[1], cr));
-        wl = hs_.tick(sHs_[0], hi_.tick(sHi_[0], lo_.tick(sLo_[0], wl)));
-        wr = hs_.tick(sHs_[1], hi_.tick(sHi_[1], lo_.tick(sLo_[1], wr)));
+        double spatialL = alignedL, spatialR = alignedR;
+        if (!xtc_.idle()) xtc_.tick(alignedL, alignedR, spatialL, spatialR);
+        double eqL = hp_.tick(sHp2_[0], hp_.tick(sHp1_[0], spatialL));
+        double eqR = hp_.tick(sHp2_[1], hp_.tick(sHp1_[1], spatialR));
+        eqL = hs_.tick(sHs_[0], hi_.tick(sHi_[0], lo_.tick(sLo_[0], eqL)));
+        eqR = hs_.tick(sHs_[1], hi_.tick(sHi_[1], lo_.tick(sLo_[1], eqR)));
         // virtual bass layer after the EQ filters, before the output gain and the limiter; generated from the
         // undelayed pre-EQ input (hpv) or from the EQ output itself (Bankstown)
         double layL = 0.0, layR = 0.0;
         if (vbCur_ >= 0) {
             VbModule* m = vbMods_[vbCur_];
-            if (m->inputAfterEq()) m->tick(wl, wr, layL, layR);
+            if (m->inputAfterEq()) m->tick(eqL, eqR, layL, layR);
             else m->tick(xl, xr, layL, layR);
             // Experimental options (all off: neither branch runs, the layer is untouched).
             if (genCur_) { layL *= s1mTrim; layR *= s1mTrim; }
             if (!cond_.idle()) {
-                const double cg = cond_.tick(layL, layR, 0.5 * (xdl + xdr));
+                const double cg = cond_.tick(layL, layR, 0.5 * (alignedL + alignedR));
                 layL *= cg;
                 layR *= cg;
             }
@@ -669,11 +675,11 @@ void Engine::process(float* io, int frames) {
         if (devMeterOn_) {
             // Developer-mode display only (nothing here reaches the output): dry low band (aligned with the layer),
             // layer, and both in the 150-400 Hz band where the phone's protection acts.
-            const double low = devLp_.tick(sDevLp_, 0.5 * (xdl + xdr));
+            const double low = devLp_.tick(sDevLp_, 0.5 * (alignedL + alignedR));
             const double lay = vg * layMid * og;
             devBinDry_ += low * low;
             devBinLay_ += lay * lay;
-            const double bd = devBp_.tick(sDevBpDry_, 0.5 * (wl + wr) * og);
+            const double bd = devBp_.tick(sDevBpDry_, 0.5 * (eqL + eqR) * og);
             const double bl = devBp_.tick(sDevBpLay_, lay);
             devPowDry_ += (bd * bd - devPowDry_) * devPowCoef_;
             devPowLay_ += (bl * bl - devPowLay_) * devPowCoef_;
@@ -694,11 +700,12 @@ void Engine::process(float* io, int frames) {
         if (layerRead < 0) layerRead += kDryLen;
         const double delayedLayerL = layerDelayL_[layerRead], delayedLayerR = layerDelayR_[layerRead];
         if (++layerPos_ >= kDryLen) layerPos_ = 0;
-        wl = (wl + vg * layL) * og;
-        wr = (wr + vg * layR) * og;
+        // EQ output plus the layer, then the output gain: what the limiter sees.
+        const double preLimitL = (eqL + vg * layL) * og;
+        const double preLimitR = (eqR + vg * layR) * og;
 
-        double ll = 0.0, lr = 0.0;
-        lim_.process(wl, wr, ll, lr);
+        double limitedL = 0.0, limitedR = 0.0;
+        lim_.process(preLimitL, preLimitR, limitedL, limitedR);
 
         // Isolate the actual generator contribution, not the difference between two reruns.
         // The full sum above still drives its original limiter and the loudness matcher below.
@@ -718,34 +725,34 @@ void Engine::process(float* io, int frames) {
         soloRun_ = runSolo;
 
         // Dry path, delayed by the limiter latency so the crossfade stays phase aligned.
-        dryL_[dryPos_] = xdl;
-        dryR_[dryPos_] = xdr;
+        dryL_[dryPos_] = alignedL;
+        dryR_[dryPos_] = alignedR;
         int rd = dryPos_ - lat;
         if (rd < 0) rd += kDryLen;
-        const double dl = dryL_[rd], dr = dryR_[rd];
+        const double dryDelayedL = dryL_[rd], dryDelayedR = dryR_[rd];
         if (++dryPos_ >= kDryLen) dryPos_ = 0;
 
         // Loudness match: processed output vs the input it came from (both time aligned, before any gate or fade).
-        if (matchOn) match_.push(dl, dr, ll, lr);
+        if (matchOn) match_.push(dryDelayedL, dryDelayedR, limitedL, limitedR);
         // Flat bypass: the input at the matched loudness, through its own limiter (same ceiling, same latency). The
         // limiter stays warm whenever matched bypass is enabled, including while the wet path is selected.
         const double fx = flatX_.next();
         const double mg = match_.nextGain();
-        double bl = dl, br = dr;
+        double bl = dryDelayedL, br = dryDelayedR;
         // Keep this delay/limiter warm even while wet is selected, so bypass starts with valid recent samples.
         const bool runFlat = fx > 0.0;
         if (runFlat) {
             if (!flatRun_) limFlat_.reset();
             double fl2 = 0.0, fr2 = 0.0;
-            limFlat_.process(xdl * mg, xdr * mg, fl2, fr2);
-            bl = fx * fl2 + (1.0 - fx) * dl;
-            br = fx * fr2 + (1.0 - fx) * dr;
+            limFlat_.process(alignedL * mg, alignedR * mg, fl2, fr2);
+            bl = fx * fl2 + (1.0 - fx) * dryDelayedL;
+            br = fx * fr2 + (1.0 - fx) * dryDelayedR;
         }
         flatRun_ = runFlat;
 
         // The gate comes after the dry/wet mix: a bypass never escapes a mute.
-        const double normalL = mix * ll + (1.0 - mix) * bl;
-        const double normalR = mix * lr + (1.0 - mix) * br;
+        const double normalL = mix * limitedL + (1.0 - mix) * bl;
+        const double normalR = mix * limitedR + (1.0 - mix) * br;
         // No bypass leaks into a settled solo monitor; VB-off/zero-layer means silence.
         const double yl = (sx == 0.0 ? normalL : (1.0 - sx) * normalL + sx * mix * sl) * fade * gate * vbx;
         const double yr = (sx == 0.0 ? normalR : (1.0 - sx) * normalR + sx * mix * sr) * fade * gate * vbx;
