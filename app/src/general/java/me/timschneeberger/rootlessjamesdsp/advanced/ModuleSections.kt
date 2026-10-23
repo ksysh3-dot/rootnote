@@ -75,7 +75,7 @@ fun JamesDspModules(host: RnAdvancedActivity, sealed: Boolean, showIcons: Boolea
             R.string.compander_granularity_medium, R.string.compander_granularity_high, R.string.compander_granularity_extreme)
             .map { stringResource(it) }
         PrefSlider(compander, k(R.string.key_compander_granularity), stringResource(R.string.compander_granularity), 0f,
-            0f..4f, 1f, "", 0, strictStep = true, label = { granularity.getOrElse(it.roundToInt()) { it.roundToInt().toString() } })
+            0f..4f, 1f, "", 0, strictStep = true, label = { v -> granularity.getOrElse(v.roundToInt()) { v.roundToInt().toString() } })
         PrefChoice(compander, k(R.string.key_compander_tftransforms), stringResource(R.string.compander_tftransforms), "0",
             R.array.compander_tf_transforms, R.array.compander_tf_transforms_values)
         val responseKey = k(R.string.key_compander_response)
