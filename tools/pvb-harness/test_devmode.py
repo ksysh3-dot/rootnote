@@ -343,6 +343,16 @@ def t_meters(lib):
     check('meters on 55 + 82 Hz together: both fundamentals held at most reads after 1 s', seen >= 30,
           reads_with_both=seen)
     e.close()
+    # the source-bass line is steep: a 262 Hz piano/vocal note reads at least 20 dB below a 55 Hz bass of equal level
+    lv = {}
+    for f in (55.0, 262.0):
+        e = Engine(lib, sr, vb_on=1, vb_algo=P1, vb_level_db=6, dev_on=1, dev_meter=1)
+        e.process(tone(sr, 2.0, f), block=960)
+        lib.pvb_copy_dev_meters(e.h, out.ctypes.data_as(FP), n)
+        lv[f] = float(np.median(out[fields:].reshape(-1, 2)[-200:, 0]))
+        e.close()
+    check('meters: source-bass line rejects low-mid notes (262 Hz >= 20 dB below 55 Hz)', lv[262.0] < lv[55.0] - 20,
+          bass_db=lv[55.0], lowmid_db=lv[262.0])
     bad = Engine(lib, sr)
     check('copy_dev_meters rejects a short buffer', lib.pvb_copy_dev_meters(bad.h, out.ctypes.data_as(FP), n - 1) == 0)
     bad.close()

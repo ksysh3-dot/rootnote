@@ -341,8 +341,11 @@ private:
     // Developer mode: voicing last pushed to the modules, and the display meters (audio thread writes, any reads).
     DevVoicing devApplied_;
     bool devMeterOn_ = false;
-    RampedSvf devLp_, devBp_;
-    SvfState sDevLp_, sDevBpDry_, sDevBpLay_;
+    // devLp_: 8th-order Butterworth low-pass at the generator edge (4 sections): the display's source-bass line, steep
+    // enough that piano or vocals at 250-400 Hz do not read as bass the generator could use.
+    static constexpr int kDevLpSections = 4;
+    RampedSvf devLp_[kDevLpSections], devBp_;
+    SvfState sDevLp_[kDevLpSections], sDevBpDry_, sDevBpLay_;
     double devBinDry_ = 0, devBinLay_ = 0, devPowDry_ = 0, devPowLay_ = 0, devPowCoef_ = 0;
     int devBinLen_ = 240, devBinN_ = 0;
     uint32_t devRingCount_ = 0;
