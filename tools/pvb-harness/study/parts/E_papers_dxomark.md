@@ -389,65 +389,9 @@ back volume, DSP and room.
   Treat the two as one data point.
   The A33 and A53 also share maximum SPL values (74.3/69.3).
 
-### 4.3 Per-model DXOMARK audio data (Android, Samsung first)
+### 4.3 Per-model DXOMARK data
 
-PB = Playback, Tim = Timbre, Dyn = Dynamics, Vol = Volume, Art = Artifacts. Max SPL is hip-hop / classical in dBA.
-
-| Device | Published | PB | Tim | Dyn | Vol | Art | Max SPL | Bass / low-end wording [S] | URL |
-|---|---|---|---|---|---|---|---|---|---|
-| Galaxy S24 Ultra | 2024-03-15 | 140 | 135 | 131 | 137 | 96 | 74.8 / 71.8 | "Deep and powerful bass"; low-end extension "quite good" but could go deeper; upper-bass muddiness | https://www.dxomark.com/samsung-galaxy-s24-ultra-audio-test/ |
-| Galaxy S24+ (Exynos) [1] | 2024-03-15 | 139 | 135 | 132 | 133 | 99 | n/a | "Good bass" (pro) | https://www.dxomark.com/samsung-galaxy-s24-audio-test/ |
-| Galaxy S23 Ultra (Snapdragon) | 2023-02-21 | 140 | 135 | 131 | 137 | 96 | 74.8 / 71.8 | Same wording as the S24U | https://www.dxomark.com/?p=140754 |
-| Galaxy S23 (Snapdragon) | 2023-02-23 | 131 | 126 | 129 | 130 | 89 | n/a | "lacked some bass and low-midrange"; bright, "Excessive treble boost" | https://www.dxomark.com/samsung-galaxy-s23-audio-test/ |
-| Galaxy S23 FE | 2023-12-14 | 137 | 127 | 132 | 135 | 105 | 74.1 / 70.9 | Good upper-bass presence; "Lack of high- and low-end extension" | https://www.dxomark.com/samsung-galaxy-s23-fe-audio-test/ |
-| Galaxy Z Fold5 | 2023-09-19 | 132 | 129 | 132 | 128 | 84 | 72.8 / 69.4 | "solid" bass, "very good punch" | https://www.dxomark.com/samsung-galaxy-z-fold5-audio-test |
-| Galaxy Z Flip5 | 2023-09-19 | 128 | 121 | 129 | 125 | 91 | 72.3 / 68.1 | "decent but lacked low-end extension" | https://www.dxomark.com/samsung-galaxy-z-flip5-audio-test/ |
-| Galaxy A54 5G | 2023-03-20 | 132 | 129 | 130 | 124 | 96 | 75.0 / 71.3 | Warm but "lacked some depth in the low-end" | https://www.dxomark.com/samsung-galaxy-a54-5g-audio-test |
-| Galaxy A53 5G | 2022-05-20 | 128 | 128 | 134 | 128 | 113 | 74.3 / 69.3 | "Limited bass" (con) | https://www.dxomark.com/samsung-galaxy-a53-5g-audio-test/ |
-| Galaxy A33 5G | 2022-05-12 | 125 | 128 | 131 | 126 | 113 | 74.3 / 69.3 | "surprisingly solid" bass, but "Lacks sufficient bass" (con) | https://www.dxomark.com/samsung-galaxy-a33-5g-audio-test |
-| Galaxy S22 Ultra (Exynos) | — | — | — | — | — | — | 74.1 / 70.2 | (SPL only, from the 12S Ultra page comparison) | https://www.dxomark.com/?p=126245 |
-| Pixel 8 Pro | 2023-10-12 | 143 | 131 | 137 | 130 | 109 | 74.3 / 71.4 | Low end "strong and pleasant", upper-bass emphasis | https://www.dxomark.com/google-pixel-8-pro-audio-test/ |
-| Pixel 7a | 2023-06-13 | 133 | 129 | 128 | 126 | 99 | 74.0 / 69.5 | "lacking bass and low midrange body"; thin | https://www.dxomark.com/google-pixel-7a-audio-test |
-| Xiaomi 12S Ultra | 2022-09-28 | 124 | 117 | 125 | 121 | 113 | 72.6 / 69.0 | "powerful it's not that deep" | https://www.dxomark.com/?p=126245 |
-
-[1] The URL `samsung-galaxy-s24-audio-test` returned the S24+ (Exynos) page. The index also lists a separate
-S24 (Exynos) test that I did not open.
-
-Reference phones on the same pages: iPhone 15 Pro Max 75.1/72.3, Huawei Mate 60 Pro+ 74.9/71.5 and
-iPhone 14 Pro Max 74.0/71.1 dBA.
-
----
-
-## 5. Images to digitize
-
-None were digitized. I could not see any chart image, so no axis calibration was attempted.
-
-1. **DXOMARK "Music playback frequency response" charts.** 1/12 octave, sine, anechoic. The fetched text exposed no
-   image URL, so the chart is probably script-rendered. A browser capture or a look at the page's network requests is
-   needed. Pages, priority order:
-   - S24 Ultra (and the S23 Ultra page for comparison), S24+, S24 (Exynos)
-   - S23 FE, A54, A53, A33, Z Fold5, Z Flip5
-   - Pixel 8 Pro, Pixel 7a
-
-   URLs are in table 4.3. The S24 (Exynos) page is listed first on https://www.dxomark.com/category/audio-reviews/.
-   Check the axis labels and whether the curves are absolute dB SPL or normalised before reuse. The protocol does not
-   state the distance or the level for this chart.
-2. **Datasheet curves without numbers:**
-   - D4 open-back response at 125 mW, 1 cm (Knowles 1318 PDF above)
-   - D6 Figures 2.1 and 2.2 (Soberton SP-1511S-5)
-   - D7 frequency-response curve (Bestar)
-   - D8 free-field response at 3.16 cm (PUI BOX1-18082-10C)
-   - R3 response curve (Soberton RC-1206S-1)
-
-   These would add measured curves between the tolerance-window points. They are low priority, because the Knowles
-   windows already give numbers.
-3. **Sweep-to-Unlock power-spectrum figures** for 12 phone models: an indirect measurement, recorded by a car head
-   unit at 1 m. They might give relative roll-off shapes for older Galaxy J/A/S/Note models. Treat as C.
-4. **Jiang 2023 (Applied Sciences) SPL figures** for the side-firing module, 100 Hz to 20 kHz at 10 cm.
-   The article is open access with vector-like figures. It would give one complete module response including the
-   Helmholtz peak.
-
----
+Kept out of this public repository (third-party per-model data, research use only).
 
 ## 6. Open gaps
 
