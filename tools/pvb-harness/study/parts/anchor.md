@@ -80,5 +80,16 @@ band definitions are not published.
 - Verdict: **not possible** (no data reachable). Even if obtained, an anechoic sine response at an unstated volume
   would need its own offset (no room gain below ~300 Hz compared with our in-room curve).
 
+## Next step for the main session (browser)
+
+Best anchor candidates, in order: (1) Bandicoot Lab S26 Ultra chart (UMIK-1 room measurement like ours, 50 cm,
+100 % volume): https://bandicootlab.com/phone/samsung-galaxy-s26-ultra ; (2) NotebookCheck S26 Ultra pink-noise
+chart (review URL above). Both are JavaScript charts; all chart URLs are in A_galaxy_s.md "Charts to digitize".
+WebFetch offsets do not help for NotebookCheck: the stored page is already cut at about 92 k characters.
+
+Incidental Bandicoot values for other brands (same metric, for the other researchers): iPhone 17 Pro Max bass drop
+21 dB (quoted on the S25 Ultra page).
+
 ## Revision log
+- 2026-10-23 v0.2: added browser next steps and the iPhone 17 Pro Max Bandicoot value.
 - 2026-10-23 v0.1: first version (Bandicoot, NotebookCheck, DXOMARK, Mobilissimo checked).
