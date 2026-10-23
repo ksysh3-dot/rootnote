@@ -57,7 +57,7 @@ class SpatialBalanceActivity : BaseActivity() {
     private val main = Handler(Looper.getMainLooper())
     private var ui by mutableStateOf(BalanceUi())
     /** The measuring run now; a run whose token is no longer current stops at its next short read. */
-    @Volatile private var run = 0
+    @Volatile private var measurementRunId = 0
     private var worker: Thread? = null
     @Volatile private var recorder: AudioRecord? = null
     /** The rotation the values are being set in: the screen is held in it from the first step until saved. */
@@ -73,7 +73,7 @@ class SpatialBalanceActivity : BaseActivity() {
             isAppearanceLightNavigationBars = !night
         }
         val s = PvbSettings.load(prefs)
-        ui = BalanceUi(loDb = s.xtcBalLoDb, hiDb = s.xtcBalHiDb)
+        ui = BalanceUi(lowBalanceDb = s.xtcBalLoDb, highBalanceDb = s.xtcBalHiDb)
         setContent {
             SpatialBalanceScreen(
                 ui,
@@ -83,8 +83,8 @@ class SpatialBalanceActivity : BaseActivity() {
                     onEarValue = { v -> setEarValue(v) },
                     onEarNext = { earNext() },
                     onRefine = { r -> refine(r) },
-                    onSave = { save() },
-                    onReset = { reset() },
+                    onSave = { commitBalance() },
+                    onReset = { clearStoredBalance() },
                     onClose = { finish() },
                 ),
             )
@@ -111,8 +111,14 @@ class SpatialBalanceActivity : BaseActivity() {
     private fun engineReady() =
         BaseAudioProcessorService.activeServices > 0 && PvbRuntime.status.processing && !PvbRuntime.abActive
 
+    /**
+     * Ends whatever plays or records now. Invalidates the measuring run (a late read or post of the old run sees a
+     * stale [measurementRunId] and drops its result), stops the recorder (unblocks a read; the measuring thread
+     * releases it), stops the test sound, clears the preview ([clearOverride]) and unlocks the rotation. Stores
+     * nothing and leaves the on-screen values as they are. Safe to call twice.
+     */
     private fun stopAll() {
-        run++
+        measurementRunId++
         worker = null
         try { recorder?.stop() } catch (_: Exception) {}   // unblocks a read in progress
         DevTestSound.stop()
@@ -120,6 +126,7 @@ class SpatialBalanceActivity : BaseActivity() {
         unlockRotation()
     }
 
+    /** Ends the preview: the engine plays the stored settings again and JamesDSP is back in the path. */
     private fun clearOverride() {
         PvbRuntime.setDevOverride(null)
         PvbRuntime.calibrating = false
@@ -128,7 +135,7 @@ class SpatialBalanceActivity : BaseActivity() {
     /** The stored values on screen again (leaving a measurement or the by-ear steps without saving). */
     private fun restoreStored() {
         val s = PvbSettings.load(prefs)
-        ui = ui.copy(loDb = s.xtcBalLoDb, hiDb = s.xtcBalHiDb, source = prefs.getString(PvbSettings.KEY_XTC_BAL_SOURCE, "") ?: "")
+        ui = ui.copy(lowBalanceDb = s.xtcBalLoDb, highBalanceDb = s.xtcBalHiDb, source = prefs.getString(PvbSettings.KEY_XTC_BAL_SOURCE, "") ?: "")
     }
 
     /** Hold the screen in the rotation calibration started in (a 180-degree turn would swap the speakers). */
@@ -141,7 +148,13 @@ class SpatialBalanceActivity : BaseActivity() {
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
     }
 
-    private fun override(xtcOn: Boolean, lo: Float, hi: Float, measuring: Boolean = false) {
+    /**
+     * Plays [lo]/[hi] (dB, "the left speaker is louder by"; the correction lowers that side) without storing them:
+     * the stored settings with spatial on ([xtcOn]) or off, these balance values and the calibration rotation, as the
+     * engine's temporary override (PvbRuntime.setDevOverride), with JamesDSP held out (PvbRuntime.calibrating).
+     * [measuring]: virtual bass held off too. Ended by [clearOverride]. Stores nothing.
+     */
+    private fun previewBalance(xtcOn: Boolean, lo: Float, hi: Float, measuring: Boolean = false) {
         val s = PvbSettings.load(prefs)
         PvbRuntime.calibrating = true
         val mode = when {
@@ -174,8 +187,8 @@ class SpatialBalanceActivity : BaseActivity() {
         }
         stopAll()
         lockRotation()
-        val token = ++run
-        override(xtcOn = false, lo = 0f, hi = 0f, measuring = true)
+        val token = ++measurementRunId
+        previewBalance(xtcOn = false, lo = 0f, hi = 0f, measuring = true)
         ui = ui.copy(step = BalanceStep.MEASURING, progress = 0f, measuring = MeasurePhase.QUIET)
         worker = Thread({ measureAll(token) }, "spatial-balance").also { it.start() }
     }
@@ -193,20 +206,20 @@ class SpatialBalanceActivity : BaseActivity() {
             add(MediaRecorder.AudioSource.VOICE_RECOGNITION)
         }
         fun rank(r: SpatialBalance.Result) = when {
-            r.reliable -> 3
-            r.usable && r.distinctMics -> 2
-            r.usable -> 1
+            r.recordingConsistent -> 3
+            r.hasEnoughValidBands && r.channelsDiffer -> 2
+            r.hasEnoughValidBands -> 1
             else -> 0
         }
         var best: SpatialBalance.Result? = null
         for ((i, source) in sources.withIndex()) {
-            if (token != run) return
+            if (token != measurementRunId) return
             val r = measure(token, source, i, sources.size) ?: continue
-            if (r.usable && (best == null || rank(r) > rank(best))) best = r
-            if (r.reliable) break
+            if (r.hasEnoughValidBands && (best == null || rank(r) > rank(best))) best = r
+            if (r.recordingConsistent) break
         }
         post {
-            if (token != run) return@post
+            if (token != measurementRunId) return@post
             DevTestSound.stop()
             clearOverride()
             val b = best
@@ -245,24 +258,24 @@ class SpatialBalanceActivity : BaseActivity() {
                 var got = 0
                 val chunk = 2 * (sr / 10)
                 while (got < buf.size) {
-                    if (token != run) return null
+                    if (token != measurementRunId) return null
                     val n = rec.read(buf, got, minOf(chunk, buf.size - got), AudioRecord.READ_BLOCKING)
                     if (n <= 0) return null
                     got += n
                     val f = ((attempt + (done + got / 2.0 / sr) / total) / attempts).toFloat().coerceIn(0f, 1f)
-                    post { if (token == run) ui = ui.copy(progress = f) }
+                    post { if (token == measurementRunId) ui = ui.copy(progress = f) }
                 }
                 done += seconds
                 return SpatialBalance.Recording(buf, frames)
             }
             take(0.3) ?: return null                      // settle
-            post { if (token == run) ui = ui.copy(measuring = MeasurePhase.QUIET) }
+            post { if (token == measurementRunId) ui = ui.copy(measuring = MeasurePhase.QUIET) }
             val noise = take(1.0) ?: return null
             val left = ArrayList<SpatialBalance.Recording>()
             val right = ArrayList<SpatialBalance.Recording>()
             for (k in listOf(DevTestKind.XTC_SWEEP_L, DevTestKind.XTC_SWEEP_R, DevTestKind.XTC_SWEEP_L, DevTestKind.XTC_SWEEP_R)) {
-                if (token != run) return null
-                post { if (token == run) ui = ui.copy(measuring = if (k == DevTestKind.XTC_SWEEP_L) MeasurePhase.LEFT else MeasurePhase.RIGHT) }
+                if (token != measurementRunId) return null
+                post { if (token == measurementRunId) ui = ui.copy(measuring = if (k == DevTestKind.XTC_SWEEP_L) MeasurePhase.LEFT else MeasurePhase.RIGHT) }
                 DevTestSound.start(k)
                 val r = take(period)
                 DevTestSound.stop()
@@ -274,7 +287,7 @@ class SpatialBalanceActivity : BaseActivity() {
         } catch (e: Exception) {
             return null
         } finally {
-            if (token == run) DevTestSound.stop()
+            if (token == measurementRunId) DevTestSound.stop()
             try { rec.stop() } catch (_: Exception) {}
             rec.release()
             if (recorder === rec) recorder = null
@@ -288,7 +301,7 @@ class SpatialBalanceActivity : BaseActivity() {
      * Nothing is stored here; "저장" at the end of the by-ear steps does (code review 2026-10-23, F5).
      */
     private fun refine(r: SpatialBalance.Result) {
-        if (r.reliable) ui = ui.copy(loDb = r.loDb, hiDb = r.hiDb, source = "mic")
+        if (r.recordingConsistent) ui = ui.copy(lowBalanceDb = r.lowBalanceDb, highBalanceDb = r.highBalanceDb, source = "mic")
         else restoreStored()
         startEar()
     }
@@ -299,15 +312,15 @@ class SpatialBalanceActivity : BaseActivity() {
         if (!engineReady()) { ui = ui.copy(ready = false); return }
         if (ui.step != BalanceStep.RESULT) lockRotation()   // after a measurement the screen is already held
         ui = ui.copy(step = BalanceStep.EAR_LO, source = if (ui.source == "mic" || ui.source == "mic+ear") "mic+ear" else "ear")
-        override(xtcOn = true, lo = ui.loDb, hi = ui.hiDb)
+        previewBalance(xtcOn = true, lo = ui.lowBalanceDb, hi = ui.highBalanceDb)
         DevTestSound.start(DevTestKind.XTC_BAND_LO)
     }
 
     /** The slider: moving it right moves the sound right (the left speaker gets relatively quieter). */
     private fun setEarValue(v: Float) {
         val b = PvbSettings.clampBalance(v)
-        ui = if (ui.step == BalanceStep.EAR_LO) ui.copy(loDb = b) else ui.copy(hiDb = b)
-        override(xtcOn = true, lo = ui.loDb, hi = ui.hiDb)
+        ui = if (ui.step == BalanceStep.EAR_LO) ui.copy(lowBalanceDb = b) else ui.copy(highBalanceDb = b)
+        previewBalance(xtcOn = true, lo = ui.lowBalanceDb, hi = ui.highBalanceDb)
     }
 
     private fun earNext() {
@@ -315,24 +328,26 @@ class SpatialBalanceActivity : BaseActivity() {
             ui = ui.copy(step = BalanceStep.EAR_HI)
             DevTestSound.start(DevTestKind.XTC_BAND_HI)
         } else {
-            save()
+            commitBalance()
         }
     }
 
     // ------------------------------------------------------------------------------------------------ store
 
-    private fun save() {
+    /** Stores the on-screen balance (the only place that does, with [clearStoredBalance]) and ends the preview. */
+    private fun commitBalance() {
         stopAll()
         prefs.edit()
-            .putFloat(PvbSettings.KEY_XTC_BAL_LO, ui.loDb)
-            .putFloat(PvbSettings.KEY_XTC_BAL_HI, ui.hiDb)
+            .putFloat(PvbSettings.KEY_XTC_BAL_LO, ui.lowBalanceDb)
+            .putFloat(PvbSettings.KEY_XTC_BAL_HI, ui.highBalanceDb)
             .putInt(PvbSettings.KEY_XTC_BAL_ROT, calRotation)
             .putString(PvbSettings.KEY_XTC_BAL_SOURCE, ui.source)
             .apply()
         ui = ui.copy(step = BalanceStep.DONE)
     }
 
-    private fun reset() {
+    /** "값 지우기": stores a zero balance and forgets its rotation and source (an explicit store, like [commitBalance]). */
+    private fun clearStoredBalance() {
         stopAll()
         prefs.edit()
             .putFloat(PvbSettings.KEY_XTC_BAL_LO, 0f)
@@ -340,7 +355,7 @@ class SpatialBalanceActivity : BaseActivity() {
             .remove(PvbSettings.KEY_XTC_BAL_ROT)
             .remove(PvbSettings.KEY_XTC_BAL_SOURCE)
             .apply()
-        ui = ui.copy(step = BalanceStep.INTRO, loDb = 0f, hiDb = 0f, result = null, source = "")
+        ui = ui.copy(step = BalanceStep.INTRO, lowBalanceDb = 0f, highBalanceDb = 0f, result = null, source = "")
     }
 
 }

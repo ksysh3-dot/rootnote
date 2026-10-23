@@ -73,8 +73,9 @@ enum class BalanceFailure { NO_MIC, TOO_QUIET }
 @Immutable
 data class BalanceUi(
     val step: BalanceStep = BalanceStep.INTRO,
-    val loDb: Float = 0f,
-    val hiDb: Float = 0f,
+    /** The balance on screen (dB, "the left speaker is louder by", 400-1500 Hz / 1.5-8 kHz); stored only by "저장". */
+    val lowBalanceDb: Float = 0f,
+    val highBalanceDb: Float = 0f,
     val ready: Boolean = true,
     val reduceMotion: Boolean = false,
     val progress: Float = 0f,
@@ -140,9 +141,9 @@ fun SpatialBalanceScreen(ui: BalanceUi, actions: BalanceActions) {
                 contentAlignment = Alignment.Center,
             ) {
                 val value = when (ui.step) {
-                    BalanceStep.EAR_HI -> ui.hiDb
-                    BalanceStep.EAR_LO -> ui.loDb
-                    else -> (ui.loDb + ui.hiDb) / 2f
+                    BalanceStep.EAR_HI -> ui.highBalanceDb
+                    BalanceStep.EAR_LO -> ui.lowBalanceDb
+                    else -> (ui.lowBalanceDb + ui.highBalanceDb) / 2f
                 }
                 BalanceStage(value, ui)
             }
@@ -205,15 +206,15 @@ private fun StepContent(ui: BalanceUi, actions: BalanceActions) {
         BalanceStep.INTRO -> {
             title(stringResource(R.string.balance_intro_title))
             body(stringResource(R.string.balance_intro_body))
-            if (ui.loDb != 0f || ui.hiDb != 0f)
-                note(stringResource(R.string.balance_current, sideText(ui.loDb), sideText(ui.hiDb)))
+            if (ui.lowBalanceDb != 0f || ui.highBalanceDb != 0f)
+                note(stringResource(R.string.balance_current, sideText(ui.lowBalanceDb), sideText(ui.highBalanceDb)))
             if (!ui.ready) note(stringResource(R.string.balance_not_ready))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 ActionButton(stringResource(R.string.balance_auto), filled = true, enabled = ui.ready, onClick = actions.onAuto)
                 ActionButton(stringResource(R.string.balance_ear), filled = false, enabled = ui.ready, onClick = actions.onEar)
             }
             note(stringResource(R.string.balance_auto_note))
-            if (ui.loDb != 0f || ui.hiDb != 0f)
+            if (ui.lowBalanceDb != 0f || ui.highBalanceDb != 0f)
                 ActionButton(stringResource(R.string.balance_reset), filled = false, enabled = true, onClick = actions.onReset)
         }
         BalanceStep.MEASURING -> {
@@ -231,20 +232,20 @@ private fun StepContent(ui: BalanceUi, actions: BalanceActions) {
             title(stringResource(R.string.balance_result_title))
             // a sound recording is still an estimate for this grip (the microphones' paths are assumed mirror-like, and
             // a mixed pair can pass): it only places the by-ear slider, the listener saves; an unsound one is not used
-            if (r.reliable) body(stringResource(R.string.balance_result_body, sideText(r.loDb), sideText(r.hiDb)))
+            if (r.recordingConsistent) body(stringResource(R.string.balance_result_body, sideText(r.lowBalanceDb), sideText(r.highBalanceDb)))
             note(stringResource(when {
-                r.reliable -> R.string.balance_result_estimate
-                !r.distinctMics -> R.string.balance_result_one_mic
+                r.recordingConsistent -> R.string.balance_result_estimate
+                !r.channelsDiffer -> R.string.balance_result_one_mic
                 else -> R.string.balance_result_unsteady
             }))
-            ActionButton(stringResource(if (r.reliable) R.string.balance_check_ear else R.string.balance_ear),
+            ActionButton(stringResource(if (r.recordingConsistent) R.string.balance_check_ear else R.string.balance_ear),
                 filled = true, enabled = true) { actions.onRefine(r) }
         }
         BalanceStep.EAR_LO, BalanceStep.EAR_HI -> {
             val lo = ui.step == BalanceStep.EAR_LO
             title(stringResource(if (lo) R.string.balance_ear_lo_title else R.string.balance_ear_hi_title))
             body(stringResource(R.string.balance_ear_body))
-            val v = if (lo) ui.loDb else ui.hiDb
+            val v = if (lo) ui.lowBalanceDb else ui.highBalanceDb
             BalanceSlider(v, stringResource(R.string.balance_slider_label), sideText(v), actions.onEarValue)
             Row(Modifier.fillMaxWidth()) {
                 note(stringResource(R.string.balance_slider_left))
@@ -258,7 +259,7 @@ private fun StepContent(ui: BalanceUi, actions: BalanceActions) {
         }
         BalanceStep.DONE -> {
             title(stringResource(R.string.balance_done_title))
-            body(stringResource(R.string.balance_done_body, sideText(ui.loDb), sideText(ui.hiDb)))
+            body(stringResource(R.string.balance_done_body, sideText(ui.lowBalanceDb), sideText(ui.highBalanceDb)))
             ActionButton(stringResource(R.string.story_done), filled = true, enabled = true, onClick = actions.onClose)
         }
         BalanceStep.FAILED -> {

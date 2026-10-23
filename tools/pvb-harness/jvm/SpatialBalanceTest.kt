@@ -76,17 +76,17 @@ fun main() {
     val res = SpatialBalance.analyze(noise, listOf(record(pl, true), record(pl, true)), listOf(record(pr, false), record(pr, false)), sr)
     val err = res.bandsDb.indices.maxOf { abs(res.bandsDb[it] - truth[it]) }
     check("cross method: per-band speaker difference within 0.5 dB (mics and distances cancel)", err < 0.5,
-        "max_err=${"%.2f".format(err)} lo=${res.loDb} hi=${res.hiDb}")
+        "max_err=${"%.2f".format(err)} lo=${res.lowBalanceDb} hi=${res.highBalanceDb}")
     val loTruth = truth.filterIndexed { i, _ -> SpatialBalance.BANDS[i] < SpatialBalance.SPLIT_HZ }.average()
     val hiTruth = truth.filterIndexed { i, _ -> SpatialBalance.BANDS[i] >= SpatialBalance.SPLIT_HZ }.average()
-    check("band averages match (half-dB steps)", abs(res.loDb - loTruth) <= 0.3 && abs(res.hiDb - hiTruth) <= 0.3,
-        "lo ${res.loDb} vs ${"%.2f".format(loTruth)}, hi ${res.hiDb} vs ${"%.2f".format(hiTruth)}")
-    check("distinct microphones recognised, result usable", res.distinctMics && res.usable)
+    check("band averages match (half-dB steps)", abs(res.lowBalanceDb - loTruth) <= 0.3 && abs(res.highBalanceDb - hiTruth) <= 0.3,
+        "lo ${res.lowBalanceDb} vs ${"%.2f".format(loTruth)}, hi ${res.highBalanceDb} vs ${"%.2f".format(hiTruth)}")
+    check("channels differ, enough valid bands", res.channelsDiffer && res.hasEnoughValidBands)
 
     val mono = SpatialBalance.analyze(noise, listOf(record(pl, true, oneMic = true)), listOf(record(pr, false, oneMic = true)), sr)
-    check("one microphone on both channels: flagged", !mono.distinctMics)
+    check("one microphone on both channels: flagged", !mono.channelsDiffer)
 
-    check("two real microphones, steady runs: reliable", res.reliable, "spread=${"%.1f".format(res.micSpreadDb)} repeat=${"%.2f".format(res.repeatDb)}")
+    check("two real microphones, steady runs: consistent recording", res.recordingConsistent, "spread=${"%.1f".format(res.micSpreadDb)} repeat=${"%.2f".format(res.repeatDb)}")
 
     // --- code review 2026-10-23 (F1): one microphone copied with a different gain, a delay or a filter ---
     fun copied(play: DoubleArray, fromLeft: Boolean, gain: Double, lag: Int, filtered: Boolean): SpatialBalance.Recording {
@@ -105,12 +105,12 @@ fun main() {
     )) {
         val one = SpatialBalance.analyze(noise, listOf(copied(pl, true, g, lag, f), copied(pl, true, g, lag, f)),
             listOf(copied(pr, false, g, lag, f), copied(pr, false, g, lag, f)), sr)
-        check("one microphone copied ($name): not two microphones, not reliable", !one.distinctMics && !one.reliable,
+        check("one microphone copied ($name): channels do not differ, not consistent", !one.channelsDiffer && !one.recordingConsistent,
             "spread=${"%.2f".format(one.micSpreadDb)}")
     }
     val reported = SpatialBalance.analyze(noise, listOf(record(pl, true), record(pl, true)),
         listOf(record(pr, false), record(pr, false)), sr, micsReported = 1)
-    check("recorder reports one microphone: not two microphones", !reported.distinctMics && !reported.reliable)
+    check("recorder reports one microphone: not two microphones", !reported.channelsDiffer && !reported.recordingConsistent)
 
     // --- F2: the path assumption. Equal speakers, mirror-asymmetric paths: the bias is the documented term and the
     // recording alone cannot reveal it (the screen therefore always asks to confirm by ear) ---
@@ -123,22 +123,22 @@ fun main() {
         listOf(pathRec(sr2, 0.4, 1.0), pathRec(sr2, 0.4, 1.0)), sr)
     val expected = 10 * kotlin.math.log10((1.0 * 0.2) / (0.4 * 1.0))
     check("asymmetric paths: bias equals 10*log10(HL0*HL1/(HR0*HR1)) (a known limit, not detectable)",
-        abs(asym.loDb - expected) < 0.3 && abs(asym.hiDb - expected) < 0.3, "lo=${asym.loDb} hi=${asym.hiDb} expected=${"%.2f".format(expected)}")
+        abs(asym.lowBalanceDb - expected) < 0.3 && abs(asym.highBalanceDb - expected) < 0.3, "lo=${asym.lowBalanceDb} hi=${asym.highBalanceDb} expected=${"%.2f".format(expected)}")
 
-    // repeatability: the second left run 3 dB louder (the phone moved, a noise burst) -> not reliable
+    // repeatability: the second left run 3 dB louder (the phone moved, a noise burst) -> not consistent
     val unsteady = SpatialBalance.analyze(noise, listOf(record(pl, true), record(pl.map { it * 1.41 }.toDoubleArray(), true)),
         listOf(record(pr, false), record(pr, false)), sr)
-    check("runs that disagree by 3 dB: not reliable", !unsteady.reliable, "repeat=${"%.2f".format(unsteady.repeatDb)}")
+    check("runs that disagree by 3 dB: not consistent", !unsteady.recordingConsistent, "repeat=${"%.2f".format(unsteady.repeatDb)}")
 
     // a burst confined to two bands of one run (8 dB): the median hides it, the worst-band check does not
     val burst = pl.copyOf().also { peaking(it, sr, 5000.0, 4.0, 8.0); peaking(it, sr, 6300.0, 4.0, 8.0) }
     val bursty = SpatialBalance.analyze(noise, listOf(record(pl, true), record(burst, true)),
         listOf(record(pr, false), record(pr, false)), sr)
-    check("a burst in two bands of one run: not reliable", !bursty.reliable,
+    check("a burst in two bands of one run: not consistent", !bursty.recordingConsistent,
         "repeat=${"%.2f".format(bursty.repeatDb)} worst=${"%.2f".format(bursty.repeatWorstDb)}")
 
     val silent = SpatialBalance.analyze(noise, listOf(noise), listOf(noise), sr)
-    check("nothing played (noise only): not usable, balance 0", !silent.usable && silent.loDb == 0f && silent.hiDb == 0f)
+    check("nothing played (noise only): not enough valid bands, balance 0", !silent.hasEnoughValidBands && silent.lowBalanceDb == 0f && silent.highBalanceDb == 0f)
 
     if (failed > 0) { println("SpatialBalanceTest: $failed failed"); exitProcess(1) }
     println("SpatialBalanceTest: all passed")

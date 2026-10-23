@@ -16,12 +16,12 @@ import kotlin.math.sqrt
  * ratio left / right is S_L / S_R times a path ratio, and the path ratios of the two mics are inverse to each other
  * (each mic is near one speaker and far from the other), so the geometric mean of the two mics' ratios is S_L / S_R:
  * the microphones' own responses and the distances cancel. If both channels carry the same microphone
- * ([Result.distinctMics] false) the path does not cancel and the result is only indicative.
+ * ([Result.channelsDiffer] false) the path does not cancel and the result is only indicative.
  *
  * Limits (code review 2026-10-23, F1/F2): the cancellation needs the two path ratios to be exact inverses, which a
  * real phone only approximates (mic port placement, directivity, the hand). The leftover is
  * 10·log10((H_L0·H_L1)/(H_R0·H_R1)) dB for amplitude transfers H and cannot be seen in the recordings (three
- * unknowns, two equations). So the result is an estimate for this grip: [Result.reliable] only says the recording was
+ * unknowns, two equations). So the result is an estimate for this grip: [Result.recordingConsistent] only says the recording was
  * sound (two microphones positively told apart, the runs agree, enough signal), never that the path assumption holds.
  * A mixed (beamformed) pair or a per-channel level stage can still pass, so the screen never saves a measured value
  * directly: a sound result only places the by-ear slider, and the listener's "저장" is what stores it. Two microphones are established positively: the per-mic
@@ -37,13 +37,16 @@ object SpatialBalance {
     val BANDS = doubleArrayOf(400.0, 500.0, 630.0, 800.0, 1000.0, 1250.0, 1600.0, 2000.0, 2500.0, 3150.0, 4000.0,
         5000.0, 6300.0, 8000.0)
     const val SPLIT_HZ = 1500.0
-    /** Band power at least this much above the noise floor (dB) to count. */
+    /**
+     * A band counts when its power is at least this much above the noise recording (dB, power ratio). Only decides
+     * which bands enter the average; not an audibility or an accuracy threshold.
+     */
     const val MIN_SNR_DB = 10.0
     /** The two microphones' left/right ratios differ at least this much on average (dB) for two microphones. */
     const val MIN_MIC_SPREAD_DB = 4.0
     /** ...with the same sign in at least this share of the valid bands. */
     const val MIN_SPREAD_AGREEMENT = 0.8
-    /** The repeated runs agree within this (median over bands and mics, worse side, dB) for a reliable result. */
+    /** The repeated runs agree within this (median over bands and mics, worse side, dB) for a consistent recording. */
     const val MAX_REPEAT_DB = 1.0
     /** ...and no more than a tenth of the bands differ by more than this (a burst in a few bands, dB). */
     const val MAX_REPEAT_WORST_DB = 3.0
@@ -53,18 +56,26 @@ object SpatialBalance {
     /** A stereo recording: interleaved samples of the two microphone channels. */
     class Recording(val samples: FloatArray, val frames: Int)
 
+    /**
+     * What one automatic run found. Two kinds of fields: the numbers ([lowBalanceDb], [highBalanceDb], [bandsDb]) and
+     * what the recording supports ([hasEnoughValidBands], [channelsDiffer], [recordingConsistent]). None of them says
+     * the numbers are the speakers' true difference (the path assumption, class notes).
+     */
     data class Result(
-        val loDb: Float,
-        val hiDb: Float,
+        /** "The left speaker is this many dB louder", 400-1250 Hz bands averaged (power ratios), clamped. */
+        val lowBalanceDb: Float,
+        /** The same for 1.6-8 kHz. */
+        val highBalanceDb: Float,
         /** Per band (left louder, dB), NaN where the band was too close to the noise. */
         val bandsDb: List<Double>,
         /**
-         * Two different microphones, established positively: not a copy of one channel, the two hear the speakers
-         * clearly differently ([micSpreadDb]), and the recorder did not report a single microphone.
+         * The two channels hear the two speakers clearly differently ([micSpreadDb]), neither is a gain/lag copy of
+         * the other, and the recorder did not report a single microphone. What the cross method needs; not a proof of
+         * two physical microphones (a mixed pair can pass).
          */
-        val distinctMics: Boolean,
-        /** Enough bands above the noise on both sides of [SPLIT_HZ]. */
-        val usable: Boolean,
+        val channelsDiffer: Boolean,
+        /** At least three bands above the noise on each side of [SPLIT_HZ]: the averages could be computed. */
+        val hasEnoughValidBands: Boolean,
         /** Mean over the valid bands of mic 0's left/right ratio minus mic 1's (dB); 0 for one microphone. */
         val micSpreadDb: Double = Double.NaN,
         /** Difference between the first two runs of each side (dB, the worse side's median); NaN with one run per side. */
@@ -75,10 +86,10 @@ object SpatialBalance {
         val micsReported: Int = -1,
     ) {
         /**
-         * The recording itself was sound: usable, two microphones, repeatable. Not a proof that the paths cancel
-         * (see the class notes): the value is still offered as an estimate to confirm by ear.
+         * The recording was consistent: enough bands, the channels differ, the repeated runs agree. Not a proof that
+         * the paths cancel (class notes): the screen only uses it to place the by-ear slider, never to store a value.
          */
-        val reliable: Boolean get() = usable && distinctMics && !(repeatDb > MAX_REPEAT_DB) && !(repeatWorstDb > MAX_REPEAT_WORST_DB)
+        val recordingConsistent: Boolean get() = hasEnoughValidBands && channelsDiffer && !(repeatDb > MAX_REPEAT_DB) && !(repeatWorstDb > MAX_REPEAT_WORST_DB)
     }
 
     /** Band powers (mean square) of channel [ch] of [r] for every band in [BANDS] (two cascaded RBJ band-passes). */
@@ -204,11 +215,11 @@ object SpatialBalance {
         val lo = avg { it < SPLIT_HZ }
         val hi = avg { it >= SPLIT_HZ }
         return Result(
-            loDb = PvbSettings.clampBalance((lo ?: 0.0).toFloat()),
-            hiDb = PvbSettings.clampBalance((hi ?: 0.0).toFloat()),
+            lowBalanceDb = PvbSettings.clampBalance((lo ?: 0.0).toFloat()),
+            highBalanceDb = PvbSettings.clampBalance((hi ?: 0.0).toFloat()),
             bandsDb = bands,
-            distinctMics = distinct,
-            usable = lo != null && hi != null,
+            channelsDiffer = distinct,
+            hasEnoughValidBands = lo != null && hi != null,
             micSpreadDb = spread,
             repeatDb = repeat,
             repeatWorstDb = repeatWorst,
