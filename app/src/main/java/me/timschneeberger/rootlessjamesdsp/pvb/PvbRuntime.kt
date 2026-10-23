@@ -1,9 +1,24 @@
 package me.timschneeberger.rootlessjamesdsp.pvb
 
 /**
- * What the running service publishes for the status card. The service and the UI live in the same process,
- * so a plain singleton is enough. Everything here is read on the UI thread and written on the main thread
- * of the service, except [engine] meters, which the native side makes thread-safe.
+ * Process-wide state shared by the audio service, the controller and the screens (they all live in the app process,
+ * so a singleton is enough). Each value is a separate @Volatile: a reader sees each one up to date, never several
+ * changed together as one step. Who owns what (code review refactor R2, 2026-10-23):
+ *
+ * | state | written by | cleared by | read by |
+ * |---|---|---|---|
+ * | [status] | PvbController.publish (main thread) | - | screens (main), via [addStatusListener] |
+ * | [engine] | PvbController.start / stop (main) | PvbController.stop, only if still its own | status text, analyzer, research screens |
+ * | blind comparison ([setAb], [abReturnVolume]) | LiveAbView (s26u, main) | LiveAbView.end / [endAb]; the controller ends the volume wait | controller, service route, status |
+ * | [measuring] | PvbMeasure.run (its worker thread) | the same run's finally | controller (holds XTC off, matcher hold), service route |
+ * | [calibrating] | SpatialBalanceActivity.previewBalance (main) | SpatialBalanceActivity.clearOverride (every exit) | service route (audio thread) |
+ * | [devOverride] | DevModeActivity, SpatialStoryActivity, SpatialBalanceActivity (main) | the same screen when it stops | controller (effective settings) |
+ * | [devMeter] | DevModeActivity (main) | DevModeActivity.onStop | controller (P_DEV_METER) |
+ *
+ * Listeners run on the thread that made the change ([measuring] is set on a worker thread); the controller's
+ * listeners post to the main thread before touching anything. [devOverride] has no owner token: the last screen to
+ * set or clear it wins. Only one of those screens is visible at a time and each clears it when it stops, so this
+ * holds today; a second simultaneous user would need an owner check (a behaviour change, not part of R2).
  */
 object PvbRuntime {
     data class Status(
@@ -145,13 +160,18 @@ object PvbRuntime {
         routeListeners.forEach { it() }
     }
 
-    /** The in-app measurement is playing its noise (no blind comparison may start meanwhile). */
+    /**
+     * The in-app measurement (PvbMeasure, s26u research) is playing its noise: no blind comparison may start, the
+     * controller holds spatial off and the loudness estimator still, and the service keeps JamesDSP out.
+     * Changing it notifies the comparison listeners ([addAbListener]): the controller's one listener re-evaluates
+     * the same "what plays now" state for both, so a separate list would only duplicate it. Set on a worker thread.
+     */
     @Volatile
     var measuring: Boolean = false
         set(value) {
             if (field == value) return
             field = value
-            abListeners.forEach { it() } // also refresh the controller's loudness-estimator hold
+            abListeners.forEach { it() }
         }
 
     /**
