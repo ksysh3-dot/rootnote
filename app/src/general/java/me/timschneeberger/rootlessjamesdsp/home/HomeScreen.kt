@@ -383,6 +383,39 @@ private fun BassSection(state: HomeUiState, actions: HomeActions, modifier: Modi
                 Text(linkText(state.linkLine), color = c.textSecondary, fontSize = 13.sp, lineHeight = 18.sp)
             }
         }
+        // A phone without a measured profile: the EQ balance first, virtual bass as a spice on top.
+        if (state.measuredDeviceName == null) SpiceTip(actions)
+    }
+}
+
+/**
+ * "가상 저음은 양념이에요" (unmeasured phones): set the balance with the EQ first (low mids up, treble a little down),
+ * then add virtual bass low. Neutral card (advice, not a warning); the action opens the advanced settings.
+ */
+@Composable
+private fun SpiceTip(actions: HomeActions) {
+    val c = LocalPalette.current
+    Column(
+        Modifier
+            .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 4.dp)
+            .fillMaxWidth()
+            .border(1.dp, c.divider, RoundedCornerShape(12.dp))
+            .padding(start = 16.dp, end = 8.dp, top = 12.dp, bottom = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(
+            stringResource(R.string.home_spice_title),
+            modifier = Modifier.padding(end = 8.dp).semantics { heading() },
+            color = c.textPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold, lineHeight = 22.sp,
+        )
+        Text(
+            stringResource(R.string.home_spice_body),
+            modifier = Modifier.padding(end = 8.dp),
+            color = c.textSecondary, fontSize = 13.sp, lineHeight = 18.sp,
+        )
+        FlowRowActions {
+            BannerAction(stringResource(R.string.home_spice_action), bold = true, onClick = actions.onAdvanced)
+        }
     }
 }
 

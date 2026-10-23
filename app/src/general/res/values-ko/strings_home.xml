@@ -5,6 +5,9 @@
     <string name="home_headline_correction_only">스피커 보정만 쓰고 있어요</string>
     <string name="home_headline_original">원래 소리로 듣고 있어요</string>
     <string name="home_device_measured">%1$s · 측정된 기기</string>
+    <string name="home_spice_title">가상 저음은 양념이에요</string>
+    <string name="home_spice_body">요리에서 맛은 재료와 간이 내고 향신료는 마지막에 조금 더하듯, 소리도 EQ로 균형부터 잡는 게 먼저예요. 저음이 약한 폰이라면 고급 설정에서 「저중역 보정 크기」를 올리고 「고역 감쇠 크기」로 고음을 조금 낮춘 다음, 가상 저음은 낮게 시작해 조금씩 올려 보세요. 많이 넣으면 오히려 탁해질 수 있어요.</string>
+    <string name="home_spice_action">EQ 맞추러 가기</string>
     <string name="home_device_unmeasured">측정되지 않은 기기 · 보수적 설정</string>
     <string name="home_master_action">저음 채우기</string>
     <string name="home_strength_title">가상 저음 세기</string>
