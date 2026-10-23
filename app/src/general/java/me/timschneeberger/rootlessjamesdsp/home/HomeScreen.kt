@@ -96,6 +96,10 @@ import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.semantics.setProgress
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
@@ -175,6 +179,8 @@ class HomeActions(
     val onSpatialInfo: () -> Unit = {},
     /** "좌우 맞추기" (SpatialBalanceActivity). */
     val onXtcBalance: () -> Unit = {},
+    /** "누르는 동안 가상 저음 빼고 듣기": true while held (a temporary override with the layer silent), false on release. */
+    val onHoldWithoutVb: (Boolean) -> Unit = {},
 )
 
 private val LocalPalette = staticCompositionLocalOf<RootnotePalette> { error("RootnotePalette not provided") }
@@ -383,8 +389,58 @@ private fun BassSection(state: HomeUiState, actions: HomeActions, modifier: Modi
                 Text(linkText(state.linkLine), color = c.textSecondary, fontSize = 13.sp, lineHeight = 18.sp)
             }
         }
+        HoldWithoutVbRow(enabled = state.masterOn && state.processingOn, onHold = actions.onHoldWithoutVb)
         // A phone without a measured profile: the EQ balance first, virtual bass as a spice on top.
         if (state.measuredDeviceName == null) SpiceTip(actions)
+    }
+}
+
+/**
+ * "누르는 동안 가상 저음 빼고 듣기": while the finger is down only the virtual bass layer goes silent (same model and
+ * latency, EQ unchanged, nothing stored), so the listener hears what it adds. TalkBack: a double tap holds it for 5 s.
+ */
+@Composable
+private fun HoldWithoutVbRow(enabled: Boolean, onHold: (Boolean) -> Unit) {
+    val c = LocalPalette.current
+    var held by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    fun set(on: Boolean) { if (held != on) { held = on; onHold(on) } }
+    DisposableEffect(Unit) { onDispose { if (held) onHold(false) } }
+    LaunchedEffect(enabled) { if (!enabled) set(false) }
+    val title = stringResource(R.string.home_hold_novb_title)
+    val tapLabel = stringResource(R.string.home_hold_novb_a11y)
+    val heldState = stringResource(R.string.home_hold_novb_active)
+    Column(
+        Modifier
+            .padding(start = 16.dp, end = 16.dp, top = 8.dp)
+            .fillMaxWidth()
+            .heightIn(min = 56.dp)
+            .background(if (held) c.chipSelectedBg else Color.Transparent, RoundedCornerShape(12.dp))
+            .border(1.dp, if (held) c.chipSelectedBorder else c.divider, RoundedCornerShape(12.dp))
+            .alpha(if (enabled) 1f else 0.45f)
+            .pointerInput(enabled) {
+                if (!enabled) return@pointerInput
+                detectTapGestures(onPress = {
+                    set(true)
+                    try { tryAwaitRelease() } finally { set(false) }
+                })
+            }
+            .semantics {
+                if (!enabled) disabled()
+                stateDescription = if (held) heldState else ""
+                onClick(tapLabel) {
+                    if (enabled) scope.launch { set(true); kotlinx.coroutines.delay(5000); set(false) }
+                    true
+                }
+            }
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
+        Text(title, color = c.textPrimary, fontSize = 15.sp, fontWeight = FontWeight.Bold, lineHeight = 21.sp)
+        Text(
+            stringResource(if (held) R.string.home_hold_novb_active else R.string.home_hold_novb_line),
+            color = if (held) c.accentText else c.textSecondary, fontSize = 13.sp, lineHeight = 18.sp,
+        )
     }
 }
 

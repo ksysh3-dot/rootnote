@@ -26,6 +26,7 @@ out of date. Symbols are named so they can be searched; line numbers are left ou
 | Measurement (s26u research) | `PvbMeasure.run` sets `PvbRuntime.measuring` | Spatial off, loudness estimator held, JamesDSP out of the path. |
 | Speaker calibration ("좌우 맞추기") | `SpatialBalanceActivity.previewBalance` / `clearOverride` | A temporary override (spatial on for the by-ear step, off and virtual bass off while measuring) and `PvbRuntime.calibrating` (JamesDSP out of the path). Nothing is stored before the by-ear "저장" or "값 지우기". |
 | Paused for an excluded app | `ForegroundAppWatcher` (usage events, 1 s) → service `evaluateForegroundPause` (`ForegroundPause.shouldPause`) | Option "제외한 앱을 쓰는 동안 완전히 멈추기": while an excluded app is the main window (most recently resumed; not a picture-in-picture behind another app) and the screen is on, the session database releases every muted source (`BaseSessionDatabase.suspended`) and the audio loop suspends capture and output; everything plays as without Rootnote. Needs usage access. |
+| Hold without virtual bass | `HomeActivity` (`onHoldWithoutVb`) | Temporary override while held: the user's settings with the layer silent (`VB_LEVEL_OFF`), same model and latency; cleared on release or when the screen stops. |
 | Developer mode preview | `DevModeActivity` | Temporary override while a control is held; engine meters on while visible. |
 
 The full owner table (who writes, who clears, who reads, on which thread) is the header of `PvbRuntime`.

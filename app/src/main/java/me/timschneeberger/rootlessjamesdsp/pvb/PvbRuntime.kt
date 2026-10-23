@@ -12,7 +12,7 @@ package me.timschneeberger.rootlessjamesdsp.pvb
  * | blind comparison ([setAb], [abReturnVolume]) | LiveAbView (s26u, main) | LiveAbView.end / [endAb]; the controller ends the volume wait | controller, service route, status |
  * | [measuring] | PvbMeasure.run (its worker thread) | the same run's finally | controller (holds XTC off, matcher hold), service route |
  * | [calibrating] | SpatialBalanceActivity.previewBalance (main) | SpatialBalanceActivity.clearOverride (every exit) | service route (audio thread) |
- * | [devOverride] | DevModeActivity, SpatialStoryActivity, SpatialBalanceActivity (main) | the same screen when it stops | controller (effective settings) |
+ * | [devOverride] | DevModeActivity, SpatialStoryActivity, SpatialBalanceActivity, HomeActivity (hold without virtual bass) (main) | the same screen when it stops | controller (effective settings) |
  * | [devMeter] | DevModeActivity (main) | DevModeActivity.onStop | controller (P_DEV_METER) |
  *
  * Listeners run on the thread that made the change ([measuring] is set on a worker thread); the controller's

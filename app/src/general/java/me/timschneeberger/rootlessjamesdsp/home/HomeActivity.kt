@@ -90,6 +90,9 @@ class HomeActivity : BaseActivity() {
         }
     }
 
+    /** "누르는 동안 가상 저음 빼고 듣기" is held: its override is cleared when the screen stops. */
+    private var holdingWithoutVb = false
+
     private val actions = HomeActions(
         onMaster = { on -> onMasterChanged(on) },
         onLevel = { level ->
@@ -97,6 +100,11 @@ class HomeActivity : BaseActivity() {
         },
         onChip = { chip -> onChipTapped(chip) },
         onLink = { on -> prefs.edit().putBoolean(PvbSettings.KEY_VB_VOL_LINK, on).apply() },
+        // temporary: the user's settings as played, layer silent (same model and latency); never stored
+        onHoldWithoutVb = { held ->
+            holdingWithoutVb = held
+            PvbRuntime.setDevOverride(if (held) PvbSettings.load(prefs).copy(vbLevelDb = PvbSettings.VB_LEVEL_OFF) else null)
+        },
         onAdvanced = { startActivity(me.timschneeberger.rootlessjamesdsp.advanced.RnAdvancedActivity.intent(this)) },
         onAbout = {
             startActivity(me.timschneeberger.rootlessjamesdsp.settings.RnSettingsActivity.intent(this,
@@ -232,6 +240,7 @@ class HomeActivity : BaseActivity() {
     }
 
     override fun onStop() {
+        if (holdingWithoutVb) { holdingWithoutVb = false; PvbRuntime.setDevOverride(null) }
         if (::prefs.isInitialized) {
             prefs.unregisterOnSharedPreferenceChangeListener(prefListener)
             PvbRuntime.removeStatusListener(statusListener)
