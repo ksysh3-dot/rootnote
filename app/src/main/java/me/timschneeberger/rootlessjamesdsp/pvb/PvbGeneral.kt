@@ -196,6 +196,15 @@ object PvbGeneral {
      */
     const val WELCOME_ACTIVITY = "me.timschneeberger.rootlessjamesdsp.home.WelcomeActivity"
 
+    /** The general build's Compose settings (settings/RnSettingsActivity.kt); route = a RnSettingsActivity.Route name. */
+    const val SETTINGS_ACTIVITY = "me.timschneeberger.rootlessjamesdsp.settings.RnSettingsActivity"
+
+    /** The general build's Compose excluded-apps page (exclusions/RnExclusionsActivity.kt). */
+    const val EXCLUSIONS_ACTIVITY = "me.timschneeberger.rootlessjamesdsp.exclusions.RnExclusionsActivity"
+
+    fun settingsIntent(context: Context, route: String): Intent =
+        Intent().setClassName(context, SETTINGS_ACTIVITY).putExtra("route", route)
+
     /** A welcome screen is open (set when it is launched, cleared when it closes for good): one at a time. */
     @Volatile var welcomeOpen = false
 

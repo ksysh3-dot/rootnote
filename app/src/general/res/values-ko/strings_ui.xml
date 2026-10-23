@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="rn_minus">%1$s 줄이기</string>
+    <string name="rn_plus">%1$s 늘리기</string>
+    <string name="rn_selected">선택됨</string>
+</resources>

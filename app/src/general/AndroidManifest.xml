@@ -80,6 +80,19 @@
             android:exported="false"
             android:label="@string/dev_title"
             android:theme="@style/Theme.RootlessJamesDSP" />
+        <!-- Settings and About in Compose (settings/RnSettingsActivity.kt); one instance per page (extra "route").
+             The legacy SettingsActivity forwards here in this build. Not exported. -->
+        <activity
+            android:name="me.timschneeberger.rootlessjamesdsp.settings.RnSettingsActivity"
+            android:exported="false"
+            android:label="@string/title_activity_settings"
+            android:theme="@style/Theme.RootlessJamesDSP" />
+        <!-- Excluded apps in Compose (exclusions/RnExclusionsActivity.kt); BlocklistActivity forwards here. -->
+        <activity
+            android:name="me.timschneeberger.rootlessjamesdsp.exclusions.RnExclusionsActivity"
+            android:exported="false"
+            android:label="@string/title_activity_blocklist"
+            android:theme="@style/Theme.RootlessJamesDSP" />
         <activity android:name="me.timschneeberger.rootlessjamesdsp.activity.MainActivity">
             <intent-filter tools:node="remove">
                 <action android:name="android.intent.action.MAIN" />

@@ -22,6 +22,13 @@ class SettingsActivity : BaseActivity(),
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // General build: the settings are Compose pages (RnSettingsActivity); every caller lands there.
+        if (me.timschneeberger.rootlessjamesdsp.pvb.PvbBuild.general) {
+            startActivity(me.timschneeberger.rootlessjamesdsp.pvb.PvbGeneral.settingsIntent(this,
+                if (intent.getBooleanExtra(EXTRA_ABOUT, false)) "ABOUT" else "ROOT"))
+            finish()
+            return
+        }
         val binding = ActivitySettingsBinding.inflate(layoutInflater)
 
         setContentView(binding.root)

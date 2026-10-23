@@ -11,6 +11,12 @@ class BlocklistActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // General build: the excluded apps are a Compose page (exclusions/RnExclusionsActivity).
+        if (me.timschneeberger.rootlessjamesdsp.pvb.PvbBuild.general) {
+            startActivity(android.content.Intent().setClassName(this, me.timschneeberger.rootlessjamesdsp.pvb.PvbGeneral.EXCLUSIONS_ACTIVITY))
+            finish()
+            return
+        }
         binding = ActivityBlocklistBinding.inflate(layoutInflater)
 
         setContentView(binding.root)

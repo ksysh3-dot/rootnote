@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Shared Compose kit (ui/): words the kit's controls say to TalkBack. -->
+<resources>
+    <string name="rn_minus">Decrease %1$s</string>
+    <string name="rn_plus">Increase %1$s</string>
+    <string name="rn_selected">Selected</string>
+</resources>

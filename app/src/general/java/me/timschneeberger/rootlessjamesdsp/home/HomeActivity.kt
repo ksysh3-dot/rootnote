@@ -26,10 +26,8 @@ import androidx.core.view.WindowCompat
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import me.timschneeberger.rootlessjamesdsp.R
 import me.timschneeberger.rootlessjamesdsp.activity.BaseActivity
-import me.timschneeberger.rootlessjamesdsp.activity.BlocklistActivity
 import me.timschneeberger.rootlessjamesdsp.activity.MainActivity
 import me.timschneeberger.rootlessjamesdsp.activity.OnboardingActivity
-import me.timschneeberger.rootlessjamesdsp.activity.SettingsActivity
 import me.timschneeberger.rootlessjamesdsp.pvb.FirstRun
 import me.timschneeberger.rootlessjamesdsp.pvb.FirstWeekStore
 import me.timschneeberger.rootlessjamesdsp.pvb.HomeLogic
@@ -101,9 +99,10 @@ class HomeActivity : BaseActivity() {
         onLink = { on -> prefs.edit().putBoolean(PvbSettings.KEY_VB_VOL_LINK, on).apply() },
         onAdvanced = { startActivity(Intent(this, MainActivity::class.java)) },
         onAbout = {
-            startActivity(Intent(this, SettingsActivity::class.java).putExtra(SettingsActivity.EXTRA_ABOUT, true))
+            startActivity(me.timschneeberger.rootlessjamesdsp.settings.RnSettingsActivity.intent(this,
+                me.timschneeberger.rootlessjamesdsp.settings.RnSettingsActivity.Route.ABOUT))
         },
-        onExclusions = { startActivity(Intent(this, BlocklistActivity::class.java)) },
+        onExclusions = { startActivity(me.timschneeberger.rootlessjamesdsp.exclusions.RnExclusionsActivity.intent(this)) },
         onKillBattery = {
             startActivity(Intent(this, OnboardingActivity::class.java).putExtra(OnboardingActivity.EXTRA_BATTERY_SETUP, true))
         },
