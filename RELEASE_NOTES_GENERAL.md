@@ -7,8 +7,24 @@ The corresponding source is the tagged commit; `source-*.tar.gz` below contains 
 - Setup needs Shizuku or ADB once (the app shows the exact commands for its package on first start).
 - Android 15+: turn on "Disable screen share protections" in Developer options.
 - Apps that block audio capture (Spotify, Chrome, SoundCloud, ...) play unprocessed.
-- Measured settings exist only for the Galaxy S26 Ultra; other phones start with conservative neutral settings.
+- Measured settings exist only for the Galaxy S26 Ultra; other phones start with conservative settings based on published measurements of 92 Android phones.
 - Privacy: only settings are stored; no song titles, no recordings, nothing sent (see PRIVACY.md).
+
+## 0.9.0-beta.5
+
+측정하지 않은 폰의 시작 EQ를 실측 자료로 다시 잡고, 개발자 모드의 배음 그래프를 고쳤어요.
+
+- **측정하지 않은 폰의 시작값을 바꿨어요.** 지금까지는 EQ 없이 평평하게 시작했어요. 이제는 저역 차단 120 Hz, 저중역 +2 dB(220 Hz), 고음 −2 dB(4.5 kHz)로 시작해요.
+  - 근거는 공개된 리뷰 측정(NotebookCheck)의 안드로이드 92기종이에요. 각 폰을 직접 측정한 갤럭시 S26 Ultra와 비교해서, 저음이 가장 약한 쪽 폰들에도 무리가 없는 값으로 정했어요. 스피커 부품 데이터시트와 논문은 넘으면 안 되는 한계로만 참고했어요.
+  - S26 Ultra 측정값은 다른 연구소의 같은 폰 측정과 비교해 봤어요. 측정 조건 차이가 큰 10 kHz 이상을 빼면 대부분의 대역에서 2 dB 안쪽으로 맞았어요.
+  - 가상 저음은 그대로 +0에서 시작해요. 갤럭시 S26 Ultra는 측정값 그대로예요.
+  - 새로 설치할 때만 적용돼요. 이미 쓰시던 분의 설정은 바뀌지 않아요.
+- **개발자 모드 배음 막대:**
+  - 막대가 순간마다 나타났다 사라지던 문제를 고쳤어요. 이제 한 음이 끝나도 0.15초 동안 남아 있다가 천천히 내려가요.
+  - 동시에 나는 저음을 최대 3개까지 따로 보여 줘요. 가장 큰 음이 진하게, 나머지는 연하게 보여요.
+  - 막대를 얇게 바꿨어요.
+  - 그림에만 쓰는 부분이라 소리는 똑같아요.
+- **개발자 모드 시간 그래프:** 회색 선이 배음을 만드는 재료 저음(원음)이라고 표시를 고쳤어요.
 
 ## 0.9.0-beta.4
 
