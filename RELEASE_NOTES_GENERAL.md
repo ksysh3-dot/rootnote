@@ -10,6 +10,11 @@ The corresponding source is the tagged commit; `source-*.tar.gz` below contains 
 - Measured settings exist only for the Galaxy S26 Ultra; other phones start with conservative neutral settings.
 - Privacy: only settings are stored; no song titles, no recordings, nothing sent (see PRIVACY.md).
 
+## 0.9.0-beta.3
+
+- 측정되지 않은 폰(갤럭시 S26 Ultra 외)의 가상 저음 탭에 「가상 저음은 양념이에요」 안내를 넣었어요. 저음이 약한 폰이라면 고급 설정에서 「저중역 보정 크기」를 올리고 「고역 감쇠 크기」로 고음을 조금 낮춘 다음, 가상 저음은 낮게 시작해 조금씩 올려 보세요. 가상 저음만 많이 넣으면 오히려 탁해질 수 있어요.
+- S25+를 쓰시는 분의 피드백으로 넣은 안내예요. 다른 기기에서 써 보신 분들의 설정(개발자 모드의 공유 코드)을 보내 주시면 기기별 시작값을 만드는 데 큰 도움이 돼요.
+
 ## 0.9.0-beta.2: 0.9.0-beta.1 이후 바뀐 것
 
 폰 내장 스피커로 듣는 음악의 저음과 공간감을 살려 주는 앱 Rootnote의 베타 업데이트예요. 써 보시고 느낀 점을 알려 주시면 큰 도움이 돼요.
