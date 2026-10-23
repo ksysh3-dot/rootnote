@@ -4,8 +4,10 @@ import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.drawable.ColorDrawable
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.view.HapticFeedbackConstants
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -30,7 +32,7 @@ import me.timschneeberger.rootlessjamesdsp.utils.extensions.PermissionExtensions
  * - [thenSetup]: the first launch with permissions missing (HomeActivity). Either answer goes on to the setup
  *   screens (OnboardingActivity), like the old dialog; back on the first page closes the app.
  * - for a result (PvbGeneral.showFirstRunNotice, from the home screen, the DSP screen or the switch): RESULT_OK when
- *   confirmed, RESULT_CANCELED for "다음에" or back. "다음에" is remembered for the process
+ *   confirmed, RESULT_CANCELED for "나중에" or back. "나중에" is remembered for the process
  *   (PvbGeneral.welcomeLater): the home screen stops opening the welcome by itself, and the next time it opens (when
  *   processing is switched on) it opens on the last page.
  */
@@ -85,6 +87,9 @@ class WelcomeActivity : BaseActivity() {
         if (answered) return
         answered = true
         if (confirmed) {
+            // starting turns processing on: the same feel as the home screen's switch turning it on
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
+                window.decorView.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
             PvbGeneral.confirmFirstRun(this)
             PvbGeneral.markUnmeasuredNoticeShown(this)
         } else {
@@ -100,7 +105,7 @@ class WelcomeActivity : BaseActivity() {
         finish()
     }
 
-    /** Back on the first page: the first launch closes the app (the welcome comes again next time); else "다음에". */
+    /** Back on the first page: the first launch closes the app (the welcome comes again next time); else "나중에". */
     private fun leave() {
         if (thenSetup) finish() else answer(confirmed = false)
     }

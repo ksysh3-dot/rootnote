@@ -92,7 +92,7 @@ java -cp "$OUTH:$KOTLIN_STDLIB" HomeLogicTestKt "$HERE/../../.."
 # en/ko strings of these screens and of the first-run notice (pure Kotlin).
 OUTF="$HERE/../build/jvm-firstweek"
 rm -rf "$OUTF"; mkdir -p "$OUTF"
-$KOTLINC -classpath "$KOTLIN_STDLIB" "$APP/FirstWeek.kt" "$HERE/FirstWeekTest.kt" -d "$OUTF"
+$KOTLINC -classpath "$KOTLIN_STDLIB" "$APP/FirstWeek.kt" "$APP/KeepWords.kt" "$HERE/FirstWeekTest.kt" -d "$OUTF"
 java -cp "$OUTF:$KOTLIN_STDLIB" FirstWeekTestKt "$HERE/../../.."
 
 # JamesDSP -> PVB chain: route table, module sealing and restore of the user's values, 16-bit conversion against the

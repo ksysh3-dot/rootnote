@@ -144,7 +144,7 @@
     <string name="welcome_activity_title">시작 안내</string>
     <string name="welcome_bass_title">작은 스피커가 못 내는 저음,\n배음으로 채워요</string>
     <string name="welcome_spatial_title">소리가 폰 밖\n양옆으로 넓어져요</string>
-    <string name="welcome_hero_logo_a11y">Rootnote 표시: 이어진 음표 넷. 위의 세 음표(배음)가 차례로 나타나고, 마지막에 속이 빈 첫 음표(들리지 않는 기음)가 나타나요.</string>
+    <string name="welcome_hero_logo_a11y">%1$s 표시: 이어진 음표 넷. 위의 세 음표(배음)가 차례로 나타나고, 마지막에 속이 빈 첫 음표(들리지 않는 기음)가 나타나요.</string>
     <string name="welcome_hero_bass_a11y">폰 그림. 처음엔 작은 소리만 나오다가, 청록색 큰 물결(가상 저음)이 아래 스피커에서 퍼져요.</string>
     <string name="welcome_hero_space_a11y">위에서 본 그림: 가로로 든 폰과 그 앞의 사람. 처음엔 두 스피커 소리가 반대쪽 귀로도 새다가(점선), 그 선이 사라지고 두 소리가 양쪽 귀 옆으로 벌어져요.</string>
     <string name="welcome_start_title">이제 시작해 볼까요?</string>

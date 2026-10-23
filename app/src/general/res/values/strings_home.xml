@@ -144,7 +144,7 @@
     <string name="welcome_activity_title">Welcome</string>
     <string name="welcome_bass_title">The bass a small speaker cannot play,\nfilled in with overtones</string>
     <string name="welcome_spatial_title">The sound opens out\nbeyond the phone</string>
-    <string name="welcome_hero_logo_a11y">The Rootnote mark: four beamed notes. The three upper notes (overtones) appear one by one, then the empty first note (the fundamental you hear but is not played).</string>
+    <string name="welcome_hero_logo_a11y">The %1$s mark: four beamed notes. The three upper notes (overtones) appear one by one, then the empty first note (the fundamental you hear but is not played).</string>
     <string name="welcome_hero_bass_a11y">A phone. At first only a small sound comes out; then a large teal wave (virtual bass) spreads from the bottom speaker.</string>
     <string name="welcome_hero_space_a11y">Seen from above: the phone held sideways and the listener in front of it. At first each speaker also leaks to the far ear (dashed lines); then those lines fade and the two sounds move out beside the ears.</string>
     <string name="welcome_start_title">Ready to start?</string>

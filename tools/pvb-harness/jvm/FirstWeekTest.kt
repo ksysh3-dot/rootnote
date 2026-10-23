@@ -3,6 +3,8 @@ import me.timschneeberger.rootlessjamesdsp.pvb.FirstWeek.Page
 import me.timschneeberger.rootlessjamesdsp.pvb.KillWatch
 import me.timschneeberger.rootlessjamesdsp.pvb.KillWatch.Flags
 import me.timschneeberger.rootlessjamesdsp.pvb.QuickExclude
+import me.timschneeberger.rootlessjamesdsp.pvb.WORD_JOINER
+import me.timschneeberger.rootlessjamesdsp.pvb.keepWords
 import java.io.File
 import javax.xml.parsers.DocumentBuilderFactory
 
@@ -136,10 +138,31 @@ fun main(args: Array<String>) {
     expect("GPL-3.0" in welEn["welcome_ready_legal"]!! && "GPL-3.0" in welKo["welcome_ready_legal"]!!, "welcome: licence line")
     expect("AutoEQ" in welEn["welcome_ready_privacy_body"]!! && "AutoEQ" in welKo["welcome_ready_privacy_body"]!!,
         "welcome: the only network use is named")
+    // whole-word Korean wrapping (keepWords): joiners only inside words with Hangul, nothing lost, English untouched
+    val wj = WORD_JOINER
+    expect(keepWords("어긋나면") == "어${wj}긋${wj}나${wj}면", "joined between syllables")
+    expect(keepWords("약 0.15초") == "약 0.15${wj}초", "a number joined to its unit, the space left free")
+    expect(keepWords("Rootnote예요.\n폰") == "Rootnote${wj}예${wj}요${wj}.\n폰", "brand + ending joined; the newline free")
+    expect(keepWords("Nice to meet you!") == "Nice to meet you!", "English unchanged")
+    expect(keepWords("가́") == "가́", "nothing before a combining mark")
+    expect(keepWords("한") == "한", "decomposed Hangul left alone")
+    expect(keepWords("가😀") == "가$wj😀", "a joiner before an emoji, never inside its surrogate pair")
+    expect(keepWords(keepWords("어긋나면")) == keepWords("어긋나면"), "a second pass changes nothing")
+    for ((key, text) in welKo.filterKeys { it.startsWith("welcome_") }) {
+        val k = keepWords(text)
+        expect(k.replace(wj.toString(), "") == text, "keepWords keeps every character of $key")
+        for (i in 1 until text.length) {
+            val a = text[i - 1]
+            val b = text[i]
+            if (!a.isWhitespace() && !b.isWhitespace() && (a in '가'..'힣' || b in '가'..'힣'))
+                expect(k.contains("$a$wj$b"), "$key: no break between '$a' and '$b'")
+        }
+    }
+
     val home = welKo
     expect(home["home_exclude_title"] == "앱별 제외 (영상·게임)", "home exclusion row title")
     expect(home["home_killed_title"]!!.startsWith("시스템이 %1\$s를 종료했습니다"), "kill banner title")
 
     println("First week: onboarding pages (general skips welcome/limitations/ready, battery step unless exempt), " +
-        "kill detection (normal stops, reboot/update, failed restart), quick exclusions = manifest queries, en/ko strings: OK")
+        "kill detection (normal stops, reboot/update, failed restart), quick exclusions = manifest queries, en/ko strings, whole-word Korean wrapping: OK")
 }
