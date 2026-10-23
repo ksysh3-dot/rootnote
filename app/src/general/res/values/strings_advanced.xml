@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- General build: the advanced screen (advanced/, Compose) and its file libraries. Korean: values-ko. -->
+<resources>
+    <string name="rn_adv_service">Audio processing</string>
+    <string name="rn_adv_service_on">On. Turning it off stops capturing and plays the original sound.</string>
+    <string name="rn_adv_service_off">Off. Turn it on to see the status below.</string>
+    <string name="rn_adv_service_starting">Starting…</string>
+    <string name="rn_adv_status">Status</string>
+    <string name="rn_adv_status_off">The service is off. Turn it on with the switch above to see its status here.</string>
+    <string name="rn_adv_research_copy">Copy bass research record</string>
+    <string name="rn_adv_more">More</string>
+    <string name="rn_adv_section_tone">Tone</string>
+    <string name="rn_adv_section_output">Output and limiter</string>
+    <string name="rn_adv_section_volume">Low-mids by volume</string>
+    <string name="rn_adv_section_jdsp">JamesDSP effects</string>
+    <string name="rn_adv_eq_edit">Edit bands</string>
+    <string name="rn_adv_compander_edit">Edit response curve</string>
+    <string name="rn_adv_editor_hint">Drag on the graph to change a band. Cancel puts back the curve you started with.</string>
+    <string name="rn_adv_device_profile_manage">Manage profiles</string>
+    <string name="rn_files_actions">Options for %1$s</string>
+    <string name="rn_files_empty">No files here yet. Use Import to add one.</string>
+    <string name="rn_presets_empty">No saved presets yet. New preset saves the current settings.</string>
+    <string name="rn_files_untagged">Untagged</string>
+    <string name="rn_files_all">All</string>
+    <string name="rn_files_delete_confirm">Delete \'%1$s\'?</string>
+    <string name="rn_files_name_empty">Enter a name</string>
+</resources>

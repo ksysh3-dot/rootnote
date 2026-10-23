@@ -32,6 +32,7 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -47,6 +48,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
@@ -236,6 +238,7 @@ fun RnSwitchRow(
     line: String? = null,
     enabled: Boolean = true,
     bold: Boolean = false,
+    icon: Painter? = null,
 ) {
     val interaction = remember { MutableInteractionSource() }
     Row(
@@ -246,8 +249,32 @@ fun RnSwitchRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        if (icon != null) RowIcon(icon, enabled)
         RowText(title, line, enabled, Modifier.weight(1f), bold)
         Box(Modifier.alpha(if (enabled) 1f else 0.4f)) { RnSwitch(checked) }
+    }
+}
+
+/** A 24 dp row icon in the secondary colour (the module icons of the advanced screen). Decorative. */
+@Composable
+private fun RowIcon(icon: Painter, enabled: Boolean) {
+    Icon(icon, contentDescription = null, tint = LocalRn.current.textSecondary,
+        modifier = Modifier.size(24.dp).alpha(if (enabled) 1f else 0.4f))
+}
+
+/**
+ * The title of a group that has no switch of its own (the advanced screen's "출력 제어"): 16/22 Bold like a bold
+ * switch row's title, a heading, min 56 dp, with an optional icon.
+ */
+@Composable
+fun RnGroupTitle(title: String, icon: Painter? = null, enabled: Boolean = true) {
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 16.dp, vertical = 12.dp).semantics { heading() },
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        if (icon != null) RowIcon(icon, enabled)
+        RowText(title, null, enabled, Modifier.weight(1f), bold = true)
     }
 }
 

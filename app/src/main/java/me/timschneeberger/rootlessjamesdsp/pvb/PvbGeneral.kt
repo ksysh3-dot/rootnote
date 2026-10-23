@@ -172,6 +172,21 @@ object PvbGeneral {
         if (PvbBuild.general) Intent().setClassName(context.packageName, HOME_ACTIVITY)
         else Intent(context, me.timschneeberger.rootlessjamesdsp.activity.MainActivity::class.java)
 
+    /** The general build's advanced screen (src/general, Compose); named by string like [HOME_ACTIVITY]. */
+    const val ADVANCED_ACTIVITY = "me.timschneeberger.rootlessjamesdsp.advanced.RnAdvancedActivity"
+
+    /**
+     * The advanced screen with what MainActivity was started with (a file VIEW and its read grant, the audio-effect
+     * panel, the tile's long press, the onboarding's capture prompt). General build only.
+     */
+    fun advancedIntent(context: Context, from: Intent?): Intent = Intent().setClassName(context.packageName, ADVANCED_ACTIVITY).apply {
+        if (from == null) return@apply
+        action = from.action
+        data = from.data
+        from.extras?.let { putExtras(it) }
+        addFlags(from.flags and Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+
     /** Developer mode screen of the general build (src/general, Compose); named by string like [HOME_ACTIVITY]. */
     const val DEVMODE_ACTIVITY = "me.timschneeberger.rootlessjamesdsp.devmode.DevModeActivity"
     /** pvb_flags: developer-mode consent given, gauge style, warning counts and hidden warnings. */

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="rn_adv_service">오디오 처리</string>
+    <string name="rn_adv_service_on">켜져 있어요. 끄면 소리를 받지 않고 원래 소리로 재생돼요.</string>
+    <string name="rn_adv_service_off">꺼져 있어요. 켜면 아래에 상태가 보여요.</string>
+    <string name="rn_adv_service_starting">켜는 중…</string>
+    <string name="rn_adv_status">상태</string>
+    <string name="rn_adv_status_off">서비스가 꺼져 있습니다. 위의 스위치로 켜면 상태가 여기에 표시됩니다.</string>
+    <string name="rn_adv_research_copy">저음 연구 기록 복사</string>
+    <string name="rn_adv_more">더보기</string>
+    <string name="rn_adv_section_tone">음색 보정</string>
+    <string name="rn_adv_section_output">출력과 리미터</string>
+    <string name="rn_adv_section_volume">볼륨에 따른 저중역</string>
+    <string name="rn_adv_section_jdsp">JamesDSP 효과</string>
+    <string name="rn_adv_eq_edit">밴드 편집</string>
+    <string name="rn_adv_compander_edit">응답 곡선 편집</string>
+    <string name="rn_adv_editor_hint">그래프를 끌어서 밴드를 바꿔요. 취소하면 처음 곡선으로 돌아가요.</string>
+    <string name="rn_adv_device_profile_manage">프로파일 관리</string>
+    <string name="rn_files_actions">%1$s 옵션</string>
+    <string name="rn_files_empty">아직 파일이 없어요. 가져오기로 추가하세요.</string>
+    <string name="rn_presets_empty">저장된 프리셋이 없어요. 새 프리셋으로 지금 설정을 저장하세요.</string>
+    <string name="rn_files_untagged">태그 없음</string>
+    <string name="rn_files_all">전체</string>
+    <string name="rn_files_delete_confirm">\'%1$s\' 파일을 삭제할까요?</string>
+    <string name="rn_files_name_empty">이름을 입력하세요</string>
+</resources>

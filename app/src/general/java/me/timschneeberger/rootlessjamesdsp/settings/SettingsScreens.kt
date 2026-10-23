@@ -71,6 +71,7 @@ import me.timschneeberger.rootlessjamesdsp.ui.RnEndSpace
 import me.timschneeberger.rootlessjamesdsp.ui.RnInputDialog
 import me.timschneeberger.rootlessjamesdsp.ui.RnNavRow
 import me.timschneeberger.rootlessjamesdsp.ui.RnNote
+import me.timschneeberger.rootlessjamesdsp.ui.RnNumberInput
 import me.timschneeberger.rootlessjamesdsp.ui.RnPage
 import me.timschneeberger.rootlessjamesdsp.ui.RnSectionTitle
 import me.timschneeberger.rootlessjamesdsp.ui.RnSliderRow
@@ -276,33 +277,8 @@ private fun AudioPage(host: RnSettingsActivity) {
         RnNavRow(stringResource(R.string.audio_format_optimization_refresh), enabled = benchmark, chevron = false) { runBenchmark() }
         RnEndSpace()
     }
-    if (editBuffer) NumberInput(stringResource(R.string.audio_format_buffer_size), app.float(kBuf, defBuf), 128f..16384f, 128f,
+    if (editBuffer) RnNumberInput(stringResource(R.string.audio_format_buffer_size), app.float(kBuf, defBuf), 128f..16384f, 128f,
         unit.trim(), onDone = { setBuffer(it); editBuffer = false }, onDismiss = { editBuffer = false })
-}
-
-/** The legacy slider's "값 편집" input: a number in range, a multiple of [step]. */
-@Composable
-fun NumberInput(
-    title: String, value: Float, range: ClosedFloatingPointRange<Float>, step: Float, suffix: String?,
-    onDone: (Float) -> Unit, onDismiss: () -> Unit, decimals: Int = if (step % 1f == 0f) 0 else 2,
-) {
-    val formatError = stringResource(R.string.slider_dialog_format_error)
-    val stepError = stringResource(R.string.slider_dialog_step_error, step.toInt().coerceAtLeast(1))
-    RnInputDialog(
-        title = stringResource(R.string.slider_dialog_title), hint = title,
-        initial = if (decimals == 0) value.toInt().toString() else String.format(Locale.ROOT, "%.${decimals}f", value),
-        suffix = suffix, number = true,
-        validate = { t ->
-            val v = t.replace(',', '.').toFloatOrNull()
-            when {
-                v == null || v < range.start || v > range.endInclusive -> formatError
-                step >= 1f && step % 1f == 0f && ((v - range.start) % step) != 0f -> stepError
-                else -> null
-            }
-        },
-        onDone = { t -> t.replace(',', '.').toFloatOrNull()?.let(onDone) },
-        onDismiss = onDismiss,
-    )
 }
 
 // ------------------------------------------------------------------------------------------------ device profiles

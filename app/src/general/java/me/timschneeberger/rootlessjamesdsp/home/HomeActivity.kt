@@ -50,7 +50,7 @@ import me.timschneeberger.rootlessjamesdsp.utils.extensions.PermissionExtensions
 import timber.log.Timber
 
 /**
- * Launch screen of the general build (Rootnote). The DSP screen (MainActivity) is reached through "Advanced
+ * Launch screen of the general build (Rootnote). The DSP screen (advanced/RnAdvancedActivity) is reached through "Advanced
  * settings"; the s26u build keeps MainActivity as its launcher and never contains this class.
  *
  * The master row is the general build's processing switch: on = PVB processing (pvb_enable) and virtual bass
@@ -97,7 +97,7 @@ class HomeActivity : BaseActivity() {
         },
         onChip = { chip -> onChipTapped(chip) },
         onLink = { on -> prefs.edit().putBoolean(PvbSettings.KEY_VB_VOL_LINK, on).apply() },
-        onAdvanced = { startActivity(Intent(this, MainActivity::class.java)) },
+        onAdvanced = { startActivity(me.timschneeberger.rootlessjamesdsp.advanced.RnAdvancedActivity.intent(this)) },
         onAbout = {
             startActivity(me.timschneeberger.rootlessjamesdsp.settings.RnSettingsActivity.intent(this,
                 me.timschneeberger.rootlessjamesdsp.settings.RnSettingsActivity.Route.ABOUT))

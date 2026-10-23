@@ -60,7 +60,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
 import me.timschneeberger.rootlessjamesdsp.R
+import java.util.Locale
 import kotlin.math.abs
+import kotlin.math.floor
 import kotlin.math.roundToInt
 
 /**
@@ -116,7 +118,7 @@ fun RnSliderRow(
             }
             RnTrack(
                 value = shown, range = range, default = default, enabled = enabled, name = title, valueText = valueText(shown),
-                snap = ::snap,
+                snap = ::snap, tick = maxOf(step, (range.endInclusive - range.start) / HAPTIC_TICKS),
                 onDrag = { v, done ->
                     dragging = !done
                     local = v
@@ -170,6 +172,7 @@ private fun RnTrack(
     name: String,
     valueText: String,
     snap: (Float) -> Float,
+    tick: Float,
     onDrag: (Float, Boolean) -> Unit,
     modifier: Modifier,
 ) {
@@ -191,7 +194,8 @@ private fun RnTrack(
         return snap(r.start + f * (r.endInclusive - r.start))
     }
     fun emit(v: Float, done: Boolean) {
-        val idx = ((v - rangeNow.start) * 1000f).roundToInt()
+        // one tick per step, but at most about HAPTIC_TICKS per sweep (a fine slider would buzz otherwise)
+        val idx = if (tick > 0f) floor((v - rangeNow.start) / tick + 1e-4f).toInt() else ((v - rangeNow.start) * 1000f).roundToInt()
         if (idx != lastIndex) {
             lastIndex = idx
             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -245,4 +249,64 @@ private fun RnTrack(
                 .background(c.thumb, CircleShape)
         )
     }
+}
+
+/** At most this many haptic ticks across a slider's whole range. */
+private const val HAPTIC_TICKS = 24f
+
+/**
+ * The legacy slider's "값 편집" input: a number in [range]. With [strictStep] it must also be a multiple of [step]
+ * counted from the range start (the legacy sliders with a set increment); otherwise any value in range is taken.
+ */
+@Composable
+fun RnNumberInput(
+    title: String, value: Float, range: ClosedFloatingPointRange<Float>, step: Float, suffix: String?,
+    onDone: (Float) -> Unit, onDismiss: () -> Unit, decimals: Int = if (step % 1f == 0f) 0 else 2,
+    strictStep: Boolean = step >= 1f && step % 1f == 0f,
+) {
+    val formatError = stringResource(R.string.slider_dialog_format_error)
+    val stepError = stringResource(R.string.slider_dialog_step_error, step.toInt().coerceAtLeast(1))
+    fun onStep(v: Float): Boolean {
+        if (!strictStep || step <= 0f) return true
+        val n = (v - range.start) / step
+        return abs(n - Math.round(n)) < 1e-3f
+    }
+    RnInputDialog(
+        title = stringResource(R.string.slider_dialog_title), hint = title,
+        initial = if (decimals == 0) Math.round(value).toString() else String.format(Locale.ROOT, "%.${decimals}f", value),
+        suffix = suffix, number = true,
+        validate = { t ->
+            val v = t.replace(',', '.').toFloatOrNull()
+            when {
+                v == null || v < range.start || v > range.endInclusive -> formatError
+                !onStep(v) -> stepError
+                else -> null
+            }
+        },
+        onDone = { t -> t.replace(',', '.').toFloatOrNull()?.let(onDone) },
+        onDismiss = onDismiss,
+    )
+}
+
+/** [RnSliderRow] whose title opens [RnNumberInput] (the legacy MaterialSeekbarPreference: slider plus "값 편집"). */
+@Composable
+fun RnValueSlider(
+    title: String,
+    value: Float,
+    range: ClosedFloatingPointRange<Float>,
+    step: Float,
+    valueText: (Float) -> String,
+    onChange: (Float) -> Unit,
+    line: String? = null,
+    default: Float? = null,
+    enabled: Boolean = true,
+    suffix: String? = null,
+    decimals: Int = if (step % 1f == 0f) 0 else 2,
+    strictStep: Boolean = false,
+) {
+    var editing by remember { mutableStateOf(false) }
+    RnSliderRow(title, value.coerceIn(range.start, range.endInclusive), range, step, valueText, onChange, line, default,
+        enabled, onEdit = { editing = true })
+    if (editing) RnNumberInput(title, value, range, step, suffix, onDone = { onChange(it); editing = false },
+        onDismiss = { editing = false }, decimals = decimals, strictStep = strictStep)
 }

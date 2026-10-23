@@ -93,6 +93,13 @@
             android:exported="false"
             android:label="@string/title_activity_blocklist"
             android:theme="@style/Theme.RootlessJamesDSP" />
+        <!-- Advanced settings in Compose (advanced/RnAdvancedActivity.kt); MainActivity forwards every start here in
+             this build (files opened with the app, the audio-effect panel, the tile's long press). Not exported. -->
+        <activity
+            android:name="me.timschneeberger.rootlessjamesdsp.advanced.RnAdvancedActivity"
+            android:exported="false"
+            android:label="@string/home_advanced_title"
+            android:theme="@style/Theme.RootlessJamesDSP" />
         <activity android:name="me.timschneeberger.rootlessjamesdsp.activity.MainActivity">
             <intent-filter tools:node="remove">
                 <action android:name="android.intent.action.MAIN" />

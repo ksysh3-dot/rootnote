@@ -21,7 +21,12 @@ import me.timschneeberger.rootlessjamesdsp.utils.Constants
  * [dsp]: a JamesDSP namespace (dsp_*). The engine does not watch those files; like the legacy
  * PreferenceGroupFragment, every change in the file sends ACTION_PREFERENCES_UPDATED so the service re-reads them.
  */
-class RnPrefsFile(val prefs: SharedPreferences, private val dsp: Boolean, private val context: Context) {
+class RnPrefsFile(
+    val prefs: SharedPreferences,
+    private val dsp: Boolean,
+    private val context: Context,
+    private val name: String? = null,
+) {
     internal var version by mutableIntStateOf(0)
 
     internal val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ ->
@@ -45,6 +50,20 @@ class RnPrefsFile(val prefs: SharedPreferences, private val dsp: Boolean, privat
     fun int(key: String, default: Int): Int { version; return prefs.getInt(key, default) }
     fun contains(key: String): Boolean { version; return prefs.contains(key) }
 
+    /** Reads several values at once ([PvbSettings.load] and the like); the caller is redrawn on any change. */
+    fun <T> read(block: (SharedPreferences) -> T): T { version; return block(prefs) }
+
+    /**
+     * The file was replaced on disk (a preset load, the revert, a profile switch): JamesDSP files are re-read
+     * (MODE_MULTI_PROCESS reloads when the file changed) and every reader is redrawn. Reloading does not call the
+     * change listeners, so this is the only signal.
+     */
+    @Suppress("DEPRECATION")
+    fun reload() {
+        if (dsp && name != null) context.getSharedPreferences(name, Context.MODE_MULTI_PROCESS)
+        version++
+    }
+
     fun put(key: String, value: Boolean) = prefs.edit().putBoolean(key, value).apply()
     fun put(key: String, value: String) = prefs.edit().putString(key, value).apply()
     fun put(key: String, value: Float) = prefs.edit().putFloat(key, value).apply()
@@ -61,7 +80,7 @@ class RnPrefsFile(val prefs: SharedPreferences, private val dsp: Boolean, privat
 fun rememberPrefsFile(name: String, dsp: Boolean = name.startsWith("dsp_")): RnPrefsFile {
     val context = LocalContext.current.applicationContext
     val file = remember(name) {
-        RnPrefsFile(context.getSharedPreferences(name, if (dsp) Context.MODE_MULTI_PROCESS else Context.MODE_PRIVATE), dsp, context)
+        RnPrefsFile(context.getSharedPreferences(name, if (dsp) Context.MODE_MULTI_PROCESS else Context.MODE_PRIVATE), dsp, context, name)
     }
     DisposableEffect(file) {
         // SharedPreferences keeps listeners weakly: the file object holds it strongly for as long as it is registered

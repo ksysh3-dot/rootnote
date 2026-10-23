@@ -146,6 +146,14 @@ class MainActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // General build: the advanced screen is the Compose RnAdvancedActivity. Every way in (home, a file opened
+        // with the app, the audio-effect panel, the tile's long press, app compatibility) is forwarded there.
+        if (PvbBuild.general) {
+            startActivity(PvbGeneral.advancedIntent(this, intent))
+            finish()
+            return
+        }
+
         savedInstanceState?.let {
             hasLoadFailed = it.getBoolean(STATE_LOAD_FAILED)
         }
