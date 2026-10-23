@@ -10,6 +10,15 @@ The corresponding source is the tagged commit; `source-*.tar.gz` below contains 
 - Measured settings exist only for the Galaxy S26 Ultra; other phones start with conservative neutral settings.
 - Privacy: only settings are stored; no song titles, no recordings, nothing sent (see PRIVACY.md).
 
+## 0.9.0-beta.4
+
+측정하지 않은 폰의 기본값을 아주 보수적으로 바꾸고, 직접 맞추기 쉽게 도구를 넣었어요.
+
+- **측정하지 않은 폰은 가상 저음을 +0(가장 약하게)으로 시작해요.** 스피커가 어디까지 버티는지 앱이 알 수 없어서, 기본값은 켜기만 하고 더 올릴지는 들으면서 정하시도록 했어요. 갤럭시 S26 Ultra는 측정값(+4) 그대로예요. 이미 쓰시던 분의 설정은 바뀌지 않아요(새로 설치할 때만 적용).
+- **누르는 동안 가상 저음 빼고 듣기:** 홈 가상 저음 탭에서 누르고 있는 동안 가상 저음만 빠져요. EQ는 그대로라서, 내 폰에서 가상 저음이 플러스인지 마이너스인지 바로 비교할 수 있어요.
+- **리미터 경고:** 세기를 너무 올려 소리가 눌리기 시작하면 홈에 "한 칸 낮추기"가 떠요.
+- **내 설정 복사 (앱 정보):** 앱 버전, 기기 모델, 소리 설정값만 한 번에 복사돼요. 잘 맞춘 설정을 보내 주시면 기종별 시작값을 만드는 데 써요.
+
 ## 0.9.0-beta.3
 
 - 측정되지 않은 폰(갤럭시 S26 Ultra 외)의 가상 저음 탭에 「가상 저음은 양념이에요」 안내를 넣었어요. 저음이 약한 폰이라면 고급 설정에서 「저중역 보정 크기」를 올리고 「고역 감쇠 크기」로 고음을 조금 낮춘 다음, 가상 저음은 낮게 시작해 조금씩 올려 보세요. 가상 저음만 많이 넣으면 오히려 탁해질 수 있어요.

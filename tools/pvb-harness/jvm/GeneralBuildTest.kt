@@ -76,8 +76,8 @@ fun main(args: Array<String>) {
     check(s[PvbSettings.KEY_VB_STRENGTH_DB] == 4f && s[PvbSettings.KEY_VB_VOL_LINK] == true,
         "s26u profile: virtual bass +4 with the volume link on: $s")
     // unmeasured phones: EQ first, virtual bass added low (the home "spice" tip)
-    check(n[PvbSettings.KEY_VB_STRENGTH_DB] == 2f && n[PvbSettings.KEY_VB_VOL_LINK] == true,
-        "neutral profile: virtual bass +2 with the volume link on: $n")
+    check(n[PvbSettings.KEY_VB_STRENGTH_DB] == 0f && n[PvbSettings.KEY_VB_VOL_LINK] == true,
+        "neutral profile: virtual bass +0 (weakest step) with the volume link on: $n")
 
     // Values written on a fresh general install: processing off until the first-run notice, caps applied.
     val wn = DeviceProfiles.valuesFor(neutral, SafeCaps.GENERAL)

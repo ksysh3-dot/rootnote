@@ -2,7 +2,7 @@
   "id": "neutral",
   "name": "Neutral (not measured)",
   "measured": false,
-  "_note": "Conservative defaults for any phone that has not been measured: protective high-pass only, flat EQ, 3 dB of output headroom. Match-on-disable is off, so the S26U-tuned loudness weighting of the matcher is never used; the S26U speaker and limiter curves are not shown. Virtual bass starts at +2 (not +4 as on the S26U): on an unmeasured speaker the EQ balance comes first and virtual bass is added low (2026-10-23, S25+ feedback; the home tip says the same).",
+  "_note": "Conservative defaults for any phone that has not been measured: protective high-pass only, flat EQ, 3 dB of output headroom. Match-on-disable is off, so the S26U-tuned loudness weighting of the matcher is never used; the S26U speaker and limiter curves are not shown. Virtual bass starts at +0, the weakest step (not +4 as on the S26U): nothing is known about an unmeasured speaker, so the default only switches it on and every increase is left to the listener; the EQ balance comes first (2026-10-23, S25+ feedback; the home tip says the same).",
   "match": {
     "manufacturer": [],
     "model_prefixes": []
@@ -26,7 +26,7 @@
     "pvb_dyn_enable": false,
     "pvb_vb_enable": false,
     "pvb_vb_vol_link": true,
-    "pvb_vb_strength_db": 2
+    "pvb_vb_strength_db": 0
   },
   "loudness_weighting": "none",
   "short_name": "",
