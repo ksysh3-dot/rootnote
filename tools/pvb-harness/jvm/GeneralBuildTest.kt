@@ -73,9 +73,11 @@ fun main(args: Array<String>) {
         s[PvbSettings.KEY_HI_Q] == d.hiQ && s[PvbSettings.KEY_OUT_DB] == d.outDb && s[PvbSettings.KEY_CEIL_DB] == d.ceilDb &&
         s[PvbSettings.KEY_RELEASE_MS] == d.releaseMs && s[PvbSettings.KEY_MATCH_ON_DISABLE] == d.matchOnDisable,
         "s26u profile must equal the s26u defaults: $s")
-    for (pr in listOf(n, s))
-        check(pr[PvbSettings.KEY_VB_STRENGTH_DB] == 4f && pr[PvbSettings.KEY_VB_VOL_LINK] == true,
-            "both profiles: virtual bass +4 with the volume link on: $pr")
+    check(s[PvbSettings.KEY_VB_STRENGTH_DB] == 4f && s[PvbSettings.KEY_VB_VOL_LINK] == true,
+        "s26u profile: virtual bass +4 with the volume link on: $s")
+    // unmeasured phones: EQ first, virtual bass added low (the home "spice" tip)
+    check(n[PvbSettings.KEY_VB_STRENGTH_DB] == 2f && n[PvbSettings.KEY_VB_VOL_LINK] == true,
+        "neutral profile: virtual bass +2 with the volume link on: $n")
 
     // Values written on a fresh general install: processing off until the first-run notice, caps applied.
     val wn = DeviceProfiles.valuesFor(neutral, SafeCaps.GENERAL)
