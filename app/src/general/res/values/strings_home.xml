@@ -164,7 +164,7 @@
     <string name="welcome_know_speaker_body">Earphones and Bluetooth play the original sound. Apps that block audio capture (for example Spotify, Chrome, SoundCloud) are not processed either.</string>
     <string name="welcome_know_others_title">Use other audio effect apps separately</string>
     <string name="welcome_know_others_body">With both on, processing can stop.</string>
-    <string name="welcome_know_volume">Long listening at full volume can make the speakers hot.</string>
+    <string name="welcome_know_volume">Long listening at full volume can heat the speakers.</string>
     <string name="welcome_ready_title">Setup happens once</string>
     <string name="welcome_ready_body">No root needed.</string>
     <string name="welcome_ready_grant_title">Grant permissions once</string>

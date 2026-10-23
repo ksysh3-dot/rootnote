@@ -259,7 +259,11 @@ private fun WelcomeBottomBar(last: Boolean, reduceMotion: Boolean, actions: Welc
     }
 }
 
-/** [enabled] false only while the button fades in or out: it keeps its look, it just does not answer. */
+/**
+ * [enabled] false only while the button fades in or out: it keeps its look, it just does not answer. Unlike the
+ * family's buttons it also pads 12 dp vertically (a wrapped label at large font sizes grows the pill instead of
+ * touching its edge) and clips its ripple to the pill.
+ */
 @Composable
 private fun PillButton(label: String, filled: Boolean, enabled: Boolean, modifier: Modifier, onClick: () -> Unit) {
     val c = rootnotePalette()
@@ -428,8 +432,8 @@ private fun ReadyText(state: WelcomeState, actions: WelcomeActions) {
 }
 
 /**
- * A row: a 24 dp symbol (2 dp round strokes, docs/DESIGN.md 7), the title (16/22 bold) and its line (13/18), like
- * the home screen's navigation rows without the chevron. No dividers, no card. [extra] goes under the line (links).
+ * A row: a 24 dp symbol (2 dp round strokes, docs/DESIGN.md 7), the title (16/22 bold, like the home screen's switch
+ * rows and DESIGN.md's 행 제목) and its line (13/18). No dividers, no card. [extra] goes under the line (links).
  */
 @Composable
 private fun InfoRow(symbol: Glyph, tint: Color, title: String, body: String, extra: (@Composable () -> Unit)? = null) {
