@@ -4,6 +4,7 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.exp
 import kotlin.math.ln
+import kotlin.math.pow
 import kotlin.math.sin
 
 /**
@@ -36,14 +37,17 @@ enum class DevTestKind {
 class DevTestSignal {
     private var kind: DevTestKind? = null
     private var toneHz = 55.0
+    /** Gain of the two-interval bursts (step 1 of bass fit sets their level), linear. */
+    private var ifcGain = 1.0
     private var t = 0L            // frames since the sound started
     private var sr = 48000
     private val phase = DoubleArray(4)
 
     /** Restarts with [kind] (null = silence). */
-    fun set(kind: DevTestKind?, toneHz: Double) {
+    fun set(kind: DevTestKind?, toneHz: Double, levelDb: Double = 0.0) {
         this.kind = kind
         this.toneHz = toneHz
+        ifcGain = 10.0.pow(levelDb.coerceAtMost(0.0) / 20)
         t = 0
         phase.fill(0.0)
         rng = 0x2545F4914F6CDD1DL
@@ -192,7 +196,7 @@ class DevTestSignal {
     // Two-interval trial: one burst of [IFC_LEN_S] starting at [start], 40 ms raised-cosine edges (no click to hear).
     private fun ifcTone(time: Double, start: Double): Double {
         val env = noteEnv(time - start, IFC_LEN_S, 0.04)
-        return if (env == 0.0) 0.0 else FIT_TONE_AMP * env * sin(advance(0, toneHz))
+        return if (env == 0.0) 0.0 else FIT_TONE_AMP * ifcGain * env * sin(advance(0, toneHz))
     }
 
     // E1 A1 D2 G1, 0.9 s each, bass with a little second harmonic under a soft chord (Em Am Dm G); once, then silence.
@@ -322,7 +326,7 @@ class DevTestSignal {
  * thread ([render]); the screen calls [stop] whenever it leaves (onStop), so a test sound never outlives the screen.
  */
 object DevTestSound {
-    data class Request(val kind: DevTestKind, val toneHz: Double, val serial: Int)
+    data class Request(val kind: DevTestKind, val toneHz: Double, val serial: Int, val levelDb: Double = 0.0)
 
     @Volatile var request: Request? = null
         private set
@@ -332,8 +336,9 @@ object DevTestSound {
 
     val playing: Boolean get() = request != null
 
-    fun start(kind: DevTestKind, toneHz: Double = 55.0) {
-        request = Request(kind, toneHz, ++serial)
+    /** [levelDb]: the two-interval bursts' level re their full level (bass fit step 1), at most 0. */
+    fun start(kind: DevTestKind, toneHz: Double = 55.0, levelDb: Double = 0.0) {
+        request = Request(kind, toneHz, ++serial, levelDb)
     }
 
     fun stop() {
@@ -356,7 +361,7 @@ object DevTestSound {
     private fun sync(): Boolean? {
         val r = request ?: run { playingSerial = -1; return null }
         if (r.serial != playingSerial) {
-            signal.set(r.kind, r.toneHz)
+            signal.set(r.kind, r.toneHz, r.levelDb)
             playingSerial = r.serial
         }
         return true

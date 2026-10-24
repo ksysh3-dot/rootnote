@@ -36,6 +36,8 @@
     <string name="fit_question_of">문제 %1$d · 최대 %2$d</string>
     <string name="fit_floor_title">어느 쪽에서 소리가 났나요?</string>
     <string name="fit_floor_body">소리가 두 번 중 한 번 나요. 아무 소리도 안 날 때도 있어요. 음은 안 들리고 떨림이나 잡음만 났다면 \"윙·지직만\"을 골라 주세요.</string>
+    <string name="fit_floor_part_ref">앞부분: 가운데 음 하나가 점점 작아져요. 이 볼륨에서 얼마나 작은 소리까지 들리는지 재요.</string>
+    <string name="fit_floor_part_low">뒷부분: 음이 점점 낮아져요. 방금 겨우 들린 크기보다 조금 크게 들려줘요.</string>
     <string name="fit_interval">%1$d번째</string>
     <string name="fit_interval_a11y">%1$d번째 구간</string>
     <string name="fit_floor_first">첫 번째</string>

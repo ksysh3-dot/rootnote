@@ -9,10 +9,12 @@ import me.timschneeberger.rootlessjamesdsp.pvb.FitRng
 import me.timschneeberger.rootlessjamesdsp.pvb.FitStage
 import me.timschneeberger.rootlessjamesdsp.pvb.FitVariant
 import me.timschneeberger.rootlessjamesdsp.pvb.FloorStaircase
+import me.timschneeberger.rootlessjamesdsp.pvb.HearingThreshold
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbSettings
 import me.timschneeberger.rootlessjamesdsp.pvb.ShapeGrid
 import kotlin.math.abs
 import kotlin.math.exp
+import kotlin.math.pow
 import kotlin.math.log2
 import kotlin.system.exitProcess
 
@@ -36,7 +38,7 @@ private class Listener(
 
     fun run(s: BassFitSession): BassFitSession {
         var guard = 0
-        while (s.stage != FitStage.DONE && guard++ < 400) {
+        while (s.stage != FitStage.DONE && guard++ < 500) {
             when (val p = s.prompt) {
                 is FitPrompt.Floor -> {
                     val t = p.trial
@@ -44,7 +46,11 @@ private class Listener(
                     s.answerFloor(when (t) {
                         is FloorStaircase.Trial.Catch -> if (catchLiar) FloorStaircase.Choice.FIRST else FloorStaircase.Choice.NEITHER
                         is FloorStaircase.Trial.Tone -> {
-                            val heard = u() < 1 / (1 + exp(-log2(t.hz / floorHz) / 0.06))
+                            // threshold -35 dB at 300 Hz; ISO 226 hearing; speaker 24 dB/oct, -10 dB re 300 Hz at floorHz
+                            val fc = floorHz * 2.0.pow(10.0 / 24)
+                            val sp = minOf(0.0, 24 * log2(t.hz / fc)) - minOf(0.0, 24 * log2(300.0 / fc))
+                            val sl = t.levelDb + 35 - (HearingThreshold.db(t.hz) - HearingThreshold.db(300.0)) + sp
+                            val heard = u() < 1 / (1 + exp(-sl / 1.0))
                             when {
                                 heard -> if (t.inFirst) FloorStaircase.Choice.FIRST else FloorStaircase.Choice.SECOND
                                 u() < 0.5 -> FloorStaircase.Choice.NEITHER
@@ -178,7 +184,7 @@ fun main() {
         val l = Listener(floorHz = 180.0, idealDb = 4.0, breakDb = 9.0, seed = 12)
         val s = l.run(BassFitSession(1212L, 4.0, me.timschneeberger.rootlessjamesdsp.pvb.FitScope.FLOOR))
         val r = s.result
-        check(s.stage == FitStage.DONE && r.floorHz != null && l.log.all { it.length == 1 } && r.floorQuestions in 10..30 &&
+        check(s.stage == FitStage.DONE && r.floorHz != null && l.log.all { it.length == 1 } && r.floorQuestions in 25..75 && r.refThresholdDb != null &&
             r.floorCatch >= 2 && r.layerAudible == null && r.limitDb == null,
             "floor only: ${r.floorQuestions} questions (${r.floorCatch} catch), floor ${r.floorHz?.toInt()} Hz, nothing else asked")
         val lb = Listener(floorHz = 180.0, idealDb = 4.0, breakDb = 9.0, seed = 13)
