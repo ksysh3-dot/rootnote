@@ -12,7 +12,7 @@ The corresponding source is the tagged commit; `source-*.tar.gz` below contains 
 
 ## 0.9.0-beta.8
 
-(0.9.0-beta.7 was tagged but never built: the build ran out of memory. This is the same release.)
+(0.9.0-beta.7은 태그만 만들어지고 빌드 중 메모리가 모자라 실패했어요. 내용은 같아요.)
 
 
 저음 맞추기 3단계(찌그러짐 한계)의 답을 셋으로 나눴어요.
