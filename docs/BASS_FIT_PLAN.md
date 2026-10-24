@@ -115,16 +115,27 @@ within 0.2 octave, so the latency only has to be roughly known.
   body, clipping at high volume (flagged). Host test (SpeakerProbeTest): a simulated speaker's -10 dB point found
   within 1/6 octave at 113-197 Hz with a microphone high-pass at 80 Hz; level and a 0.3 s latency error do not move it.
 
-## Validation against the UMIK-1 (planned)
+## Validation against the UMIK-1
 
-On the S26 Ultra, speakers of known floor made with the engine's high-pass (e.g. 120/150/180/220 Hz, hidden from the
-listener, random order), several volumes, 3-5 repeats with fresh seeds:
-- criterion: the UMIK-1 -10 dB point at the listening position for the ear floor and the microphone floor
-  (correlation, slope, mean difference, Bland-Altman); UMIK-1 distortion knee for the break-up limit; UMIK-1 band
-  levels for the room check (pass/fail agreement in quiet, fan, TV rooms);
-- reliability: ICC and standard error of measurement for floor and limit, kappa for the categorical results;
+Validation mode (bass fit screen, "검증 모드"; `pvb/BassFitValidation.kt`):
+- **Repeated listening runs:** step 1 or step 3 alone (`FitScope`), under virtual speakers of known floor: the
+  speaker as it is, or the engine's high-pass at 120/150/180/220 Hz (2nd order) on top of the test settings. The
+  chosen conditions x 1/2/3/5 repeats are shuffled (no condition twice in a row), hidden from the listener, each run
+  with a fresh seed; the room is checked once per block; no result is shown between runs (a break screen only).
+- **UMIK-1 sounds:** per condition, shown: 20 s pink noise (40-4000 Hz, -22 dBFS RMS) for REW's RTA with the UMIK-1
+  at the ears, then the probe sweep with the phone microphone (its reference floor is logged).
+- **Log:** one CSV row per run in the app's files (`bass_fit_validation.csv`; copy, send, clear): time, model, app
+  version, kind (ear_floor_hz / ear_breakup_db / mic_floor_hz), condition, seed, volume, value, reliable, questions,
+  catch trials, false alarms, microphone floor, clipped, latency, room pass and margin.
+
+Analysis (outside the app):
+- criterion: the UMIK-1 -10 dB point per condition (from the RTA) against the ear floor and the microphone floor
+  (correlation, slope, mean difference, Bland-Altman); the UMIK-1 distortion knee against the break-up level; UMIK-1
+  band levels against the room check (pass/fail agreement in quiet, fan, TV rooms);
+- reliability: ICC and standard error of measurement per condition across repeats, kappa for categorical results;
 - preferences (strength, shape) have no physical criterion: test-retest and the blind music check.
-Needs a validation mode (one step, a hidden condition, results to CSV) and REW recording alongside.
+One phone and one listener: the result holds for this phone and this ear; more listeners show the spread between
+people.
 
 ## Open decisions
 

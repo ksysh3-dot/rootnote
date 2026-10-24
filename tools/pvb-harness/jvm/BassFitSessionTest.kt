@@ -172,6 +172,39 @@ fun main() {
             "first X of the ABX is A in ${firstX.count { it }} of ${firstX.size} runs (about half)")
     }
 
+    // ---------------------------------------------------------------------------------------- one step alone
+    run {
+        val l = Listener(floorHz = 180.0, idealDb = 4.0, breakDb = 9.0, seed = 12)
+        val s = l.run(BassFitSession(1212L, 4.0, me.timschneeberger.rootlessjamesdsp.pvb.FitScope.FLOOR))
+        val r = s.result
+        check(s.stage == FitStage.DONE && r.floorHz != null && l.log.all { it.length == 1 } && r.floorQuestions in 10..30 &&
+            r.floorCatch >= 2 && r.layerAudible == null && r.limitDb == null,
+            "floor only: ${r.floorQuestions} questions (${r.floorCatch} catch), floor ${r.floorHz?.toInt()} Hz, nothing else asked")
+        val lb = Listener(floorHz = 180.0, idealDb = 4.0, breakDb = 9.0, seed = 13)
+        val sb = BassFitSession(1313L, 4.0, me.timschneeberger.rootlessjamesdsp.pvb.FitScope.BREAKUP)
+        check(sb.stage == FitStage.BREAKUP, "break-up only: starts at step 3")
+        lb.run(sb)
+        val rb = sb.result
+        check(sb.stage == FitStage.DONE && lb.log.all { it.startsWith("b") } && rb.limitDb != null && rb.breakupCatch >= 2 &&
+            rb.floorQuestions == 0, "break-up only: ${rb.breakupQuestions} questions, limit ${rb.limitDb}, no other step")
+    }
+
+    // ---------------------------------------------------------------------------------------- validation plan, log
+    run {
+        val conds = me.timschneeberger.rootlessjamesdsp.pvb.FitConditions.ALL
+        val a = me.timschneeberger.rootlessjamesdsp.pvb.ValidationPlan(5L, conds, 3).runs
+        val b = me.timschneeberger.rootlessjamesdsp.pvb.ValidationPlan(6L, conds, 3).runs
+        check(a.size == 15 && conds.all { c -> a.count { it == c } == 3 } && a != b,
+            "plan: every virtual speaker 3 times, another order for another seed")
+        check((1 until a.size).all { a[it] != a[it - 1] }, "plan: no condition twice in a row")
+        val line = me.timschneeberger.rootlessjamesdsp.pvb.ValidationLog.line(me.timschneeberger.rootlessjamesdsp.pvb.ValidationLog.Row(
+            "2026-10-24T09:40", "SM-S948N", "0.9.0-beta.6", me.timschneeberger.rootlessjamesdsp.pvb.ValidationLog.Kind.EAR_FLOOR,
+            150.0, 0x1234L, 8, 15, 162.34, true, 22, 4, 0, 158.0, false, 152.0, true, 41.25))
+        val cols = me.timschneeberger.rootlessjamesdsp.pvb.ValidationLog.HEADER.split(",").size
+        check(line.split(",").size == cols && line.contains(",ear_floor_hz,hp150,0000000000001234,8,15,162.3,1,22,4,0,158.0,0,152,1,41.3"),
+            "log line: $line")
+    }
+
     // ---------------------------------------------------------------------------------------- clip settings
     run {
         val base = PvbSettings(hpHz = 120f, lowDb = 2f, hiDb = -2f, vbOn = true, vbLevelDb = 5f, vbVolLink = true, dynOn = true,

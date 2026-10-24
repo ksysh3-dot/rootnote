@@ -29,6 +29,8 @@ enum class DevTestKind {
     FIT_SILENCE, FIT_REF, FIT_IFC_1, FIT_IFC_2, FIT_IFC_0, FIT_LOW, FIT_MID,
     /** "마이크가 듣는 값" ([SpeakerProbe]): a log sweep 40-500 Hz in 9 s, then 1 s silence, repeating, -15 dBFS. */
     PROBE_SWEEP,
+    /** Validation: pink noise 40-4000 Hz, about -22 dBFS RMS, for the UMIK-1 in REW's RTA. */
+    FIT_PINK,
 }
 
 class DevTestSignal {
@@ -85,6 +87,7 @@ class DevTestSignal {
             DevTestKind.XTC_BAND_LO -> 400.0 to 1500.0
             DevTestKind.XTC_BAND_HI -> 1500.0 to 8000.0
             DevTestKind.FIT_REF -> 56.0 to 560.0
+            DevTestKind.FIT_PINK -> 40.0 to 4000.0
             else -> return
         }
         for (i in 0 until 4) {
@@ -102,7 +105,12 @@ class DevTestSignal {
         }
         bz.fill(0.0)
         // white noise of RMS 1 keeps sqrt(band / (sr / 2)) of its power in the band
-        bandGain = (if (kind == DevTestKind.FIT_REF) FIT_REF_RMS else BAND_RMS) / kotlin.math.sqrt((hi - lo) / (sr / 2.0))
+        bandGain = when (kind) {
+            DevTestKind.FIT_REF -> FIT_REF_RMS / kotlin.math.sqrt((hi - lo) / (sr / 2.0))
+            DevTestKind.FIT_PINK -> PINK_GAIN
+            else -> BAND_RMS / kotlin.math.sqrt((hi - lo) / (sr / 2.0))
+        }
+        pk.fill(0.0)
     }
 
     private fun white(): Double {
@@ -111,8 +119,18 @@ class DevTestSignal {
         return ((rng ushr 11).toDouble() / (1L shl 53).toDouble() * 2.0 - 1.0) * 1.7320508075688772
     }
 
+    // Paul Kellet's economy pink filter (-3 dB/octave within 0.5 dB over the audio band)
+    private val pk = DoubleArray(3)
+    private fun pinkSource(): Double {
+        val w = white()
+        pk[0] = 0.99765 * pk[0] + w * 0.0990460
+        pk[1] = 0.96300 * pk[1] + w * 0.2965164
+        pk[2] = 0.57000 * pk[2] + w * 1.0526913
+        return pk[0] + pk[1] + pk[2] + w * 0.1848
+    }
+
     private fun band(): Double {
-        var x = white()
+        var x = if (kind == DevTestKind.FIT_PINK) pinkSource() else white()
         for (i in 0 until 4) {
             val o = 5 * i
             val z = 2 * i
@@ -143,7 +161,7 @@ class DevTestSignal {
             DevTestKind.SWEEP -> sweep(time)
             DevTestKind.KICK -> kick(time)
             DevTestKind.BASS_CHORD -> bassChord(time)
-            DevTestKind.XTC_BAND_LO, DevTestKind.XTC_BAND_HI, DevTestKind.FIT_REF -> band()
+            DevTestKind.XTC_BAND_LO, DevTestKind.XTC_BAND_HI, DevTestKind.FIT_REF, DevTestKind.FIT_PINK -> band()
             DevTestKind.XTC_SWEEP_L, DevTestKind.XTC_SWEEP_R -> xtcSweep(time)
             DevTestKind.FIT_SILENCE, DevTestKind.FIT_IFC_0 -> 0.0
             DevTestKind.FIT_IFC_1 -> ifcTone(time, IFC_LEAD_S)
@@ -270,6 +288,7 @@ class DevTestSignal {
         val TONE_CHOICES = doubleArrayOf(40.0, 55.0, 80.0)
         // "저음 맞추기"
         const val FIT_REF_RMS = 0.08       // -22 dBFS RMS band noise
+        const val PINK_GAIN = 0.04         // pink noise 40-4000 Hz at about -22 dBFS RMS (peak about -10 dBFS)
         const val FIT_TONE_AMP = 0.18      // -15 dBFS peak
         const val FIT_BASS_AMP = 0.2
         /** Two-interval trial: interval 1 at [IFC_LEAD_S], interval 2 [IFC_LEN_S] + [IFC_GAP_S] later. */

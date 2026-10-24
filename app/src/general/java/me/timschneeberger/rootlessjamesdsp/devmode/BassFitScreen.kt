@@ -24,6 +24,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -45,7 +48,9 @@ import me.timschneeberger.rootlessjamesdsp.R
 import me.timschneeberger.rootlessjamesdsp.pvb.BassFitSession
 import me.timschneeberger.rootlessjamesdsp.pvb.CheckRound
 import me.timschneeberger.rootlessjamesdsp.pvb.DevParams
+import me.timschneeberger.rootlessjamesdsp.pvb.FitConditions
 import me.timschneeberger.rootlessjamesdsp.pvb.FitPrompt
+import me.timschneeberger.rootlessjamesdsp.pvb.FitScope
 import me.timschneeberger.rootlessjamesdsp.pvb.FitResult
 import me.timschneeberger.rootlessjamesdsp.pvb.FloorStaircase
 import me.timschneeberger.rootlessjamesdsp.pvb.NoiseGate
@@ -53,6 +58,10 @@ import me.timschneeberger.rootlessjamesdsp.pvb.SpeakerProbe
 import me.timschneeberger.rootlessjamesdsp.ui.LocalRn
 import me.timschneeberger.rootlessjamesdsp.ui.RnBand
 import me.timschneeberger.rootlessjamesdsp.ui.RnButtonRow
+import me.timschneeberger.rootlessjamesdsp.ui.RnChoice
+import me.timschneeberger.rootlessjamesdsp.ui.RnChoiceRow
+import me.timschneeberger.rootlessjamesdsp.ui.RnDialog
+import me.timschneeberger.rootlessjamesdsp.ui.RnSwitchRow
 import me.timschneeberger.rootlessjamesdsp.ui.RnDivider
 import me.timschneeberger.rootlessjamesdsp.ui.RnEase
 import me.timschneeberger.rootlessjamesdsp.ui.RnFilledButton
@@ -74,7 +83,7 @@ import kotlin.math.roundToInt
  * a step-1 question, the A/B/X play pads and the progress line of the room check.
  */
 
-enum class FitScreen { INTRO, ROOM, ROOM_WARN, TEST, RESULT, CHECK, SAVE, DONE }
+enum class FitScreen { INTRO, ROOM, ROOM_WARN, TEST, RESULT, CHECK, SAVE, DONE, VALIDATE, VAL_NEXT }
 enum class FitPause { VOLUME, ROUTE, ENGINE }
 
 @Immutable
@@ -117,6 +126,19 @@ data class FitUi(
     val checkNew: Int = 0,
     val checkOld: Int = 0,
     val checkSame: Int = 0,
+    // validation mode
+    val validating: Boolean = false,
+    val valScope: FitScope = FitScope.FLOOR,
+    val valConds: Set<Int> = FitConditions.ALL.indices.toSet(),
+    val valRepeats: Int = 3,
+    val valTotal: Int = 0,
+    val valIndex: Int = 0,
+    val logLines: Int = 0,
+    /** UMIK-1 sound playing for this condition index; 0 pink noise, 1 probe sweep. */
+    val umikPlaying: Int? = null,
+    val umikPhase: Int = 0,
+    /** Microphone floor per condition index from the last UMIK-1 sound (-1 = none found). */
+    val umikFloors: Map<Int, Double> = emptyMap(),
 )
 
 class FitActions(
@@ -138,11 +160,25 @@ class FitActions(
     val onCheckAnswer: (CheckRound.Answer) -> Unit,
     val onSave: () -> Unit,
     val onClose: () -> Unit,
+    val onValidate: () -> Unit,
+    val onValScope: (FitScope) -> Unit,
+    val onValCondition: (Int, Boolean) -> Unit,
+    val onValRepeats: (Int) -> Unit,
+    val onValStart: () -> Unit,
+    val onValNext: () -> Unit,
+    val onValStop: () -> Unit,
+    val onUmik: (Int) -> Unit,
+    val onLogCopy: () -> Unit,
+    val onLogSend: () -> Unit,
+    val onLogClear: () -> Unit,
+    val onValBack: () -> Unit,
 )
 
 @Composable
 fun BassFitScreen(ui: FitUi, actions: FitActions) {
-    RnPage(stringResource(R.string.fit_title), onBack = actions.onBack, bottomBar = { BottomAnswers(ui, actions) }) {
+    val back = if (ui.screen == FitScreen.VALIDATE) actions.onValBack else actions.onBack
+    val title = stringResource(if (ui.validating || ui.screen == FitScreen.VALIDATE) R.string.fit_val_title else R.string.fit_title)
+    RnPage(title, onBack = back, bottomBar = { BottomAnswers(ui, actions) }) {
         ui.paused?.let { p ->
             RnNote(when (p) {
                 FitPause.VOLUME -> stringResource(R.string.fit_pause_volume, ui.volumeText)
@@ -159,6 +195,11 @@ fun BassFitScreen(ui: FitUi, actions: FitActions) {
             FitScreen.CHECK -> Check(ui, actions)
             FitScreen.SAVE -> Save(ui)
             FitScreen.DONE -> Done()
+            FitScreen.VALIDATE -> Validate(ui, actions)
+            FitScreen.VAL_NEXT -> {
+                Title(stringResource(R.string.fit_val_next_title, ui.valIndex, ui.valTotal))
+                Body(stringResource(R.string.fit_val_next_body))
+            }
         }
     }
 }
@@ -271,6 +312,7 @@ private fun Question(ui: FitUi, actions: FitActions) {
         is FitPrompt.Buzz -> p.number
         else -> 0
     }
+    if (ui.validating) RnSectionTitle(stringResource(R.string.fit_val_run, ui.valIndex, ui.valTotal))
     RnSectionTitle(stepLabel(ui) + if (number > 0) "  ·  " + (if (p is FitPrompt.Abx)
         stringResource(R.string.fit_question_of, number, p.maxTrials) else stringResource(R.string.fit_question, number)) else "")
     when (p) {
@@ -502,6 +544,73 @@ private fun Done() {
     Body(stringResource(R.string.fit_saved_body))
 }
 
+// ------------------------------------------------------------------------------------------------ validation
+
+@Composable
+private fun conditionLabel(i: Int): String = FitConditions.ALL[i]?.let { stringResource(R.string.fit_val_cond_hp, it.roundToInt()) }
+    ?: stringResource(R.string.fit_val_cond_real)
+
+/**
+ * Validation mode: one step repeated under hidden virtual speakers (the engine's high-pass), the UMIK-1 sounds per
+ * condition, and the log (copy, send, clear). Kit rows only: choice rows, switch rows, navigation rows.
+ */
+@Composable
+private fun Validate(ui: FitUi, actions: FitActions) {
+    var confirmClear by remember { mutableStateOf(false) }
+    Title(stringResource(R.string.fit_val_title))
+    Body(stringResource(R.string.fit_val_body))
+    if (!ui.ready) RnNote(stringResource(R.string.fit_not_ready), warning = true)
+
+    RnSectionTitle(stringResource(R.string.fit_val_ear))
+    RnChoiceRow(stringResource(R.string.fit_val_step), listOf(
+        RnChoice(FitScope.FLOOR, stringResource(R.string.fit_val_step_floor)),
+        RnChoice(FitScope.BREAKUP, stringResource(R.string.fit_val_step_breakup)),
+    ), ui.valScope, actions.onValScope)
+    RnChoiceRow(stringResource(R.string.fit_val_repeats), listOf(1, 2, 3, 5).map {
+        RnChoice(it, stringResource(R.string.fit_val_repeats_n, it))
+    }, ui.valRepeats, actions.onValRepeats)
+    for (i in FitConditions.ALL.indices) {
+        RnSwitchRow(conditionLabel(i), checked = i in ui.valConds, onCheckedChange = { on -> actions.onValCondition(i, on) })
+    }
+    val runs = ui.valConds.size * ui.valRepeats
+    RnParagraph(stringResource(R.string.fit_val_ear_note, runs))
+
+    RnBand()
+    RnSectionTitle(stringResource(R.string.fit_val_umik))
+    RnParagraph(stringResource(R.string.fit_val_umik_note))
+    for (i in FitConditions.ALL.indices) {
+        val playing = ui.umikPlaying == i
+        val floor = ui.umikFloors[i]
+        RnNavRow(conditionLabel(i), chevron = false, enabled = ui.ready || playing,
+            line = when {
+                playing && ui.umikPhase == 0 -> stringResource(R.string.fit_val_umik_pink)
+                playing -> stringResource(R.string.fit_val_umik_sweep)
+                floor != null -> if (floor > 0) stringResource(R.string.fit_val_umik_floor, SpeakerProbe.roundHz(floor))
+                    else stringResource(R.string.fit_r_mic_none)
+                else -> null
+            },
+            value = stringResource(if (playing) R.string.fit_val_umik_stop else R.string.fit_val_umik_play),
+            valueColor = LocalRn.current.accentText,
+            onClick = { actions.onUmik(i) })
+    }
+
+    RnBand()
+    RnSectionTitle(stringResource(R.string.fit_val_log_title))
+    RnParagraph(stringResource(R.string.fit_val_log_lines, ui.logLines))
+    if (ui.logLines > 0) {
+        RnButtonRow {
+            RnOutlineButton(stringResource(R.string.fit_val_log_clear), Modifier.weight(1f)) { confirmClear = true }
+            RnOutlineButton(stringResource(R.string.fit_val_log_copy), Modifier.weight(1f), onClick = actions.onLogCopy)
+            RnOutlineButton(stringResource(R.string.fit_val_log_send), Modifier.weight(1f), onClick = actions.onLogSend)
+        }
+    }
+    if (confirmClear) RnDialog(
+        title = stringResource(R.string.fit_val_log_clear_title), text = stringResource(R.string.fit_val_log_clear_body, ui.logLines),
+        confirmLabel = stringResource(R.string.fit_val_log_clear), onConfirm = { confirmClear = false; actions.onLogClear() },
+        dismissLabel = stringResource(android.R.string.cancel), onDismiss = { confirmClear = false },
+    )
+}
+
 // ------------------------------------------------------------------------------------------------ answers (bottom bar)
 
 @Composable
@@ -514,7 +623,18 @@ private fun BottomAnswers(ui: FitUi, actions: FitActions) {
         when (ui.screen) {
             FitScreen.INTRO -> {
                 RnButtonRow { RnFilledButton(stringResource(R.string.fit_start), Modifier.weight(1f), enabled = ui.ready, onClick = actions.onStart) }
-                if (ui.canRestore) RnButtonRow { RnOutlineButton(stringResource(R.string.fit_restore), Modifier.weight(1f), onClick = actions.onRestore) }
+                RnButtonRow {
+                    if (ui.canRestore) RnOutlineButton(stringResource(R.string.fit_restore), Modifier.weight(1f), onClick = actions.onRestore)
+                    RnOutlineButton(stringResource(R.string.fit_val_open), Modifier.weight(1f), onClick = actions.onValidate)
+                }
+            }
+            FitScreen.VALIDATE -> RnButtonRow {
+                RnFilledButton(stringResource(R.string.fit_val_start), Modifier.weight(1f),
+                    enabled = ui.ready && ui.valConds.isNotEmpty() && ui.umikPlaying == null, onClick = actions.onValStart)
+            }
+            FitScreen.VAL_NEXT -> RnButtonRow {
+                RnOutlineButton(stringResource(R.string.fit_val_stop), Modifier.weight(1f), onClick = actions.onValStop)
+                RnFilledButton(stringResource(R.string.fit_val_next), Modifier.weight(1f), onClick = actions.onValNext)
             }
             FitScreen.ROOM -> Unit
             FitScreen.ROOM_WARN -> {

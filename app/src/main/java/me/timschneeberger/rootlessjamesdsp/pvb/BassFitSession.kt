@@ -82,6 +82,13 @@ data class FitResult(
     val shape: ShapeGrid.Cell?,
     /** Applied strength: the preferred one (or the stored one) capped by a reliable limit. */
     val strengthDb: Double?,
+    /** Question counts (validation log): step 1 and step 3, catch trials and "heard" / "buzz" on them. */
+    val floorQuestions: Int = 0,
+    val floorCatch: Int = 0,
+    val floorFalseAlarms: Int = 0,
+    val breakupQuestions: Int = 0,
+    val breakupCatch: Int = 0,
+    val breakupFalseAlarms: Int = 0,
 ) {
     /** [values] ([DevParams.ALL] order) with what this run applies. */
     fun applyTo(values: FloatArray): FloatArray {
@@ -103,7 +110,10 @@ data class FitResult(
     }
 }
 
-class BassFitSession(val seed: Long, val storedStrengthDb: Double) {
+/** What a run asks: everything, or one step alone (validation mode: repeated against the UMIK-1). */
+enum class FitScope { ALL, FLOOR, BREAKUP }
+
+class BassFitSession(val seed: Long, val storedStrengthDb: Double, val scope: FitScope = FitScope.ALL) {
     private val seeds = FitRng(seed)
     private fun sub(): Long = seeds.next()
 
@@ -131,6 +141,10 @@ class BassFitSession(val seed: Long, val storedStrengthDb: Double) {
 
     /** Strength the edge and layer checks play at: the stored one, at least +4 and at most +8. */
     val probeDb: Double = storedStrengthDb.coerceIn(4.0, 8.0)
+
+    init {
+        if (scope == FitScope.BREAKUP) startBreakup()
+    }
 
     /** 1..4: the step the screen shows ("1단계" ...); 0 when done. */
     val step: Int
@@ -179,6 +193,7 @@ class BassFitSession(val seed: Long, val storedStrengthDb: Double) {
         val f = floorTest.floorHz()
         floor = if (f != null && floorTest.reliable) BassFitMapping.fromFloor(f) else null
         edgeHz = floor?.boundaryHz
+        if (scope == FitScope.FLOOR) { enter(FitStage.DONE); return }
         // the edge check needs room above the floor's edge (the engine stops at 280 Hz)
         if (floor != null && raisedEdge() / floor!!.boundaryHz >= 1.1) {
             edgeAbx = AbxRun(edgeSeed)
@@ -265,7 +280,7 @@ class BassFitSession(val seed: Long, val storedStrengthDb: Double) {
         val b = breakup!!
         b.answer(if (buzz) BreakupStaircase.Answer.BUZZ else BreakupStaircase.Answer.CLEAN)
         number++
-        if (b.done) enter(FitStage.SHAPE_OFFER)
+        if (b.done) enter(if (scope == FitScope.BREAKUP) FitStage.DONE else FitStage.SHAPE_OFFER)
     }
 
     /** The optional shape step: take it (about 18 pairs) or finish. */
@@ -314,6 +329,12 @@ class BassFitSession(val seed: Long, val storedStrengthDb: Double) {
                 shapeConsistent = shapeTried && shape.done && shape.consistent,
                 shape = if (shapeTried && shape.done && shape.consistent) shape.best() else null,
                 strengthDb = if (pref != null || capped) currentStrength() else null,
+                floorQuestions = floorTest.toneTrials + floorTest.catchTrials,
+                floorCatch = floorTest.catchTrials,
+                floorFalseAlarms = floorTest.falseAlarms,
+                breakupQuestions = b?.let { it.levelTrials + it.catchTrials } ?: 0,
+                breakupCatch = b?.catchTrials ?: 0,
+                breakupFalseAlarms = b?.falseAlarms ?: 0,
             )
         }
 }
