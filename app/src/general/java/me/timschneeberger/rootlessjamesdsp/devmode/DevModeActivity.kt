@@ -155,7 +155,8 @@ class DevModeActivity : BaseActivity() {
             measuredBadge = badge,
             thresholdMeasured = DevEvidenceText.thresholdMeasured(profile),
             measuredOnName = badge.deviceName,
-            speakerFloorHz = profile.speakerFloorHz,
+            // the floor a saved "저음 맞추기" found, else the device profile's
+            speakerFloorHz = flags.getFloat(BassFitActivity.KEY_FIT_FLOOR_HZ, profile.speakerFloorHz),
             gaugeVu = flags.getBoolean(PvbGeneral.KEY_DEV_GAUGE_VU, false),
             hiddenCount = tracker.hiddenTypes().size,
             canUndo = undo.isNotEmpty(),
@@ -389,6 +390,7 @@ class DevModeActivity : BaseActivity() {
             prefs.edit().putBoolean(DevParams.KEY_DEV_ON, false).apply()
             finish()
         },
+        onBassFit = { startActivity(Intent(this, BassFitActivity::class.java)) },
     )
 
     /** The slider range of [spec] for the current model (the roll-off offset depends on it). */

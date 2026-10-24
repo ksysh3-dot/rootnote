@@ -1,6 +1,7 @@
 import me.timschneeberger.rootlessjamesdsp.pvb.AbxRun
 import me.timschneeberger.rootlessjamesdsp.pvb.BassFitMapping
-import me.timschneeberger.rootlessjamesdsp.pvb.BreakupLadder
+import me.timschneeberger.rootlessjamesdsp.pvb.BreakupStaircase
+import me.timschneeberger.rootlessjamesdsp.pvb.FitLatency
 import me.timschneeberger.rootlessjamesdsp.pvb.FitRng
 import me.timschneeberger.rootlessjamesdsp.pvb.FitStats
 import me.timschneeberger.rootlessjamesdsp.pvb.FloorStaircase
@@ -58,6 +59,25 @@ fun main() {
     val burstV = NoiseGate.judge(bursty, add(noise(n2, -75.0, 5), ref), FS)
     check(!burstV.pass && NoiseGate.Reason.ROOM_UNSTEADY in burstV.reasons, "a voice-like burst in the room fails (jump ${"%.1f".format(burstV.jumpDb)} dB)")
     check(NoiseGate.judge(null, null, FS).reasons == listOf(NoiseGate.Reason.NO_MIC), "no microphone: says so")
+    // a phone speaker barely plays 63-100 Hz: in a quiet room that is not "noise"
+    val phoneRef = add(tones(n2, -30.0, bands.filter { it >= 125.0 }.toDoubleArray()), tones(n2, -62.0, bands.filter { it < 125.0 }.toDoubleArray()))
+    val phoneV = NoiseGate.judge(quiet, add(noise(n2, -75.0, 8), phoneRef), FS)
+    check(phoneV.pass, "quiet room, speaker silent below 125 Hz: passes (worst margin ${"%.1f".format(phoneV.worstSnrDb)} dB at ${phoneV.worstBandHz.toInt()} Hz)")
+    // ... but a rumble there still fails (it masks the tones above it)
+    val rumble = add(quiet, tones(n3, -58.0, doubleArrayOf(63.0)))
+    val rumbleV = NoiseGate.judge(rumble, add(add(noise(n2, -75.0, 9), tones(n2, -58.0, doubleArrayOf(63.0))), phoneRef), FS)
+    check(!rumbleV.pass && rumbleV.worstBandHz == 63.0 && NoiseGate.Reason.SNR_LOW in rumbleV.reasons,
+        "a 63 Hz rumble 28 dB under the speaker's strongest band fails (${"%.1f".format(rumbleV.worstSnrDb)} dB at ${rumbleV.worstBandHz.toInt()} Hz)")
+    // latency: the reference starts 230 ms after it was asked for
+    run {
+        val from = (1.0 * FS).toInt(); val lat = (0.23 * FS).toInt()
+        val x = noise((3.0 * FS).toInt(), -75.0, 10)
+        val r = tones(x.size, -30.0, doubleArrayOf(160.0, 315.0))
+        for (i in from + lat until x.size) x[i] += r[i]
+        val on = FitLatency.onsetFrame(x, FS, from)
+        check(on != null && abs(on - (from + lat)) <= (0.012 * FS).toInt(), "latency: onset found at ${on?.let { (it - from) * 1000 / FS }} ms (230)")
+        check(FitLatency.onsetFrame(noise(x.size, -75.0, 11), FS, from) == null, "latency: no reference -> null (typical latency used)")
+    }
     val roomBands = NoiseGate.bandLevels(quiet, FS, bands)
     check(!NoiseGate.disturbed(noise(n2, -75.0, 6), FS, roomBands) &&
         NoiseGate.disturbed(add(noise(n2, -75.0, 7), tones(n2, -50.0, doubleArrayOf(160.0))), FS, roomBands),
@@ -140,20 +160,35 @@ fun main() {
     check((0 until 20).all { s -> bracket(3.0, s.toLong()).result == 2 }, "strength: ideal halfway between 2 and 4 -> ties keep the lower")
     check(bracket(6.0, 3, flip = true).let { !it.consistent }, "strength: a reversed answer on the repeated first pair -> inconsistent")
 
-    // --- break-up ladder
-    fun ladder(breakAt: Double, seed: Long): BreakupLadder {
-        val l = BreakupLadder(seed, startDb = 4.0)
-        val r = FitRng(seed * 6151 + 11)          // the listener's own guesses, independent of the hidden order
-        while (!l.done) {
-            val hears = l.levelDb >= breakAt
-            l.answer(if (hears) l.abx.xIsA() else r.bit())
+    // --- break-up staircase: yes/no listener, logistic around the true break-up level, honest on catch trials
+    fun breakup(trueDb: Double, seed: Long, start: Double = 4.0, liar: Boolean = false): BreakupStaircase {
+        val b = BreakupStaircase(seed, start)
+        val r = FitRng(seed * 6151 + 11)
+        while (!b.done) {
+            val buzz = when (val t = b.current) {
+                is BreakupStaircase.Trial.Catch -> liar
+                is BreakupStaircase.Trial.Level -> (r.next() ushr 11).toDouble() / (1L shl 53) < 1 / (1 + exp(-(t.db - trueDb) / 0.7))
+            }
+            b.answer(if (buzz) BreakupStaircase.Answer.BUZZ else BreakupStaircase.Answer.CLEAN)
         }
-        return l
+        return b
     }
-    val hit = (0 until 200).count { s -> ladder(9.5, s.toLong()).limitDb == 7.0 }
-    check(hit >= 176, "break-up: audible from 10 dB (ladder 4, 7, 10) -> limit 7 dB in $hit / 200 runs (>= 88 %; two guessing steps cost about 7 %)")
-    val never = (0 until 200).count { s -> ladder(99.0, s.toLong()).limitDb == 10.0 }
-    check(never >= 170, "break-up: never audible -> limit = last step tried (10 dB) in $never / 200 runs (guessing false alarms are the rest)")
+    for (t in doubleArrayOf(5.0, 8.0, 10.0, 11.5)) {
+        val runs = (0 until 200).map { breakup(t, it.toLong()) }
+        val errs = runs.map { it.breakupDb()?.let { b -> abs(b - t) } ?: 99.0 }.sorted()
+        val med = errs[errs.size / 2]; val p90 = errs[errs.size * 9 / 10]
+        val limits = runs.mapNotNull { it.limitDb }
+        check(med < 1.0 && p90 < 2.5 && runs.count { it.reliable } >= 180 && limits.count { it <= t - 1.0 } >= 190,
+            "break-up at $t dB: median error ${"%.2f".format(med)} dB, 90th ${"%.2f".format(p90)} dB, limits ${limits.minOrNull()}..${limits.maxOrNull()}, ${limits.count { it <= t - 1.0 }} / 200 at least 1 dB under it (break-up - 3, whole dB)")
+    }
+    run {
+        val never = (0 until 200).count { s -> breakup(99.0, s.toLong()).let { it.limitDb == 12.0 && it.reliable } }
+        check(never >= 195, "break-up: never buzzes -> limit 12 dB in $never / 200 runs")
+        val lie = (0 until 100).count { s -> !breakup(8.0, s.toLong(), liar = true).reliable }
+        check(lie >= 95, "break-up: 'buzz' on catch trials (layer off) -> unreliable in $lie / 100 runs")
+        val b = breakup(8.0, 3)
+        check(b.levelTrials + b.catchTrials <= 24, "break-up: at most 24 questions (${b.levelTrials + b.catchTrials})")
+    }
 
     // --- shape grid: listener utility peaked at one cell, Thurstone noise
     fun grid(target: Int, seed: Long): ShapeGrid {
@@ -169,6 +204,8 @@ fun main() {
         }
         return g
     }
+    check((0 until 40).map { ShapeGrid(it.toLong()).current!!.let { (i, j, _) -> i * 10 + j } }.toSet().size == 4,
+        "shape: the first pair (centre vs a corner) changes with the seed")
     for (target in intArrayOf(0, 4, 8, 5)) {
         val right = (0 until 40).count { s -> grid(target, s.toLong()).best() == ShapeGrid(0).cells[target] }
         check(right >= 30, "shape: preferred cell $target found in $right / 40 runs (18 pairs)")

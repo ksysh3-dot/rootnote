@@ -123,6 +123,8 @@ object PvbEngineParams {
         p[PvbParam.D_PERC_DB] = s.devPercDb
         p[PvbParam.D_ATTACK_MS] = s.devAttackMs
         p[PvbParam.D_RELEASE_MS] = s.devReleaseMs
+        // virtual-bass table matched to this speaker floor: 150 Hz (the S26 Ultra) = 1 = the model, bit exact
+        p[PvbParam.D_TABLE_SCALE] = s.devTableFloorHz / DevParams.TABLE_FLOOR.default
         // Crosstalk cancellation: the phone's own speakers only (designed for landscape, the two speakers left and
         // right of the listener; not tied to the screen rotation, which a locked rotation would misreport); never
         // during a measurement. During a comparison it follows the condition: EQ v1.1 has it off

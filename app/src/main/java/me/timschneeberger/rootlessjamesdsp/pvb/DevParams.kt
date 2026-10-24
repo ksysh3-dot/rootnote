@@ -11,7 +11,8 @@ import kotlin.math.roundToInt
  * - new engine values: generator input edge (P_D_BOUNDARY_HZ), output band (P_D_OUT_LO_HZ / P_D_OUT_HI_HZ), harmonic
  *   offsets k = 2, 3, 4, 5+ (P_D_H*_DB, re the model's own table), upper roll-off offset (P_D_ROLLOFF_DB_OCT, added to
  *   the model's 24 dB/oct, 12 for "부드러운 저음"), sustained / percussive path (P_D_SUST_DB / P_D_PERC_DB), attack and
- *   release of the P1-family track life (P_D_ATTACK_MS / P_D_RELEASE_MS, 16/3 ms hops). They only act while
+ *   release of the P1-family track life (P_D_ATTACK_MS / P_D_RELEASE_MS, 16/3 ms hops), the speaker floor the layer's
+ *   table is matched to (P_D_TABLE_SCALE = Hz / 150). They only act while
  *   [PvbSettings.devOn] (P_DEV_ON); each value at its default is the model bit for bit.
  * - existing settings: high-pass (P_HP_HZ), strength (P_VB_LEVEL_DB; up to +12 in developer mode instead of +9), volume
  *   link start / slope / maximum ([VolumeLevelLink]), and the four experimental options (P_X_*).
@@ -79,6 +80,7 @@ object DevParams {
     const val KEY_PERC = "pvb_dev_perc_db"
     const val KEY_ATTACK = "pvb_dev_attack_ms"
     const val KEY_RELEASE = "pvb_dev_release_ms"
+    const val KEY_TABLE_FLOOR = "pvb_dev_table_floor_hz"
 
     /** One continuity hop of the P1 family: 16 samples at 3 kHz. */
     const val HOP_MS = 16f / 3f
@@ -97,7 +99,8 @@ object DevParams {
     private val S = DevEvidence.MEASURED
     private val E = DevEvidence.ESTIMATE
 
-    val BOUNDARY = DevSpec("boundary", KEY_BOUNDARY, DevGroup.BAND, DevUnit.HZ, 100f, 210f, 5f, 190f, 140f, 200f,
+    /** Up to 280 Hz (the engine's limit): a speaker that stops higher than the S26 Ultra needs a higher edge (저음 맞추기). */
+    val BOUNDARY = DevSpec("boundary", KEY_BOUNDARY, DevGroup.BAND, DevUnit.HZ, 100f, 280f, 5f, 190f, 140f, 260f,
         listOf(R, S), DevHighlight.BOUNDARY)
     val OUT_LO = DevSpec("out_lo", KEY_OUT_LO, DevGroup.BAND, DevUnit.HZ, 80f, 250f, 10f, 150f, 120f, 200f,
         listOf(R, S), DevHighlight.OUT_BAND)
@@ -137,12 +140,19 @@ object DevParams {
         listOf(M, S), DevHighlight.THRESHOLD)
     val X_DENSE = DevSpec("x_dense", PvbSettings.KEY_X_DENSE, DevGroup.SIZE, DevUnit.SWITCH, 0f, 1f, 1f, 0f, 0f, 1f,
         listOf(E, S), DevHighlight.LAYER)
+    /**
+     * Speaker floor the virtual-bass weight/gain table is matched to (P_D_TABLE_SCALE = value / 150): 150 Hz is the
+     * S26 Ultra's measured floor, the model itself; set by "저음 맞추기" from the floor it finds.
+     */
+    val TABLE_FLOOR = DevSpec("table_floor", KEY_TABLE_FLOOR, DevGroup.BAND, DevUnit.HZ, 115f, 260f, 5f, 150f, 120f, 220f,
+        listOf(S, E), DevHighlight.LAYER)
 
     /** Share-code order (RN1). Append only. */
     val ALL: List<DevSpec> = listOf(
         BOUNDARY, OUT_LO, OUT_HI, HP, H2, H3, H4, H5, ROLLOFF, SUST, PERC,
         ATTACK, RELEASE, X_RISE, X_SMOOTH, X_S1M,
         STRENGTH, VOL_START, VOL_SLOPE, VOL_MAX, X_DENSE,
+        TABLE_FLOOR,
     )
 
     fun byId(id: String): DevSpec? = ALL.firstOrNull { it.id == id }
@@ -187,6 +197,7 @@ object DevParams {
         VOL_SLOPE -> s.vbVolSlope
         VOL_MAX -> s.vbVolMaxDb
         X_DENSE -> if (s.xDense) 1f else 0f
+        TABLE_FLOOR -> s.devTableFloorHz
         else -> spec.default
     }
 
@@ -201,6 +212,7 @@ object DevParams {
             devSustDb = v(SUST), devPercDb = v(PERC), devAttackMs = v(ATTACK), devReleaseMs = v(RELEASE),
             xRise = b(X_RISE), xSmooth = b(X_SMOOTH), xS1m = b(X_S1M), vbLevelDb = v(STRENGTH),
             vbVolRefPct = v(VOL_START), vbVolSlope = v(VOL_SLOPE), vbVolMaxDb = v(VOL_MAX), xDense = b(X_DENSE),
+            devTableFloorHz = v(TABLE_FLOOR),
         )
     }
 

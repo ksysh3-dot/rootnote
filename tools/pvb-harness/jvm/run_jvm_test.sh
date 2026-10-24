@@ -20,6 +20,9 @@ OUTB="$HERE/../build/jvm-bassfit"
 rm -rf "$OUTB"; mkdir -p "$OUTB"
 $KOTLINC -classpath "$KOTLIN_STDLIB" "$APP/PvbMeasureMath.kt" "$APP/BassFit.kt" "$HERE/BassFitTest.kt" -d "$OUTB"
 java -cp "$OUTB:$KOTLIN_STDLIB" BassFitTestKt
+# bass fit session: step order, a fresh question order per seed, what the answers apply (pure Kotlin)
+$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/DevParams.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/PvbMeasureMath.kt" "$APP/BassFit.kt" "$APP/BassFitSession.kt" "$HERE/BassFitSessionTest.kt" -d "$OUTB"
+java -cp "$OUTB:$KOTLIN_STDLIB" BassFitSessionTestKt
 # service read/write arithmetic (pure Kotlin)
 OUTP="$HERE/../build/jvm-pump"
 rm -rf "$OUTP"; mkdir -p "$OUTP"

@@ -120,6 +120,9 @@ import me.timschneeberger.rootlessjamesdsp.pvb.DevSpec
 import me.timschneeberger.rootlessjamesdsp.pvb.DevTestKind
 import me.timschneeberger.rootlessjamesdsp.pvb.DevUnit
 import me.timschneeberger.rootlessjamesdsp.pvb.DevWarning
+import me.timschneeberger.rootlessjamesdsp.ui.RnDivider
+import me.timschneeberger.rootlessjamesdsp.ui.RnNavRow
+import me.timschneeberger.rootlessjamesdsp.ui.RnTheme
 import java.util.Locale
 import kotlin.math.roundToInt
 
@@ -193,6 +196,8 @@ class DevActions(
     val onGaugeStyle: (Boolean) -> Unit,
     val onRestoreWarnings: () -> Unit,
     val onTurnOff: () -> Unit,
+    /** Opens "저음 맞추기" (BassFitActivity). */
+    val onBassFit: () -> Unit,
 )
 
 /** Rootnote palette plus the semantic tokens of docs/DESIGN.md 2.2 (res/values{,-night}/colors_rootnote.xml). */
@@ -274,6 +279,7 @@ private fun DevContent(state: DevUiState, actions: DevActions) {
     Column(Modifier.fillMaxSize().background(c.bg).statusBarsPadding().navigationBarsPadding()) {
         TopBar(actions)
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
+            BassFitEntry(actions)
             TestSounds(state, actions)
             val pager = rememberPagerState(initialPage = state.tab, pageCount = { 3 })
             val tabNow by rememberUpdatedState(state.tab)
@@ -357,6 +363,15 @@ private fun TopBar(actions: DevActions) {
             Text(stringResource(R.string.dev_badge_noliability), color = c.warnText, fontSize = 11.sp, lineHeight = 16.sp,
                 fontWeight = FontWeight.Medium)
         }
+    }
+}
+
+/** The row that opens "저음 맞추기": the shared kit's navigation row (ui/RnRows.kt), then a divider. */
+@Composable
+private fun BassFitEntry(actions: DevActions) {
+    RnTheme(LocalDevReduceMotion.current) {
+        RnNavRow(stringResource(R.string.fit_title), line = stringResource(R.string.fit_entry_line), onClick = actions.onBassFit)
+        RnDivider()
     }
 }
 

@@ -262,4 +262,10 @@
     <string name="dev_ev_vol_1" formatted="false">S26 Ultra는 볼륨 80%에서 저역 보호 문턱이 약 −27 dBFS, 50%에서 약 −15 dBFS였어요. 볼륨 연동으로 지직거림이 크게 줄었어요.</string>
     <string name="dev_ev_x_dense_0">큰 저음이 진동판을 흔들 때 중고음이 함께 일그러지는 상호변조 현상에서 나온 예상이에요.</string>
     <string name="dev_ev_x_dense_1">S26 Ultra 19차 청취에서는 같은 평균 크기 고정과 구분되지 않았어요.</string>
+    <string name="dev_p_table_floor_name">배음 표 기준 바닥</string>
+    <string name="dev_p_table_floor_line">가상 저음 세기 표를 이 스피커가 내는 가장 낮은 음에 맞춰 옮겨요. 150 Hz는 S26 Ultra 그대로예요.</string>
+    <string name="dev_p_table_floor_up">더 높은 음(150~250 Hz)에도 배음이 채워져요. 대신 아주 낮은 음(55~100 Hz)의 배음은 작아져요.</string>
+    <string name="dev_p_table_floor_down">반대로 낮은 음의 배음이 커지고, 높은 음 쪽은 비어요.</string>
+    <string name="dev_ev_table_floor_0">가상 저음 세기 표는 S26 Ultra 스피커(바닥 150 Hz)에 맞춰 만들었어요. 다른 폰에서는 그 폰의 바닥만큼 표를 옮겨요.</string>
+    <string name="dev_ev_table_floor_1">표를 옮겨도 S26 Ultra와 같은 크기로 들리는지는 아직 확인 중이에요. "저음 맞추기"의 세기 비교가 그 차이를 귀로 메워요.</string>
 </resources>

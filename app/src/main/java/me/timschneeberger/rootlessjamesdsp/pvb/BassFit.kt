@@ -12,13 +12,14 @@ import kotlin.math.roundToInt
 /*
  * "저음 맞추기" (bass fit, docs/BASS_FIT_PLAN.md): the pure logic of the in-app listening tests. No Android types;
  * host JVM tested in tools/pvb-harness/jvm/BassFitTest.kt. The screen plays what a step asks for and feeds the answers
- * back; every random choice comes from a seed, so a run can be replayed exactly.
+ * back; every random choice comes from a seed. The screen draws a new seed for every run, so the order of the
+ * questions and the A/B/X sides differ each time, and records it, so a run can be replayed exactly.
  *
- *  - NoiseGate: is the room quiet enough (strict), and was a trial disturbed.
+ *  - NoiseGate: is the room quiet enough (strict), and was a trial disturbed. FitLatency: when a sound really plays.
  *  - AbxRun: one ABX decision (up to 8 trials, 7/8 or 6/6 = distinguishable).
  *  - FloorStaircase: step 1, the speaker floor by a two-interval forced choice with catch trials (2-down/1-up).
  *  - StrengthBracket: step 2b, preferred virtual-bass strength by blind A/B bracketing (ties take the lower).
- *  - BreakupLadder: step 3, the level where harmonics start to break up (ABX per step).
+ *  - BreakupStaircase: step 3, the level where harmonics start to break up (yes/no with catch trials).
  *  - BradleyTerry / ShapeGrid: step 4 (optional), harmonic shape from blind pairwise preferences.
  *  - BassFitMapping: what a found floor sets.
  */
@@ -36,6 +37,9 @@ class FitRng(seed: Long) {
     fun bit(): Boolean = next() < 0
     fun below(n: Int): Int = ((next() ushr 1) % n).toInt()
 }
+
+/** Catch trials every staircase asks at least (a false-alarm rate needs more than one). */
+const val MIN_CATCH = 2
 
 object FitStats {
     /** P(X >= k) for X ~ Binomial(n, 1/2): one-sided chance of k or more right answers by guessing. */
@@ -70,7 +74,7 @@ object NoiseGate {
 
     data class Verdict(
         val pass: Boolean,
-        /** Lowest signal-to-noise ratio over the test bands, dB, and the band where it occurred. */
+        /** Lowest margin over the test bands ([judge]), dB, and the band where it occurred. */
         val worstSnrDb: Double,
         val worstBandHz: Double,
         /** Room level jumps: max - median of 100 ms frame levels, dB. */
@@ -122,20 +126,31 @@ object NoiseGate {
         return sorted.last() - sorted[sorted.size / 2]
     }
 
+    /** A band whose reference is this far below the reference's strongest band is one the speaker barely plays. */
+    const val PLAYS_DB = 20.0
+
     /**
      * [room]: the room with nothing playing (3 s); [withSignal]: the test reference playing (2 s), same microphone.
-     * The signal power is (with - room) per band, so a reference that barely rises over the room gives a low ratio.
+     * The signal power is (with - room) per band. In the bands the speaker plays (within [PLAYS_DB] of its strongest
+     * test band) the margin is the signal-to-noise ratio. A phone speaker barely plays 63-100 Hz, so there the ratio
+     * would be low in any room; those bands are judged by the room against the speaker's strongest band instead (a
+     * rumble there still masks the tones above it). Pass: every margin >= [MIN_SNR_DB] and the room steady.
      */
     fun judge(room: FloatArray?, withSignal: FloatArray?, fs: Double): Verdict {
         if (room == null || withSignal == null) return Verdict(false, Double.NaN, Double.NaN, Double.NaN, listOf(Reason.NO_MIC))
         val n = bandLevels(room, fs, TEST_BANDS)
         val s = bandLevels(withSignal, fs, TEST_BANDS)
+        val sigDb = DoubleArray(TEST_BANDS.size) { b ->
+            val sig = 10.0.pow(s[b] / 10) - 10.0.pow(n[b] / 10)
+            if (sig <= 0) -200.0 else 10 * log10(sig)
+        }
+        val strongest = sigDb.maxOrNull() ?: -200.0
         var worst = Double.POSITIVE_INFINITY
         var worstHz = TEST_BANDS[0]
         for (b in TEST_BANDS.indices) {
-            val sig = 10.0.pow(s[b] / 10) - 10.0.pow(n[b] / 10)
-            val snr = if (sig <= 0) 0.0 else 10 * log10(sig / 10.0.pow(n[b] / 10))
-            if (snr < worst) { worst = snr; worstHz = TEST_BANDS[b] }
+            val plays = sigDb[b] >= strongest - PLAYS_DB
+            val margin = if (plays) sigDb[b] - n[b] else strongest - n[b]
+            if (margin < worst) { worst = margin; worstHz = TEST_BANDS[b] }
         }
         val jump = jumpDb(room, fs)
         val reasons = ArrayList<Reason>()
@@ -149,6 +164,47 @@ object NoiseGate {
     fun disturbed(silent: FloatArray, fs: Double, roomBandsDb: DoubleArray): Boolean {
         val l = bandLevels(silent, fs, TEST_BANDS)
         return l.indices.any { l[it] > roomBandsDb[it] + DISTURB_DB }
+    }
+}
+
+/**
+ * How late a requested sound reaches the microphone (the capture, the engine and the output buffers in between): the
+ * screen asks for the reference at frame [from] of its recording and looks for where it starts. Used to find the
+ * silent interval of each trial in the recording, and to light the interval marks when the sound really plays.
+ */
+object FitLatency {
+    const val TYPICAL_S = 0.15
+    const val MAX_S = 1.0
+
+    /**
+     * First 10 ms frame after [from] louder than halfway (in dB) between the quiet half second before [from] and the
+     * reference 1.0-1.6 s after it. Null when the reference rose by less than 15 dB or [x] is too short.
+     */
+    fun onsetFrame(x: FloatArray, fs: Double, from: Int): Int? {
+        val len = (0.01 * fs).roundToInt().coerceAtLeast(1)
+        fun lvl(i: Int): Double {
+            var s = 0.0
+            for (j in i until i + len) s += x[j].toDouble() * x[j]
+            return PvbMeasureMath.db(s / len)
+        }
+        fun median(a: Int, b: Int): Double? {
+            val l = ArrayList<Double>()
+            var i = a
+            while (i + len <= b) { l += lvl(i); i += len }
+            return if (l.isEmpty()) null else l.sorted()[l.size / 2]
+        }
+        val loudEnd = from + (1.6 * fs).toInt()
+        if (from < 0 || loudEnd > x.size) return null
+        val quiet = median(max(0, from - (0.5 * fs).toInt()), from) ?: return null
+        val loud = median(from + (1.0 * fs).toInt(), loudEnd) ?: return null
+        if (loud - quiet < 15.0) return null
+        val threshold = (quiet + loud) / 2
+        var i = from
+        while (i + len <= from + (MAX_S * fs).toInt()) {
+            if (lvl(i) > threshold) return i
+            i += len
+        }
+        return null
     }
 }
 
@@ -193,7 +249,7 @@ class AbxRun(private val seed: Long, val maxTrials: Int = 8, val passAt: Int = 7
  * The speaker floor by a two-interval forced choice: a tone burst plays in one of two intervals ("어느 쪽에서 소리가
  * 났나요?"). Frequencies from [startHz] down in 1/6-octave steps. 1-down/1-up until the first miss (fast descent),
  * then 2-down/1-up (converges where 70.7 % are heard, Levitt 1971). A buzz-only answer counts as not heard. About one
- * trial in five is a catch trial (both intervals silent; the right answer is "neither").
+ * trial in five is a catch trial (both intervals silent; the right answer is "neither"), at least [MIN_CATCH].
  */
 class FloorStaircase(
     private val seed: Long,
@@ -221,10 +277,14 @@ class FloorStaircase(
     var falseAlarms = 0; private set
     var current: Trial = nextTrial(); private set
 
-    val done: Boolean get() = reversals.size >= stopReversals || toneTrials + catchTrials >= maxTrials
+    /** Enough reversals and at least [MIN_CATCH] catch trials, or [maxTrials] asked. */
+    val done: Boolean get() = (reversals.size >= stopReversals && catchTrials >= MIN_CATCH) || toneTrials + catchTrials >= maxTrials
 
-    private fun nextTrial(): Trial =
-        if (toneTrials + catchTrials >= 2 && rng.below(5) == 0) Trial.Catch else Trial.Tone(freqs[idx], rng.bit())
+    private fun nextTrial(): Trial = when {
+        reversals.size >= stopReversals -> Trial.Catch          // only the missing catch trials are left
+        toneTrials + catchTrials >= 2 && rng.below(5) == 0 -> Trial.Catch
+        else -> Trial.Tone(freqs[idx], rng.bit())
+    }
 
     fun answer(c: Choice) {
         check(!done) { "done" }
@@ -315,31 +375,90 @@ class StrengthBracket(private val seed: Long) {
 // ------------------------------------------------------------------------------------------------ step 3: break-up
 
 /**
- * Break-up limit: the layer goes up in [stepDb] steps from [startDb]; at each step an ABX of "this level" against
- * "6 dB lower" ("어느 쪽이 지직거리나요?"). The first distinguishable step is the break-up level; the limit is 3 dB
- * below it. Never distinguished up to the last step tried (at most [topDb]): the limit is that last step.
+ * Break-up limit: yes/no on the bass clip ("지직거림이나 찌그러짐이 들리나요?") with the layer at a level in
+ * 0..[maxDb], [stepDb] apart. "Buzz" lowers the next level, "clean" raises it (1-up/1-down: converges where the
+ * listener hears break-up half the time). About one trial in five after the first two (at least [MIN_CATCH]) is a
+ * catch trial: the same clip with the layer off; "buzz" there is a false alarm (the volume alone makes the speaker
+ * buzz, or "buzz" by habit).
+ *
+ * Not an ABX of a level against a lower one: any audible layer differs from itself 6 dB lower, so an ABX would only
+ * find that the two levels differ, not where the sound starts to break up.
+ *
+ * Break-up level: mean of the last four reversal levels. Limit: 3 dB below it, rounded down to whole dB. Clean three
+ * times in a row at [maxDb] and never buzzing there: no break-up found, limit [maxDb].
  */
-class BreakupLadder(private val seed: Long, val startDb: Double, val stepDb: Double = 3.0, val topDb: Double = 12.0,
-                    val abxTrials: Int = 8) {
-    var levelDb = startDb; private set
-    var abx = AbxRun(seed, abxTrials); private set
-    var breakupDb: Double? = null; private set
-    var done = false; private set
-    private var step = 0
-
-    fun answer(saidXIsA: Boolean) {
-        check(!done)
-        when (abx.answer(saidXIsA)) {
-            AbxRun.State.DISTINGUISHED -> { breakupDb = levelDb; done = true }
-            AbxRun.State.NOT_DISTINGUISHED -> {
-                if (levelDb + stepDb > topDb + 1e-9) done = true
-                else { levelDb += stepDb; step++; abx = AbxRun(seed + step, abxTrials) }
-            }
-            AbxRun.State.RUNNING -> {}
-        }
+class BreakupStaircase(
+    seed: Long,
+    startDb: Double,
+    val stepDb: Double = 2.0,
+    val maxDb: Double = 12.0,
+    val maxTrials: Int = 24,
+    val stopReversals: Int = 6,
+) {
+    enum class Answer { CLEAN, BUZZ }
+    sealed class Trial {
+        data class Level(val db: Double) : Trial()
+        object Catch : Trial()
     }
 
-    val limitDb: Double? get() = if (!done) null else breakupDb?.minus(3.0) ?: levelDb
+    private val rng = FitRng(seed)
+    private var levelDb = (Math.round(startDb / stepDb) * stepDb).coerceIn(0.0, maxDb)
+    private var lastDir = 0
+    private val reversals = ArrayList<Double>()
+    var levelTrials = 0; private set
+    var catchTrials = 0; private set
+    var falseAlarms = 0; private set
+    var buzzAnswers = 0; private set
+    private var cleanAtMax = 0
+    private var buzzAtMax = 0
+    /** Clean three times in a row at the top and never buzzing there: no break-up within the range. */
+    private val cleanAtTop: Boolean get() = cleanAtMax >= 3 && buzzAtMax == 0
+    var current: Trial = next(); private set
+
+    /** Enough reversals (or clean three times at the top) and at least [MIN_CATCH] catch trials, or [maxTrials] asked. */
+    val done: Boolean
+        get() = ((reversals.size >= stopReversals || cleanAtTop) && catchTrials >= MIN_CATCH) ||
+            levelTrials + catchTrials >= maxTrials
+
+    private fun next(): Trial = when {
+        reversals.size >= stopReversals || cleanAtTop -> Trial.Catch   // only the missing catch trials are left
+        levelTrials + catchTrials >= 2 && rng.below(5) == 0 -> Trial.Catch
+        else -> Trial.Level(levelDb)
+    }
+
+    fun answer(a: Answer) {
+        check(!done) { "done" }
+        when (current) {
+            is Trial.Catch -> { catchTrials++; if (a == Answer.BUZZ) falseAlarms++ }
+            is Trial.Level -> {
+                levelTrials++
+                if (a == Answer.BUZZ) buzzAnswers++
+                val dir = if (a == Answer.BUZZ) -1 else 1
+                if (lastDir != 0 && dir != lastDir) reversals += levelDb
+                lastDir = dir
+                val atTop = levelDb >= maxDb - 1e-9
+                cleanAtMax = if (a == Answer.CLEAN && atTop) cleanAtMax + 1 else 0
+                if (a == Answer.BUZZ && atTop) buzzAtMax++
+                levelDb = (levelDb + dir * stepDb).coerceIn(0.0, maxDb)
+            }
+        }
+        if (!done) current = next()
+    }
+
+    /** Mean of the last four reversal levels (fewer if fewer); null before two reversals. */
+    fun breakupDb(): Double? = if (reversals.size < 2) null else reversals.takeLast(4).average()
+
+    /** Strength cap, whole dB: break-up - 3, or [maxDb] when no break-up was found; null while running or undecided. */
+    val limitDb: Double?
+        get() = when {
+            !done -> null
+            cleanAtTop || buzzAnswers == 0 -> maxDb
+            else -> breakupDb()?.let { kotlin.math.floor(it - 3.0).coerceIn(0.0, maxDb) }
+        }
+
+    /** Enough reversals (or clean at the top) and no more than a third of the catch trials heard as buzzing. */
+    val reliable: Boolean
+        get() = (reversals.size >= 4 || cleanAtTop) && (catchTrials == 0 || falseAlarms * 3 <= catchTrials)
 }
 
 // ------------------------------------------------------------------------------------------------ step 4: shape
@@ -369,8 +488,9 @@ object BradleyTerry {
 }
 
 /**
- * 3 x 3 grid of (roll-off offset, low-order weight). The next pair is the one whose scores are closest, penalised by
- * how often it has been asked; [maxPairs] pairs, the first pair repeated at the end for consistency.
+ * 3 x 3 grid of (roll-off offset, low-order weight). The first pair is the centre against a corner the seed picks;
+ * then the pair whose scores are closest, penalised by how often it has been asked; [maxPairs] pairs, the first pair
+ * repeated at the end (sides swapped) for consistency.
  */
 class ShapeGrid(private val seed: Long, val maxPairs: Int = 18) {
     data class Cell(val rolloffDbOct: Double, val lowOrderDb: Double)
@@ -381,7 +501,8 @@ class ShapeGrid(private val seed: Long, val maxPairs: Int = 18) {
     private val asked = Array(cells.size) { IntArray(cells.size) }
     private val rng = FitRng(seed)
     var pairs = 0; private set
-    var current: Triple<Int, Int, Boolean>? = Triple(4, 0, rng.bit())   // (i, j, iIsA): centre vs a corner first
+    private val first = Triple(4, intArrayOf(0, 2, 6, 8)[rng.below(4)], rng.bit())   // (i, j, iIsA)
+    var current: Triple<Int, Int, Boolean>? = first
         private set
     private var firstAnswer: Int = -2
     var consistent = true; private set
@@ -395,7 +516,7 @@ class ShapeGrid(private val seed: Long, val maxPairs: Int = 18) {
         if (pairs == 1) firstAnswer = win
         current = when {
             pairs < maxPairs - 1 -> nextPair()
-            pairs == maxPairs - 1 -> Triple(4, 0, !iIsA)
+            pairs == maxPairs - 1 -> Triple(first.first, first.second, !first.third)
             else -> {
                 if (firstAnswer != -1 && win != -1 && firstAnswer != win) consistent = false
                 null
@@ -424,6 +545,8 @@ class ShapeGrid(private val seed: Long, val maxPairs: Int = 18) {
 /** What a found speaker floor sets (the S26 Ultra's measured floor of 150 Hz gives its own values). */
 object BassFitMapping {
     const val REF_FLOOR_HZ = 150.0
+    /** Highest generator edge the engine takes (pvb_engine.cpp sanitize). */
+    const val MAX_EDGE_HZ = 280.0
     data class FloorSettings(val speakerFloorHz: Double, val hpHz: Double, val boundaryHz: Double, val outLoHz: Double,
                              val tableScale: Double)
 
@@ -433,7 +556,7 @@ object BassFitMapping {
         return FloorSettings(
             speakerFloorHz = f,
             hpHz = max(80.0, f / 1.5),
-            boundaryHz = min(280.0, 190.0 * k),
+            boundaryHz = min(MAX_EDGE_HZ, 190.0 * k),
             outLoHz = min(300.0, 150.0 * k),
             tableScale = k,
         )

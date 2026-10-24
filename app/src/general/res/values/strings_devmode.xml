@@ -262,4 +262,10 @@
     <string name="dev_ev_vol_1" formatted="false">On the S26 Ultra the bass protection threshold was about -27 dBFS at 80% volume and about -15 dBFS at 50%. The volume link reduced the buzz a lot.</string>
     <string name="dev_ev_x_dense_0">An expectation from intermodulation: when strong bass moves the diaphragm, the mids and highs distort with it.</string>
     <string name="dev_ev_x_dense_1">In listening round 19 on the S26 Ultra it could not be told apart from a fixed average level.</string>
+    <string name="dev_p_table_floor_name">Harmonic table floor</string>
+    <string name="dev_p_table_floor_line">Moves the virtual-bass strength table to the lowest note this speaker plays. 150 Hz is the S26 Ultra as it is.</string>
+    <string name="dev_p_table_floor_up">Higher notes (150-250 Hz) get harmonics too. The harmonics of very low notes (55-100 Hz) get smaller.</string>
+    <string name="dev_p_table_floor_down">The other way round: low notes get bigger harmonics, higher notes are left empty.</string>
+    <string name="dev_ev_table_floor_0">The virtual-bass strength table was made for the S26 Ultra\'s speaker (floor 150 Hz). On other phones the table moves by that phone\'s floor.</string>
+    <string name="dev_ev_table_floor_1">Whether a moved table sounds as strong as on the S26 Ultra is still being checked. The strength comparison in "Bass fit" closes that gap by ear.</string>
 </resources>
