@@ -3,6 +3,7 @@
 <resources>
     <string name="eq_info_title">저음, 왕창 올려도 될까요?</string>
     <string name="eq_info_open">EQ 설명</string>
+    <string name="eq_story_more">아래에 더 있어요</string>
     <string name="eq_story_brand_note">A사 폰의 저음은 일부가 배음일 수도 있어요. 다른 연구실 측정에서 60~100 Hz의 배음이 원음보다 수십 배 큰 구간이 있었어요. 볼륨 100%에서 한 번 잰 값이라 확정은 아니에요.</string>
     <string name="eq_try_title">직접 들어 보기</string>
     <string name="eq_try_unavailable">Rootnote가 켜져 있고 스피커로 음악이 나올 때 해 볼 수 있어요.</string>
@@ -100,5 +101,7 @@
         <item>5배음</item>
         <item>배음 합: 원음의 수십 배</item>
         <item>다른 연구실 측정 · 볼륨 100%</item>
+        <item>S26 Ultra (직접 측정)</item>
+        <item>폰 80%가 들어오는 범위</item>
     </string-array>
 </resources>
