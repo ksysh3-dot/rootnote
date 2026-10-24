@@ -11,6 +11,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import me.timschneeberger.rootlessjamesdsp.MainApplication
 import me.timschneeberger.rootlessjamesdsp.R
+import me.timschneeberger.rootlessjamesdsp.home.BassStoryActivity
 import me.timschneeberger.rootlessjamesdsp.activity.GraphicEqualizerActivity
 import me.timschneeberger.rootlessjamesdsp.activity.LiveprogEditorActivity
 import me.timschneeberger.rootlessjamesdsp.activity.LiveprogParamsActivity
@@ -96,8 +97,9 @@ fun JamesDspModules(host: RnAdvancedActivity, sealed: Boolean, spatialSealed: Bo
     // 멀티 모달 이퀄라이저
     val eq = rememberDspFile(Constants.PREF_EQ, host)
     var eqEdit by remember { mutableStateOf(false) }
+    val openStory = { host.startActivity(BassStoryActivity.intent(host)) }
     DspModule(stringResource(R.string.eq_enable), R.drawable.ic_baseline_equalizer_24dp, showIcons, eq,
-        k(R.string.key_eq_enable), sealOf(JdspChain.Policy.INFO, sealed), eqNote) {
+        k(R.string.key_eq_enable), sealOf(JdspChain.Policy.INFO, sealed), eqNote, onNote = openStory) {
         val typeKey = k(R.string.key_eq_filter_type)
         PrefChoice(eq, typeKey, stringResource(R.string.eq_filter_type), "0", R.array.eq_filter_types, R.array.eq_filter_types_values)
         PrefChoice(eq, k(R.string.key_eq_interpolation), stringResource(R.string.eq_interpolator), "0",
@@ -114,7 +116,7 @@ fun JamesDspModules(host: RnAdvancedActivity, sealed: Boolean, spatialSealed: Bo
     // Parametric equalizer: its editor stays a screen of its own
     val peq = rememberDspFile(Constants.PREF_PEQ, host)
     DspModule(stringResource(R.string.peq_enable), R.drawable.ic_baseline_equalizer_24dp, showIcons, peq,
-        k(R.string.key_peq_enable), sealOf(JdspChain.Policy.INFO, sealed), eqNote) {
+        k(R.string.key_peq_enable), sealOf(JdspChain.Policy.INFO, sealed), eqNote, onNote = openStory) {
         val value = peq.string(k(R.string.key_peq_bands), Constants.DEFAULT_PEQ)
         val count = remember(value) { ParametricEqBandList().apply { deserialize(value) }.size }
         val preamp = peq.float(k(R.string.key_peq_preamp), 0f)
@@ -127,7 +129,7 @@ fun JamesDspModules(host: RnAdvancedActivity, sealed: Boolean, spatialSealed: Bo
     // 임의 응답 이퀄라이저 (GEQ): its editor (and AutoEQ) stays a screen of its own
     val geq = rememberDspFile(Constants.PREF_GEQ, host)
     DspModule(stringResource(R.string.geq_enable), R.drawable.ic_baseline_chart_timeline_variant_24dp, showIcons, geq,
-        k(R.string.key_geq_enable), sealOf(JdspChain.Policy.INFO, sealed), eqNote) {
+        k(R.string.key_geq_enable), sealOf(JdspChain.Policy.INFO, sealed), eqNote, onNote = openStory) {
         val value = geq.string(k(R.string.key_geq_nodes), Constants.DEFAULT_GEQ)
         val count = remember(value) { GraphicEqNodeList().apply { deserialize(value) }.size }
         val open = { host.launchSafely { host.startActivity(Intent(host, GraphicEqualizerActivity::class.java)) } }

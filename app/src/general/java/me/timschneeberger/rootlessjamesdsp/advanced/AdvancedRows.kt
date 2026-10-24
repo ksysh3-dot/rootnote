@@ -86,7 +86,7 @@ enum class Seal { NONE, INFO, LOCKED }
 @Composable
 fun DspModule(
     title: String, icon: Int, showIcons: Boolean, file: RnPrefsFile, enableKey: String?,
-    seal: Seal, note: String?, content: @Composable () -> Unit,
+    seal: Seal, note: String?, onNote: (() -> Unit)? = null, content: @Composable () -> Unit,
 ) {
     RnBand()
     val locked = seal == Seal.LOCKED
@@ -94,6 +94,6 @@ fun DspModule(
     val on = enableKey == null || file.bool(enableKey, false)
     if (enableKey != null) RnSwitchRow(title, on, { file.put(enableKey, it) }, enabled = !locked, bold = true, icon = painter)
     else RnGroupTitle(title, painter, enabled = !locked)
-    if (seal != Seal.NONE && note != null) RnNote(note, warning = locked)
+    if (seal != Seal.NONE && note != null) RnNote(note, warning = locked, onClick = onNote)
     if (on) CompositionLocalProvider(LocalSealed provides locked) { content() }
 }
