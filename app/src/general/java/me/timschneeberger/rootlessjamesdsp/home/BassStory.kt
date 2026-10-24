@@ -51,6 +51,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -113,8 +114,10 @@ private val Ease = CubicBezierEasing(0.32f, 0.72f, 0f, 1f)
 private const val SCENES = 11
 /** The page with "직접 들어 보기" (63 Hz +10 dB at a moment the listener is not told). */
 private const val TRY_PAGE = 6
-private val PERIODS = intArrayOf(4200, 3600, 4000, 3200, 4000, 3600, 2000, 3600, 3600, 5200, 4200)
-private val KEY_FRAMES = floatArrayOf(0.9f, 0.7f, 0.55f, 0.3f, 0.45f, 0.6f, 0f, 0.5f, 0.5f, 0.95f, 0.9f)
+/** The iPhone page (its small note on harmonics under the text). */
+private const val IPHONE_PAGE = 1
+private val PERIODS = intArrayOf(4200, 11000, 4000, 3200, 4000, 3600, 2000, 3600, 3600, 5200, 4200)
+private val KEY_FRAMES = floatArrayOf(0.9f, 0.97f, 0.55f, 0.3f, 0.45f, 0.6f, 0f, 0.5f, 0.5f, 0.95f, 0.9f)
 
 /**
  * The listening trial of [TRY_PAGE], driven by BassStoryActivity: [phase] IDLE, PREP (the trial's base settings
@@ -192,6 +195,8 @@ fun BassStory(reduceMotion: Boolean, trial: TryUi, actions: TryActions, onClose:
                     Text(items.getOrElse(2 * page) { "" }, modifier = Modifier.semantics { heading() },
                         color = c.textPrimary, fontSize = 20.sp, lineHeight = 26.sp, fontWeight = FontWeight.Bold)
                     Text(items.getOrElse(2 * page + 1) { "" }, color = c.textPrimary, fontSize = 15.sp, lineHeight = 22.sp)
+                    if (page == IPHONE_PAGE) Text(stringResource(R.string.eq_story_iphone_note), color = c.textSecondary,
+                        fontSize = 12.sp, lineHeight = 17.sp)
                     if (page == TRY_PAGE) TryControl(trial, actions)
                 }
             }
@@ -352,25 +357,92 @@ private fun DrawScope.sceneResponse(t: Float, ink: Ink, tm: TextMeasurer, labels
     }
 }
 
-/** 2: the median Android phone, then the iPhones' median drawn over it; the bass gap shaded. */
+/**
+ * 2, a short motion piece (11 s): (a) the iPhones' median rises above the median Android phone, the bass gap
+ * shaded; (b) the chart zooms into 60-100 Hz and fades; (c) a small fundamental, then waves of the 2nd to 5th
+ * harmonics appear under it one by one; (d) a column stacks the harmonics until it is tens of times the fundamental.
+ * The harmonic amplitudes are illustrative (the text says "tens of times"; no per-model value is drawn).
+ */
 private fun DrawScope.sceneIphone(t: Float, ink: Ink, tm: TextMeasurer, labels: Array<String>) {
     val ch = Chart(size.width, size.height)
-    zonesAndGrid(ch, ink, tm, labels)
-    curve(ch, { PhoneResponse.P50[it] }, ink.accent, 2.5f.dp.toPx())
-    val a = phase(t, 0.1f, 0.6f)
-    // the gap at 125-400 Hz fills as the iPhone line rises from the Android one
-    val gap = Path()
-    val idx = PhoneResponse.HZ.indices.filter { PhoneResponse.HZ[it] <= 400f }
-    fun mix(i: Int) = PhoneResponse.P50[i] + (PhoneResponse.IPHONE_P50[i] - PhoneResponse.P50[i]) * a
-    idx.forEachIndexed { k, i -> val x = ch.x(PhoneResponse.HZ[i]); if (k == 0) gap.moveTo(x, ch.y(mix(i))) else gap.lineTo(x, ch.y(mix(i))) }
-    for (i in idx.reversed()) gap.lineTo(ch.x(PhoneResponse.HZ[i]), ch.y(PhoneResponse.P50[i]))
-    gap.close()
-    drawPath(gap, ink.accent.copy(alpha = 0.25f))
-    curve(ch, { mix(it) }, ink.text, 2.5f.dp.toPx())
-    val b = phase(t, 0.6f, 0.72f)
-    if (b > 0f) {
-        text(tm, labels.getOrElse(27) { "" }, ch.x(160f), ch.y(PhoneResponse.IPHONE_P50[1]) - 20.dp.toPx(), ink.text.copy(alpha = b), 11f, bold = true)
-        text(tm, labels.getOrElse(28) { "" }, ch.x(200f), ch.y(PhoneResponse.P50[2]) + 6.dp.toPx(), ink.accent.copy(alpha = b), 11f, bold = true)
+    val rise = phase(t, 0.03f, 0.25f)
+    val zoom = phase(t, 0.32f, 0.45f)
+    if (zoom < 1f) {
+        val pivot = Offset(ch.x(80f), ch.y(-24f))
+        val sc = 1f + 3f * zoom
+        val fade = 1f - phase(t, 0.38f, 0.45f)
+        withTransform({ scale(sc, sc, pivot) }) {
+            drawContext.canvas.saveLayer(androidx.compose.ui.geometry.Rect(Offset.Zero, size),
+                androidx.compose.ui.graphics.Paint().apply { alpha = fade })
+            zonesAndGrid(ch, ink, tm, labels)
+            curve(ch, { PhoneResponse.P50[it] }, ink.accent, 2.5f.dp.toPx())
+            val gap = Path()
+            val idx = PhoneResponse.HZ.indices.filter { PhoneResponse.HZ[it] <= 400f }
+            fun mix(i: Int) = PhoneResponse.P50[i] + (PhoneResponse.IPHONE_P50[i] - PhoneResponse.P50[i]) * rise
+            idx.forEachIndexed { k, i -> val x = ch.x(PhoneResponse.HZ[i]); if (k == 0) gap.moveTo(x, ch.y(mix(i))) else gap.lineTo(x, ch.y(mix(i))) }
+            for (i in idx.reversed()) gap.lineTo(ch.x(PhoneResponse.HZ[i]), ch.y(PhoneResponse.P50[i]))
+            gap.close()
+            drawPath(gap, ink.accent.copy(alpha = 0.25f))
+            curve(ch, { mix(it) }, ink.text, 2.5f.dp.toPx())
+            val b = phase(t, 0.22f, 0.3f)
+            if (b > 0f && zoom == 0f) {
+                text(tm, labels.getOrElse(27) { "" }, ch.x(160f), ch.y(PhoneResponse.IPHONE_P50[1]) - 20.dp.toPx(), ink.text.copy(alpha = b), 11f, bold = true)
+                text(tm, labels.getOrElse(28) { "" }, ch.x(200f), ch.y(PhoneResponse.P50[2]) + 6.dp.toPx(), ink.accent.copy(alpha = b), 11f, bold = true)
+            }
+            // the zoom target: a frame around 60-100 Hz
+            if (zoom > 0f) drawRect(ink.warn, Offset(ch.x(60f), ch.top), Size(ch.x(100f) - ch.x(60f), ch.bottom - ch.top),
+                style = Stroke(1.5f.dp.toPx() / sc))
+            drawContext.canvas.restore()
+        }
+        if (zoom < 0.5f) return
+    }
+    // (c) + (d): the zoomed view
+    val show = phase(t, 0.42f, 0.5f)
+    val w = size.width; val h = size.height
+    text(tm, labels.getOrElse(29) { "" }, w * 0.02f, h * 0.0f, ink.warn.copy(alpha = show), 11f, bold = true)
+    val waveL = w * 0.03f; val waveR = w * 0.66f
+    val rows = 5
+    val rowH = h * 0.86f / rows
+    val shift = t * 2f * PI.toFloat() * 6f
+    fun wave(row: Int, cycles: Float, amp: Float, color: Color, a: Float) {
+        val yMid = h * 0.1f + rowH * (row + 0.5f)
+        val p = Path()
+        for (i in 0..96) {
+            val x = waveL + (waveR - waveL) * i / 96f
+            val v = yMid - amp * a * sin(i / 96f * cycles * 2f * PI.toFloat() - shift * cycles / 2f)
+            if (i == 0) p.moveTo(x, v) else p.lineTo(x, v)
+        }
+        drawPath(p, color.copy(alpha = a), style = Stroke(2.5f.dp.toPx(), cap = StrokeCap.Round))
+    }
+    // the fundamental: small
+    wave(0, 2f, rowH * 0.06f, ink.accent, show)
+    text(tm, labels.getOrElse(30) { "" }, waveR + 4.dp.toPx(), h * 0.1f + rowH * 0.5f - 8.dp.toPx(), ink.accent.copy(alpha = show), 11f, bold = true)
+    // the harmonics: bigger waves appearing one by one
+    val amps = floatArrayOf(0.42f, 0.38f, 0.3f, 0.24f)
+    for (k in 0 until 4) {
+        val a = phase(t, 0.5f + 0.07f * k, 0.56f + 0.07f * k)
+        if (a <= 0f) continue
+        wave(k + 1, 2f * (k + 2), rowH * amps[k], ink.warn, a)
+        text(tm, labels.getOrElse(31 + k) { "" }, waveR + 4.dp.toPx(), h * 0.1f + rowH * (k + 1.5f) - 8.dp.toPx(), ink.warn.copy(alpha = a), 11f, bold = true)
+    }
+    // (d) the column: the fundamental's tiny block, then the harmonics stacked on it
+    val colX = w * 0.84f; val colW = w * 0.1f
+    val base = h * 0.9f
+    val unit = h * 0.012f
+    drawRect(ink.accent.copy(alpha = show), Offset(colX, base - unit), Size(colW, unit))
+    var top = base - unit
+    val parts = floatArrayOf(18f, 15f, 10f, 7f)          // in fundamental units: about 50 in all, "tens of times"
+    for (k in 0 until 4) {
+        val a = phase(t, 0.78f + 0.03f * k, 0.81f + 0.03f * k)
+        if (a <= 0f) continue
+        val hh = unit * parts[k] * a
+        drawRect(ink.warn.copy(alpha = 0.55f + 0.1f * k), Offset(colX, top - hh), Size(colW, hh))
+        top -= hh
+    }
+    val done = phase(t, 0.9f, 0.95f)
+    if (done > 0f) {
+        text(tm, labels.getOrElse(35) { "" }, colX + colW, top - 34.dp.toPx(), ink.warn.copy(alpha = done), 11f, bold = true, align = 1f)
+        text(tm, labels.getOrElse(36) { "" }, colX + colW, top - 18.dp.toPx(), ink.soft.copy(alpha = done), 10f, align = 1f)
     }
 }
 
