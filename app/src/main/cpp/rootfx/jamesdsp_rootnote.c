@@ -17,6 +17,7 @@
 #endif
 #include <stdint.h>  // Rootnote: essential.h needs it (bionic pulls it in elsewhere)
 #include <stdlib.h>
+#include <unistd.h>  // Rootnote: getpid (NDK clang treats implicit declarations as errors)
 #include <string.h>
 #include <math.h>
 #include "essential.h"
