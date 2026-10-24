@@ -10,6 +10,20 @@ The corresponding source is the tagged commit; `source-*.tar.gz` below contains 
 - Measured settings exist only for the Galaxy S26 Ultra; other phones start with conservative settings based on published measurements of 92 Android phones.
 - Privacy: only settings are stored; no song titles, no recordings, nothing sent (see PRIVACY.md).
 
+## 0.9.0-beta.6
+
+개발자 모드에 "저음 맞추기"를 넣었어요. 귀로 들으며 내 폰 스피커에 맞는 저음 값을 찾는 시험이에요. 아직 실험 단계라 개발자 모드에서만 쓸 수 있어요.
+
+- **저음 맞추기 (개발자 모드 맨 위):** 10분쯤 걸려요.
+  - 주변 소음을 먼저 엄격하게 확인해요. 시끄러우면 "결과가 부정확할 수 있어요"라고 알려 줘요.
+  - 이어서 네 단계를 해요: 스피커가 내는 가장 낮은 소리, 가상 저음이 들리는지와 좋아하는 세기, 찌그러지기 시작하는 세기, 배음 모양(선택).
+  - 문제 순서와 A·B는 매번 달라지고, 확인용 문제가 섞여 있어요.
+  - 볼륨이 바뀌거나 이어폰으로 바뀌면 잠시 멈춰요.
+  - 끝나면 내 음악으로 지금 설정과 새 설정을 블라인드로 비교한 뒤 저장할 수 있어요. 저장하기 전에는 아무것도 바뀌지 않고, 저장한 뒤에도 되돌릴 수 있어요.
+- **마이크가 듣는 값 (참고용):** 폰 마이크로 바로 옆 스피커가 실제로 저음을 내는지 재요. 개발자 모드의 "스피커 확인 (마이크)"와 저음 맞추기 결과에서 볼 수 있어요. 참고용이라 설정에는 적용하지 않아요.
+- **검증 모드:** 같은 시험을 조건을 숨긴 채 여러 번 반복하고 결과를 기록(CSV)으로 남겨요. 측정 마이크와 비교할 때 써요.
+- **개발자 값 추가:** "배음 표 기준 바닥"이 생겼고, "저음 경계"는 280 Hz까지 올릴 수 있어요. 기본값 그대로면 소리는 이전과 같아요.
+
 ## 0.9.0-beta.5
 
 측정하지 않은 폰의 시작 EQ를 실측 자료로 다시 잡고, 개발자 모드의 배음 그래프를 고쳤어요.

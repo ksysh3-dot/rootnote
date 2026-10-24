@@ -27,7 +27,7 @@ only; headphones and Bluetooth are bypassed.
 
 ## Status
 
-**Beta** (`0.9.0-beta.5`, Android 10 or later, arm64).
+**Beta** (`0.9.0-beta.6`, Android 10 or later, arm64).
 
 - The default settings were measured on a **Galaxy S26 Ultra** (model `SM-S948*`). Every other phone starts
   with a conservative neutral profile (120 Hz low cut, low-mid +2 dB, treble -2 dB, output -3 dB, limiter -1 dBTP; see docs/SPEAKER_ESTIMATES.md) and a
@@ -148,7 +148,7 @@ RootlessJamesDSP의 루트 없는 시스템 오디오 캡처는 그대로 쓰고
 
 ### 상태
 
-**베타**(`0.9.0-beta.5`, Android 10 이상, arm64)입니다.
+**베타**(`0.9.0-beta.6`, Android 10 이상, arm64)입니다.
 
 - 기본 설정은 **갤럭시 S26 Ultra**(모델 `SM-S948*`)에서 측정했습니다. 다른 폰은 보수적인 중립 설정(보호용 저역 차단
   100 Hz, 평탄한 EQ, 출력 −3 dB, 리미터 −1 dBTP)으로 시작하고 "측정되지 않은 기기" 안내를 한 번 띄웁니다. 들으면서
