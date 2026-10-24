@@ -3,7 +3,7 @@
 <resources>
     <string name="eq_info_title">Can I just crank up the bass?</string>
     <string name="eq_info_open">About EQ</string>
-    <string name="eq_story_iphone_note">Part of the iPhone\'s bass may be harmonics. In another lab\'s measurement, the harmonics at 60-100 Hz were tens of times larger than the fundamental in places. One measurement at 100% volume, so not certain.</string>
+    <string name="eq_story_brand_note">Part of brand A\'s bass may be harmonics. In another lab\'s measurement, the harmonics at 60-100 Hz were tens of times larger than the fundamental in places. One measurement at 100% volume, so not certain.</string>
     <string name="eq_try_title">Listen for yourself</string>
     <string name="eq_try_unavailable">You can try this while Rootnote is on and music plays on the speaker.</string>
     <string name="eq_try_volume">The volume is high. Turn it below half first: at loud volume rattle comes before bass.</string>
@@ -28,8 +28,8 @@
     <string-array name="eq_story">
         <item>What a phone speaker plays</item>
         <item>The picture shows how loud the speakers of about 90 Android phones play, from low to high notes, with the mids (about where voices are) at 0.\n\nBelow 200 Hz the sound drops fast. The median phone is about 23 dB under its mids at 125 Hz, and below that it is too quiet for this data to show.\n\nEstimates: one reviewer\'s measurements, all taken the same way, moved into Rootnote\'s frame. No per-model values are shown. The dashed line is the Galaxy S26 Ultra as Rootnote measured it.</item>
-        <item>And the iPhone, known for its bass?</item>
-        <item>In both sets of measurements, iPhones played 125-250 Hz about 6-9 dB louder than the median Android phone; about 1 Android phone in 10 plays that much. The picture is the median of 7 iPhones measured by one reviewer: it reaches 10 dB under its mids at about 155 Hz, some 50 Hz lower than the median Android phone (about 205 Hz).\n\nThe gap to the Galaxy S26 Ultra differed between measurements: about 7 dB in this reviewer\'s data, about 1-2 dB in another lab\'s data taken at 100% volume. At full volume both phones\' protection seems to narrow it.\n\nStill, an iPhone too is about 14 dB under its mids at 125 Hz, so boosting 32 or 63 Hz a lot has the same problems there. With only 5-7 iPhones, take this as a rough comparison.</item>
+        <item>And another maker\'s phones, known for their bass?</item>
+        <item>We looked at one maker\'s phones known for strong bass (brand A below). In both sets of measurements, brand A phones played 125-250 Hz about 6-9 dB louder than the median Android phone; about 1 Android phone in 10 plays that much. The picture is the median of 7 brand A phones measured by one reviewer: it reaches 10 dB under its mids at about 155 Hz, some 50 Hz lower than the median Android phone (about 205 Hz).\n\nThe gap to the Galaxy S26 Ultra differed between measurements: about 7 dB in this reviewer\'s data, about 1-2 dB in another lab\'s data taken at 100% volume. At full volume both phones\' protection seems to narrow it.\n\nStill, a brand A phone too is about 14 dB under its mids at 125 Hz, so boosting 32 or 63 Hz a lot has the same problems there. With only 5-7 brand A phones, take this as a rough comparison.</item>
         <item>Raising 32 and 63 Hz a lot</item>
         <item>Many phone EQs shared online push the lowest sliders far up. Those sliders sit in the grey part of the picture, where the speaker hardly plays.\n\nA 10 dB boost only takes a sound that was 23 dB down to 13 dB down, so the bass you hear grows very little. Two problems come with it instead.\n\nSamsung gives the same reason. The audio moderator of Samsung Members answered (June 2025) that since One UI 6.1.1 the lowest two bands (63 and 125 Hz) of the built-in speaker EQ are disabled by policy, because raising low-frequency gain can distort the sound.</item>
         <item>The cone reaches its limit first</item>
@@ -51,7 +51,7 @@
     </string-array>
     <string-array name="eq_story_a11y">
         <item>Picture: frequency response of Android phone speakers. Median phone, 10-90% range and the S26 Ultra as measured. The sound drops fast under 200 Hz.</item>
-        <item>Picture: the median of the iPhones rises above the median Android phone. Then 60-100 Hz is zoomed in: under a small fundamental, waves of the 2nd to 5th harmonics appear one by one, and the stacked harmonics grow to tens of times the fundamental.</item>
+        <item>Picture: the median of the brand A phones rises above the median Android phone. Then 60-100 Hz is zoomed in: under a small fundamental, waves of the 2nd to 5th harmonics appear one by one, and the stacked harmonics grow to tens of times the fundamental.</item>
         <item>Picture: the 31, 62 and 125 Hz EQ sliders go up 10 dB, and the median phone\'s curve rises only a little inside the grey part.</item>
         <item>Picture: for the same loudness the cone moves a little at 250 Hz and 16 times as far at 63 Hz, where it hits its limit and rattles.</item>
         <item>Picture: when the bass bar crosses the protection line, the voice and instrument bars go down too.</item>
@@ -90,7 +90,7 @@
         <item>Treble peak -3 dB</item>
         <item>EQ band: 63 Hz +10 dB</item>
         <item>The skirt is what you hear</item>
-        <item>Median of 7 iPhones</item>
+        <item>Median of 7 brand A phones</item>
         <item>Median Android</item>
         <item>60-100 Hz, zoomed</item>
         <item>Fundamental</item>

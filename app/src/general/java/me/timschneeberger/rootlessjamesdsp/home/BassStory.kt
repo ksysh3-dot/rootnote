@@ -103,8 +103,8 @@ internal object PhoneResponse {
         9.2f, 12.6f, 11.2f, 14.1f, 12.4f, 6.2f, -5.0f, -8.9f)
     val P90 = floatArrayOf(-16.5f, -9.4f, -5.3f, -1.1f, 0.3f, -0.6f, -1.9f, -1.5f, 1.2f, 3.7f, 4.6f, 2.9f, 5.7f, 12.7f,
         16.3f, 15.2f, 19.0f, 17.8f, 11.2f, 0.9f, -1.8f)
-    /** iPhones in the same reviewer's data (7 phones), median per band, same frame. Aggregate only. */
-    val IPHONE_P50 = floatArrayOf(-14.4f, -5.1f, -3.6f, -2.5f, -2.3f, -0.9f, -3.0f, -4.1f, -2.8f, -0.6f, 1.4f, 0.6f, 4.9f,
+    /** Brand A (another maker's phones known for strong bass) in the same reviewer's data: 7 phones, median per band, same frame. Aggregate only. */
+    val BRAND_A_P50 = floatArrayOf(-14.4f, -5.1f, -3.6f, -2.5f, -2.3f, -0.9f, -3.0f, -4.1f, -2.8f, -0.6f, 1.4f, 0.6f, 4.9f,
         10.6f, 12.4f, 10.5f, 17.0f, 17.8f, 14.0f, 0.5f, -3.9f)
     /** The median phone is 10 dB under its mids here. */
     const val MEDIAN_MINUS10_HZ = 206f
@@ -114,8 +114,8 @@ private val Ease = CubicBezierEasing(0.32f, 0.72f, 0f, 1f)
 private const val SCENES = 11
 /** The page with "직접 들어 보기" (63 Hz +10 dB at a moment the listener is not told). */
 private const val TRY_PAGE = 6
-/** The iPhone page (its small note on harmonics under the text). */
-private const val IPHONE_PAGE = 1
+/** The brand A page (its small note on harmonics under the text). */
+private const val BRAND_PAGE = 1
 private val PERIODS = intArrayOf(4200, 11000, 4000, 3200, 4000, 3600, 2000, 3600, 3600, 5200, 4200)
 private val KEY_FRAMES = floatArrayOf(0.9f, 0.97f, 0.55f, 0.3f, 0.45f, 0.6f, 0f, 0.5f, 0.5f, 0.95f, 0.9f)
 
@@ -195,7 +195,7 @@ fun BassStory(reduceMotion: Boolean, trial: TryUi, actions: TryActions, onClose:
                     Text(items.getOrElse(2 * page) { "" }, modifier = Modifier.semantics { heading() },
                         color = c.textPrimary, fontSize = 20.sp, lineHeight = 26.sp, fontWeight = FontWeight.Bold)
                     Text(items.getOrElse(2 * page + 1) { "" }, color = c.textPrimary, fontSize = 15.sp, lineHeight = 22.sp)
-                    if (page == IPHONE_PAGE) Text(stringResource(R.string.eq_story_iphone_note), color = c.textSecondary,
+                    if (page == BRAND_PAGE) Text(stringResource(R.string.eq_story_brand_note), color = c.textSecondary,
                         fontSize = 12.sp, lineHeight = 17.sp)
                     if (page == TRY_PAGE) TryControl(trial, actions)
                 }
@@ -256,7 +256,7 @@ private fun Scene(page: Int, reduceMotion: Boolean, active: Boolean, trial: TryU
         val t = clock.value % 1f
         when (page) {
             0 -> sceneResponse(t, ink, tm, labels)
-            1 -> sceneIphone(t, ink, tm, labels)
+            1 -> sceneBrand(t, ink, tm, labels)
             2 -> sceneCrank(t, ink, tm, labels)
             3 -> sceneCone(t, ink, tm, labels)
             4 -> sceneProtect(t, ink, tm, labels)
@@ -358,12 +358,12 @@ private fun DrawScope.sceneResponse(t: Float, ink: Ink, tm: TextMeasurer, labels
 }
 
 /**
- * 2, a short motion piece (11 s): (a) the iPhones' median rises above the median Android phone, the bass gap
+ * 2, a short motion piece (11 s): (a) brand A's median rises above the median Android phone, the bass gap
  * shaded; (b) the chart zooms into 60-100 Hz and fades; (c) a small fundamental, then waves of the 2nd to 5th
  * harmonics appear under it one by one; (d) a column stacks the harmonics until it is tens of times the fundamental.
  * The harmonic amplitudes are illustrative (the text says "tens of times"; no per-model value is drawn).
  */
-private fun DrawScope.sceneIphone(t: Float, ink: Ink, tm: TextMeasurer, labels: Array<String>) {
+private fun DrawScope.sceneBrand(t: Float, ink: Ink, tm: TextMeasurer, labels: Array<String>) {
     val ch = Chart(size.width, size.height)
     val rise = phase(t, 0.03f, 0.25f)
     val zoom = phase(t, 0.32f, 0.45f)
@@ -378,7 +378,7 @@ private fun DrawScope.sceneIphone(t: Float, ink: Ink, tm: TextMeasurer, labels: 
             curve(ch, { PhoneResponse.P50[it] }, ink.accent, 2.5f.dp.toPx())
             val gap = Path()
             val idx = PhoneResponse.HZ.indices.filter { PhoneResponse.HZ[it] <= 400f }
-            fun mix(i: Int) = PhoneResponse.P50[i] + (PhoneResponse.IPHONE_P50[i] - PhoneResponse.P50[i]) * rise
+            fun mix(i: Int) = PhoneResponse.P50[i] + (PhoneResponse.BRAND_A_P50[i] - PhoneResponse.P50[i]) * rise
             idx.forEachIndexed { k, i -> val x = ch.x(PhoneResponse.HZ[i]); if (k == 0) gap.moveTo(x, ch.y(mix(i))) else gap.lineTo(x, ch.y(mix(i))) }
             for (i in idx.reversed()) gap.lineTo(ch.x(PhoneResponse.HZ[i]), ch.y(PhoneResponse.P50[i]))
             gap.close()
@@ -386,7 +386,7 @@ private fun DrawScope.sceneIphone(t: Float, ink: Ink, tm: TextMeasurer, labels: 
             curve(ch, { mix(it) }, ink.text, 2.5f.dp.toPx())
             val b = phase(t, 0.22f, 0.3f)
             if (b > 0f && zoom == 0f) {
-                text(tm, labels.getOrElse(27) { "" }, ch.x(160f), ch.y(PhoneResponse.IPHONE_P50[1]) - 20.dp.toPx(), ink.text.copy(alpha = b), 11f, bold = true)
+                text(tm, labels.getOrElse(27) { "" }, ch.x(160f), ch.y(PhoneResponse.BRAND_A_P50[1]) - 20.dp.toPx(), ink.text.copy(alpha = b), 11f, bold = true)
                 text(tm, labels.getOrElse(28) { "" }, ch.x(200f), ch.y(PhoneResponse.P50[2]) + 6.dp.toPx(), ink.accent.copy(alpha = b), 11f, bold = true)
             }
             // the zoom target: a frame around 60-100 Hz
