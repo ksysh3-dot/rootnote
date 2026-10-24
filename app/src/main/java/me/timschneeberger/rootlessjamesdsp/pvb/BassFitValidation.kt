@@ -43,7 +43,7 @@ class ValidationPlan(seed: Long, conditions: List<Double?>, val repeats: Int) {
 /** One line per run (ear floor, ear break-up, or the microphone's probe), CSV with a fixed header. */
 object ValidationLog {
     const val HEADER = "time,model,app,kind,condition,seed,volume,volume_max,value,reliable,questions,catch,false_alarms," +
-        "mic_floor_hz,mic_clipped,latency_ms,room_pass,room_margin_db"
+        "mic_floor_hz,mic_clipped,latency_ms,room_pass,room_margin_db,rattles,buzzes,catch_rattles,catch_buzzes,first_kind"
 
     enum class Kind(val id: String) { EAR_FLOOR("ear_floor_hz"), EAR_BREAKUP("ear_breakup_db"), MIC_PROBE("mic_floor_hz") }
 
@@ -52,6 +52,9 @@ object ValidationLog {
         val volume: Int, val volumeMax: Int, val value: Double?, val reliable: Boolean?, val questions: Int?, val catchTrials: Int?,
         val falseAlarms: Int?, val micFloorHz: Double?, val micClipped: Boolean?, val latencyMs: Double?, val roomPass: Boolean?,
         val roomMarginDb: Double?,
+        /** Break-up rows: answers by kind (level trials, then layer-off ones) and the kind heard first. */
+        val rattles: Int? = null, val buzzes: Int? = null, val catchRattles: Int? = null, val catchBuzzes: Int? = null,
+        val firstKind: BreakupStaircase.Answer? = null,
     )
 
     private fun clean(s: String) = s.replace(Regex("[,\\n\\r\"]"), "_")
@@ -63,5 +66,7 @@ object ValidationLog {
         String.format(Locale.ROOT, "%016X", r.seed), r.volume.toString(), r.volumeMax.toString(), num(r.value),
         b(r.reliable), r.questions?.toString() ?: "", r.catchTrials?.toString() ?: "", r.falseAlarms?.toString() ?: "",
         num(r.micFloorHz), b(r.micClipped), num(r.latencyMs, 0), b(r.roomPass), num(r.roomMarginDb),
+        r.rattles?.toString() ?: "", r.buzzes?.toString() ?: "", r.catchRattles?.toString() ?: "",
+        r.catchBuzzes?.toString() ?: "", r.firstKind?.name?.lowercase(Locale.ROOT) ?: "",
     ).joinToString(",")
 }

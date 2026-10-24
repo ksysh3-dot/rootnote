@@ -1,4 +1,5 @@
 import me.timschneeberger.rootlessjamesdsp.pvb.BassFitSession
+import me.timschneeberger.rootlessjamesdsp.pvb.BreakupStaircase
 import me.timschneeberger.rootlessjamesdsp.pvb.BassFitSettings
 import me.timschneeberger.rootlessjamesdsp.pvb.CheckRound
 import me.timschneeberger.rootlessjamesdsp.pvb.DevParams
@@ -77,7 +78,7 @@ private class Listener(
                     val v = p.variant
                     val buzz = v.vbOn && u() < 1 / (1 + exp(-(v.levelDb - breakDb) / 0.7))
                     log += "b" + (if (v.vbOn) v.levelDb.toInt().toString() else "-") + (if (buzz) "B" else "c")
-                    s.answerBuzz(buzz)
+                    s.answerBreakup(if (buzz) BreakupStaircase.Answer.BUZZ else BreakupStaircase.Answer.CLEAN)
                 }
                 is FitPrompt.ShapeOffer -> s.shapeChoice(takeShape)
                 is FitPrompt.Done -> {}

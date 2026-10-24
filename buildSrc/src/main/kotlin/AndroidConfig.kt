@@ -13,8 +13,8 @@ object AndroidConfig {
     const val GENERAL_BRAND_NAME = "Rootnote"
     const val GENERAL_APPLICATION_ID = "kr.ksysh3.rootnote"
     // Own version scheme, independent of upstream 1.6.x and of the s26u alphas.
-    const val generalVersionName = "0.9.0-beta.6"
-    const val generalVersionCode = 1005
+    const val generalVersionName = "0.9.0-beta.7"
+    const val generalVersionCode = 1006
     // Upstream version this fork is based on (shown in the About screen).
     const val upstreamVersion = "1.6.14"
 

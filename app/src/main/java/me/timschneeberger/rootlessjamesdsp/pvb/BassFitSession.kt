@@ -89,6 +89,12 @@ data class FitResult(
     val breakupQuestions: Int = 0,
     val breakupCatch: Int = 0,
     val breakupFalseAlarms: Int = 0,
+    /** Step 3 by kind: which break-up comes first, answers of each kind, and the layer-off ones. */
+    val breakupKind: BreakupStaircase.Answer? = null,
+    val breakupRattles: Int = 0,
+    val breakupBuzzes: Int = 0,
+    val breakupCatchRattles: Int = 0,
+    val breakupCatchBuzzes: Int = 0,
 ) {
     /** [values] ([DevParams.ALL] order) with what this run applies. */
     fun applyTo(values: FloatArray): FloatArray {
@@ -275,10 +281,10 @@ class BassFitSession(val seed: Long, val storedStrengthDb: Double, val scope: Fi
         }
     }
 
-    fun answerBuzz(buzz: Boolean) {
+    fun answerBreakup(a: BreakupStaircase.Answer) {
         check(stage == FitStage.BREAKUP)
         val b = breakup!!
-        b.answer(if (buzz) BreakupStaircase.Answer.BUZZ else BreakupStaircase.Answer.CLEAN)
+        b.answer(a)
         number++
         if (b.done) enter(if (scope == FitScope.BREAKUP) FitStage.DONE else FitStage.SHAPE_OFFER)
     }
@@ -335,6 +341,11 @@ class BassFitSession(val seed: Long, val storedStrengthDb: Double, val scope: Fi
                 breakupQuestions = b?.let { it.levelTrials + it.catchTrials } ?: 0,
                 breakupCatch = b?.catchTrials ?: 0,
                 breakupFalseAlarms = b?.falseAlarms ?: 0,
+                breakupKind = b?.firstKind,
+                breakupRattles = b?.rattleAnswers ?: 0,
+                breakupBuzzes = b?.buzzAnswers ?: 0,
+                breakupCatchRattles = b?.catchRattles ?: 0,
+                breakupCatchBuzzes = b?.catchBuzzes ?: 0,
             )
         }
 }

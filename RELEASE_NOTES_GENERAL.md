@@ -10,6 +10,15 @@ The corresponding source is the tagged commit; `source-*.tar.gz` below contains 
 - Measured settings exist only for the Galaxy S26 Ultra; other phones start with conservative settings based on published measurements of 92 Android phones.
 - Privacy: only settings are stored; no song titles, no recordings, nothing sent (see PRIVACY.md).
 
+## 0.9.0-beta.7
+
+저음 맞추기 3단계(찌그러짐 한계)의 답을 셋으로 나눴어요.
+
+- **깨끗해요 / 떨려요 / 지직거려요:** 기기나 진동판이 덜덜 떨리는 소리와 갈라지는 소리를 따로 고를 수 있어요. 둘 다 찌그러짐으로 쳐서 한계를 찾아요.
+- **결과에 "먼저 나는 소리"가 나와요:** 이 기기가 떨림과 지직거림 중 어느 쪽이 먼저(더 낮은 세기에서) 나는지 보여 줘요.
+- **볼륨 경고:** 가상 저음을 끈 문제에서도 떨리거나 지직거렸다면 볼륨만으로도 너무 크다고 알려 줘요.
+- **검증 기록(CSV):** 떨림·지직거림 답 수와 먼저 나는 소리를 열로 더 남겨요.
+
 ## 0.9.0-beta.6
 
 개발자 모드에 "저음 맞추기"를 넣었어요. 귀로 들으며 내 폰 스피커에 맞는 저음 값을 찾는 시험이에요. 아직 실험 단계라 개발자 모드에서만 쓸 수 있어요.
