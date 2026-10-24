@@ -43,7 +43,7 @@ class ValidationPlan(seed: Long, conditions: List<Double?>, val repeats: Int) {
 /** One line per run (ear floor, ear break-up, or the microphone's probe), CSV with a fixed header. */
 object ValidationLog {
     const val HEADER = "time,model,app,kind,condition,seed,volume,volume_max,value,reliable,questions,catch,false_alarms," +
-        "mic_floor_hz,mic_clipped,latency_ms,room_pass,room_margin_db,rattles,buzzes,catch_rattles,catch_buzzes,first_kind,ref_db,noise_corr_100_db"
+        "mic_floor_hz,mic_clipped,latency_ms,room_pass,room_margin_db,rattles,buzzes,catch_rattles,catch_buzzes,first_kind,ref_db,noise_corr_100_db,mic_source"
 
     enum class Kind(val id: String) { EAR_FLOOR("ear_floor_hz"), EAR_BREAKUP("ear_breakup_db"), MIC_PROBE("mic_floor_hz") }
 
@@ -59,6 +59,8 @@ object ValidationLog {
         val refDb: Double? = null,
         /** Floor rows with "소음 보정" on: the correction of the 100 Hz burst, dB. */
         val noiseCorrDb: Double? = null,
+        /** The phone microphone's recording source for the room check: "unprocessed" or "voice_recognition". */
+        val micSource: String? = null,
     )
 
     private fun clean(s: String) = s.replace(Regex("[,\\n\\r\"]"), "_")
@@ -71,6 +73,6 @@ object ValidationLog {
         b(r.reliable), r.questions?.toString() ?: "", r.catchTrials?.toString() ?: "", r.falseAlarms?.toString() ?: "",
         num(r.micFloorHz), b(r.micClipped), num(r.latencyMs, 0), b(r.roomPass), num(r.roomMarginDb),
         r.rattles?.toString() ?: "", r.buzzes?.toString() ?: "", r.catchRattles?.toString() ?: "",
-        r.catchBuzzes?.toString() ?: "", r.firstKind?.name?.lowercase(Locale.ROOT) ?: "", num(r.refDb), num(r.noiseCorrDb),
+        r.catchBuzzes?.toString() ?: "", r.firstKind?.name?.lowercase(Locale.ROOT) ?: "", num(r.refDb), num(r.noiseCorrDb), r.micSource?.let(::clean) ?: "",
     ).joinToString(",")
 }

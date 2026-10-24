@@ -382,19 +382,28 @@ class FloorStaircase(
  */
 object NoiseMasking {
     /**
-     * Android's audio input guideline for VOICE_RECOGNITION: a 90 dB SPL tone reads RMS 2500 of 32768 (-22.4 dB re
-     * full scale), flat within 3 dB from 100 Hz to 4 kHz. The fit records UNPROCESSED where offered, assumed alike.
+     * Android's input sensitivity per recording source (Android CDD), dB SPL = dB re full scale + this.
+     * VOICE_RECOGNITION: a 90 dB SPL tone reads RMS 2500 of 32768 (-22.4 dB), flat within 3 dB from 100 Hz to 4 kHz.
+     * UNPROCESSED: 94 dB SPL reads -36 dB re full scale, flat only within 10 dB from 100 Hz to 7 kHz and 20 dB below
+     * 100 Hz. (0.9.0-beta.10 used the VOICE_RECOGNITION value for both, so with UNPROCESSED it took the room 17.6 dB
+     * too quiet and hardly corrected.)
      */
     const val SPL_OFFSET_DB = 112.4
+    const val SPL_OFFSET_UNPROCESSED_DB = 130.0
+    fun splOffsetDb(unprocessed: Boolean): Double = if (unprocessed) SPL_OFFSET_UNPROCESSED_DB else SPL_OFFSET_DB
+    /** Below this the microphone's response is allowed to be off by 20 dB: the bands under it are not used. */
+    const val LOWEST_TRUSTED_HZ = 100.0
     /** A tone is just masked about this far from the noise power in its third-octave band (critical ratio ~17 dB
      *  at 300 Hz over a band ~70 Hz wide). */
     const val MASK_K_DB = -2.0
     const val MAX_DOWN_DB = 12.0
     const val MAX_UP_DB = 6.0
 
-    /** Room level (dB re full scale) at [hz], log-frequency interpolation between [NoiseGate.TEST_BANDS]. */
-    fun roomDb(roomBandsDb: DoubleArray, hz: Double): Double {
+    /** Room level (dB re full scale) at [hz], log-frequency interpolation between [NoiseGate.TEST_BANDS]; below
+     *  [LOWEST_TRUSTED_HZ] the level there is used (the bands under it are not trusted). */
+    fun roomDb(roomBandsDb: DoubleArray, hz0: Double): Double {
         val c = NoiseGate.TEST_BANDS
+        val hz = maxOf(hz0, LOWEST_TRUSTED_HZ)
         if (hz <= c.first()) return roomBandsDb.first()
         if (hz >= c.last()) return roomBandsDb.last()
         var i = 0
@@ -404,15 +413,16 @@ object NoiseMasking {
     }
 
     /** How far the room raises the threshold at [hz], dB (0 in a silent room). */
-    fun riseDb(roomBandsDb: DoubleArray, hz: Double): Double {
+    fun riseDb(roomBandsDb: DoubleArray, hz: Double, splOffsetDb: Double = SPL_OFFSET_DB): Double {
         val q = HearingThreshold.db(hz)
-        val masked = roomDb(roomBandsDb, hz) + SPL_OFFSET_DB + MASK_K_DB
+        val masked = roomDb(roomBandsDb, hz) + splOffsetDb + MASK_K_DB
         return 10 * log10(10.0.pow(q / 10) + 10.0.pow(masked / 10)) - q
     }
 
     /** Correction of the burst at [hz]: its rise minus the reference's, limited. Negative = quieter bursts. */
-    fun correctionDb(roomBandsDb: DoubleArray, hz: Double): Double =
-        (riseDb(roomBandsDb, hz) - riseDb(roomBandsDb, RefLevelStaircase.REF_HZ)).coerceIn(-MAX_DOWN_DB, MAX_UP_DB)
+    fun correctionDb(roomBandsDb: DoubleArray, hz: Double, splOffsetDb: Double = SPL_OFFSET_DB): Double =
+        (riseDb(roomBandsDb, hz, splOffsetDb) - riseDb(roomBandsDb, RefLevelStaircase.REF_HZ, splOffsetDb))
+            .coerceIn(-MAX_DOWN_DB, MAX_UP_DB)
 }
 
 /**

@@ -141,6 +141,8 @@ class BassFitSession(val seed: Long, val storedStrengthDb: Double, val scope: Fi
     private var floorTest = FloorStaircase(floorSeed)
     /** Room levels of the room check when "소음 보정" is on ([NoiseMasking]); null = no correction. */
     var noiseBandsDb: DoubleArray? = null
+    /** The recording source's sensitivity ([NoiseMasking.splOffsetDb]). */
+    var noiseSplOffsetDb: Double = NoiseMasking.SPL_OFFSET_DB
     private var refDone = false
     private var floor: BassFitMapping.FloorSettings? = null
     private val edgeSeed = sub()
@@ -216,7 +218,7 @@ class BassFitSession(val seed: Long, val storedStrengthDb: Double, val scope: Fi
                 refDone = true
                 val bands = noiseBandsDb
                 floorTest = FloorStaircase(floorSeed, refDb = refTest.thresholdDb() ?: -FloorStaircase.SL_DB,
-                    noiseDb = bands?.let { b -> { hz: Double -> NoiseMasking.correctionDb(b, hz) } })
+                    noiseDb = bands?.let { b -> { hz: Double -> NoiseMasking.correctionDb(b, hz, noiseSplOffsetDb) } })
             }
             return
         }
@@ -381,7 +383,7 @@ class BassFitSession(val seed: Long, val storedStrengthDb: Double, val scope: Fi
                 breakupCatchRattles = b?.catchRattles ?: 0,
                 breakupCatchBuzzes = b?.catchBuzzes ?: 0,
                 shapeOnly = scope == FitScope.SHAPE,
-                noiseCorrectionDb = noiseBandsDb?.let { NoiseMasking.correctionDb(it, 100.0) },
+                noiseCorrectionDb = noiseBandsDb?.let { NoiseMasking.correctionDb(it, 100.0, noiseSplOffsetDb) },
             )
         }
 }

@@ -40,6 +40,7 @@ import me.timschneeberger.rootlessjamesdsp.pvb.FitStage
 import me.timschneeberger.rootlessjamesdsp.pvb.FitVariant
 import me.timschneeberger.rootlessjamesdsp.pvb.FloorStaircase
 import me.timschneeberger.rootlessjamesdsp.pvb.NoiseGate
+import me.timschneeberger.rootlessjamesdsp.pvb.NoiseMasking
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbBuild
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbGeneral
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbRuntime
@@ -89,6 +90,8 @@ class BassFitActivity : RnActivity() {
     private var token = 0
     private var latencyS = FitLatency.TYPICAL_S
     private var roomBands: DoubleArray? = null
+    /** The room check's recording source (null: not measured). */
+    private var roomRaw: Boolean? = null
     private var startVolume = -1
     private var oldSettings: PvbSettings? = null
     private var newSettings: PvbSettings? = null
@@ -301,7 +304,8 @@ class BassFitActivity : RnActivity() {
                     if (t != token || isFinishing) return@post
                     latencyS = lat
                     roomBands = bands
-                    if (ui.noiseCorr) session?.noiseBandsDb = bands
+                    roomRaw = m.unprocessed
+                    if (ui.noiseCorr) session?.let { it.noiseBandsDb = bands; it.noiseSplOffsetDb = NoiseMasking.splOffsetDb(m.unprocessed) }
                     ui = ui.copy(micFloorHz = probe?.floorHz(), micClipped = probe?.clipped == true)
                     if (verdict.pass) {
                         ui = ui.copy(verdict = verdict)
@@ -615,7 +619,7 @@ class BassFitActivity : RnActivity() {
         conditionHp = p.runs[planIndex]
         planIndex++
         session = BassFitSession(SecureRandom().nextLong(), stored().vbLevelDb.toDouble(), ui.valScope)
-            .also { if (ui.noiseCorr) it.noiseBandsDb = roomBands }
+            .also { if (ui.noiseCorr) { it.noiseBandsDb = roomBands; it.noiseSplOffsetDb = NoiseMasking.splOffsetDb(roomRaw == true) } }
         // the microphone (silent-interval checks) only for the step-1 runs
         if (ui.valScope == FitScope.FLOOR && mic == null &&
             ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED)
@@ -649,6 +653,7 @@ class BassFitActivity : RnActivity() {
             firstKind = r.breakupKind.takeIf { !floor },
             refDb = r.refThresholdDb.takeIf { floor },
             noiseCorrDb = r.noiseCorrectionDb.takeIf { floor },
+            micSource = roomRaw?.let { if (it) "unprocessed" else "voice_recognition" },
         ))
         ui = ui.copy(screen = FitScreen.VAL_NEXT, prompt = null, playing = null, logLines = logLines().coerceAtLeast(0))
     }
@@ -786,7 +791,7 @@ class BassFitActivity : RnActivity() {
  * the frames recorded so far; [copy] gives a stretch back while it is still in the ring. UNPROCESSED where the phone
  * offers it (no noise suppression or gain control), else VOICE_RECOGNITION (both keep the ratios the room check uses).
  */
-internal class FitMic private constructor(private val rec: AudioRecord) {
+internal class FitMic private constructor(private val rec: AudioRecord, val unprocessed: Boolean) {
     private val ring = FloatArray(FS * RING_S)
     @Volatile var frames = 0L; private set
     @Volatile private var running = true
@@ -838,7 +843,7 @@ internal class FitMic private constructor(private val rec: AudioRecord) {
                 AudioRecord(source, fs, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_FLOAT, maxOf(minBuf, fs / 2))
             } catch (_: Exception) { null }
             if (rec == null || rec.state != AudioRecord.STATE_INITIALIZED) { rec?.release(); return null }
-            return FitMic(rec)
+            return FitMic(rec, source == MediaRecorder.AudioSource.UNPROCESSED)
         }
     }
 }

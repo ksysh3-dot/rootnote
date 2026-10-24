@@ -352,9 +352,11 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
         mediaProjection?.registerCallback(projectionCallback, Handler(Looper.getMainLooper()))
 
         if (mediaProjection != null) {
-            startRecording()
-            me.timschneeberger.rootlessjamesdsp.pvb.FirstWeekStore.onCaptureStarted(this)
-            sendLocalBroadcast(Intent(Constants.ACTION_SERVICE_STARTED))
+            // report "started" only when the recorder and track were really built (they can fail and stop the service)
+            if (startRecording()) {
+                me.timschneeberger.rootlessjamesdsp.pvb.FirstWeekStore.onCaptureStarted(this)
+                sendLocalBroadcast(Intent(Constants.ACTION_SERVICE_STARTED))
+            }
         } else {
             Timber.w("Failed to capture audio")
             stopSelf()
@@ -580,20 +582,24 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
 
     // Start recording thread
     @SuppressLint("BinaryOperationInTimber")
-    private fun startRecording() {
-        if (worker != null) return
+    /**
+     * Starts the audio generation. True when it runs (or already ran, or starts as soon as the previous one has
+     * ended); false when it could not start (no permission, recorder or track failed: the service stops itself).
+     */
+    private fun startRecording(): Boolean {
+        if (worker != null) return true
         if (lingering != null) {
             // the previous generation has not ended yet: start when it has
             startWhenStopped = true
-            return
+            return true
         }
-        if (isServiceDisposing) return
+        if (isServiceDisposing) return false
 
         // Sanity check
         if (!hasRecordPermission()) {
             Timber.e("Record audio permission missing. Can't record")
             stopSelf()
-            return
+            return false
         }
 
         // Load preferences
@@ -625,7 +631,7 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
             Timber.e("Failed to create initial audio record")
             Timber.e(ex)
             stopSelf()
-            return
+            return false
         }
         try {
             track = buildAudioTrack(encodingFormat, sampleRate, bufferSizeBytes)
@@ -635,7 +641,7 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
             Timber.e(ex)
             recorder.release()
             stopSelf()
-            return
+            return false
         }
 
         if(engine.sampleRate.toInt() != sampleRate) {
@@ -649,6 +655,7 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
         worker = w
         buzzDiagnostics.attach(sampleRate)
         w.thread.start()
+        return true
     }
 
     /**

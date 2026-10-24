@@ -179,3 +179,10 @@ difference: each threshold's rise is the room's third-octave level (dB SPL by An
 90 dB SPL = RMS 2500 of 32768) as a masked tone 2 dB under the band, power-added to the ISO 226 threshold; the burst
 moves by its rise minus the 300 Hz one, limited to -12..+6 dB. Uncalibrated, so the validation log keeps the value at
 100 Hz (`noise_corr_100_db`) to check against the UMIK-1.
+
+Correction (0.9.0-beta.11): the room check records UNPROCESSED where the phone offers it, and the CDD gives that source
+its own sensitivity (94 dB SPL = -36 dB re full scale, flat within 10 dB from 100 Hz to 7 kHz, 20 dB below), 17.6 dB
+apart from VOICE_RECOGNITION's. beta.10 used the VOICE_RECOGNITION value for both, so with UNPROCESSED the room read
+17.6 dB too quiet and the correction hardly acted. NoiseMasking now takes the offset of the source actually opened,
+ignores the bands under 100 Hz, and the log records the source (`mic_source`). Still nominal values: one recording of
+the room beside the UMIK-1 gives the real offset of a phone.
