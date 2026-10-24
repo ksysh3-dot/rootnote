@@ -86,6 +86,12 @@
             android:exported="false"
             android:label="@string/fit_title"
             android:theme="@style/Theme.RootlessJamesDSP" />
+        <!-- "저음, 왕창 올려도 될까요?" (advanced/BassGuideActivity.kt): the low-bass EQ guide. Not exported. -->
+        <activity
+            android:name="me.timschneeberger.rootlessjamesdsp.advanced.BassGuideActivity"
+            android:exported="false"
+            android:label="@string/guide_title"
+            android:theme="@style/Theme.RootlessJamesDSP" />
         <!-- Settings and About in Compose (settings/RnSettingsActivity.kt); one instance per page (extra "route").
              The legacy SettingsActivity forwards here in this build. Not exported. -->
         <activity
