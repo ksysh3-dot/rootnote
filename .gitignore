@@ -29,3 +29,5 @@ __pycache__/
 /*-q0.json
 /ci-build.log
 tools/pvb-harness/study/private/
+/tools/rootfx/build/
+/tools/rootfx/build-android/
