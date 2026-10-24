@@ -3,6 +3,7 @@
 <resources>
     <string name="eq_info_title">Can I just crank up the bass?</string>
     <string name="eq_info_open">About EQ</string>
+    <string name="eq_story_iphone_note">Part of the iPhone\'s bass may be harmonics. In another lab\'s measurement, the harmonics at 60-100 Hz were tens of times larger than the fundamental in places. One measurement at 100% volume, so not certain.</string>
     <string name="eq_try_title">Listen for yourself</string>
     <string name="eq_try_unavailable">You can try this while Rootnote is on and music plays on the speaker.</string>
     <string name="eq_try_volume">The volume is high. Turn it below half first: at loud volume rattle comes before bass.</string>
@@ -50,7 +51,7 @@
     </string-array>
     <string-array name="eq_story_a11y">
         <item>Picture: frequency response of Android phone speakers. Median phone, 10-90% range and the S26 Ultra as measured. The sound drops fast under 200 Hz.</item>
-        <item>Picture: the median Android phone against the median of 7 iPhones. The iPhones play 125-250 Hz about 7 dB louder.</item>
+        <item>Picture: the median of the iPhones rises above the median Android phone. Then 60-100 Hz is zoomed in: under a small fundamental, waves of the 2nd to 5th harmonics appear one by one, and the stacked harmonics grow to tens of times the fundamental.</item>
         <item>Picture: the 31, 62 and 125 Hz EQ sliders go up 10 dB, and the median phone\'s curve rises only a little inside the grey part.</item>
         <item>Picture: for the same loudness the cone moves a little at 250 Hz and 16 times as far at 63 Hz, where it hits its limit and rattles.</item>
         <item>Picture: when the bass bar crosses the protection line, the voice and instrument bars go down too.</item>
@@ -91,5 +92,13 @@
         <item>The skirt is what you hear</item>
         <item>Median of 7 iPhones</item>
         <item>Median Android</item>
+        <item>60-100 Hz, zoomed</item>
+        <item>Fundamental</item>
+        <item>2nd</item>
+        <item>3rd</item>
+        <item>4th</item>
+        <item>5th</item>
+        <item>Harmonics: tens of times the fundamental</item>
+        <item>Another lab · 100% volume</item>
     </string-array>
 </resources>

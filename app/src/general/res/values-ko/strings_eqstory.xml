@@ -3,6 +3,7 @@
 <resources>
     <string name="eq_info_title">저음, 왕창 올려도 될까요?</string>
     <string name="eq_info_open">EQ 설명</string>
+    <string name="eq_story_iphone_note">아이폰의 저음은 일부가 배음일 수도 있어요. 다른 연구실 측정에서 60~100 Hz의 배음이 원음보다 수십 배 큰 구간이 있었어요. 볼륨 100%에서 한 번 잰 값이라 확정은 아니에요.</string>
     <string name="eq_try_title">직접 들어 보기</string>
     <string name="eq_try_unavailable">Rootnote가 켜져 있고 스피커로 음악이 나올 때 해 볼 수 있어요.</string>
     <string name="eq_try_volume">볼륨이 커요. 절반 아래로 낮춘 뒤 해 주세요. 큰 볼륨에서는 저음보다 떨림이 먼저 와요.</string>
@@ -50,7 +51,7 @@
     </string-array>
     <string-array name="eq_story_a11y">
         <item>그림: 안드로이드 폰 스피커의 주파수 응답. 중간 폰과 10~90% 범위, S26 Ultra 실측. 200 Hz 아래로 급하게 작아져요.</item>
-        <item>그림: 안드로이드 중간 폰과 아이폰 7대 중간값의 비교. 아이폰은 125~250 Hz가 약 7 dB 커요.</item>
+        <item>그림: 안드로이드 중간 폰 위로 아이폰 중간값이 올라와요. 이어서 60~100 Hz를 확대하면 작은 원음 아래로 2~5배음 물결이 차례로 생기고, 배음을 쌓은 막대가 원음의 수십 배가 돼요.</item>
         <item>그림: EQ의 31·62·125 Hz 칸을 10 dB 올려도 중간 폰의 곡선은 회색 구역에서 조금만 올라가요.</item>
         <item>그림: 같은 크기 소리를 낼 때 250 Hz는 진동판이 조금, 63 Hz는 16배 움직여 한계에 닿고 떨려요.</item>
         <item>그림: 저음 막대가 보호 문턱을 넘으면 목소리와 악기 막대까지 함께 낮아져요.</item>
@@ -91,5 +92,13 @@
         <item>들리는 건 이 옆자락</item>
         <item>아이폰 7대 중간값</item>
         <item>안드로이드 중간값</item>
+        <item>60~100 Hz 확대</item>
+        <item>원음</item>
+        <item>2배음</item>
+        <item>3배음</item>
+        <item>4배음</item>
+        <item>5배음</item>
+        <item>배음 합: 원음의 수십 배</item>
+        <item>다른 연구실 측정 · 볼륨 100%</item>
     </string-array>
 </resources>
