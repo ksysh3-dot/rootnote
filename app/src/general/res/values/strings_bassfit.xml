@@ -60,7 +60,7 @@
     <string name="fit_prefer_b">B is better</string>
     <string name="fit_prefer_same">No difference</string>
     <string name="fit_buzz_title">Does the bass rattle or buzz?</string>
-    <string name="fit_buzz_body">Clean: just the bass. Rattles: a fluttering, shaking hum, as if the body or the cone flaps. Buzzes: a crackling, torn sound. Some questions have the virtual bass off.</string>
+    <string name="fit_buzz_body">Answer about the \"Bass\" clip. Clean: only the bass note, smooth. A hum you feel in your hand is still clean. Rattles: a \"brrr\", clattering sound added on the beat, as if something loose touches and shakes along. Buzzes: the sound itself cracks or tears. \"Reference\" plays the same clip with the virtual bass off: compare with it. Some questions have the virtual bass off.</string>
     <string name="fit_buzz_clean">Clean</string>
     <string name="fit_buzz_buzz">Buzzes</string>
     <string name="fit_buzz_rattle">Rattles</string>
@@ -69,6 +69,7 @@
     <string name="fit_r_kind_buzz">Buzz</string>
     <string name="fit_r_catch_broke">Some questions with the virtual bass off also rattled or buzzed: the volume alone is too high for this speaker. Lower it and run again.</string>
     <string name="fit_clip_label">Bass</string>
+    <string name="fit_buzz_ref_label">Reference</string>
     <string name="fit_shape_title">Fine-tune the harmonic shape too?</string>
     <string name="fit_shape_body">Compare 18 pairs to choose the harmonics\' slope and the weight of the lowest one. About 5 more minutes.</string>
     <string name="fit_shape_take">Fine-tune</string>

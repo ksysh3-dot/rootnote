@@ -359,7 +359,10 @@ private fun Question(ui: FitUi, actions: FitActions) {
         is FitPrompt.Buzz -> {
             Title(stringResource(R.string.fit_buzz_title))
             Stage {
-                Row(Modifier.fillMaxWidth()) { PlayPad("C", stringResource(R.string.fit_clip_label), ui, actions) }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    PlayPad("C", stringResource(R.string.fit_clip_label), ui, actions)
+                    PlayPad("R", stringResource(R.string.fit_buzz_ref_label), ui, actions)
+                }
             }
             RnParagraph(stringResource(R.string.fit_buzz_body))
         }

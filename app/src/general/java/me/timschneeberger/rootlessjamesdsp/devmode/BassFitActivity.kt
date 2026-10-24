@@ -377,7 +377,8 @@ class BassFitActivity : RnActivity() {
         val (variant, material, toneHz) = when (p) {
             is FitPrompt.Abx -> Triple(when (label) { "A" -> p.a; "B" -> p.b; else -> if (p.xIsA) p.a else p.b }, p.material, p.toneHz)
             is FitPrompt.Prefer -> Triple(if (label == "A") p.a else p.b, p.material, p.toneHz)
-            is FitPrompt.Buzz -> Triple(p.variant, FitMaterial.LOW, 0.0)
+            // "R": the clean reference, the same clip with the virtual bass off (what a catch trial plays)
+            is FitPrompt.Buzz -> Triple(if (label == "R") p.variant.copy(vbOn = false, levelDb = 0.0) else p.variant, FitMaterial.LOW, 0.0)
             else -> return
         }
         token++
