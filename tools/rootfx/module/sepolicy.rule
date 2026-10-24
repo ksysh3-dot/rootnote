@@ -1,0 +1,7 @@
+# The JamesDSP script engine (EEL) compiles to memory it runs; the audio server needs these (as the stock modules).
+allow audioserver audioserver_tmpfs file { read write execute }
+allow audioserver system_file file { execmod }
+allow audioserver audioserver process { execmem }
+allow mediaserver mediaserver_tmpfs file { read write execute }
+allow hal_audio_default hal_audio_default process { execmem }
+allow hal_audio_default hal_audio_default_tmpfs file { execute }

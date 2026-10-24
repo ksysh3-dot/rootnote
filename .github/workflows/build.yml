@@ -240,6 +240,16 @@ jobs:
           echo "brand=$brand" >> "$GITHUB_OUTPUT"
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
+      # Rootnote for rooted phones: the JamesDSP audio effect with the PVB engine as a Magisk module (docs/ROOT_BUILD_PLAN.md)
+      - name: Build the root effect module (Magisk)
+        run: tools/rootfx/build_android.sh
+
+      - name: Upload root module artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Rootnote-JamesDSP-module
+          path: dist-root/*
+
       - name: Upload s26u APK artifact
         uses: actions/upload-artifact@v4
         with:
@@ -266,3 +276,5 @@ jobs:
             dist-general/*.apk
             dist-general/*.sha256
             dist-general/source-*.tar.gz
+            dist-root/*.zip
+            dist-root/*.sha256

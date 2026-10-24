@@ -19,7 +19,7 @@ target_include_directories(rootnotefx PRIVATE ${ROOTFX_JDSP} ${ROOTFX_JDSP}/jdsp
         ${CMAKE_CURRENT_LIST_DIR}/../libpvb)
 # no DEBUG logging inside audioserver (the project-wide flags define it)
 target_compile_options(rootnotefx PRIVATE -UDEBUG $<$<COMPILE_LANGUAGE:C>:-std=gnu11 -O2 -w>
-        $<$<COMPILE_LANGUAGE:CXX>:-std=c++17 -O2 -fno-fast-math>)
+        $<$<COMPILE_LANGUAGE:CXX>:-std=c++17 -O2 -fno-fast-math -fvisibility-inlines-hidden>)
 # audioserver loads it with dlopen: no C++ runtime of its own to rely on, everything hidden but the library symbol
 set_target_properties(rootnotefx PROPERTIES C_VISIBILITY_PRESET hidden CXX_VISIBILITY_PRESET hidden)
 if(ANDROID)
