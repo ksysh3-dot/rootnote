@@ -42,8 +42,8 @@ Before step 1, with the phone microphone (the permission the measurement feature
 5. Otherwise: "주변이 시끄러워서 결과가 부정확할 수 있어요! 그래도 진행할까요?" [조용한 곳에서 다시] [그래도 진행].
    Proceeding marks the result "noisy" (lower confidence; never used as shared data).
 6. No microphone permission: "주변이 조용한지 확인할 수 없어요" with the same choice.
-7. During the test the silent interval of each two-interval trial is monitored; a noise burst above the gate discards
-   that trial and repeats it.
+7. During step 1 the silent interval of each two-interval trial is monitored; a noise burst 6 dB over the room in a
+   test band discards that trial and repeats it (three times at most, then it is answered).
 
 ## Steps
 
@@ -91,8 +91,11 @@ change) -> the listener's own music, three blind pairs of the current and the ne
 
 - A volume change, another output or the engine stopping pauses (the sound stops) and repeats the question when back.
 - Clips restart from their beginning with the side's settings (the engine takes them 200 ms before the clip).
-- Saving writes the developer values and keeps the values before it, the record line and the floor (pvb_flags);
-  "맞추기 전으로 되돌리기" writes them back. Leaving the screen stores nothing.
+- Saving writes the developer values (and developer mode on) and keeps the values before it, the record line and the
+  floor (pvb_flags); "맞추기 전으로 되돌리기" writes them back. Leaving the screen stores nothing; leaving during the
+  questions starts over, a finished run (result, music check, save) waits while another app is open.
+- The screen stays on during a run. A step-1 trial disturbed three times in a row is answered anyway (a steady noise
+  must not stall the test). The microphone runs only during the room check and step 1.
 
 ## Open decisions
 

@@ -171,7 +171,8 @@ class DevModeActivity : BaseActivity() {
         val values = DevParams.read(s)
         update {
             it.copy(values = values, vbAlgo = s.vbAlgo, s1mOn = s.xS1m, volumeLinkOn = s.vbVolLink,
-                canUndo = undo.isNotEmpty(), hiddenCount = tracker.hiddenTypes().size, shareCode = shareCode(values))
+                canUndo = undo.isNotEmpty(), hiddenCount = tracker.hiddenTypes().size, shareCode = shareCode(values),
+                speakerFloorHz = flags.getFloat(BassFitActivity.KEY_FIT_FLOOR_HZ, profile.speakerFloorHz))
         }
     }
 

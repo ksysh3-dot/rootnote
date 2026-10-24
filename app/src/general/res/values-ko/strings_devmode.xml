@@ -267,5 +267,5 @@
     <string name="dev_p_table_floor_up">더 높은 음(150~250 Hz)에도 배음이 채워져요. 대신 아주 낮은 음(55~100 Hz)의 배음은 작아져요.</string>
     <string name="dev_p_table_floor_down">반대로 낮은 음의 배음이 커지고, 높은 음 쪽은 비어요.</string>
     <string name="dev_ev_table_floor_0">가상 저음 세기 표는 S26 Ultra 스피커(바닥 150 Hz)에 맞춰 만들었어요. 다른 폰에서는 그 폰의 바닥만큼 표를 옮겨요.</string>
-    <string name="dev_ev_table_floor_1">표를 옮겨도 S26 Ultra와 같은 크기로 들리는지는 아직 확인 중이에요. "저음 맞추기"의 세기 비교가 그 차이를 귀로 메워요.</string>
+    <string name="dev_ev_table_floor_1">표를 옮겨도 S26 Ultra와 같은 크기로 들리는지는 아직 확인 중이에요. \"저음 맞추기\"의 세기 비교가 그 차이를 귀로 메워요.</string>
 </resources>

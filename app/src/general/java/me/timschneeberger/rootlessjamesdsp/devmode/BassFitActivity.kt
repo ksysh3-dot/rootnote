@@ -11,6 +11,7 @@ import android.media.MediaRecorder
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.view.WindowManager
 import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,6 +29,7 @@ import me.timschneeberger.rootlessjamesdsp.pvb.FitLatency
 import me.timschneeberger.rootlessjamesdsp.pvb.FitMaterial
 import me.timschneeberger.rootlessjamesdsp.pvb.FitPrompt
 import me.timschneeberger.rootlessjamesdsp.pvb.FitResult
+import me.timschneeberger.rootlessjamesdsp.pvb.FitStage
 import me.timschneeberger.rootlessjamesdsp.pvb.FitVariant
 import me.timschneeberger.rootlessjamesdsp.pvb.FloorStaircase
 import me.timschneeberger.rootlessjamesdsp.pvb.NoiseGate
@@ -79,6 +81,8 @@ class BassFitActivity : RnActivity() {
     private var oldSettings: PvbSettings? = null
     private var newSettings: PvbSettings? = null
     private var newValues: FloatArray? = null
+    /** Times the current step-1 trial was played again because of a noise. */
+    private var disturbedRuns = 0
 
     private val statusListener: () -> Unit = { main.post { checkPause() } }
 
@@ -96,14 +100,19 @@ class BassFitActivity : RnActivity() {
         if (!::prefs.isInitialized) return
         PvbRuntime.addStatusListener(statusListener)
         ui = ui.copy(ready = engineReady())
+        if (ui.screen == FitScreen.CHECK) { keepScreenOn(true); playCheckSide(ui.checkSide); checkPause() }
     }
 
     override fun onStop() {
         if (::prefs.isInitialized) {
             PvbRuntime.removeStatusListener(statusListener)
-            stopAll()
-            // a run can't go on after leaving: nothing was stored, start again from the beginning
-            if (ui.screen != FitScreen.INTRO && ui.screen != FitScreen.DONE) ui = introState()
+            when (ui.screen) {
+                // a finished run waits (the check asks for music from another app): only what plays stops
+                FitScreen.RESULT, FitScreen.CHECK, FitScreen.SAVE -> { token++; PvbRuntime.setDevOverride(null); keepScreenOn(false) }
+                // questions can't go on after leaving: nothing was stored, start again from the beginning
+                FitScreen.INTRO, FitScreen.DONE -> stopAll()
+                else -> { stopAll(); ui = introState() }
+            }
         }
         super.onStop()
     }
@@ -126,6 +135,7 @@ class BassFitActivity : RnActivity() {
     /** Ends what plays and records; the stored settings and JamesDSP play again. Stores nothing. */
     private fun stopAll() {
         token++
+        keepScreenOn(false)
         DevTestSound.stop()
         PvbRuntime.setDevOverride(null)
         PvbRuntime.calibrating = false
@@ -138,6 +148,12 @@ class BassFitActivity : RnActivity() {
         PvbRuntime.calibrating = true
         PvbRuntime.setDevOverride(BassFitSettings.of(stored(), v))
         DevTestSound.start(DevTestKind.FIT_SILENCE)
+    }
+
+    /** The screen stays on while a run plays (a screen timeout would end the run). */
+    private fun keepScreenOn(on: Boolean) {
+        if (on) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
     private fun later(delayS: Double, block: () -> Unit) {
@@ -187,6 +203,7 @@ class BassFitActivity : RnActivity() {
     private fun start() {
         if (!engineReady()) { ui = ui.copy(ready = false); return }
         stopAll()
+        keepScreenOn(true)
         val st = PvbRuntime.status
         startVolume = st.volumeIndex
         val seed = SecureRandom().nextLong()
@@ -217,10 +234,11 @@ class BassFitActivity : RnActivity() {
         later(3.6) {
             DevTestSound.start(DevTestKind.FIT_REF)
             refFrom = m.frames
-            ui = ui.copy(roomPhase = 1, progress = 0.55f)
+            ui = ui.copy(roomPhase = 1, progress = 0.5f)
         }
-        for (k in 1..4) later(3.6 + 0.6 * k) { ui = ui.copy(progress = 0.55f + 0.09f * k) }
-        later(6.4) {
+        for (k in 1..5) later(3.6 + 0.6 * k) { ui = ui.copy(progress = 0.5f + 0.09f * k) }
+        // 3.6 s of reference: the 1.8 s window after a latency of up to 1 s is recorded in full
+        later(7.2) {
             DevTestSound.start(DevTestKind.FIT_SILENCE)
             ui = ui.copy(roomPhase = 2, progress = 1f)
             val t = token
@@ -230,7 +248,7 @@ class BassFitActivity : RnActivity() {
                 val around = m.copy(refFrom - (0.5 * fs).toLong(), (2.6 * fs).toInt())
                 val onset = around?.let { FitLatency.onsetFrame(it, fs, (0.5 * fs).toInt()) }
                 val lat = onset?.let { (it - 0.5 * fs) / fs } ?: FitLatency.TYPICAL_S
-                val sig = m.copy(refFrom + ((lat + 0.4) * fs).toLong(), (1.8 * fs).toInt())
+                val sig = m.copy(refFrom + ((lat + 0.3) * fs).toLong(), (1.8 * fs).toInt())
                 val verdict = NoiseGate.judge(room, sig, fs)
                 val bands = room?.let { NoiseGate.bandLevels(it, fs, NoiseGate.TEST_BANDS) }
                 main.post {
@@ -248,7 +266,9 @@ class BassFitActivity : RnActivity() {
 
     private fun beginTest() {
         ui = ui.copy(screen = FitScreen.TEST)
+        keepScreenOn(true)
         present()
+        checkPause()        // a volume changed on the warning screen
     }
 
     // ------------------------------------------------------------------------------------------------ questions
@@ -259,7 +279,10 @@ class BassFitActivity : RnActivity() {
         token++
         val p = s.prompt
         if (p is FitPrompt.Done) { finishTest(); return }
-        ui = ui.copy(step = s.step, prompt = p, heard = emptySet(), playing = null, answerable = false)
+        disturbedRuns = 0
+        // the microphone is only needed for the step-1 trials (privacy indicator, battery)
+        if (p !is FitPrompt.Floor) { mic?.stop(); mic = null }
+        ui = ui.copy(step = s.step, prompt = p, heard = emptySet(), playing = null, answerable = false, disturbed = false)
         when (p) {
             is FitPrompt.Floor -> { hold(FitVariant.RAW); later(0.4) { playTrial(p) } }
             is FitPrompt.Buzz -> { hold(p.variant); later(0.3) { playClip("C") } }
@@ -294,8 +317,9 @@ class BassFitActivity : RnActivity() {
                 is FloorStaircase.Trial.Catch -> listOf(i1, i2)
                 is FloorStaircase.Trial.Tone -> listOf(if (trial.inFirst) i2 else i1)
             }
-            if (mark != null && disturbed(mark, silent)) {
+            if (mark != null && disturbedRuns < MAX_DISTURBED && disturbed(mark, silent)) {
                 // a noise in the silent interval: the trial doesn't count, play it again
+                disturbedRuns++
                 ui = ui.copy(disturbed = true)
                 later(1.2) { playTrial(p) }
             } else ui = ui.copy(answerable = true, heard = setOf("T"))
@@ -359,6 +383,7 @@ class BassFitActivity : RnActivity() {
         PvbRuntime.setDevOverride(null)
         PvbRuntime.calibrating = false
         mic?.stop(); mic = null
+        keepScreenOn(false)
         val r = s.result
         val cur = DevParams.read(stored())
         val next = r.applyTo(cur)
@@ -378,7 +403,9 @@ class BassFitActivity : RnActivity() {
         ui = ui.copy(screen = FitScreen.CHECK, checkNumber = 1, checkTrials = check!!.trials, checkSide = 1)
         PvbRuntime.calibrating = false
         DevTestSound.stop()                 // the listener's own music
+        keepScreenOn(true)
         playCheckSide(1)
+        checkPause()        // a volume changed on the result screen
     }
 
     private fun playCheckSide(side: Int) {
@@ -390,10 +417,11 @@ class BassFitActivity : RnActivity() {
 
     private fun answerCheck(a: CheckRound.Answer) {
         val c = check ?: return
-        if (ui.paused != null) return
+        if (ui.paused != null || ui.screen != FitScreen.CHECK || c.done) return
         c.answer(a)
         if (c.done) {
             PvbRuntime.setDevOverride(null)
+            keepScreenOn(false)
             ui = ui.copy(screen = FitScreen.SAVE, checkNew = c.newPicked, checkOld = c.oldPicked, checkSame = c.same)
         } else {
             ui = ui.copy(checkNumber = c.number + 1)
@@ -412,6 +440,7 @@ class BassFitActivity : RnActivity() {
         val before = DevParams.read(stored())
         val e = prefs.edit()
         DevParams.write(values, { k, v -> e.putFloat(k, v) }, { k, v -> e.putBoolean(k, v) })
+        e.putBoolean(DevParams.KEY_DEV_ON, true)      // the values act only with developer mode on (as the check played them)
         e.apply()
         val f = flags.edit().putString(KEY_FIT_BEFORE, before.joinToString(",")).putString(KEY_FIT_RECORD, record(r))
         r.floor?.let { f.putFloat(KEY_FIT_FLOOR_HZ, it.speakerFloorHz.toFloat()) }
@@ -422,10 +451,10 @@ class BassFitActivity : RnActivity() {
 
     private fun restoreBefore() {
         val raw = flags.getString(KEY_FIT_BEFORE, null) ?: return
-        val v = raw.split(",").mapNotNull { it.trim().toFloatOrNull() }
-        // values saved by an older version are shorter: the values added since keep their current value
+        val v = raw.split(",").map { it.trim().toFloatOrNull() }
+        // index by index: a value that doesn't parse, or one added since (an older, shorter list), keeps its current value
         val cur = DevParams.read(stored())
-        val values = FloatArray(cur.size) { if (it < v.size) v[it] else cur[it] }
+        val values = FloatArray(cur.size) { v.getOrNull(it)?.takeIf { x -> x.isFinite() } ?: cur[it] }
         val e = prefs.edit()
         DevParams.write(values, { k, x -> e.putFloat(k, x) }, { k, x -> e.putBoolean(k, x) })
         e.apply()
@@ -464,7 +493,9 @@ class BassFitActivity : RnActivity() {
         onAbx = { xIsA -> answered { it.answerAbx(xIsA) } },
         onPrefer = { pick -> answered { it.answerPrefer(pick) } },
         onBuzz = { buzz -> answered { it.answerBuzz(buzz) } },
-        onShape = { take -> session?.let { it.shapeChoice(take); present() } },
+        onShape = { take ->
+            session?.takeIf { it.stage == FitStage.SHAPE_OFFER && ui.screen == FitScreen.TEST }?.let { it.shapeChoice(take); present() }
+        },
         onCheckStart = { startCheck() },
         onCheckSkip = { skipCheck() },
         onCheckSide = { side -> if (ui.paused == null) playCheckSide(side) },
@@ -481,9 +512,12 @@ class BassFitActivity : RnActivity() {
         const val KEY_FIT_RECORD = "bass_fit_record"
         /** Speaker floor found by the last saved fit (Hz): the developer-mode graphs draw it instead of the profile's. */
         const val KEY_FIT_FLOOR_HZ = "bass_fit_floor_hz"
-        private const val CHECK_SALT = 0x5EED_C0DE_L
+        private const val CHECK_SALT = 0x5EEDC0DEL
+        /** A trial disturbed this many times in a row is answered anyway (a steady noise must not stall the test). */
+        private const val MAX_DISTURBED = 3
 
-        fun seedText(seed: Long): String = String.format(Locale.ROOT, "%08X", (seed ushr 32) xor (seed and 0xFFFFFFFFL))
+        /** The whole 64-bit seed as four groups of four hex digits (the run can be replayed from it). */
+        fun seedText(seed: Long): String = String.format(Locale.ROOT, "%016X", seed).chunked(4).joinToString("-")
 
         fun signed(v: Double): String = when {
             v > 0.05 -> "+" + String.format(Locale.ROOT, "%.0f", v)

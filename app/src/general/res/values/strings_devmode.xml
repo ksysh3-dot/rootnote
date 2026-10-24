@@ -267,5 +267,5 @@
     <string name="dev_p_table_floor_up">Higher notes (150-250 Hz) get harmonics too. The harmonics of very low notes (55-100 Hz) get smaller.</string>
     <string name="dev_p_table_floor_down">The other way round: low notes get bigger harmonics, higher notes are left empty.</string>
     <string name="dev_ev_table_floor_0">The virtual-bass strength table was made for the S26 Ultra\'s speaker (floor 150 Hz). On other phones the table moves by that phone\'s floor.</string>
-    <string name="dev_ev_table_floor_1">Whether a moved table sounds as strong as on the S26 Ultra is still being checked. The strength comparison in "Bass fit" closes that gap by ear.</string>
+    <string name="dev_ev_table_floor_1">Whether a moved table sounds as strong as on the S26 Ultra is still being checked. The strength comparison in \"Bass fit\" closes that gap by ear.</string>
 </resources>
