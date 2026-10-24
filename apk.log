@@ -1,0 +1,1000 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.10.2/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :buildSrc:checkKotlinGradlePluginConfigurationErrors
+> Task :buildSrc:pluginDescriptors
+> Task :buildSrc:processResources NO-SOURCE
+> Task :buildSrc:compileKotlin
+> Task :buildSrc:compileJava NO-SOURCE
+> Task :buildSrc:compileGroovy NO-SOURCE
+> Task :buildSrc:classes UP-TO-DATE
+
+> Task :buildSrc:jar
+:jar: No valid plugin descriptors were found in META-INF/gradle-plugins
+
+> Configure project :app
+WARNING: The option setting 'android.defaults.buildfeatures.buildconfig=true' is deprecated.
+The current default is 'false'.
+It will be removed in version 9.0 of the Android Gradle plugin.
+To keep using this feature, add the following to your module-level build.gradle files:
+    android.buildFeatures.buildConfig = true
+or from Android Studio, click: `Refactor` > `Migrate BuildConfig to Gradle Build Files`.
+::notice title=General signing::GENERAL_KEY_PASSWORD opens the release key as given
+Checking the license for package NDK (Side by side) 27.0.12077973 in /usr/local/lib/android/sdk/licenses
+License for package NDK (Side by side) 27.0.12077973 accepted.
+Preparing "Install NDK (Side by side) 27.0.12077973 v.27.0.12077973".
+"Install NDK (Side by side) 27.0.12077973 v.27.0.12077973" ready.
+Installing NDK (Side by side) 27.0.12077973 in /usr/local/lib/android/sdk/ndk/27.0.12077973
+"Install NDK (Side by side) 27.0.12077973 v.27.0.12077973" complete.
+"Install NDK (Side by side) 27.0.12077973 v.27.0.12077973" finished.
+Checking the license for package Android SDK Platform 33 in /usr/local/lib/android/sdk/licenses
+License for package Android SDK Platform 33 accepted.
+Preparing "Install Android SDK Platform 33 (revision 3)".
+"Install Android SDK Platform 33 (revision 3)" ready.
+Installing Android SDK Platform 33 in /usr/local/lib/android/sdk/platforms/android-33
+"Install Android SDK Platform 33 (revision 3)" complete.
+"Install Android SDK Platform 33 (revision 3)" finished.
+
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preRootlessFullS26uPreviewBuild UP-TO-DATE
+
+> Task :app:configureCMakeRelWithDebInfo[arm64-v8a]
+Checking the license for package CMake 3.22.1 in /usr/local/lib/android/sdk/licenses
+License for package CMake 3.22.1 accepted.
+Preparing "Install CMake 3.22.1 v.3.22.1".
+"Install CMake 3.22.1 v.3.22.1" ready.
+Installing CMake 3.22.1 in /usr/local/lib/android/sdk/cmake/3.22.1
+"Install CMake 3.22.1 v.3.22.1" complete.
+"Install CMake 3.22.1 v.3.22.1" finished.
+C/C++: CMake Warning:
+C/C++:   Manually-specified variables were not used by the project:
+C/C++:     NO_CRASHLYTICS
+
+> Task :app:buildCMakeRelWithDebInfo[arm64-v8a]
+C/C++: ninja: Entering directory `/home/runner/work/rootnote/rootnote/app/.cxx/RelWithDebInfo/2r275p33/arm64-v8a'
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/arbEqConv.c:6:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/bs2b.c:2:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/convolver1D.c:6:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/crossfeed.c:6:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/dbb.c:6:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/dynamic.c:8:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/numericSys/FilterDesign/cos_fib_paraunitary.c:522:26: warning: result of comparison of constant -2 with expression of type 'char' is always false [-Wtautological-constant-out-of-range-compare]
+C/C++:   522 |                                         if (U0l[j * Lh + i] == -2)
+C/C++:       |                                             ~~~~~~~~~~~~~~~ ^  ~~
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/numericSys/FilterDesign/cos_fib_paraunitary.c:524:31: warning: result of comparison of constant -1 with expression of type 'char' is always false [-Wtautological-constant-out-of-range-compare]
+C/C++:   524 |                                         else if (U0l[j * Lh + i] == -1)
+C/C++:       |                                                  ~~~~~~~~~~~~~~~ ^  ~~
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/numericSys/FilterDesign/cos_fib_paraunitary.c:539:25: warning: result of comparison of constant -2 with expression of type 'char' is always false [-Wtautological-constant-out-of-range-compare]
+C/C++:   539 |                                         if (QQ[j * Lh + i] == -2)
+C/C++:       |                                             ~~~~~~~~~~~~~~ ^  ~~
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/numericSys/FilterDesign/cos_fib_paraunitary.c:541:30: warning: result of comparison of constant -1 with expression of type 'char' is always false [-Wtautological-constant-out-of-range-compare]
+C/C++:   541 |                                         else if (QQ[j * Lh + i] == -1)
+C/C++:       |                                                  ~~~~~~~~~~~~~~ ^  ~~
+C/C++: 4 warnings generated.
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/numericSys/FilterDesign/polyphaseFilterbank.c:55:1: warning: non-void function does not return a value in all control paths [-Wreturn-type]
+C/C++:    55 | }
+C/C++:       | ^
+C/C++: 1 warning generated.
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/numericSys/FFTConvolver.c:886:27: warning: expression result unused [-Wunused-value]
+C/C++:   886 |                 conv2->_segmentsLLIRRe[1];
+C/C++:       |                 ~~~~~~~~~~~~~~~~~~~~~~ ~^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjdspimptoolbox/main/JdspImpResToolbox.c:7:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/liveprogWrapper.c:3:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/multimodalEQ.c:6:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/vacuumTube.c:6:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/stereoEnhancement.c:4:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/vdc.c:6:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/generalDSP/ArbFIRGen.c:5:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/generalDSP/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/binaryBlobs.c:1:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/generalDSP/interpolation.c:4:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/generalDSP/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/reverb.c:10:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/jdspController.c:9:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/generalDSP/TwoStageFFTConvolver.c:7:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/generalDSP/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/nseel-compiler.c:30:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/eel_matrix.h:94:38: warning: passing 'int32_t[2]' (aka 'int[2]') to parameter of type 'unsigned int *' converts between pointers to integer types with different sign [-Wpointer-sign]
+C/C++:    94 |         geninv(matIn, rows1, cols1, matOut, size);
+C/C++:       |                                             ^~~~
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/numericSys/quadprog.h:25:82: note: passing argument to parameter 'size' here
+C/C++:    25 | void geninv(double *G, unsigned int m1, unsigned int n1, double *Y, unsigned int size[2]);
+C/C++:       |                                                                                  ^
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/nseel-compiler.c:2596:8: warning: assigning to 'const unsigned char *' from 'const char *' converts between pointers to integer types where one is of the unique plain 'char' type and the other is not [-Wpointer-sign]
+C/C++:  2596 |                         end = src + len;
+C/C++:       |                             ^ ~~~~~~~~~
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/nseel-compiler.c:2597:7: warning: assigning to 'const unsigned char *' from 'const char *' converts between pointers to integer types where one is of the unique plain 'char' type and the other is not [-Wpointer-sign]
+C/C++:  2597 |                         in = src;
+C/C++:       |                            ^ ~~~
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/nseel-compiler.c:2633:36: warning: passing 'unsigned char *' to parameter of type 'const char *' converts between pointers to integer types where one is of the unique plain 'char' type and the other is not [-Wpointer-sign]
+C/C++:  2633 |                         *dest = s_str_create_from_c_str(out);
+C/C++:       |                                                         ^~~
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/s_str.h:61:49: note: passing argument to parameter 'c_str_ptr' here
+C/C++:    61 | s_str s_str_create_from_c_str(const char *const c_str_ptr);
+C/C++:       |                                                 ^
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/nseel-compiler.c:2747:41: warning: passing 'unsigned char *' to parameter of type 'const char *' converts between pointers to integer types where one is of the unique plain 'char' type and the other is not [-Wpointer-sign]
+C/C++:  2747 |                         *dest = s_str_create_from_c_str_0Inc(out, out_len);
+C/C++:       |                                                              ^~~
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/s_str.h:62:54: note: passing argument to parameter 'c_str_ptr' here
+C/C++:    62 | s_str s_str_create_from_c_str_0Inc(const char *const c_str_ptr, const size_t length);
+C/C++:       |                                                      ^
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/nseel-compiler.c:4367:34: warning: passing 'unsigned char *' to parameter of type 'const char *' converts between pointers to integer types where one is of the unique plain 'char' type and the other is not [-Wpointer-sign]
+C/C++:  4367 |         *dest = s_str_create_from_c_str(base64String);
+C/C++:       |                                         ^~~~~~~~~~~~
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/s_str.h:61:49: note: passing argument to parameter 'c_str_ptr' here
+C/C++:    61 | s_str s_str_create_from_c_str(const char *const c_str_ptr);
+C/C++:       |                                                 ^
+C/C++: 6 warnings generated.
+
+> Task :app:preRootlessFdroidS26uReleaseBuild UP-TO-DATE
+> Task :app:mergeRootlessFdroidS26uReleaseJniLibFolders
+> Task :codeview:preBuild UP-TO-DATE
+> Task :codeview:preReleaseBuild UP-TO-DATE
+> Task :codeview:mergeReleaseJniLibFolders
+> Task :codeview:mergeReleaseNativeLibs NO-SOURCE
+> Task :hidden-api-impl:preBuild UP-TO-DATE
+> Task :hidden-api-impl:preReleaseBuild UP-TO-DATE
+> Task :codeview:copyReleaseJniLibsProjectOnly
+> Task :hidden-api-impl:mergeReleaseJniLibFolders
+> Task :hidden-api-impl:mergeReleaseNativeLibs NO-SOURCE
+> Task :codeview:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :hidden-api-impl:copyReleaseJniLibsProjectOnly
+> Task :codeview:generateReleaseBuildConfig
+> Task :codeview:generateReleaseResValues
+> Task :codeview:generateReleaseResources
+> Task :app:mergeRootlessFdroidS26uReleaseNativeLibs
+> Task :codeview:packageReleaseResources
+> Task :app:stripRootlessFdroidS26uReleaseDebugSymbols
+> Task :codeview:javaPreCompileRelease
+> Task :codeview:parseReleaseLocalResources
+> Task :app:extractRootlessFdroidS26uReleaseNativeSymbolTables
+> Task :hidden-api-stubs:compileJava
+> Task :hidden-api-stubs:processResources NO-SOURCE
+> Task :hidden-api-stubs:classes
+> Task :hidden-api-stubs:jar
+> Task :hidden-api-impl:generateReleaseBuildConfig
+> Task :codeview:generateReleaseRFile
+> Task :hidden-api-impl:generateReleaseResValues
+> Task :app:mergeRootlessFdroidS26uReleaseNativeDebugMetadata
+> Task :hidden-api-impl:generateReleaseResources
+> Task :hidden-api-impl:packageReleaseResources
+> Task :hidden-api-refined:preBuild UP-TO-DATE
+> Task :hidden-api-refined:preReleaseBuild UP-TO-DATE
+> Task :hidden-api-impl:javaPreCompileRelease
+> Task :hidden-api-refined:generateReleaseResValues
+> Task :hidden-api-impl:parseReleaseLocalResources
+> Task :hidden-api-refined:generateReleaseResources
+> Task :hidden-api-refined:packageReleaseResources
+> Task :hidden-api-impl:generateReleaseRFile
+> Task :hidden-api-refined:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :hidden-api-refined:parseReleaseLocalResources
+> Task :hidden-api-refined:generateReleaseBuildConfig
+> Task :hidden-api-refined:generateReleaseRFile
+> Task :hidden-api-refined:javaPreCompileRelease
+> Task :hidden-api-refined:compileReleaseKotlin NO-SOURCE
+
+> Task :hidden-api-refined:compileReleaseJavaWithJavac
+warning: Supported source version 'RELEASE_8' from annotation processor 'org.gradle.api.internal.tasks.compile.processing.TimeTrackingProcessor' less than -source '17'
+1 warning
+
+> Task :hidden-api-refined:transformReleaseClassesWithAsm
+> Task :app:checkRootlessFdroidS26uReleaseDuplicateClasses
+> Task :hidden-api-refined:bundleLibCompileToJarRelease
+> Task :app:buildKotlinToolingMetadata
+
+> Task :hidden-api-impl:compileReleaseJavaWithJavac
+warning: unknown enum constant Scope.LIBRARY_GROUP_PREFIX
+  reason: class file for androidx.annotation.RestrictTo$Scope not found
+warning: unknown enum constant Scope.LIBRARY_GROUP_PREFIX
+warning: unknown enum constant Scope.LIBRARY_GROUP_PREFIX
+warning: unknown enum constant Scope.LIBRARY_GROUP_PREFIX
+warning: unknown enum constant Scope.LIBRARY_GROUP_PREFIX
+warning: unknown enum constant Scope.LIBRARY_GROUP_PREFIX
+warning: unknown enum constant Scope.LIBRARY_GROUP_PREFIX
+7 warnings
+
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :hidden-api-impl:transformReleaseClassesWithAsm
+> Task :app:dataBindingMergeDependencyArtifactsRootlessFdroidS26uRelease
+> Task :hidden-api-impl:bundleLibRuntimeToJarRelease
+> Task :app:generateRootlessFdroidS26uReleaseResValues
+> Task :app:generateRootlessFdroidS26uReleaseResources
+> Task :app:packageRootlessFdroidS26uReleaseResources
+> Task :app:generateRootlessFdroidS26uReleaseBuildConfig
+> Task :codeview:writeReleaseAarMetadata
+> Task :hidden-api-impl:writeReleaseAarMetadata
+> Task :app:mergeRootlessFdroidS26uReleaseResources
+> Task :app:parseRootlessFdroidS26uReleaseLocalResources
+> Task :app:checkRootlessFdroidS26uReleaseAarMetadata
+> Task :app:dataBindingGenBaseClassesRootlessFdroidS26uRelease
+> Task :app:mapRootlessFdroidS26uReleaseSourceSetPaths
+> Task :app:createRootlessFdroidS26uReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRootlessFdroidS26uRelease
+> Task :codeview:extractDeepLinksRelease
+> Task :hidden-api-impl:extractDeepLinksRelease
+> Task :codeview:compileReleaseLibraryResources
+> Task :hidden-api-impl:compileReleaseLibraryResources
+> Task :hidden-api-impl:bundleLibCompileToJarRelease
+> Task :codeview:processReleaseManifest
+> Task :hidden-api-impl:processReleaseManifest
+> Task :app:javaPreCompileRootlessFdroidS26uRelease
+> Task :app:processRootlessFdroidS26uReleaseMainManifest
+> Task :app:processRootlessFdroidS26uReleaseManifest
+> Task :app:desugarRootlessFdroidS26uReleaseFileDependencies
+> Task :app:mergeRootlessFdroidS26uReleaseStartupProfile
+> Task :app:processRootlessFdroidS26uReleaseManifestForPackage
+> Task :codeview:prepareReleaseArtProfile
+> Task :hidden-api-impl:prepareReleaseArtProfile
+warn: removing resource kr.ksysh3.pvb.s26u:string/onboarding_adb_dump_not_granted without required default value.
+warn: removing resource kr.ksysh3.pvb.s26u:string/onboarding_adb_dump_not_granted_title without required default value.
+warn: removing resource kr.ksysh3.pvb.s26u:string/onboarding_adb_manual_step5b without required default value.
+
+> Task :app:mergeRootlessFdroidS26uReleaseArtProfile
+> Task :app:generateRootlessFdroidS26uReleaseAssets UP-TO-DATE
+> Task :codeview:mergeReleaseShaders
+> Task :codeview:compileReleaseShaders NO-SOURCE
+> Task :codeview:generateReleaseAssets UP-TO-DATE
+> Task :codeview:packageReleaseAssets
+> Task :hidden-api-impl:mergeReleaseShaders
+> Task :hidden-api-impl:compileReleaseShaders NO-SOURCE
+> Task :hidden-api-impl:generateReleaseAssets UP-TO-DATE
+> Task :hidden-api-impl:packageReleaseAssets
+> Task :app:mergeRootlessFdroidS26uReleaseAssets
+warn: removing resource kr.ksysh3.pvb.s26u:string/onboarding_adb_dump_not_granted without required default value.
+warn: removing resource kr.ksysh3.pvb.s26u:string/onboarding_adb_dump_not_granted_title without required default value.
+warn: removing resource kr.ksysh3.pvb.s26u:string/onboarding_adb_manual_step5b without required default value.
+
+> Task :app:processRootlessFdroidS26uReleaseResources
+> Task :app:compressRootlessFdroidS26uReleaseAssets
+> Task :app:extractRootlessFdroidS26uReleaseVersionControlInfo
+> Task :hidden-api-impl:processReleaseJavaRes NO-SOURCE
+> Task :app:collectRootlessFdroidS26uReleaseDependencies
+> Task :app:sdkRootlessFdroidS26uReleaseDependencyData
+> Task :codeview:compileReleaseKotlin
+> Task :app:validateSigningRootlessFdroidS26uRelease
+> Task :codeview:compileReleaseJavaWithJavac
+> Task :codeview:bundleLibRuntimeToJarRelease
+> Task :codeview:bundleLibCompileToJarRelease
+> Task :app:optimizeRootlessFdroidS26uReleaseResources
+> Task :app:mergeExtDexRootlessFdroidS26uRelease
+> Task :codeview:processReleaseJavaRes
+> Task :app:writeRootlessFdroidS26uReleaseAppMetadata
+> Task :app:writeRootlessFdroidS26uReleaseSigningConfigVersions
+> Task :app:preRootlessFdroidGeneralReleaseBuild UP-TO-DATE
+> Task :app:mergeRootlessFdroidGeneralReleaseJniLibFolders
+> Task :app:mergeRootlessFdroidGeneralReleaseNativeLibs
+> Task :app:checkRootlessFdroidGeneralReleaseDuplicateClasses
+> Task :app:stripRootlessFdroidGeneralReleaseDebugSymbols
+> Task :app:dataBindingMergeDependencyArtifactsRootlessFdroidGeneralRelease
+> Task :app:generateRootlessFdroidGeneralReleaseResValues
+> Task :app:generateRootlessFdroidGeneralReleaseResources
+> Task :app:extractRootlessFdroidGeneralReleaseNativeSymbolTables
+> Task :app:packageRootlessFdroidGeneralReleaseResources
+> Task :app:mergeRootlessFdroidGeneralReleaseNativeDebugMetadata
+> Task :app:parseRootlessFdroidGeneralReleaseLocalResources
+> Task :app:generateRootlessFdroidGeneralReleaseBuildConfig
+> Task :app:checkRootlessFdroidGeneralReleaseAarMetadata
+> Task :app:mapRootlessFdroidGeneralReleaseSourceSetPaths
+> Task :app:createRootlessFdroidGeneralReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRootlessFdroidGeneralRelease
+> Task :app:mergeRootlessFdroidGeneralReleaseResources
+> Task :app:processRootlessFdroidGeneralReleaseMainManifest
+> Task :app:dataBindingGenBaseClassesRootlessFdroidGeneralRelease
+> Task :app:processRootlessFdroidGeneralReleaseManifest
+> Task :app:desugarRootlessFdroidGeneralReleaseFileDependencies
+> Task :app:mergeRootlessFdroidGeneralReleaseStartupProfile
+> Task :app:processRootlessFdroidGeneralReleaseManifestForPackage
+> Task :app:javaPreCompileRootlessFdroidGeneralRelease
+warn: removing resource kr.ksysh3.rootnote:string/onboarding_adb_dump_not_granted without required default value.
+warn: removing resource kr.ksysh3.rootnote:string/onboarding_adb_dump_not_granted_title without required default value.
+warn: removing resource kr.ksysh3.rootnote:string/onboarding_adb_manual_step5b without required default value.
+
+> Task :app:mergeRootlessFdroidGeneralReleaseArtProfile
+> Task :app:generateRootlessFdroidGeneralReleaseAssets UP-TO-DATE
+> Task :app:mergeRootlessFdroidGeneralReleaseAssets
+warn: removing resource kr.ksysh3.rootnote:string/onboarding_adb_dump_not_granted without required default value.
+warn: removing resource kr.ksysh3.rootnote:string/onboarding_adb_dump_not_granted_title without required default value.
+warn: removing resource kr.ksysh3.rootnote:string/onboarding_adb_manual_step5b without required default value.
+
+> Task :app:compressRootlessFdroidGeneralReleaseAssets
+> Task :app:extractRootlessFdroidGeneralReleaseVersionControlInfo
+> Task :app:processRootlessFdroidGeneralReleaseResources
+> Task :app:collectRootlessFdroidGeneralReleaseDependencies
+
+> Task :app:kspRootlessFdroidS26uReleaseKotlin
+w: [ksp] /home/runner/work/rootnote/rootnote/app/src/main/java/me/timschneeberger/rootlessjamesdsp/model/room/AppBlocklistDatabase.kt:10: Schema export directory was not provided to the annotation processor so Room cannot export the schema. You can either provide `room.schemaLocation` annotation processor argument by applying the Room Gradle plugin (id 'androidx.room') OR set exportSchema to false.
+
+> Task :app:mergeExtDexRootlessFdroidGeneralRelease
+> Task :app:sdkRootlessFdroidGeneralReleaseDependencyData
+> Task :app:optimizeRootlessFdroidGeneralReleaseResources
+> Task :app:validateSigningRootlessFdroidGeneralRelease
+> Task :app:writeRootlessFdroidGeneralReleaseAppMetadata
+> Task :app:writeRootlessFdroidGeneralReleaseSigningConfigVersions
+> Task :app:prePluginFullS26uPreviewBuild UP-TO-DATE
+
+> Task :app:configureCMakeRelWithDebInfo[arm64-v8a]-2
+C/C++: CMake Warning:
+C/C++:   Manually-specified variables were not used by the project:
+C/C++:     NO_CRASHLYTICS
+
+> Task :app:kaptGenerateStubsRootlessFdroidS26uReleaseKotlin
+w: Support for language version 2.0+ in kapt is in Alpha and must be enabled explicitly. Falling back to 1.9.
+
+> Task :app:buildCMakeRelWithDebInfo[arm64-v8a]-2
+C/C++: ninja: Entering directory `/home/runner/work/rootnote/rootnote/app/.cxx/RelWithDebInfo/106t596w/arm64-v8a'
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/bs2b.c:2:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/arbEqConv.c:6:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/convolver1D.c:6:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/crossfeed.c:6:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/dbb.c:6:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+
+> Task :app:kspRootlessFdroidGeneralReleaseKotlin
+w: [ksp] /home/runner/work/rootnote/rootnote/app/src/main/java/me/timschneeberger/rootlessjamesdsp/model/room/AppBlocklistDatabase.kt:10: Schema export directory was not provided to the annotation processor so Room cannot export the schema. You can either provide `room.schemaLocation` annotation processor argument by applying the Room Gradle plugin (id 'androidx.room') OR set exportSchema to false.
+
+> Task :app:buildCMakeRelWithDebInfo[arm64-v8a]-2
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/dynamic.c:8:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/numericSys/FilterDesign/cos_fib_paraunitary.c:522:26: warning: result of comparison of constant -2 with expression of type 'char' is always false [-Wtautological-constant-out-of-range-compare]
+C/C++:   522 |                                         if (U0l[j * Lh + i] == -2)
+C/C++:       |                                             ~~~~~~~~~~~~~~~ ^  ~~
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/numericSys/FilterDesign/cos_fib_paraunitary.c:524:31: warning: result of comparison of constant -1 with expression of type 'char' is always false [-Wtautological-constant-out-of-range-compare]
+C/C++:   524 |                                         else if (U0l[j * Lh + i] == -1)
+C/C++:       |                                                  ~~~~~~~~~~~~~~~ ^  ~~
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/numericSys/FilterDesign/cos_fib_paraunitary.c:539:25: warning: result of comparison of constant -2 with expression of type 'char' is always false [-Wtautological-constant-out-of-range-compare]
+C/C++:   539 |                                         if (QQ[j * Lh + i] == -2)
+C/C++:       |                                             ~~~~~~~~~~~~~~ ^  ~~
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/numericSys/FilterDesign/cos_fib_paraunitary.c:541:30: warning: result of comparison of constant -1 with expression of type 'char' is always false [-Wtautological-constant-out-of-range-compare]
+C/C++:   541 |                                         else if (QQ[j * Lh + i] == -1)
+C/C++:       |                                                  ~~~~~~~~~~~~~~ ^  ~~
+C/C++: 4 warnings generated.
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/numericSys/FFTConvolver.c:886:27: warning: expression result unused [-Wunused-value]
+C/C++:   886 |                 conv2->_segmentsLLIRRe[1];
+C/C++:       |                 ~~~~~~~~~~~~~~~~~~~~~~ ~^
+C/C++: 1 warning generated.
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/numericSys/FilterDesign/polyphaseFilterbank.c:55:1: warning: non-void function does not return a value in all control paths [-Wreturn-type]
+C/C++:    55 | }
+C/C++:       | ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjdspimptoolbox/main/JdspImpResToolbox.c:7:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/liveprogWrapper.c:3:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/multimodalEQ.c:6:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/stereoEnhancement.c:4:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/vacuumTube.c:6:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/vdc.c:6:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/generalDSP/ArbFIRGen.c:5:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/generalDSP/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/binaryBlobs.c:1:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/generalDSP/interpolation.c:4:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/generalDSP/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/reverb.c:10:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/jdspController.c:9:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/generalDSP/TwoStageFFTConvolver.c:7:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/generalDSP/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/nseel-compiler.c:30:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/eel_matrix.h:94:38: warning: passing 'int32_t[2]' (aka 'int[2]') to parameter of type 'unsigned int *' converts between pointers to integer types with different sign [-Wpointer-sign]
+C/C++:    94 |         geninv(matIn, rows1, cols1, matOut, size);
+C/C++:       |                                             ^~~~
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/numericSys/quadprog.h:25:82: note: passing argument to parameter 'size' here
+C/C++:    25 | void geninv(double *G, unsigned int m1, unsigned int n1, double *Y, unsigned int size[2]);
+C/C++:       |                                                                                  ^
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/nseel-compiler.c:2596:8: warning: assigning to 'const unsigned char *' from 'const char *' converts between pointers to integer types where one is of the unique plain 'char' type and the other is not [-Wpointer-sign]
+C/C++:  2596 |                         end = src + len;
+C/C++:       |                             ^ ~~~~~~~~~
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/nseel-compiler.c:2597:7: warning: assigning to 'const unsigned char *' from 'const char *' converts between pointers to integer types where one is of the unique plain 'char' type and the other is not [-Wpointer-sign]
+C/C++:  2597 |                         in = src;
+C/C++:       |                            ^ ~~~
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/nseel-compiler.c:2633:36: warning: passing 'unsigned char *' to parameter of type 'const char *' converts between pointers to integer types where one is of the unique plain 'char' type and the other is not [-Wpointer-sign]
+C/C++:  2633 |                         *dest = s_str_create_from_c_str(out);
+C/C++:       |                                                         ^~~
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/s_str.h:61:49: note: passing argument to parameter 'c_str_ptr' here
+C/C++:    61 | s_str s_str_create_from_c_str(const char *const c_str_ptr);
+C/C++:       |                                                 ^
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/nseel-compiler.c:2747:41: warning: passing 'unsigned char *' to parameter of type 'const char *' converts between pointers to integer types where one is of the unique plain 'char' type and the other is not [-Wpointer-sign]
+C/C++:  2747 |                         *dest = s_str_create_from_c_str_0Inc(out, out_len);
+C/C++:       |                                                              ^~~
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/s_str.h:62:54: note: passing argument to parameter 'c_str_ptr' here
+C/C++:    62 | s_str s_str_create_from_c_str_0Inc(const char *const c_str_ptr, const size_t length);
+C/C++:       |                                                      ^
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/nseel-compiler.c:4367:34: warning: passing 'unsigned char *' to parameter of type 'const char *' converts between pointers to integer types where one is of the unique plain 'char' type and the other is not [-Wpointer-sign]
+C/C++:  4367 |         *dest = s_str_create_from_c_str(base64String);
+C/C++:       |                                         ^~~~~~~~~~~~
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/s_str.h:61:49: note: passing argument to parameter 'c_str_ptr' here
+C/C++:    61 | s_str s_str_create_from_c_str(const char *const c_str_ptr);
+C/C++:       |                                                 ^
+C/C++: 6 warnings generated.
+
+> Task :app:kaptRootlessFdroidS26uReleaseKotlin SKIPPED
+> Task :app:preRootFdroidGeneralReleaseBuild UP-TO-DATE
+> Task :app:mergeRootFdroidGeneralReleaseJniLibFolders
+> Task :app:checkRootFdroidGeneralReleaseDuplicateClasses
+> Task :app:mergeRootFdroidGeneralReleaseNativeLibs
+> Task :app:dataBindingMergeDependencyArtifactsRootFdroidGeneralRelease
+> Task :app:generateRootFdroidGeneralReleaseResValues
+> Task :app:stripRootFdroidGeneralReleaseDebugSymbols
+> Task :app:generateRootFdroidGeneralReleaseResources
+> Task :app:extractRootFdroidGeneralReleaseNativeSymbolTables
+
+> Task :app:kaptGenerateStubsRootlessFdroidGeneralReleaseKotlin
+w: Support for language version 2.0+ in kapt is in Alpha and must be enabled explicitly. Falling back to 1.9.
+
+> Task :app:kaptRootlessFdroidGeneralReleaseKotlin SKIPPED
+> Task :app:mergeRootFdroidGeneralReleaseNativeDebugMetadata
+> Task :app:mergeRootFdroidGeneralReleaseResources
+> Task :app:packageRootFdroidGeneralReleaseResources
+> Task :app:generateRootFdroidGeneralReleaseBuildConfig
+> Task :app:checkRootFdroidGeneralReleaseAarMetadata
+> Task :app:mapRootFdroidGeneralReleaseSourceSetPaths
+> Task :app:createRootFdroidGeneralReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRootFdroidGeneralRelease
+> Task :app:parseRootFdroidGeneralReleaseLocalResources
+> Task :app:processRootFdroidGeneralReleaseMainManifest
+> Task :app:dataBindingGenBaseClassesRootFdroidGeneralRelease
+> Task :app:processRootFdroidGeneralReleaseManifest
+> Task :app:processRootFdroidGeneralReleaseManifestForPackage
+> Task :app:javaPreCompileRootFdroidGeneralRelease
+> Task :app:desugarRootFdroidGeneralReleaseFileDependencies
+> Task :app:mergeRootFdroidGeneralReleaseStartupProfile
+warn: removing resource kr.ksysh3.rootnote.root:string/onboarding_adb_dump_not_granted without required default value.
+warn: removing resource kr.ksysh3.rootnote.root:string/onboarding_adb_dump_not_granted_title without required default value.
+warn: removing resource kr.ksysh3.rootnote.root:string/onboarding_adb_manual_step5b without required default value.
+
+warn: removing resource kr.ksysh3.rootnote.root:string/onboarding_adb_dump_not_granted without required default value.
+warn: removing resource kr.ksysh3.rootnote.root:string/onboarding_adb_dump_not_granted_title without required default value.
+warn: removing resource kr.ksysh3.rootnote.root:string/onboarding_adb_manual_step5b without required default value.
+
+> Task :app:processRootFdroidGeneralReleaseResources
+> Task :app:mergeExtDexRootFdroidGeneralRelease
+> Task :app:mergeRootFdroidGeneralReleaseArtProfile
+> Task :app:generateRootFdroidGeneralReleaseAssets UP-TO-DATE
+> Task :app:mergeRootFdroidGeneralReleaseAssets
+> Task :app:compressRootFdroidGeneralReleaseAssets
+> Task :app:extractRootFdroidGeneralReleaseVersionControlInfo
+> Task :app:optimizeRootFdroidGeneralReleaseResources
+> Task :app:collectRootFdroidGeneralReleaseDependencies
+> Task :app:sdkRootFdroidGeneralReleaseDependencyData
+> Task :app:validateSigningRootFdroidGeneralRelease
+> Task :app:writeRootFdroidGeneralReleaseAppMetadata
+> Task :app:writeRootFdroidGeneralReleaseSigningConfigVersions
+
+> Task :app:kspRootFdroidGeneralReleaseKotlin
+w: [ksp] /home/runner/work/rootnote/rootnote/app/src/main/java/me/timschneeberger/rootlessjamesdsp/model/room/AppBlocklistDatabase.kt:10: Schema export directory was not provided to the annotation processor so Room cannot export the schema. You can either provide `room.schemaLocation` annotation processor argument by applying the Room Gradle plugin (id 'androidx.room') OR set exportSchema to false.
+
+> Task :app:kaptGenerateStubsRootFdroidGeneralReleaseKotlin
+w: Support for language version 2.0+ in kapt is in Alpha and must be enabled explicitly. Falling back to 1.9.
+
+> Task :app:kaptRootFdroidGeneralReleaseKotlin SKIPPED
+> Task :app:compileRootlessFdroidS26uReleaseKotlin
+> Task :app:compileRootlessFdroidGeneralReleaseKotlin
+> Task :app:compileRootFdroidGeneralReleaseKotlin
+
+> Task :app:compileRootlessFdroidGeneralReleaseKotlin FAILED
+e: org.jetbrains.kotlin.backend.common.BackendException: Backend Internal error: Exception during IR lowering
+File being compiled: /home/runner/work/rootnote/rootnote/app/src/general/java/me/timschneeberger/rootlessjamesdsp/devmode/DevModeScreen.kt
+The root cause java.lang.RuntimeException was thrown at: org.jetbrains.kotlin.backend.jvm.codegen.FunctionCodegen.generate(FunctionCodegen.kt:48)
+	at org.jetbrains.kotlin.backend.common.CodegenUtil.reportBackendException(CodegenUtil.kt:253)
+	at org.jetbrains.kotlin.backend.common.CodegenUtil.reportBackendException$default(CodegenUtil.kt:236)
+	at org.jetbrains.kotlin.backend.common.phaser.PerformByIrFilePhase.invokeSequential(performByIrFile.kt:55)
+	at org.jetbrains.kotlin.backend.common.phaser.PerformByIrFilePhase.invoke(performByIrFile.kt:42)
+	at org.jetbrains.kotlin.backend.common.phaser.PerformByIrFilePhase.invoke(performByIrFile.kt:28)
+	at org.jetbrains.kotlin.backend.common.phaser.NamedCompilerPhase.phaseBody(CompilerPhase.kt:166)
+	at org.jetbrains.kotlin.backend.common.phaser.AbstractNamedCompilerPhase.invoke(CompilerPhase.kt:113)
+	at org.jetbrains.kotlin.backend.common.phaser.CompositePhase.invoke(PhaseBuilders.kt:27)
+	at org.jetbrains.kotlin.backend.common.phaser.CompositePhase.invoke(PhaseBuilders.kt:14)
+	at org.jetbrains.kotlin.backend.common.phaser.NamedCompilerPhase.phaseBody(CompilerPhase.kt:166)
+	at org.jetbrains.kotlin.backend.common.phaser.AbstractNamedCompilerPhase.invoke(CompilerPhase.kt:113)
+	at org.jetbrains.kotlin.backend.common.phaser.CompilerPhaseKt.invokeToplevel(CompilerPhase.kt:62)
+	at org.jetbrains.kotlin.backend.jvm.JvmIrCodegenFactory.invokeCodegen(JvmIrCodegenFactory.kt:371)
+	at org.jetbrains.kotlin.codegen.CodegenFactory.generateModule(CodegenFactory.kt:47)
+	at org.jetbrains.kotlin.backend.jvm.JvmIrCodegenFactory.generateModuleInFrontendIRMode(JvmIrCodegenFactory.kt:433)
+	at org.jetbrains.kotlin.cli.jvm.compiler.pipeline.JvmCompilerPipelineKt.generateCodeFromIr(jvmCompilerPipeline.kt:192)
+	at org.jetbrains.kotlin.cli.jvm.compiler.pipeline.JvmCompilerPipelineKt.runBackend(jvmCompilerPipeline.kt:80)
+	at org.jetbrains.kotlin.cli.jvm.compiler.pipeline.JvmCompilerPipelineLightTreeKt.compileModule(jvmCompilerPipelineLightTree.kt:264)
+	at org.jetbrains.kotlin.cli.jvm.compiler.pipeline.JvmCompilerPipelineLightTreeKt.compileSingleModuleUsingFrontendIrAndLightTree(jvmCompilerPipelineLightTree.kt:231)
+	at org.jetbrains.kotlin.cli.jvm.compiler.pipeline.JvmCompilerPipelineLightTreeKt.compileModulesUsingFrontendIrAndLightTree(jvmCompilerPipelineLightTree.kt:86)
+	at org.jetbrains.kotlin.cli.jvm.K2JVMCompiler.doExecute(K2JVMCompiler.kt:146)
+	at org.jetbrains.kotlin.cli.jvm.K2JVMCompiler.doExecute(K2JVMCompiler.kt:43)
+	at org.jetbrains.kotlin.cli.common.CLICompiler.execImpl(CLICompiler.kt:102)
+	at org.jetbrains.kotlin.cli.common.CLICompiler.exec(CLICompiler.kt:316)
+	at org.jetbrains.kotlin.incremental.IncrementalJvmCompilerRunner.runCompiler(IncrementalJvmCompilerRunner.kt:464)
+	at org.jetbrains.kotlin.incremental.IncrementalJvmCompilerRunner.runCompiler(IncrementalJvmCompilerRunner.kt:73)
+	at org.jetbrains.kotlin.incremental.IncrementalCompilerRunner.doCompile(IncrementalCompilerRunner.kt:506)
+	at org.jetbrains.kotlin.incremental.IncrementalCompilerRunner.compileImpl(IncrementalCompilerRunner.kt:423)
+	at org.jetbrains.kotlin.incremental.IncrementalCompilerRunner.compileNonIncrementally(IncrementalCompilerRunner.kt:301)
+	at org.jetbrains.kotlin.incremental.IncrementalCompilerRunner.compile(IncrementalCompilerRunner.kt:129)
+	at org.jetbrains.kotlin.daemon.CompileServiceImplBase.execIncrementalCompiler(CompileServiceImpl.kt:674)
+	at org.jetbrains.kotlin.daemon.CompileServiceImplBase.access$execIncrementalCompiler(CompileServiceImpl.kt:91)
+	at org.jetbrains.kotlin.daemon.CompileServiceImpl.compile(CompileServiceImpl.kt:1659)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at java.rmi/sun.rmi.server.UnicastServerRef.dispatch(UnicastServerRef.java:360)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:200)
+	at java.rmi/sun.rmi.transport.Transport$1.run(Transport.java:197)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:712)
+	at java.rmi/sun.rmi.transport.Transport.serviceCall(Transport.java:196)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport.handleMessages(TCPTransport.java:587)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run0(TCPTransport.java:828)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.lambda$run$0(TCPTransport.java:705)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:399)
+	at java.rmi/sun.rmi.transport.tcp.TCPTransport$ConnectionHandler.run(TCPTransport.java:704)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+Caused by: java.lang.RuntimeException: Exception while generating code for:
+FUN name:DevContent visibility:private modality:FINAL <> (state:me.timschneeberger.rootlessjamesdsp.devmode.DevUiState, actions:me.timschneeberger.rootlessjamesdsp.devmode.DevActions, $composer:androidx.compose.runtime.Composer?, $changed:kotlin.Int) returnType:kotlin.Unit
+  annotations:
+    OptIn(markerClass = [CLASS_REFERENCE 'CLASS IR_EXTERNAL_DECLARATION_STUB ANNOTATION_CLASS name:ExperimentalFoundationApi modality:OPEN visibility:public superTypes:[kotlin.Annotation]' type=kotlin.reflect.KClass<androidx.compose.foundation.ExperimentalFoundationApi>] type=kotlin.Array<out kotlin.reflect.KClass<out kotlin.Annotation>> varargElementType=kotlin.reflect.KClass<out kotlin.Annotation>)
+    Composable
+    ComposableTarget(applier = "androidx.compose.ui.UiComposable")
+  VALUE_PARAMETER name:state index:0 type:me.timschneeberger.rootlessjamesdsp.devmode.DevUiState
+  VALUE_PARAMETER name:actions index:1 type:me.timschneeberger.rootlessjamesdsp.devmode.DevActions
+  VALUE_PARAMETER name:$composer index:2 type:androidx.compose.runtime.Composer? [assignable]
+  VALUE_PARAMETER name:$changed index:3 type:kotlin.Int
+  BLOCK_BODY
+    SET_VAR '$composer: androidx.compose.runtime.Composer? [assignable] declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent' type=kotlin.Unit origin=null
+      CALL 'public abstract fun startRestartGroup (key: kotlin.Int): androidx.compose.runtime.Composer declared in androidx.compose.runtime.Composer' type=androidx.compose.runtime.Composer origin=null
+        $this: GET_VAR '$composer: androidx.compose.runtime.Composer? [assignable] declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent' type=androidx.compose.runtime.Composer? origin=null
+        key: CONST Int type=kotlin.Int value=547489839
+    VAR name:$dirty type:kotlin.Int [val]
+      GET_VAR '$changed: kotlin.Int declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent' type=kotlin.Int origin=null
+    WHEN type=kotlin.Unit origin=IF
+      BRANCH
+        if: CALL 'public final fun EQEQ (arg0: kotlin.Any?, arg1: kotlin.Any?): kotlin.Boolean declared in kotlin.internal.ir' type=kotlin.Boolean origin=null
+          arg0: CALL 'public final fun and (other: kotlin.Int): kotlin.Int [infix] declared in kotlin.Int' type=kotlin.Int origin=null
+            $this: GET_VAR '$changed: kotlin.Int declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent' type=kotlin.Int origin=null
+            other: CONST Int type=kotlin.Int value=6
+          arg1: CONST Int type=kotlin.Int value=0
+        then: SET_VAR 'val $dirty: kotlin.Int [val] declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent' type=kotlin.Unit origin=null
+          CALL 'public final fun or (other: kotlin.Int): kotlin.Int [infix] declared in kotlin.Int' type=kotlin.Int origin=null
+            $this: GET_VAR 'val $dirty: kotlin.Int [val] declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent' type=kotlin.Int origin=null
+            other: WHEN type=kotlin.Int origin=IF
+              BRANCH
+                if: CALL 'public abstract fun changed (value: kotlin.Any?): kotlin.Boolean declared in androidx.compose.runtime.Composer' type=kotlin.Boolean origin=null
+                  $this: GET_VAR '$composer: androidx.compose.runtime.Composer? [assignable] declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent' type=androidx.compose.runtime.Composer? origin=null
+                  value: GET_VAR 'state: me.timschneeberger.rootlessjamesdsp.devmode.DevUiState declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent' type=me.timschneeberger.rootlessjamesdsp.devmode.DevUiState origin=null
+                then: CONST Int type=kotlin.Int value=4
+              BRANCH
+                if: CONST Boolean type=kotlin.Boolean value=true
+                then: CONST Int type=kotlin.Int value=2
+    WHEN type=kotlin.Unit origin=IF
+      BRANCH
+        if: CALL 'public final fun EQEQ (arg0: kotlin.Any?, arg1: kotlin.Any?): kotlin.Boolean declared in kotlin.internal.ir' type=kotlin.Boolean origin=null
+          arg0: CALL 'public final fun and (other: kotlin.Int): kotlin.Int [infix] declared in kotlin.Int' type=kotlin.Int origin=null
+            $this: GET_VAR '$changed: kotlin.Int declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent' type=kotlin.Int origin=null
+            other: CONST Int type=kotlin.Int value=48
+          arg1: CONST Int type=kotlin.Int value=0
+        then: SET_VAR 'val $dirty: kotlin.Int [val] declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent' type=kotlin.Unit origin=null
+          CALL 'public final fun or (other: kotlin.Int): kotlin.Int [infix] declared in kotlin.Int' type=kotlin.Int origin=null
+            $this: GET_VAR 'val $dirty: kotlin.Int [val] declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent' type=kotlin.Int origin=null
+            other: WHEN type=kotlin.Int origin=IF
+              BRANCH
+                if: CALL 'public abstract fun changed (value: kotlin.Any?): kotlin.Boolean declared in androidx.compose.runtime.Composer' type=kotlin.Boolean origin=null
+                  $this: GET_VAR '$composer: androidx.compose.runtime.Composer? [assignable] declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent' type=androidx.compose.runtime.Composer? origin=null
+                  value: GET_VAR 'actions: me.timschneeberger.rootlessjamesdsp.devmode.DevActions declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent' type=me.timschneeberger.rootlessjamesdsp.devmode.DevActions origin=null
+                then: CONST Int type=kotlin.Int value=32
+              BRANCH
+                if: CONST Boolean type=kotlin.Boolean value=true
+                then: CONST Int type=kotlin.Int value=16
+    WHEN type=kotlin.Unit origin=IF
+      BRANCH
+        if: CALL 'public final fun OROR (arg0: kotlin.Boolean, arg1: kotlin.Boolean): kotlin.Boolean declared in kotlin.internal.ir' type=kotlin.Boolean origin=null
+          arg0: CALL 'public final fun not (): kotlin.Boolean [operator] declared in kotlin.Boolean' type=kotlin.Boolean origin=null
+            $this: CALL 'public final fun EQEQ (arg0: kotlin.Any?, arg1: kotlin.Any?): kotlin.Boolean declared in kotlin.internal.ir' type=kotlin.Boolean origin=null
+              arg0: CALL 'public final fun and (other: kotlin.Int): kotlin.Int [infix] declared in kotlin.Int' type=kotlin.Int origin=null
+                $this: GET_VAR 'val $dirty: kotlin.Int [val] declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent' type=kotlin.Int origin=null
+                other: CONST Int type=kotlin.Int value=19
+              arg1: CONST Int type=kotlin.Int value=18
+          arg1: CALL 'public final fun not (): kotlin.Boolean [operator] declared in kotlin.Boolean' type=kotlin.Boolean origin=null
+            $this: CALL 'public abstract fun <get-skipping> (): kotlin.Boolean declared in androidx.compose.runtime.Composer' type=kotlin.Boolean origin=null
+              $this: GET_VAR '$composer: androidx.compose.runtime.Composer? [assignable] declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent' type=androidx.compose.runtime.Composer? origin=null
+        then: BLOCK type=kotlin.Unit origin=null
+          WHEN type=kotlin.Unit origin=IF
+            BRANCH
+              if: CALL 'public final fun isTraceInProgress (): kotlin.Boolean declared in androidx.compose.runtime.ComposerKt' type=kotlin.Boolean origin=null
+              then: CALL 'public final fun traceEventStart (key: kotlin.Int, dirty1: kotlin.Int, dirty2: kotlin.Int, info: kotlin.String): kotlin.Unit declared in androidx.compose.runtime.ComposerKt' type=kotlin.Unit origin=null
+                key: CONST Int type=kotlin.Int value=547489839
+                dirty1: GET_VAR 'val $dirty: kotlin.Int [val] declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent' type=kotlin.Int origin=null
+                dirty2: CONST Int type=kotlin.Int value=-1
+                info: CONST String type=kotlin.String value="me.timschneeberger.rootlessjamesdsp.devmode.DevContent (DevModeScreen.kt:280)"
+          VAR name:c type:me.timschneeberger.rootlessjamesdsp.devmode.DevPalette [val]
+            CALL 'public final fun <get-current> ($composer: androidx.compose.runtime.Composer?, $changed: kotlin.Int): T of androidx.compose.runtime.CompositionLocal [inline] declared in androidx.compose.runtime.CompositionLocal' type=me.timschneeberger.rootlessjamesdsp.devmode.DevPalette origin=GET_PROPERTY
+              $this: TYPE_OP type=androidx.compose.runtime.CompositionLocal<T of androidx.compose.runtime.CompositionLocal> origin=IMPLICIT_CAST typeOperand=androidx.compose.runtime.CompositionLocal<T of androidx.compose.runtime.CompositionLocal>
+                GET_FIELD 'FIELD PROPERTY_BACKING_FIELD name:LocalDevPalette type:androidx.compose.runtime.ProvidableCompositionLocal<me.timschneeberger.rootlessjamesdsp.devmode.DevPalette> visibility:private [final,static]' type=androidx.compose.runtime.ProvidableCompositionLocal<me.timschneeberger.rootlessjamesdsp.devmode.DevPalette> origin=null
+              $composer: GET_VAR '$composer: androidx.compose.runtime.Composer? [assignable] declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent' type=androidx.compose.runtime.Composer? origin=null
+              $changed: CONST Int type=kotlin.Int value=6
+          CALL 'public final fun Column (modifier: androidx.compose.ui.Modifier?, verticalArrangement: androidx.compose.foundation.layout.Arrangement.Vertical?, horizontalAlignment: androidx.compose.ui.Alignment.Horizontal?, content: @[ExtensionFunctionType] kotlin.Function3<androidx.compose.foundation.layout.ColumnScope, androidx.compose.runtime.Composer, kotlin.Int, kotlin.Unit>, $composer: androidx.compose.runtime.Composer?, $changed: kotlin.Int, $default: kotlin.Int): kotlin.Unit [inline] declared in androidx.compose.foundation.layout.ColumnKt' type=kotlin.Unit origin=null
+            modifier: CALL 'public final fun navigationBarsPadding (): androidx.compose.ui.Modifier declared in androidx.compose.foundation.layout.WindowInsetsPadding_androidKt' type=androidx.compose.ui.Modifier origin=null
+              $receiver: CALL 'public final fun statusBarsPadding (): androidx.compose.ui.Modifier declared in androidx.compose.foundation.layout.WindowInsetsPadding_androidKt' type=androidx.compose.ui.Modifier origin=null
+                $receiver: CALL 'public final fun background-bw27NRU$default (color: androidx.compose.ui.graphics.Color, shape: androidx.compose.ui.graphics.Shape?, $mask0: kotlin.Int, $handler: kotlin.Any?): androidx.compose.ui.Modifier declared in androidx.compose.foundation.BackgroundKt' type=androidx.compose.ui.Modifier origin=DEFAULT_DISPATCH_CALL
+                  $receiver: CALL 'public final fun fillMaxSize$default (fraction: kotlin.Float, $mask0: kotlin.Int, $handler: kotlin.Any?): androidx.compose.ui.Modifier declared in androidx.compose.foundation.layout.SizeKt' type=androidx.compose.ui.Modifier origin=DEFAULT_DISPATCH_CALL
+                    $receiver: GET_FIELD 'FIELD FIELD_FOR_OBJECT_INSTANCE name:Companion type:androidx.compose.ui.Modifier.Companion visibility:public [final,static] declared in androidx.compose.ui.Modifier' type=androidx.compose.ui.Modifier.Companion origin=null
+                    fraction: COMPOSITE type=kotlin.Float origin=DEFAULT_VALUE
+                      CONST Float type=kotlin.Float value=0.0
+                    $mask0: CONST Int type=kotlin.Int value=1
+                    $handler: CONST Null type=kotlin.Any? value=null
+                  color: CALL 'public final fun getBg-0d7_KjU (): androidx.compose.ui.graphics.Color declared in me.timschneeberger.rootlessjamesdsp.devmode.DevPalette' type=androidx.compose.ui.graphics.Color origin=GET_PROPERTY
+                    $this: GET_VAR 'val c: me.timschneeberger.rootlessjamesdsp.devmode.DevPalette [val] declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent' type=me.timschneeberger.rootlessjamesdsp.devmode.DevPalette origin=null
+                  shape: COMPOSITE type=androidx.compose.ui.graphics.Shape? origin=DEFAULT_VALUE
+                    CONST Null type=androidx.compose.ui.graphics.Shape? value=null
+                  $mask0: CONST Int type=kotlin.Int value=2
+                  $handler: CONST Null type=kotlin.Any? value=null
+            verticalArrangement: COMPOSITE type=kotlin.Nothing? origin=DEFAULT_VALUE
+              CONST Null type=kotlin.Nothing? value=null
+            horizontalAlignment: COMPOSITE type=kotlin.Nothing? origin=DEFAULT_VALUE
+              CONST Null type=kotlin.Nothing? value=null
+            content: BLOCK type=@[ExtensionFunctionType] kotlin.Function3<androidx.compose.foundation.layout.ColumnScope, androidx.compose.runtime.Composer, kotlin.Int, kotlin.Unit> origin=LAMBDA
+              COMPOSITE type=kotlin.Unit origin=null
+              FUNCTION_REFERENCE 'private final fun DevContent$lambda$14 ($actions: me.timschneeberger.rootlessjamesdsp.devmode.DevActions, $$dirty: kotlin.Int, $state: me.timschneeberger.rootlessjamesdsp.devmode.DevUiState, $$composer: androidx.compose.runtime.Composer?, $c: me.timschneeberger.rootlessjamesdsp.devmode.DevPalette, $composer: androidx.compose.runtime.Composer?, $changed: kotlin.Int): kotlin.Unit declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt' type=@[ExtensionFunctionType] kotlin.Function3<androidx.compose.foundation.layout.ColumnScope, androidx.compose.runtime.Composer, kotlin.Int, kotlin.Unit> origin=INLINE_LAMBDA reflectionTarget=null
+                $actions: GET_VAR 'actions: me.timschneeberger.rootlessjamesdsp.devmode.DevActions declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent' type=me.timschneeberger.rootlessjamesdsp.devmode.DevActions origin=null
+                $$dirty: GET_VAR 'val $dirty: kotlin.Int [val] declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent' type=kotlin.Int origin=null
+                $state: GET_VAR 'state: me.timschneeberger.rootlessjamesdsp.devmode.DevUiState declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent' type=me.timschneeberger.rootlessjamesdsp.devmode.DevUiState origin=null
+                $$composer: GET_VAR '$composer: androidx.compose.runtime.Composer? [assignable] declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent' type=androidx.compose.runtime.Composer? origin=null
+                $c: GET_VAR 'val c: me.timschneeberger.rootlessjamesdsp.devmode.DevPalette [val] declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent' type=me.timschneeberger.rootlessjamesdsp.devmode.DevPalette origin=null
+            $composer: GET_VAR '$composer: androidx.compose.runtime.Composer? [assignable] declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent' type=androidx.compose.runtime.Composer? origin=null
+            $changed: CONST Int type=kotlin.Int value=0
+            $default: CONST Int type=kotlin.Int value=6
+          WHEN type=kotlin.Unit origin=IF
+            BRANCH
+              if: CALL 'public final fun isTraceInProgress (): kotlin.Boolean declared in androidx.compose.runtime.ComposerKt' type=kotlin.Boolean origin=null
+              then: CALL 'public final fun traceEventEnd (): kotlin.Unit declared in androidx.compose.runtime.ComposerKt' type=kotlin.Unit origin=null
+      BRANCH
+        if: CONST Boolean type=kotlin.Boolean value=true
+        then: CALL 'public abstract fun skipToGroupEnd (): kotlin.Unit declared in androidx.compose.runtime.Composer' type=kotlin.Unit origin=null
+          $this: GET_VAR '$composer: androidx.compose.runtime.Composer? [assignable] declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent' type=androidx.compose.runtime.Composer? origin=null
+    BLOCK type=kotlin.Unit origin=null
+      BLOCK type=kotlin.Unit origin=FOLDED_SAFE_CALL
+        WHEN type=kotlin.Unit origin=FOLDED_SAFE_CALL
+          BRANCH
+            if: COMPOSITE type=kotlin.Boolean origin=null
+              VAR IR_TEMPORARY_VARIABLE name:tmp0_safe_receiver type:androidx.compose.runtime.ScopeUpdateScope? [val]
+                CALL 'public abstract fun endRestartGroup (): androidx.compose.runtime.ScopeUpdateScope? declared in androidx.compose.runtime.Composer' type=androidx.compose.runtime.ScopeUpdateScope? origin=null
+                  $this: GET_VAR '$composer: androidx.compose.runtime.Composer? [assignable] declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent' type=androidx.compose.runtime.Composer? origin=null
+              CALL 'public final fun not (): kotlin.Boolean [operator] declared in kotlin.Boolean' type=kotlin.Boolean origin=null
+                $this: CALL 'public final fun EQEQ (arg0: kotlin.Any?, arg1: kotlin.Any?): kotlin.Boolean declared in kotlin.internal.ir' type=kotlin.Boolean origin=null
+                  arg0: GET_VAR 'val tmp0_safe_receiver: androidx.compose.runtime.ScopeUpdateScope? [val] declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent' type=androidx.compose.runtime.ScopeUpdateScope? origin=null
+                  arg1: CONST Null type=kotlin.Nothing? value=null
+            then: CALL 'public abstract fun updateScope (block: kotlin.Function2<androidx.compose.runtime.Composer, kotlin.Int, kotlin.Unit>): kotlin.Unit declared in androidx.compose.runtime.ScopeUpdateScope' type=kotlin.Unit origin=null
+              $this: GET_VAR 'val tmp0_safe_receiver: androidx.compose.runtime.ScopeUpdateScope? [val] declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent' type=androidx.compose.runtime.ScopeUpdateScope? origin=null
+              block: BLOCK type=kotlin.Function2<androidx.compose.runtime.Composer?, kotlin.Int, kotlin.Unit> origin=LAMBDA
+                COMPOSITE type=kotlin.Unit origin=null
+                CALL 'public final fun <jvm-indy> <T> (dynamicCall: T of kotlin.jvm.internal.<jvm-indy>, bootstrapMethodHandle: kotlin.Any, vararg bootstrapMethodArguments: kotlin.Any): T of kotlin.jvm.internal.<jvm-indy> declared in kotlin.jvm.internal' type=kotlin.Function2<androidx.compose.runtime.Composer?, kotlin.Int, kotlin.Unit> origin=null
+                  <T>: kotlin.Function2<androidx.compose.runtime.Composer?, kotlin.Int, kotlin.Unit>
+                  dynamicCall: CALL 'public final fun invoke (p0: me.timschneeberger.rootlessjamesdsp.devmode.DevUiState, p1: me.timschneeberger.rootlessjamesdsp.devmode.DevActions, p2: kotlin.Int): kotlin.Function2<androidx.compose.runtime.Composer?, kotlin.Int, kotlin.Unit> declared in kotlin.jvm.internal.invokeDynamic' type=kotlin.Function2<androidx.compose.runtime.Composer?, kotlin.Int, kotlin.Unit> origin=null
+                    p0: GET_VAR 'state: me.timschneeberger.rootlessjamesdsp.devmode.DevUiState declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent' type=me.timschneeberger.rootlessjamesdsp.devmode.DevUiState origin=null
+                    p1: GET_VAR 'actions: me.timschneeberger.rootlessjamesdsp.devmode.DevActions declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent' type=me.timschneeberger.rootlessjamesdsp.devmode.DevActions origin=null
+                    p2: GET_VAR '$changed: kotlin.Int declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent' type=kotlin.Int origin=null
+                  bootstrapMethodHandle: CALL 'public final fun <jvm-method-handle> (tag: kotlin.Int, owner: kotlin.String, name: kotlin.String, descriptor: kotlin.String, isInterface: kotlin.Boolean): kotlin.Any declared in kotlin.jvm.internal' type=kotlin.Any origin=null
+                    tag: CONST Int type=kotlin.Int value=6
+                    owner: CONST String type=kotlin.String value="java/lang/invoke/LambdaMetafactory"
+                    name: CONST String type=kotlin.String value="metafactory"
+                    descriptor: CONST String type=kotlin.String value="(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;"
+                    isInterface: CONST Boolean type=kotlin.Boolean value=false
+                  bootstrapMethodArguments: VARARG type=kotlin.Array<kotlin.Any> varargElementType=kotlin.Any
+                    CALL 'public final fun <jvm-original-method-type> (method: kotlin.Any): kotlin.Any declared in kotlin.jvm.internal' type=kotlin.Any origin=null
+                      method: RAW_FUNCTION_REFERENCE 'public abstract fun invoke (p1: P1 of kotlin.Function2, p2: P2 of kotlin.Function2): R of kotlin.Function2 [operator] declared in kotlin.Function2' type=kotlin.Any
+                    RAW_FUNCTION_REFERENCE 'private final fun DevContent$lambda$15 ($state: me.timschneeberger.rootlessjamesdsp.devmode.DevUiState, $actions: me.timschneeberger.rootlessjamesdsp.devmode.DevActions, $$changed: kotlin.Int, $composer: androidx.compose.runtime.Composer?, $force: kotlin.Int): kotlin.Unit? declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt' type=kotlin.Any
+                    CALL 'public final fun <jvm-original-method-type> (method: kotlin.Any): kotlin.Any declared in kotlin.jvm.internal' type=kotlin.Any origin=null
+                      method: RAW_FUNCTION_REFERENCE 'public abstract fun invoke (p1: androidx.compose.runtime.Composer?, p2: kotlin.Int?): kotlin.Unit? [fake_override,operator] declared in kotlin.jvm.internal.invokeDynamic.<fake>' type=kotlin.Any
+          BRANCH
+            if: CONST Boolean type=kotlin.Boolean value=true
+            then: CONST Null type=kotlin.Any? value=null
+
+	at org.jetbrains.kotlin.backend.jvm.codegen.FunctionCodegen.generate(FunctionCodegen.kt:48)
+	at org.jetbrains.kotlin.backend.jvm.codegen.FunctionCodegen.generate$default(FunctionCodegen.kt:41)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ClassCodegen.generateMethodNode(ClassCodegen.kt:407)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ClassCodegen.generateMethod(ClassCodegen.kt:424)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ClassCodegen.generate(ClassCodegen.kt:169)
+	at org.jetbrains.kotlin.backend.jvm.FileCodegen.lower(JvmPhases.kt:39)
+	at org.jetbrains.kotlin.backend.common.phaser.PhaseFactoriesKt.createFilePhase$lambda$4(PhaseFactories.kt:71)
+	at org.jetbrains.kotlin.backend.common.phaser.PhaseBuildersKt$createSimpleNamedCompilerPhase$1.phaseBody(PhaseBuilders.kt:69)
+	at org.jetbrains.kotlin.backend.common.phaser.SimpleNamedCompilerPhase.phaseBody(CompilerPhase.kt:226)
+	at org.jetbrains.kotlin.backend.common.phaser.AbstractNamedCompilerPhase.invoke(CompilerPhase.kt:113)
+	at org.jetbrains.kotlin.backend.common.phaser.PerformByIrFilePhase.invokeSequential(performByIrFile.kt:52)
+	... 47 more
+Caused by: java.lang.RuntimeException: Exception while generating code for:
+FUN INLINE_LAMBDA name:DevContent$lambda$14 visibility:private modality:FINAL <> ($receiver:androidx.compose.foundation.layout.ColumnScope, $actions:me.timschneeberger.rootlessjamesdsp.devmode.DevActions, $$dirty:kotlin.Int, $state:me.timschneeberger.rootlessjamesdsp.devmode.DevUiState, $$composer:androidx.compose.runtime.Composer?, $c:me.timschneeberger.rootlessjamesdsp.devmode.DevPalette, $composer:androidx.compose.runtime.Composer?, $changed:kotlin.Int) returnType:kotlin.Unit
+  annotations:
+    Composable
+    ComposableTarget(applier = "androidx.compose.ui.UiComposable")
+  $receiver: VALUE_PARAMETER name:$this$Column type:androidx.compose.foundation.layout.ColumnScope
+  VALUE_PARAMETER BOUND_VALUE_PARAMETER name:$actions index:0 type:me.timschneeberger.rootlessjamesdsp.devmode.DevActions
+  VALUE_PARAMETER BOUND_VALUE_PARAMETER name:$$dirty index:1 type:kotlin.Int
+  VALUE_PARAMETER BOUND_VALUE_PARAMETER name:$state index:2 type:me.timschneeberger.rootlessjamesdsp.devmode.DevUiState
+  VALUE_PARAMETER BOUND_VALUE_PARAMETER name:$$composer index:3 type:androidx.compose.runtime.Composer?
+  VALUE_PARAMETER BOUND_VALUE_PARAMETER name:$c index:4 type:me.timschneeberger.rootlessjamesdsp.devmode.DevPalette
+  VALUE_PARAMETER name:$composer index:5 type:androidx.compose.runtime.Composer? [assignable]
+  VALUE_PARAMETER name:$changed index:6 type:kotlin.Int
+  BLOCK_BODY
+    VAR name:$i$a$-Column-DevModeScreenKt$DevContent$1 type:kotlin.Int [val]
+      CONST Int type=kotlin.Int value=0
+    COMPOSITE type=kotlin.Unit origin=null
+      CALL 'private final fun TopBar (actions: me.timschneeberger.rootlessjamesdsp.devmode.DevActions, $composer: androidx.compose.runtime.Composer?, $changed: kotlin.Int): kotlin.Unit declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt' type=kotlin.Unit origin=null
+        actions: GET_VAR '$actions: me.timschneeberger.rootlessjamesdsp.devmode.DevActions declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent$lambda$14' type=me.timschneeberger.rootlessjamesdsp.devmode.DevActions origin=null
+        $composer: GET_VAR '$composer: androidx.compose.runtime.Composer? [assignable] declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent$lambda$14' type=androidx.compose.runtime.Composer? origin=null
+        $changed: CALL 'public final fun and (other: kotlin.Int): kotlin.Int [infix] declared in kotlin.Int' type=kotlin.Int origin=null
+          $this: CONST Int type=kotlin.Int value=14
+          other: CALL 'public final fun shr (bitCount: kotlin.Int): kotlin.Int [infix] declared in kotlin.Int' type=kotlin.Int origin=null
+            $this: GET_VAR '$$dirty: kotlin.Int declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent$lambda$14' type=kotlin.Int origin=null
+            bitCount: CONST Int type=kotlin.Int value=3
+      CALL 'public final fun Column (modifier: androidx.compose.ui.Modifier?, verticalArrangement: androidx.compose.foundation.layout.Arrangement.Vertical?, horizontalAlignment: androidx.compose.ui.Alignment.Horizontal?, content: @[ExtensionFunctionType] kotlin.Function3<androidx.compose.foundation.layout.ColumnScope, androidx.compose.runtime.Composer, kotlin.Int, kotlin.Unit>, $composer: androidx.compose.runtime.Composer?, $changed: kotlin.Int, $default: kotlin.Int): kotlin.Unit [inline] declared in androidx.compose.foundation.layout.ColumnKt' type=kotlin.Unit origin=null
+        modifier: CALL 'public final fun verticalScroll$default (state: androidx.compose.foundation.ScrollState, enabled: kotlin.Boolean, flingBehavior: androidx.compose.foundation.gestures.FlingBehavior?, reverseScrolling: kotlin.Boolean, $mask0: kotlin.Int, $handler: kotlin.Any?): androidx.compose.ui.Modifier declared in androidx.compose.foundation.ScrollKt' type=androidx.compose.ui.Modifier origin=DEFAULT_DISPATCH_CALL
+          $receiver: CALL 'public final fun weight$default ($this: androidx.compose.foundation.layout.ColumnScope, $receiver: androidx.compose.ui.Modifier, weight: kotlin.Float, fill: kotlin.Boolean, $mask0: kotlin.Int, $handler: kotlin.Any?): androidx.compose.ui.Modifier declared in androidx.compose.foundation.layout.ColumnScope' type=androidx.compose.ui.Modifier origin=DEFAULT_DISPATCH_CALL
+            $this: GET_VAR '$this$Column: androidx.compose.foundation.layout.ColumnScope declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent$lambda$14' type=androidx.compose.foundation.layout.ColumnScope origin=null
+            $receiver: GET_FIELD 'FIELD FIELD_FOR_OBJECT_INSTANCE name:Companion type:androidx.compose.ui.Modifier.Companion visibility:public [final,static] declared in androidx.compose.ui.Modifier' type=androidx.compose.ui.Modifier.Companion origin=null
+            weight: CONST Float type=kotlin.Float value=1.0
+            fill: COMPOSITE type=kotlin.Boolean origin=DEFAULT_VALUE
+              CONST Boolean type=kotlin.Boolean value=false
+            $mask0: CONST Int type=kotlin.Int value=2
+            $handler: CONST Null type=kotlin.Any? value=null
+          state: CALL 'public final fun rememberScrollState (initial: kotlin.Int, $composer: androidx.compose.runtime.Composer?, $changed: kotlin.Int, $default: kotlin.Int): androidx.compose.foundation.ScrollState declared in androidx.compose.foundation.ScrollKt' type=androidx.compose.foundation.ScrollState origin=null
+            initial: COMPOSITE type=kotlin.Int origin=DEFAULT_VALUE
+              CONST Int type=kotlin.Int value=0
+            $composer: GET_VAR '$composer: androidx.compose.runtime.Composer? [assignable] declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent$lambda$14' type=androidx.compose.runtime.Composer? origin=null
+            $changed: CONST Int type=kotlin.Int value=0
+            $default: CONST Int type=kotlin.Int value=1
+          enabled: COMPOSITE type=kotlin.Boolean origin=DEFAULT_VALUE
+            CONST Boolean type=kotlin.Boolean value=false
+          flingBehavior: COMPOSITE type=androidx.compose.foundation.gestures.FlingBehavior? origin=DEFAULT_VALUE
+            CONST Null type=androidx.compose.foundation.gestures.FlingBehavior? value=null
+          reverseScrolling: COMPOSITE type=kotlin.Boolean origin=DEFAULT_VALUE
+            CONST Boolean type=kotlin.Boolean value=false
+          $mask0: CONST Int type=kotlin.Int value=14
+          $handler: CONST Null type=kotlin.Any? value=null
+        verticalArrangement: COMPOSITE type=kotlin.Nothing? origin=DEFAULT_VALUE
+          CONST Null type=kotlin.Nothing? value=null
+        horizontalAlignment: COMPOSITE type=kotlin.Nothing? origin=DEFAULT_VALUE
+          CONST Null type=kotlin.Nothing? value=null
+        content: BLOCK type=@[ExtensionFunctionType] kotlin.Function3<androidx.compose.foundation.layout.ColumnScope, androidx.compose.runtime.Composer, kotlin.Int, kotlin.Unit> origin=LAMBDA
+          COMPOSITE type=kotlin.Unit origin=null
+          FUNCTION_REFERENCE 'private final fun DevContent$lambda$14$lambda$13 ($actions: me.timschneeberger.rootlessjamesdsp.devmode.DevActions, $$dirty: kotlin.Int, $state: me.timschneeberger.rootlessjamesdsp.devmode.DevUiState, $$composer: androidx.compose.runtime.Composer?, $c: me.timschneeberger.rootlessjamesdsp.devmode.DevPalette, $composer: androidx.compose.runtime.Composer?, $changed: kotlin.Int): kotlin.Unit declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt' type=@[ExtensionFunctionType] kotlin.Function3<androidx.compose.foundation.layout.ColumnScope, androidx.compose.runtime.Composer, kotlin.Int, kotlin.Unit> origin=INLINE_LAMBDA reflectionTarget=null
+            $actions: GET_VAR '$actions: me.timschneeberger.rootlessjamesdsp.devmode.DevActions declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent$lambda$14' type=me.timschneeberger.rootlessjamesdsp.devmode.DevActions origin=null
+            $$dirty: GET_VAR '$$dirty: kotlin.Int declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent$lambda$14' type=kotlin.Int origin=null
+            $state: GET_VAR '$state: me.timschneeberger.rootlessjamesdsp.devmode.DevUiState declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent$lambda$14' type=me.timschneeberger.rootlessjamesdsp.devmode.DevUiState origin=null
+            $$composer: GET_VAR '$$composer: androidx.compose.runtime.Composer? declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent$lambda$14' type=androidx.compose.runtime.Composer? origin=null
+            $c: GET_VAR '$c: me.timschneeberger.rootlessjamesdsp.devmode.DevPalette declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent$lambda$14' type=me.timschneeberger.rootlessjamesdsp.devmode.DevPalette origin=null
+        $composer: GET_VAR '$composer: androidx.compose.runtime.Composer? [assignable] declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent$lambda$14' type=androidx.compose.runtime.Composer? origin=null
+        $changed: CONST Int type=kotlin.Int value=0
+        $default: CONST Int type=kotlin.Int value=6
+      CALL 'private final fun BottomBar (state: me.timschneeberger.rootlessjamesdsp.devmode.DevUiState, actions: me.timschneeberger.rootlessjamesdsp.devmode.DevActions, $composer: androidx.compose.runtime.Composer?, $changed: kotlin.Int): kotlin.Unit declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt' type=kotlin.Unit origin=null
+        state: GET_VAR '$state: me.timschneeberger.rootlessjamesdsp.devmode.DevUiState declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent$lambda$14' type=me.timschneeberger.rootlessjamesdsp.devmode.DevUiState origin=null
+        actions: GET_VAR '$actions: me.timschneeberger.rootlessjamesdsp.devmode.DevActions declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent$lambda$14' type=me.timschneeberger.rootlessjamesdsp.devmode.DevActions origin=null
+        $composer: GET_VAR '$composer: androidx.compose.runtime.Composer? [assignable] declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent$lambda$14' type=androidx.compose.runtime.Composer? origin=null
+        $changed: CALL 'public final fun or (other: kotlin.Int): kotlin.Int [infix] declared in kotlin.Int' type=kotlin.Int origin=null
+          $this: CALL 'public final fun and (other: kotlin.Int): kotlin.Int [infix] declared in kotlin.Int' type=kotlin.Int origin=null
+            $this: CONST Int type=kotlin.Int value=14
+            other: GET_VAR '$$dirty: kotlin.Int declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent$lambda$14' type=kotlin.Int origin=null
+          other: CALL 'public final fun and (other: kotlin.Int): kotlin.Int [infix] declared in kotlin.Int' type=kotlin.Int origin=null
+            $this: CONST Int type=kotlin.Int value=112
+            other: GET_VAR '$$dirty: kotlin.Int declared in me.timschneeberger.rootlessjamesdsp.devmode.DevModeScreenKt.DevContent$lambda$14' type=kotlin.Int origin=null
+
+	at org.jetbrains.kotlin.backend.jvm.codegen.FunctionCodegen.generate(FunctionCodegen.kt:48)
+	at org.jetbrains.kotlin.backend.jvm.codegen.IrSourceCompilerForInline.generateLambdaBody(IrSourceCompilerForInline.kt:67)
+	at org.jetbrains.kotlin.codegen.inline.ExpressionLambda.generateLambdaBody(LambdaInfo.kt:72)
+	at org.jetbrains.kotlin.backend.jvm.codegen.IrInlineCodegen.genValueAndPut(IrInlineCodegen.kt:100)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.visitCall$handleParameter(ExpressionCodegen.kt:561)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.visitCall(ExpressionCodegen.kt:589)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.visitCall(ExpressionCodegen.kt:134)
+	at org.jetbrains.kotlin.ir.expressions.IrCall.accept(IrCall.kt:24)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.visitStatementContainer(ExpressionCodegen.kt:524)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.visitContainerExpression(ExpressionCodegen.kt:538)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.visitContainerExpression(ExpressionCodegen.kt:134)
+	at org.jetbrains.kotlin.ir.visitors.IrElementVisitor$DefaultImpls.visitBlock(IrElementVisitor.kt:126)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.visitBlock(ExpressionCodegen.kt:409)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.visitBlock(ExpressionCodegen.kt:134)
+	at org.jetbrains.kotlin.ir.expressions.IrBlock.accept(IrBlock.kt:18)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.visitWhen(ExpressionCodegen.kt:1050)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.visitWhen(ExpressionCodegen.kt:134)
+	at org.jetbrains.kotlin.ir.expressions.IrWhen.accept(IrWhen.kt:24)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.visitStatementContainer(ExpressionCodegen.kt:524)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.visitBlockBody(ExpressionCodegen.kt:529)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.visitBlockBody(ExpressionCodegen.kt:134)
+	at org.jetbrains.kotlin.ir.expressions.IrBlockBody.accept(IrBlockBody.kt:20)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.generate(ExpressionCodegen.kt:236)
+	at org.jetbrains.kotlin.backend.jvm.codegen.FunctionCodegen.doGenerate(FunctionCodegen.kt:124)
+	at org.jetbrains.kotlin.backend.jvm.codegen.FunctionCodegen.generate(FunctionCodegen.kt:45)
+	... 57 more
+Caused by: java.lang.OutOfMemoryError: GC overhead limit exceeded
+	at org.jetbrains.org.objectweb.asm.tree.MethodNode.visitLdcInsn(MethodNode.java:407)
+	at org.jetbrains.org.objectweb.asm.MethodVisitor.visitLdcInsn(MethodVisitor.java:550)
+	at org.jetbrains.kotlin.codegen.inline.MaxStackFrameSizeAndLocalsCalculator.visitLdcInsn(MaxStackFrameSizeAndLocalsCalculator.kt:150)
+	at org.jetbrains.org.objectweb.asm.commons.InstructionAdapter.iconst(InstructionAdapter.java:716)
+	at org.jetbrains.org.objectweb.asm.commons.InstructionAdapter.visitLdcInsn(InstructionAdapter.java:629)
+	at org.jetbrains.org.objectweb.asm.MethodVisitor.visitLdcInsn(MethodVisitor.java:550)
+	at org.jetbrains.org.objectweb.asm.tree.LdcInsnNode.accept(LdcInsnNode.java:66)
+	at org.jetbrains.org.objectweb.asm.tree.InsnList.accept(InsnList.java:144)
+	at org.jetbrains.org.objectweb.asm.tree.MethodNode.accept(MethodNode.java:751)
+	at org.jetbrains.kotlin.codegen.inline.InlineCodegen.inlineCall(InlineCodegen.kt:148)
+	at org.jetbrains.kotlin.codegen.inline.InlineCodegen.performInline(InlineCodegen.kt:52)
+	at org.jetbrains.kotlin.backend.jvm.codegen.IrInlineCodegen.genInlineCall(IrInlineCodegen.kt:163)
+	at org.jetbrains.kotlin.backend.jvm.codegen.IrInlineCallGenerator.genCall(IrInlineCallGenerator.kt:36)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.visitCall(ExpressionCodegen.kt:598)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.visitCall(ExpressionCodegen.kt:134)
+	at org.jetbrains.kotlin.ir.expressions.IrCall.accept(IrCall.kt:24)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.visitStatementContainer(ExpressionCodegen.kt:524)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.visitContainerExpression(ExpressionCodegen.kt:538)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.visitContainerExpression(ExpressionCodegen.kt:134)
+	at org.jetbrains.kotlin.ir.visitors.IrElementVisitor$DefaultImpls.visitComposite(IrElementVisitor.kt:129)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.visitComposite(ExpressionCodegen.kt:134)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.visitComposite(ExpressionCodegen.kt:134)
+	at org.jetbrains.kotlin.ir.expressions.IrComposite.accept(IrComposite.kt:18)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.visitStatementContainer(ExpressionCodegen.kt:524)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.visitBlockBody(ExpressionCodegen.kt:529)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.visitBlockBody(ExpressionCodegen.kt:134)
+	at org.jetbrains.kotlin.ir.expressions.IrBlockBody.accept(IrBlockBody.kt:20)
+	at org.jetbrains.kotlin.backend.jvm.codegen.ExpressionCodegen.generate(ExpressionCodegen.kt:236)
+	at org.jetbrains.kotlin.backend.jvm.codegen.FunctionCodegen.doGenerate(FunctionCodegen.kt:124)
+	at org.jetbrains.kotlin.backend.jvm.codegen.FunctionCodegen.generate(FunctionCodegen.kt:45)
+	at org.jetbrains.kotlin.backend.jvm.codegen.IrSourceCompilerForInline.generateLambdaBody(IrSourceCompilerForInline.kt:67)
+	at org.jetbrains.kotlin.codegen.inline.ExpressionLambda.generateLambdaBody(LambdaInfo.kt:72)
+
+
+> Task :app:compileRootlessFdroidS26uReleaseKotlin
+w: file:///home/runner/work/rootnote/rootnote/app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/BuzzDiagnostics.kt:317:38 Condition is always 'true'.
+w: file:///home/runner/work/rootnote/rootnote/app/src/main/java/me/timschneeberger/rootlessjamesdsp/service/QuickTileService.kt:92:21 'fun startActivityAndCollapse(p0: Intent!): Unit' is deprecated. Deprecated in Java.
+
+> Task :app:compileRootFdroidGeneralReleaseKotlin
+w: file:///home/runner/work/rootnote/rootnote/app/src/main/java/me/timschneeberger/rootlessjamesdsp/activity/OnboardingActivity.kt:73:18 This declaration overrides a deprecated member but is not marked as deprecated itself. Please add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///home/runner/work/rootnote/rootnote/app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/BuzzDiagnostics.kt:317:38 Condition is always 'true'.
+w: file:///home/runner/work/rootnote/rootnote/app/src/main/java/me/timschneeberger/rootlessjamesdsp/service/QuickTileService.kt:92:21 'fun startActivityAndCollapse(p0: Intent!): Unit' is deprecated. Deprecated in Java.
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_3-1792820823722.json
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileRootlessFdroidGeneralReleaseKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Not enough memory to run compilation. Try to increase it via 'gradle.properties':
+     kotlin.daemon.jvmargs=-Xmx<size>
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.10.2/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 7m 15s
+179 actionable tasks: 179 executed
