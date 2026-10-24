@@ -37,7 +37,9 @@ import me.timschneeberger.rootlessjamesdsp.pvb.PvbGeneral
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbRuntime
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbSettings
 import me.timschneeberger.rootlessjamesdsp.service.BaseAudioProcessorService
+import me.timschneeberger.rootlessjamesdsp.service.RootAudioProcessorService
 import me.timschneeberger.rootlessjamesdsp.service.RootlessAudioProcessorService
+import me.timschneeberger.rootlessjamesdsp.utils.isRoot
 import me.timschneeberger.rootlessjamesdsp.ui.RnActivity
 import me.timschneeberger.rootlessjamesdsp.utils.Constants
 import me.timschneeberger.rootlessjamesdsp.utils.RoutingObserver
@@ -340,7 +342,7 @@ class RnAdvancedActivity : RnActivity() {
             requestCapturePermission()
         } else {
             startPending = false
-            RootlessAudioProcessorService.stop(this)
+            if (isRoot()) RootAudioProcessorService.stopService(this) else RootlessAudioProcessorService.stop(this)
         }
         refreshService()
     }
@@ -353,6 +355,11 @@ class RnAdvancedActivity : RnActivity() {
                 startPending = true
                 requestCapturePermission()
             })
+            return
+        }
+        if (isRoot()) {
+            RootAudioProcessorService.startServiceEnhanced(this)
+            armPendingTimeout()
             return
         }
         if (app.mediaProjectionStartIntent != null && !SdkCheck.isVanillaIceCream) {

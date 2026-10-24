@@ -98,6 +98,7 @@ class JamesDspRemoteEngine(
         try {
             effect?.release()
             effect = createEffect()
+            lastPvbParams?.let { effect.setParameterFloatArray(PVB_CMD_PARAMS, it) }
         }
         catch (ex: IllegalStateException) {
             Timber.e("Failed to re-instantiate JamesDSP effect")
@@ -123,6 +124,22 @@ class JamesDspRemoteEngine(
         effect = null
         super.close()
     }
+
+    /**
+     * Rootnote root build: the PVB engine's parameter array (PvbEngineParams.encode) to the Rootnote effect library
+     * (app/src/main/cpp/rootfx, command 41000). The stock JamesDSP library ignores it.
+     */
+    fun setPvbParams(values: FloatArray): Boolean {
+        lastPvbParams = values.copyOf()
+        return effect.setParameterFloatArray(PVB_CMD_PARAMS, values) == AudioEffect.SUCCESS
+    }
+
+    /** Sent again after the effect is re-created ([rebootEngine]): a new effect starts with the engine bypassed. */
+    private var lastPvbParams: FloatArray? = null
+
+    /** Interface version of the Rootnote effect library, null for the stock JamesDSP library (command 41002). */
+    val rootnoteVersion: Int?
+        get() = effect.getParameterInt(PVB_CMD_VERSION)?.takeIf { it > 0 }
 
     override fun setOutputControl(threshold: Float, release: Float, postGain: Float): Boolean {
         return effect.setParameterFloatArray(
@@ -315,6 +332,16 @@ class JamesDspRemoteEngine(
     companion object {
         private val EFFECT_TYPE_CUSTOM = UUID.fromString("f98765f4-c321-5de6-9a45-123459495ab2")
         private val EFFECT_JAMESDSP = UUID.fromString("f27317f4-c984-4de6-9a90-545759495bf2")
+
+        const val PVB_CMD_PARAMS = 41000
+        const val PVB_CMD_VERSION = 41002
+
+        /** The installed JamesDSP effect is Rootnote's (with the PVB engine), not the stock one. */
+        fun isRootnoteModule(): Boolean = try {
+            AudioEffect.queryEffects().orEmpty().any { it.uuid == EFFECT_JAMESDSP && it.name.contains("Rootnote") }
+        } catch (e: Exception) {
+            false
+        }
 
         fun isPluginInstalled(): PluginState {
             return try {
