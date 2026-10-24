@@ -36,6 +36,8 @@
     <string name="fit_question_of">Question %1$d · %2$d at most</string>
     <string name="fit_floor_title">Where was the sound?</string>
     <string name="fit_floor_body">The sound plays in one of two turns, and sometimes in neither. If you heard no note, only a rattle or noise, choose \"Only buzz\".</string>
+    <string name="fit_floor_part_ref">First part: one middle note that gets quieter, to find how faintly you hear at this volume.</string>
+    <string name="fit_floor_part_low">Second part: lower and lower notes, each a little louder than you just barely heard.</string>
     <string name="fit_interval">Turn %1$d</string>
     <string name="fit_interval_a11y">Turn %1$d</string>
     <string name="fit_floor_first">First</string>

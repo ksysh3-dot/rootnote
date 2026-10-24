@@ -39,7 +39,8 @@ sealed class FitPrompt {
     enum class Purpose { EDGE, LAYER, STRENGTH, SHAPE }
 
     /** Step 1: two intervals, a tone in one of them, or in neither (catch trial). */
-    data class Floor(val trial: FloorStaircase.Trial, val number: Int) : FitPrompt()
+    /** Step 1: [reference] = the first part (300 Hz getting quieter, the listener's threshold), else the floor. */
+    data class Floor(val trial: FloorStaircase.Trial, val number: Int, val reference: Boolean = false) : FitPrompt()
 
     /** Is there a difference: A, B and X (X is A or B, hidden). [toneHz]: the edge, for [FitMaterial.MID]. */
     data class Abx(
@@ -86,6 +87,8 @@ data class FitResult(
     val floorQuestions: Int = 0,
     val floorCatch: Int = 0,
     val floorFalseAlarms: Int = 0,
+    /** Step 1's threshold at 300 Hz, dB re the full test tone (validation log). */
+    val refThresholdDb: Double? = null,
     val breakupQuestions: Int = 0,
     val breakupCatch: Int = 0,
     val breakupFalseAlarms: Int = 0,
@@ -127,7 +130,11 @@ class BassFitSession(val seed: Long, val storedStrengthDb: Double, val scope: Fi
     /** Question number within the stage (1-based once a question is shown). */
     private var number = 1
 
-    private val floorTest = FloorStaircase(sub())
+    private val floorSeed = sub()
+    /** Step 1 starts with the listener's threshold at 300 Hz; the floor bursts are set from it. */
+    private val refTest = RefLevelStaircase(floorSeed xor 0x52454631L)
+    private var floorTest = FloorStaircase(floorSeed)
+    private var refDone = false
     private var floor: BassFitMapping.FloorSettings? = null
     private val edgeSeed = sub()
     private var edgeAbx: AbxRun? = null
@@ -164,7 +171,7 @@ class BassFitSession(val seed: Long, val storedStrengthDb: Double, val scope: Fi
 
     val prompt: FitPrompt
         get() = when (stage) {
-            FitStage.FLOOR -> FitPrompt.Floor(floorTest.current, number)
+            FitStage.FLOOR -> FitPrompt.Floor(if (refDone) floorTest.current else refTest.current, number, reference = !refDone)
             FitStage.EDGE -> edgePrompt()
             FitStage.LAYER -> FitPrompt.Abx(FitPrompt.Purpose.LAYER, FitMaterial.LOW, 0.0,
                 FitVariant(false, probeDb, floor, edgeHz), FitVariant(true, probeDb, floor, edgeHz),
@@ -193,11 +200,19 @@ class BassFitSession(val seed: Long, val storedStrengthDb: Double, val scope: Fi
 
     fun answerFloor(c: FloorStaircase.Choice) {
         check(stage == FitStage.FLOOR)
-        floorTest.answer(c)
         number++
+        if (!refDone) {
+            refTest.answer(c)
+            if (refTest.done) {
+                refDone = true
+                floorTest = FloorStaircase(floorSeed, refDb = refTest.thresholdDb() ?: -FloorStaircase.SL_DB)
+            }
+            return
+        }
+        floorTest.answer(c)
         if (!floorTest.done) return
         val f = floorTest.floorHz()
-        floor = if (f != null && floorTest.reliable) BassFitMapping.fromFloor(f) else null
+        floor = if (f != null && floorReliable()) BassFitMapping.fromFloor(f) else null
         edgeHz = floor?.boundaryHz
         if (scope == FitScope.FLOOR) { enter(FitStage.DONE); return }
         // the edge check needs room above the floor's edge (the engine stops at 280 Hz)
@@ -298,6 +313,13 @@ class BassFitSession(val seed: Long, val storedStrengthDb: Double, val scope: Fi
 
     private fun enter(s: FitStage) { stage = s; number = 1 }
 
+    /**
+     * Both parts reliable, and no burst at or above the found floor needed more than the full tone (the volume was high
+     * enough to play it [FloorStaircase.SL_DB] over the threshold); a capped miss there makes the floor look higher.
+     */
+    private fun floorReliable(): Boolean =
+        refTest.reliable && refTest.thresholdDb() != null && floorTest.reliable && !floorTest.cappedNearFloor()
+
     private fun startBreakup() {
         breakup = BreakupStaircase(breakupSeed, max(2.0, preferred()?.toDouble() ?: storedStrengthDb))
         enter(FitStage.BREAKUP)
@@ -322,7 +344,7 @@ class BassFitSession(val seed: Long, val storedStrengthDb: Double, val scope: Fi
             return FitResult(
                 seed = seed,
                 floorHz = floorTest.floorHz(),
-                floorReliable = floorTest.reliable,
+                floorReliable = refDone && floorTest.done && floorReliable(),
                 floor = floor,
                 edgeHz = edgeHz,
                 layerAudible = layerAudible,
@@ -335,9 +357,10 @@ class BassFitSession(val seed: Long, val storedStrengthDb: Double, val scope: Fi
                 shapeConsistent = shapeTried && shape.done && shape.consistent,
                 shape = if (shapeTried && shape.done && shape.consistent) shape.best() else null,
                 strengthDb = if (pref != null || capped) currentStrength() else null,
-                floorQuestions = floorTest.toneTrials + floorTest.catchTrials,
-                floorCatch = floorTest.catchTrials,
-                floorFalseAlarms = floorTest.falseAlarms,
+                floorQuestions = refTest.toneTrials + refTest.catchTrials + if (refDone) floorTest.toneTrials + floorTest.catchTrials else 0,
+                floorCatch = refTest.catchTrials + if (refDone) floorTest.catchTrials else 0,
+                floorFalseAlarms = refTest.falseAlarms + if (refDone) floorTest.falseAlarms else 0,
+                refThresholdDb = refTest.thresholdDb(),
                 breakupQuestions = b?.let { it.levelTrials + it.catchTrials } ?: 0,
                 breakupCatch = b?.catchTrials ?: 0,
                 breakupFalseAlarms = b?.falseAlarms ?: 0,

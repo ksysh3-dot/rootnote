@@ -5,6 +5,8 @@ import me.timschneeberger.rootlessjamesdsp.pvb.FitLatency
 import me.timschneeberger.rootlessjamesdsp.pvb.FitRng
 import me.timschneeberger.rootlessjamesdsp.pvb.FitStats
 import me.timschneeberger.rootlessjamesdsp.pvb.FloorStaircase
+import me.timschneeberger.rootlessjamesdsp.pvb.HearingThreshold
+import me.timschneeberger.rootlessjamesdsp.pvb.RefLevelStaircase
 import me.timschneeberger.rootlessjamesdsp.pvb.NoiseGate
 import me.timschneeberger.rootlessjamesdsp.pvb.ShapeGrid
 import me.timschneeberger.rootlessjamesdsp.pvb.StrengthBracket
@@ -64,10 +66,10 @@ fun main() {
     val phoneV = NoiseGate.judge(quiet, add(noise(n2, -75.0, 8), phoneRef), FS)
     check(phoneV.pass, "quiet room, speaker silent below 125 Hz: passes (worst margin ${"%.1f".format(phoneV.worstSnrDb)} dB at ${phoneV.worstBandHz.toInt()} Hz)")
     // ... but a rumble there still fails (it masks the tones above it)
-    val rumble = add(quiet, tones(n3, -58.0, doubleArrayOf(63.0)))
-    val rumbleV = NoiseGate.judge(rumble, add(add(noise(n2, -75.0, 9), tones(n2, -58.0, doubleArrayOf(63.0))), phoneRef), FS)
+    val rumble = add(quiet, tones(n3, -44.0, doubleArrayOf(63.0)))
+    val rumbleV = NoiseGate.judge(rumble, add(add(noise(n2, -75.0, 9), tones(n2, -44.0, doubleArrayOf(63.0))), phoneRef), FS)
     check(!rumbleV.pass && rumbleV.worstBandHz == 63.0 && NoiseGate.Reason.SNR_LOW in rumbleV.reasons,
-        "a 63 Hz rumble 28 dB under the speaker's strongest band fails (${"%.1f".format(rumbleV.worstSnrDb)} dB at ${rumbleV.worstBandHz.toInt()} Hz)")
+        "a 63 Hz rumble under ${NoiseGate.MIN_SNR_DB.toInt()} dB below the speaker's strongest band fails (${"%.1f".format(rumbleV.worstSnrDb)} dB at ${rumbleV.worstBandHz.toInt()} Hz)")
     // latency: the reference starts 230 ms after it was asked for
     run {
         val from = (1.0 * FS).toInt(); val lat = (0.23 * FS).toInt()
@@ -137,6 +139,66 @@ fun main() {
         check(!st.reliable && st.catchTrials > 0, "floor: a listener who 'hears' silent catch trials is marked unreliable")
         val ok = floorRun(150.0, 5)
         check(ok.reliable && ok.toneTrials + ok.catchTrials <= 30, "floor: an honest listener is reliable within 30 trials")
+    }
+
+    // --- step 1 with a level: the listener's threshold at 300 Hz first, then bursts 10 dB over it (re ISO 226).
+    // A physical listener: speaker = 4th-order high-pass at fc (24 dB/oct below), hearing = ISO 226 threshold,
+    // threshold at 300 Hz [thr300] dB re the full tone; logistic with a 1 dB slope on the sensation level.
+    fun lr4Db(f: Double, fc: Double): Double { val r = (f / fc).pow(4); return 20 * kotlin.math.log10(r / (1 + r)) }
+    fun sensation(level: Double, f: Double, fc: Double, thr300: Double) =
+        level - (thr300 + HearingThreshold.db(f) - HearingThreshold.db(300.0) - (lr4Db(f, fc) - lr4Db(300.0, fc)))
+    // [guess]: when not heard, a forced guess (worst case); otherwise "neither" (what the screen offers).
+    fun levelRun(fc: Double, thr300: Double, seed: Long, guess: Boolean = false): Pair<RefLevelStaircase, FloorStaircase> {
+        val r = FitRng(seed * 977 + 13)
+        fun hear(level: Double, f: Double) = (r.next() ushr 11).toDouble() / (1L shl 53) < 1 / (1 + exp(-sensation(level, f, fc, thr300) / 1.0))
+        fun ans(t: FloorStaircase.Trial): FloorStaircase.Choice = when (t) {
+            is FloorStaircase.Trial.Catch -> FloorStaircase.Choice.NEITHER
+            is FloorStaircase.Trial.Tone -> if (hear(t.levelDb, t.hz)) (if (t.inFirst) FloorStaircase.Choice.FIRST else FloorStaircase.Choice.SECOND)
+                else if (!guess) FloorStaircase.Choice.NEITHER else if (r.bit()) FloorStaircase.Choice.FIRST else FloorStaircase.Choice.SECOND
+        }
+        val ref = RefLevelStaircase(seed)
+        while (!ref.done) ref.answer(ans(ref.current))
+        val fl = FloorStaircase(seed + 1, refDb = ref.thresholdDb() ?: -FloorStaircase.SL_DB)
+        while (!fl.done) fl.answer(ans(fl.current))
+        return ref to fl
+    }
+    /** Where the speaker plays 10 dB less than at 300 Hz (what step 1 should find now). */
+    fun minus10(fc: Double): Double {
+        var lo = 20.0; var hi = 300.0
+        repeat(60) { val m = kotlin.math.sqrt(lo * hi); if (lr4Db(m, fc) - lr4Db(300.0, fc) < -10) lo = m else hi = m }
+        return kotlin.math.sqrt(lo * hi)
+    }
+    for (guess in listOf(false, true)) {
+        val runs = (0 until 200).map { levelRun(150.0, -35.0, it.toLong(), guess).first }
+        val errs = runs.map { it.thresholdDb()?.let { t -> abs(t - (-35.0)) } ?: 99.0 }.sorted()
+        check(errs[errs.size / 2] < 2.0 && errs[errs.size * 9 / 10] < (if (guess) 4.0 else 3.0) && runs.count { it.reliable } >= 190,
+            "reference threshold at 300 Hz (${if (guess) "forced guesses" else "\"neither\" when unheard"}): median error ${"%.1f".format(errs[errs.size / 2])} dB, 90th ${"%.1f".format(errs[errs.size * 9 / 10])} dB, reliable in ${runs.count { it.reliable }} / 200")
+    }
+    for (guess in listOf(false, true)) for (fc in doubleArrayOf(120.0, 150.0, 180.0, 220.0)) {
+        val want = minus10(fc)
+        val res = (0 until 120).map { levelRun(fc, -35.0, it.toLong() + 500, guess) }
+        val errs = res.map { it.second.floorHz()?.let { f -> abs(log2(f / want)) } ?: 9.0 }.sorted()
+        val med = errs[errs.size / 2]; val p90 = errs[errs.size * 9 / 10]
+        check(med < 0.2 && p90 < (if (guess) 0.6 else 0.3) && res.count { it.second.cappedNearFloor() } <= 6,
+            "hidden high-pass ${fc.toInt()} Hz${if (guess) " (forced guesses)" else ""}: floor near its -10 dB point ${want.toInt()} Hz (median ${"%.2f".format(med)} oct, 90th ${"%.2f".format(p90)} oct), capped near the floor in ${res.count { it.second.cappedNearFloor() }} / 120")
+    }
+    run {
+        // the old way (bursts at full level) for a 220 Hz high-pass at a sensitive listener: far too low, the bug
+        val r = FitRng(77)
+        val st = FloorStaircase(3)
+        while (!st.done) when (val t = st.current) {
+            is FloorStaircase.Trial.Catch -> st.answer(FloorStaircase.Choice.NEITHER)
+            is FloorStaircase.Trial.Tone -> st.answer(if ((r.next() ushr 11).toDouble() / (1L shl 53) < 1 / (1 + exp(-sensation(0.0, t.hz, 220.0, -35.0))))
+                (if (t.inFirst) FloorStaircase.Choice.FIRST else FloorStaircase.Choice.SECOND) else FloorStaircase.Choice.NEITHER)
+        }
+        val now = levelRun(220.0, -35.0, 3).second.floorHz()!!
+        check(st.floorHz()!! < now / 1.4, "full-level bursts under a 220 Hz high-pass found ${st.floorHz()!!.toInt()} Hz; with the reference level ${now.toInt()} Hz")
+    }
+    run {
+        // too low a volume: the bursts at the lowest notes would need more than the full tone; missed ones are counted
+        val (_, fl) = levelRun(150.0, -8.0, 9)
+        check(fl.cappedTrials > 0 && fl.cappedNearFloor(), "threshold only 8 dB under the full tone: capped bursts are counted (${fl.cappedTrials}) and flag the floor")
+        check(abs(HearingThreshold.db(100.0) - 26.5) < 1e-9 && HearingThreshold.db(300.0) in 8.6..11.4, "ISO 226 threshold table")
     }
 
     // --- strength bracket: listener preferring the level nearest an ideal; equal distance = no difference

@@ -9,7 +9,7 @@
 | Gradle 변형 | `rootlessFdroidS26uRelease` | `rootlessFdroidGeneralRelease` (다른 조합은 비활성) |
 | 패키지 | `kr.ksysh3.pvb.s26u` | `kr.ksysh3.rootnote` (`AndroidConfig.GENERAL_APPLICATION_ID`) |
 | 앱 이름 | PVB | Rootnote (`AndroidConfig.GENERAL_BRAND_NAME` → 리소스 `app_brand_name`) |
-| 버전 | 1.6.23-alpha3.3 / 61 | 0.9.0-beta.8 / 1007 (`generalVersionName`/`generalVersionCode`) |
+| 버전 | 1.6.23-alpha3.3 / 61 | 0.9.0-beta.9 / 1008 (`generalVersionName`/`generalVersionCode`) |
 | 서명 | 개인 채널 키 `app/pvb-signing.jks` (공개 저장소에는 없음: 파일이 없으면 디버그 키 = 시험용) | 환경 변수(GitHub Secrets)의 배포 키, 없으면 디버그 키 = 시험용 |
 | `RESEARCH_UI` | true (연구 도구 항상 표시) | false (정보 화면의 버전을 7번 누르면 "개발자/연구" 표시) |
 | `RECORD_FEATURES` | true | false: 곡별 세기 기억, 실청·고정 블라인드 비교 기록, 버즈 진단(녹음·마이크·5초 음악 클립·내보내기), 측정이 없음 |
@@ -68,8 +68,8 @@ CI는 `GENERAL_KEYSTORE_B64`를 `$RUNNER_TEMP/general.jks`로 풀고 `GENERAL_KE
 
 1. 이 저장소(`ksysh3-dot/rootnote`, GPL-3.0 대응 소스)에 위 Secrets 4개를 넣습니다. 저장소 주소가 바뀌면 `source_url`도 고칩니다.
 2. `main`의 CI(엔진 시험 + 두 빌드)가 통과했는지 확인합니다.
-3. 태그를 올립니다(태그 이름의 버전은 `AndroidConfig.generalVersionName`과 같게): `git tag general-v0.9.0-beta.8 && git push origin general-v0.9.0-beta.8`.
-4. CI가 엔진 시험 → 두 빌드 → 서명 확인(키가 없으면 실패) → 릴리스를 만듭니다. 첨부: `Rootnote-0.9.0-beta.8.apk`, `.sha256`, `source-<커밋>.tar.gz`(서브모듈 포함 소스). 버전에 `-`가 있으면 사전 릴리스로 표시됩니다.
+3. 태그를 올립니다(태그 이름의 버전은 `AndroidConfig.generalVersionName`과 같게): `git tag general-v0.9.0-beta.9 && git push origin general-v0.9.0-beta.9`.
+4. CI가 엔진 시험 → 두 빌드 → 서명 확인(키가 없으면 실패) → 릴리스를 만듭니다. 첨부: `Rootnote-0.9.0-beta.9.apk`, `.sha256`, `source-<커밋>.tar.gz`(서브모듈 포함 소스). 버전에 `-`가 있으면 사전 릴리스로 표시됩니다.
 5. 다음 버전은 `AndroidConfig.generalVersionName`/`generalVersionCode`를 올린 뒤 새 태그를 붙입니다.
 
 브랜치 푸시와 풀 리퀘스트는 두 빌드를 아티팩트로만 올리고 릴리스를 만들지 않습니다. s26u 변형(개인 채널)은 이 공개 저장소에서 시험 빌드(디버그 키, 아티팩트 `PVB-S26U-test-apk`)만 하며 릴리스하지 않습니다.

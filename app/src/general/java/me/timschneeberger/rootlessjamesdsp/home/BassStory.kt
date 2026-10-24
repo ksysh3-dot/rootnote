@@ -116,7 +116,8 @@ private const val SCENES = 11
 private const val TRY_PAGE = 6
 /** The brand A page (its small note on harmonics under the text). */
 private const val BRAND_PAGE = 1
-private val PERIODS = intArrayOf(4200, 11000, 4000, 3200, 4000, 3600, 2000, 3600, 3600, 5200, 4200)
+/** Loop lengths (ms): long enough to read the scene, with the end state held (each scene's last tenth or more). */
+private val PERIODS = intArrayOf(9000, 14000, 8000, 6000, 8000, 8000, 2000, 7000, 7000, 9000, 8000)
 private val KEY_FRAMES = floatArrayOf(0.9f, 0.97f, 0.55f, 0.3f, 0.45f, 0.6f, 0f, 0.5f, 0.5f, 0.95f, 0.9f)
 
 /**
@@ -181,23 +182,39 @@ fun BassStory(reduceMotion: Boolean, trial: TryUi, actions: TryActions, onClose:
         HorizontalPager(state = pager, modifier = Modifier.weight(1f).fillMaxWidth()) { page ->
             Row(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
                 Box(
-                    Modifier.weight(0.6f).fillMaxHeight().padding(vertical = 8.dp).background(c.band, RoundedCornerShape(20.dp)),
+                    Modifier.weight(0.58f).fillMaxHeight().padding(vertical = 8.dp).background(c.band, RoundedCornerShape(20.dp)),
                     contentAlignment = Alignment.Center,
                 ) {
                     Scene(page, reduceMotion, active = page == pager.currentPage, trial = trial)
                 }
+                val scroll = rememberScrollState()
+                Box(Modifier.weight(0.42f).fillMaxHeight()) {
                 Column(
-                    Modifier.weight(0.4f).fillMaxHeight().padding(start = 20.dp, top = 8.dp, bottom = 8.dp)
-                        .verticalScroll(rememberScrollState()),
+                    Modifier.fillMaxSize().padding(start = 20.dp, top = 8.dp, bottom = 8.dp)
+                        .verticalScroll(scroll),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Text("${page + 1} / $SCENES", color = c.accentText, fontSize = 13.sp, lineHeight = 18.sp, fontWeight = FontWeight.Bold)
                     Text(items.getOrElse(2 * page) { "" }, modifier = Modifier.semantics { heading() },
                         color = c.textPrimary, fontSize = 20.sp, lineHeight = 26.sp, fontWeight = FontWeight.Bold)
-                    Text(items.getOrElse(2 * page + 1) { "" }, color = c.textPrimary, fontSize = 15.sp, lineHeight = 22.sp)
+                    Text(items.getOrElse(2 * page + 1) { "" }, color = c.textPrimary, fontSize = 14.sp, lineHeight = 21.sp)
                     if (page == BRAND_PAGE) Text(stringResource(R.string.eq_story_brand_note), color = c.textSecondary,
                         fontSize = 12.sp, lineHeight = 17.sp)
                     if (page == TRY_PAGE) TryControl(trial, actions)
+                    Spacer(Modifier.size(28.dp))
+                }
+                // more text below the fold: a small pill at the bottom (no fade; DESIGN.md has no gradients)
+                if (scroll.canScrollForward) {
+                    val more = stringResource(R.string.eq_story_more)
+                    Box(
+                        Modifier.align(Alignment.BottomEnd).padding(bottom = 6.dp)
+                            .background(c.chipSelectedBg, CircleShape)
+                            .clickable(role = Role.Button) { scope.launch { scroll.animateScrollTo(scroll.maxValue) } }
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                    ) {
+                        Text(more, color = c.chipSelectedText, fontSize = 12.sp, lineHeight = 16.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
                 }
             }
         }
@@ -275,11 +292,20 @@ private fun smooth(x: Float): Float { val v = x.coerceIn(0f, 1f); return v * v *
 /** 0 -> 1 over [a, b] of the loop, then held. */
 private fun phase(t: Float, a: Float, b: Float) = smooth((t - a) / (b - a))
 
+/**
+ * A label at ([x], [y]) (top), [align] 0 left .. 1 right, kept inside the stage. With [pill], a rounded plate of
+ * that colour behind it, so a label over a curve or a zone stays readable (one look for every label on a chart).
+ */
 private fun DrawScope.text(tm: TextMeasurer, s: String, x: Float, y: Float, color: Color, size: Float = 12f,
-                           bold: Boolean = false, align: Float = 0f) {
+                           bold: Boolean = false, align: Float = 0f, pill: Color? = null) {
     val r = tm.measure(s, TextStyle(fontSize = size.sp, fontWeight = if (bold) FontWeight.Bold else FontWeight.Medium))
-    val left = (x - r.size.width * align).coerceIn(0f, max(0f, this.size.width - r.size.width))
-    drawText(r, color = color, topLeft = Offset(left, y))
+    val padX = if (pill != null) 5.dp.toPx() else 0f
+    val padY = if (pill != null) 2.dp.toPx() else 0f
+    val left = (x - r.size.width * align).coerceIn(padX, max(padX, this.size.width - r.size.width - padX))
+    val top = y.coerceIn(padY, max(padY, this.size.height - r.size.height - padY))
+    if (pill != null) drawRoundRect(pill, Offset(left - padX, top - padY), Size(r.size.width + 2 * padX, r.size.height + 2 * padY),
+        CornerRadius(6.dp.toPx()))
+    drawText(r, color = color, topLeft = Offset(left, top))
 }
 
 /** The response chart's frame: log 25 Hz-16 kHz across, +20..-35 dB down. */
@@ -297,20 +323,20 @@ private fun bell(hz: Float, f0: Float, gainDb: Float, widthOct: Float): Float {
     return gainDb * exp(-0.5f * d * d)
 }
 
-private fun DrawScope.zonesAndGrid(ch: Chart, ink: Ink, tm: TextMeasurer, labels: Array<String>) {
-    val x125 = ch.x(125f)
+private fun DrawScope.zonesAndGrid(ch: Chart, ink: Ink, tm: TextMeasurer, labels: Array<String>, names: Boolean = false) {
     val x10 = ch.x(PhoneResponse.MEDIAN_MINUS10_HZ)
-    drawRect(ink.grey.copy(alpha = 0.30f), Offset(ch.left, ch.top), Size(x125 - ch.left, ch.bottom - ch.top))
-    drawRect(ink.grey.copy(alpha = 0.16f), Offset(x125, ch.top), Size(x10 - x125, ch.bottom - ch.top))
-    drawRect(ink.accent.copy(alpha = 0.10f), Offset(x10, ch.top), Size(ch.right - x10, ch.bottom - ch.top))
-    text(tm, labels.getOrElse(0) { "" }, ch.left + 4.dp.toPx(), ch.top + 3.dp.toPx(), ink.soft, 11f)
-    text(tm, labels.getOrElse(1) { "" }, x10 + 4.dp.toPx(), ch.top + 3.dp.toPx(), ink.accent, 11f, bold = true)
+    drawRect(ink.grey.copy(alpha = 0.20f), Offset(ch.left, ch.top), Size(x10 - ch.left, ch.bottom - ch.top))
+    if (names) {
+        text(tm, labels.getOrElse(0) { "" }, ch.left + 6.dp.toPx(), ch.top + 4.dp.toPx(), ink.soft, 11f)
+        text(tm, labels.getOrElse(1) { "" }, x10 + 6.dp.toPx(), ch.top + 4.dp.toPx(), ink.accent, 11f, bold = true)
+    }
     for (db in intArrayOf(10, 0, -10, -20, -30)) {
         val y = ch.y(db.toFloat())
-        drawLine(ink.grey.copy(alpha = if (db == 0) 0.8f else 0.3f), Offset(ch.left, y), Offset(ch.right, y),
+        drawLine(ink.grey.copy(alpha = if (db == 0) 0.7f else 0.18f), Offset(ch.left, y), Offset(ch.right, y),
             (if (db == 0) 1.2f else 0.8f).dp.toPx())
         text(tm, if (db > 0) "+$db" else "$db", ch.left - 4.dp.toPx(), y - 8.dp.toPx(), ink.soft, 10f, align = 1f)
     }
+    text(tm, "dB", ch.left - 4.dp.toPx(), ch.top - 16.dp.toPx(), ink.soft, 10f, align = 1f)
     drawLine(ink.grey, Offset(ch.left, ch.bottom), Offset(ch.right, ch.bottom), 1.dp.toPx())
     for ((hz, s) in listOf(31f to "31", 62f to "62", 125f to "125", 250f to "250", 500f to "500", 1000f to "1k",
         2000f to "2k", 4000f to "4k", 8000f to "8k")) {
@@ -338,10 +364,35 @@ private fun DrawScope.phoneBand(ch: Chart, ink: Ink) {
     drawPath(p, ink.accent.copy(alpha = 0.22f))
 }
 
+/**
+ * A one-row legend in the top right corner of the stage: a line (0), a dashed line (1) or a band swatch (2) and its
+ * name, right to left. Drawn once, in the first scene; later scenes label what they add right where it is.
+ */
+private fun DrawScope.legend(tm: TextMeasurer, ink: Ink, items: List<Triple<String, Color, Int>>, a: Float) {
+    if (a <= 0f) return
+    var right = size.width
+    val y = 2.dp.toPx()
+    for ((name, color, kind) in items.reversed()) {
+        val r = tm.measure(name, TextStyle(fontSize = 10.sp, fontWeight = FontWeight.Medium))
+        drawText(r, color = ink.soft.copy(alpha = a), topLeft = Offset(right - r.size.width, y))
+        val sx = right - r.size.width - 22.dp.toPx()
+        val cy = y + r.size.height / 2f
+        when (kind) {
+            2 -> drawRoundRect(color.copy(alpha = color.alpha * a), Offset(sx, cy - 4.dp.toPx()), Size(16.dp.toPx(), 8.dp.toPx()), CornerRadius(2.dp.toPx()))
+            else -> drawLine(color.copy(alpha = a), Offset(sx, cy), Offset(sx + 16.dp.toPx(), cy), 2.dp.toPx(),
+                pathEffect = if (kind == 1) PathEffect.dashPathEffect(floatArrayOf(6f, 4f), 0f) else null)
+        }
+        right = sx - 10.dp.toPx()
+    }
+}
+
 /** 1: the chart draws itself from the left: the phones' range, the median phone, our S26 Ultra (dashed). */
 private fun DrawScope.sceneResponse(t: Float, ink: Ink, tm: TextMeasurer, labels: Array<String>) {
     val ch = Chart(size.width, size.height)
-    zonesAndGrid(ch, ink, tm, labels)
+    zonesAndGrid(ch, ink, tm, labels, names = true)
+    legend(tm, ink, listOf(
+        Triple(labels.getOrElse(28) { "" }, ink.accent, 0), Triple(labels.getOrElse(37) { "" }, ink.text, 1),
+        Triple(labels.getOrElse(38) { "" }, ink.accent.copy(alpha = 0.35f), 2)), phase(t, 0.0f, 0.15f))
     val reveal = phase(t, 0.05f, 0.7f)
     clipRect(right = ch.left + (ch.right - ch.left) * reveal) {
         phoneBand(ch, ink)
@@ -353,7 +404,8 @@ private fun DrawScope.sceneResponse(t: Float, ink: Ink, tm: TextMeasurer, labels
     if (a > 0f) {
         val p = Offset(ch.x(125f), ch.y(PhoneResponse.P50[0]))
         drawCircle(ink.accent.copy(alpha = a), 4.dp.toPx(), p)
-        text(tm, labels.getOrElse(2) { "" }, p.x + 6.dp.toPx(), p.y - 18.dp.toPx(), ink.text.copy(alpha = a), 11f, bold = true)
+        text(tm, labels.getOrElse(2) { "" }, p.x + 8.dp.toPx(), p.y - 10.dp.toPx(), ink.text.copy(alpha = a), 11f, bold = true,
+            pill = ink.bg.copy(alpha = a))
     }
 }
 
@@ -386,11 +438,13 @@ private fun DrawScope.sceneBrand(t: Float, ink: Ink, tm: TextMeasurer, labels: A
             curve(ch, { mix(it) }, ink.text, 2.5f.dp.toPx())
             val b = phase(t, 0.22f, 0.3f)
             if (b > 0f && zoom == 0f) {
-                text(tm, labels.getOrElse(27) { "" }, ch.x(160f), ch.y(PhoneResponse.BRAND_A_P50[1]) - 20.dp.toPx(), ink.text.copy(alpha = b), 11f, bold = true)
-                text(tm, labels.getOrElse(28) { "" }, ch.x(200f), ch.y(PhoneResponse.P50[2]) + 6.dp.toPx(), ink.accent.copy(alpha = b), 11f, bold = true)
+                text(tm, labels.getOrElse(27) { "" }, ch.x(330f), ch.y(PhoneResponse.BRAND_A_P50[4]) - 24.dp.toPx(), ink.text.copy(alpha = b), 11f,
+                    bold = true, pill = ink.bg.copy(alpha = b))
+                text(tm, labels.getOrElse(28) { "" }, ch.x(330f), ch.y(PhoneResponse.P50[4]) + 8.dp.toPx(), ink.accent.copy(alpha = b), 11f,
+                    bold = true, pill = ink.bg.copy(alpha = b))
             }
             // the zoom target: a frame around 60-100 Hz
-            if (zoom > 0f) drawRect(ink.warn, Offset(ch.x(60f), ch.top), Size(ch.x(100f) - ch.x(60f), ch.bottom - ch.top),
+            if (zoom > 0f) drawRect(ink.text, Offset(ch.x(60f), ch.top), Size(ch.x(100f) - ch.x(60f), ch.bottom - ch.top),
                 style = Stroke(1.5f.dp.toPx() / sc))
             drawContext.canvas.restore()
         }
@@ -399,8 +453,9 @@ private fun DrawScope.sceneBrand(t: Float, ink: Ink, tm: TextMeasurer, labels: A
     // (c) + (d): the zoomed view
     val show = phase(t, 0.42f, 0.5f)
     val w = size.width; val h = size.height
-    text(tm, labels.getOrElse(29) { "" }, w * 0.02f, h * 0.0f, ink.warn.copy(alpha = show), 11f, bold = true)
-    val waveL = w * 0.03f; val waveR = w * 0.66f
+    text(tm, labels.getOrElse(29) { "" }, 0f, 0f, ink.text.copy(alpha = show), 11f, bold = true, pill = ink.bg.copy(alpha = show))
+    // rows: a name on the left, its wave, the stacked column on the right
+    val waveL = w * 0.17f; val waveR = w * 0.64f
     val rows = 5
     val rowH = h * 0.86f / rows
     val shift = t * 2f * PI.toFloat() * 6f
@@ -416,19 +471,19 @@ private fun DrawScope.sceneBrand(t: Float, ink: Ink, tm: TextMeasurer, labels: A
     }
     // the fundamental: small
     wave(0, 2f, rowH * 0.06f, ink.accent, show)
-    text(tm, labels.getOrElse(30) { "" }, waveR + 4.dp.toPx(), h * 0.1f + rowH * 0.5f - 8.dp.toPx(), ink.accent.copy(alpha = show), 11f, bold = true)
+    text(tm, labels.getOrElse(30) { "" }, 0f, h * 0.1f + rowH * 0.5f - 8.dp.toPx(), ink.accent.copy(alpha = show), 11f, bold = true)
     // the harmonics: bigger waves appearing one by one
     val amps = floatArrayOf(0.42f, 0.38f, 0.3f, 0.24f)
     for (k in 0 until 4) {
         val a = phase(t, 0.5f + 0.07f * k, 0.56f + 0.07f * k)
         if (a <= 0f) continue
         wave(k + 1, 2f * (k + 2), rowH * amps[k], ink.warn, a)
-        text(tm, labels.getOrElse(31 + k) { "" }, waveR + 4.dp.toPx(), h * 0.1f + rowH * (k + 1.5f) - 8.dp.toPx(), ink.warn.copy(alpha = a), 11f, bold = true)
+        text(tm, labels.getOrElse(31 + k) { "" }, 0f, h * 0.1f + rowH * (k + 1.5f) - 8.dp.toPx(), ink.warn.copy(alpha = a), 11f, bold = true)
     }
     // (d) the column: the fundamental's tiny block, then the harmonics stacked on it
-    val colX = w * 0.84f; val colW = w * 0.1f
-    val base = h * 0.9f
-    val unit = h * 0.012f
+    val colX = w * 0.78f; val colW = w * 0.14f
+    val base = h * 0.8f
+    val unit = h * 0.0105f
     drawRect(ink.accent.copy(alpha = show), Offset(colX, base - unit), Size(colW, unit))
     var top = base - unit
     val parts = floatArrayOf(18f, 15f, 10f, 7f)          // in fundamental units: about 50 in all, "tens of times"
@@ -441,15 +496,15 @@ private fun DrawScope.sceneBrand(t: Float, ink: Ink, tm: TextMeasurer, labels: A
     }
     val done = phase(t, 0.9f, 0.95f)
     if (done > 0f) {
-        text(tm, labels.getOrElse(35) { "" }, colX + colW, top - 34.dp.toPx(), ink.warn.copy(alpha = done), 11f, bold = true, align = 1f)
-        text(tm, labels.getOrElse(36) { "" }, colX + colW, top - 18.dp.toPx(), ink.soft.copy(alpha = done), 10f, align = 1f)
+        text(tm, labels.getOrElse(35) { "" }, w, base + 6.dp.toPx(), ink.warn.copy(alpha = done), 11f, bold = true, align = 1f)
+        text(tm, labels.getOrElse(36) { "" }, w, base + 22.dp.toPx(), ink.soft.copy(alpha = done), 10f, align = 1f)
     }
 }
 
 /** 3: the lowest EQ bands go up 10 dB; the median phone's curve barely leaves the grey part. */
 private fun DrawScope.sceneCrank(t: Float, ink: Ink, tm: TextMeasurer, labels: Array<String>) {
     val ch = Chart(size.width, size.height)
-    zonesAndGrid(ch, ink, tm, labels)
+    zonesAndGrid(ch, ink, tm, labels, names = true)
     val up = phase(t, 0.1f, 0.55f) * (1f - phase(t, 0.9f, 1f))
     // EQ knobs on 31, 62, 125 Hz rising, on the 0 dB line
     for (hz in floatArrayOf(31f, 62f, 125f)) {
@@ -458,7 +513,8 @@ private fun DrawScope.sceneCrank(t: Float, ink: Ink, tm: TextMeasurer, labels: A
         drawLine(ink.warn.copy(alpha = 0.5f), Offset(x, y0), Offset(x, y1), 3.dp.toPx(), StrokeCap.Round)
         drawCircle(ink.warn, 6.dp.toPx(), Offset(x, y1))
     }
-    text(tm, labels.getOrElse(3) { "" }, ch.x(31f) - 4.dp.toPx(), ch.y(10f * up) - 22.dp.toPx(), ink.warn, 11f, bold = true)
+    if (up > 0.05f) text(tm, labels.getOrElse(3) { "" }, ch.x(125f) + 10.dp.toPx(), ch.y(10f * up) - 9.dp.toPx(), ink.warn, 11f, bold = true,
+        pill = ink.bg)
     curve(ch, { PhoneResponse.P50[it] }, ink.accent.copy(alpha = 0.45f), 2f.dp.toPx())
     // a low shelf (+10 dB under 125 Hz, half at 200 Hz) on the median phone
     curve(ch, { i ->
@@ -466,45 +522,56 @@ private fun DrawScope.sceneCrank(t: Float, ink: Ink, tm: TextMeasurer, labels: A
         PhoneResponse.P50[i] + 10f * up / (1f + (f / 160f).let { it * it * it * it })
     }, ink.accent, 2.5f.dp.toPx())
     val a = phase(t, 0.55f, 0.65f) * (1f - phase(t, 0.9f, 1f))
-    if (a > 0f) text(tm, labels.getOrElse(4) { "" }, ch.x(140f), ch.y(-24f), ink.text.copy(alpha = a), 11f, bold = true)
+    if (a > 0f) text(tm, labels.getOrElse(4) { "" }, ch.x(135f), ch.y(-24f), ink.text.copy(alpha = a), 11f, bold = true, pill = ink.bg.copy(alpha = a))
 }
 
-/** 4: two cones side by side: 250 Hz moves a little, 63 Hz (same loudness) 16 times as far and hits its limit. */
+/**
+ * 4: two speakers seen from the side, the same loudness: at 250 Hz the cone moves a little, at 63 Hz 16 times as
+ * far (two octaves lower), so it hits its limits and rattles. The magnet sits behind the cone and never moves; the
+ * cone's rest place leaves room for the full swing on both sides, so it never passes into the magnet. The two swings
+ * are 4 : 1 in rate (12 and 3 cycles a loop), like 250 and 63 Hz.
+ */
 private fun DrawScope.sceneCone(t: Float, ink: Ink, tm: TextMeasurer, labels: Array<String>) {
     val w = size.width; val h = size.height
-    val limit = h * 0.16f
-    fun cone(cx: Float, amp: Float, cycles: Int, label: String, sub: String) {
-        val cy = h * 0.45f
+    val limit = h * 0.11f                      // the cone's travel each way
+    fun speaker(cx: Float, amp: Float, cycles: Int, label: String, sub: String) {
+        val cy = h * 0.4f
+        val magnetW = h * 0.09f; val magnetH = h * 0.16f
+        val magnetRight = cx - limit - h * 0.03f
+        val rest = magnetRight + limit + h * 0.06f   // cone apex at rest: room for the full inward swing
         val raw = amp * sin(2f * PI.toFloat() * cycles * t)
-        val hit = abs(raw) > limit
+        val hit = abs(raw) >= limit * 0.98f
         val dx = raw.coerceIn(-limit, limit)
-        // limit marks
-        for (s in floatArrayOf(-1f, 1f)) {
-            drawLine(ink.soft.copy(alpha = 0.6f), Offset(cx + s * limit, cy - h * 0.2f), Offset(cx + s * limit, cy + h * 0.2f),
-                1.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 6f), 0f))
+        // travel limits (dashed) around the rest place
+        for (sgn in floatArrayOf(-1f, 1f)) {
+            val x = rest + sgn * limit
+            drawLine(ink.soft.copy(alpha = 0.5f), Offset(x, cy - h * 0.24f), Offset(x, cy + h * 0.24f), 1.dp.toPx(),
+                pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 6f), 0f))
         }
-        // the cone seen from the side: a short trapezoid that moves left and right
-        val p = Path().apply {
-            moveTo(cx + dx - h * 0.02f, cy - h * 0.06f); lineTo(cx + dx + h * 0.05f, cy - h * 0.16f)
-            lineTo(cx + dx + h * 0.05f, cy + h * 0.16f); lineTo(cx + dx - h * 0.02f, cy + h * 0.06f); close()
+        // magnet (behind), then the voice-coil rod to the cone, then the cone (in front)
+        drawRoundRect(ink.text.copy(alpha = 0.75f), Offset(magnetRight - magnetW, cy - magnetH / 2), Size(magnetW, magnetH), CornerRadius(4.dp.toPx()))
+        val apex = rest + dx
+        drawLine(ink.text.copy(alpha = 0.45f), Offset(magnetRight, cy), Offset(apex, cy), 3.dp.toPx())
+        val cone = Path().apply {
+            moveTo(apex, cy - h * 0.035f); lineTo(apex + h * 0.07f, cy - h * 0.2f)
+            lineTo(apex + h * 0.07f, cy + h * 0.2f); lineTo(apex, cy + h * 0.035f); close()
         }
-        drawPath(p, if (hit) ink.warn else ink.accent)
-        // the magnet stays put
-        drawRoundRect(ink.text.copy(alpha = 0.7f), Offset(cx - h * 0.12f, cy - h * 0.05f), Size(h * 0.07f, h * 0.1f), CornerRadius(4f))
+        drawPath(cone, if (hit) ink.warn else ink.accent)
         if (hit) {
-            // "드르르": short zigzags at the limit
-            val zx = cx + (if (raw > 0) 1f else -1f) * (limit + h * 0.07f)
+            // "드르르": a short zigzag in front of the cone (the rattle comes from the cone, never from the magnet)
+            val zx = apex + h * 0.11f
             val z = Path().apply {
-                moveTo(zx, cy - h * 0.12f)
-                for (k in 1..6) lineTo(zx + (if (k % 2 == 0) -1f else 1f) * h * 0.025f, cy - h * 0.12f + k * h * 0.04f)
+                moveTo(zx, cy - h * 0.13f)
+                for (k in 1..6) lineTo(zx + (if (k % 2 == 0) -1f else 1f) * h * 0.022f, cy - h * 0.13f + k * h * 0.043f)
             }
             drawPath(z, ink.warn, style = Stroke(2.dp.toPx(), cap = StrokeCap.Round))
         }
         text(tm, label, cx, h * 0.72f, ink.text, 14f, bold = true, align = 0.5f)
         text(tm, sub, cx, h * 0.72f + 20.dp.toPx(), ink.soft, 11f, align = 0.5f)
     }
-    cone(w * 0.28f, limit * 0.22f, 8, "250 Hz", labels.getOrElse(5) { "" })
-    cone(w * 0.72f, limit * 0.22f * 16f, 2, "63 Hz", labels.getOrElse(6) { "" })
+    // same loudness: travel 1 at 250 Hz, 16 at 63 Hz (the larger one clips at the limit)
+    speaker(w * 0.27f, limit * 0.16f, 12, "250 Hz", labels.getOrElse(5) { "" })
+    speaker(w * 0.73f, limit * 0.16f * 16f, 3, "63 Hz", labels.getOrElse(6) { "" })
 }
 
 /** 5: voice, instruments and bass; when the bass passes the protection line, every bar is pushed down. */
@@ -554,13 +621,13 @@ private fun DrawScope.sceneSkirt(t: Float, ink: Ink, tm: TextMeasurer, labels: A
         if (k == 0) p.moveTo(x, y) else p.lineTo(x, y)
     }
     drawPath(p, ink.warn, style = Stroke(2.dp.toPx(), cap = StrokeCap.Round))
-    text(tm, labels.getOrElse(25) { "" }, ch.x(30f), ch.y(12f) - 4.dp.toPx(), ink.warn, 11f, bold = true)
+    if (g > 0.5f) text(tm, labels.getOrElse(25) { "" }, ch.x(28f), ch.y(g) - 30.dp.toPx(), ink.warn, 11f, bold = true, pill = ink.bg)
     // the part of the skirt that lands where the speaker plays
     val a = phase(t, 0.45f, 0.6f) * (1f - phase(t, 0.9f, 1f))
     if (a > 0f) {
         val x0 = ch.x(PhoneResponse.MEDIAN_MINUS10_HZ); val x1 = ch.x(320f)
         drawRect(ink.accent.copy(alpha = 0.22f * a), Offset(x0, ch.y(4f)), Size(x1 - x0, ch.y(0f) - ch.y(4f)))
-        text(tm, labels.getOrElse(26) { "" }, x0, ch.y(4f) - 18.dp.toPx(), ink.accent.copy(alpha = a), 12f, bold = true)
+        text(tm, labels.getOrElse(26) { "" }, x0, ch.y(4f) - 22.dp.toPx(), ink.accent.copy(alpha = a), 11f, bold = true, pill = ink.bg.copy(alpha = a))
     }
     curve(ch, { PhoneResponse.P50[it] }, ink.accent.copy(alpha = 0.5f), 2f.dp.toPx())
 }
@@ -656,7 +723,7 @@ private fun DrawScope.sceneLowMid(t: Float, ink: Ink, tm: TextMeasurer, labels: 
     val g = 3f * phase(t, 0.1f, 0.5f) * (1f - phase(t, 0.88f, 1f))
     curve(ch, { PhoneResponse.P50[it] }, ink.accent.copy(alpha = 0.45f), 2f.dp.toPx())
     curve(ch, { i -> PhoneResponse.P50[i] + bell(PhoneResponse.HZ[i], 250f, g, 0.6f) }, ink.accent, 2.5f.dp.toPx())
-    text(tm, labels.getOrElse(12) { "" }, (x200 + x400) / 2f, ch.y(8f), ink.accent, 12f, bold = true, align = 0.5f)
+    text(tm, labels.getOrElse(12) { "" }, (x200 + x400) / 2f, ch.y(8f), ink.accent, 11f, bold = true, align = 0.5f, pill = ink.bg)
 }
 
 /** 9: the treble peak (2.5-6 kHz, 10 dB and more over the mids) cut by 3 dB; the bass then stands out more. */
@@ -664,11 +731,11 @@ private fun DrawScope.sceneTreble(t: Float, ink: Ink, tm: TextMeasurer, labels: 
     val ch = Chart(size.width, size.height)
     zonesAndGrid(ch, ink, tm, labels)
     val x0 = ch.x(2500f); val x1 = ch.x(6300f)
-    drawRect(ink.warn.copy(alpha = 0.14f), Offset(x0, ch.top), Size(x1 - x0, ch.bottom - ch.top))
+    drawRect(ink.accent.copy(alpha = 0.16f), Offset(x0, ch.top), Size(x1 - x0, ch.bottom - ch.top))
     val g = -3f * phase(t, 0.1f, 0.5f) * (1f - phase(t, 0.88f, 1f))
     curve(ch, { PhoneResponse.P50[it] }, ink.accent.copy(alpha = 0.45f), 2f.dp.toPx())
     curve(ch, { i -> PhoneResponse.P50[i] + bell(PhoneResponse.HZ[i], 4500f, g, 0.7f) }, ink.accent, 2.5f.dp.toPx())
-    text(tm, labels.getOrElse(13) { "" }, (x0 + x1) / 2f, ch.y(19f), ink.warn, 12f, bold = true, align = 0.5f)
+    text(tm, labels.getOrElse(13) { "" }, (x0 + x1) / 2f, ch.y(20f), ink.accent, 11f, bold = true, align = 0.5f, pill = ink.bg)
 }
 
 /** 10: four results appear one after another. */
@@ -690,8 +757,8 @@ private fun DrawScope.sceneResults(t: Float, ink: Ink, tm: TextMeasurer, labels:
 private fun DrawScope.sceneRecipe(t: Float, ink: Ink, tm: TextMeasurer, labels: Array<String>) {
     val w = size.width; val h = size.height
     val left = w * 0.06f; val right = w * 0.97f
-    val mid = h * 0.5f
-    val dbPx = h * 0.045f
+    val mid = h * 0.4f
+    val dbPx = h * 0.034f
     fun x(hz: Float) = left + (right - left) * (ln(hz / 25f) / ln(16000f / 25f))
     val a = phase(t, 0.05f, 0.6f)
     fun gain(f: Float): Float {
@@ -709,11 +776,13 @@ private fun DrawScope.sceneRecipe(t: Float, ink: Ink, tm: TextMeasurer, labels: 
     drawPath(p, ink.accent, style = Stroke(3.dp.toPx(), cap = StrokeCap.Round))
     val b = phase(t, 0.6f, 0.75f)
     if (b > 0f) {
-        text(tm, labels.getOrElse(22) { "" }, x(50f), mid + 6f * dbPx, ink.soft.copy(alpha = b), 12f, bold = true, align = 0.5f)
-        text(tm, labels.getOrElse(23) { "" }, x(220f), mid - 2.5f * dbPx - 26.dp.toPx(), ink.accent.copy(alpha = b), 12f, bold = true, align = 0.5f)
-        text(tm, labels.getOrElse(24) { "" }, x(4500f), mid + 3f * dbPx + 6.dp.toPx(), ink.accent.copy(alpha = b), 12f, bold = true, align = 0.5f)
+        text(tm, labels.getOrElse(22) { "" }, x(62f), mid + 7f * dbPx, ink.soft.copy(alpha = b), 11f, bold = true, pill = ink.bg.copy(alpha = b))
+        text(tm, labels.getOrElse(23) { "" }, x(220f), mid - 2.5f * dbPx - 26.dp.toPx(), ink.accent.copy(alpha = b), 11f, bold = true, align = 0.5f,
+            pill = ink.bg.copy(alpha = b))
+        text(tm, labels.getOrElse(24) { "" }, x(4500f), mid + 3f * dbPx + 8.dp.toPx(), ink.accent.copy(alpha = b), 11f, bold = true, align = 0.5f,
+            pill = ink.bg.copy(alpha = b))
     }
     for ((hz, s) in listOf(62f to "62", 125f to "125", 250f to "250", 1000f to "1k", 4000f to "4k")) {
-        text(tm, s, x(hz), h * 0.88f, ink.soft, 10f, align = 0.5f)
+        text(tm, s, x(hz), h * 0.9f, ink.soft, 10f, align = 0.5f)
     }
 }

@@ -334,6 +334,7 @@ private fun Question(ui: FitUi, actions: FitActions) {
                 }
             }
             Body(stringResource(R.string.fit_floor_body))
+            Body(stringResource(if (p.reference) R.string.fit_floor_part_ref else R.string.fit_floor_part_low))
             if (ui.disturbed) RnNote(stringResource(R.string.fit_disturbed), warning = true,
                 modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
         }

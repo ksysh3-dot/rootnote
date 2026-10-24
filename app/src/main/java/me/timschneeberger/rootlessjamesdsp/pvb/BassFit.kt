@@ -63,7 +63,12 @@ object FitStats {
  * microphone, so the microphone needs no calibration.
  */
 object NoiseGate {
-    const val MIN_SNR_DB = 35.0
+    /**
+     * Was 35 dB; an ordinary room with the door closed measured 18. The floor test now sets its bursts from the
+     * listener's own threshold in that room (RefLevelStaircase), so moderate noise shifts the reference and the bursts
+     * alike; what is left to catch is a room so loud the bursts drown.
+     */
+    const val MIN_SNR_DB = 15.0
     const val MAX_JUMP_DB = 6.0
     /** A silent trial interval louder than the room by this much discards the trial. */
     const val DISTURB_DB = 6.0
@@ -253,15 +258,45 @@ class AbxRun(private val seed: Long, val maxTrials: Int = 8, val passAt: Int = 7
  */
 class FloorStaircase(
     private val seed: Long,
+    /** The listener's threshold at the reference, dB re the full tone ([RefLevelStaircase.thresholdDb]). */
+    val refDb: Double = -SL_DB,
     val startHz: Double = 300.0,
     val minHz: Double = 70.0,
     val maxTrials: Int = 30,
     val stopReversals: Int = 6,
 ) {
+    companion object {
+        /** How far over the threshold the bursts play (the -10 dB point the published measurements use). */
+        const val SL_DB = 10.0
+    }
+
     enum class Choice { FIRST, SECOND, NEITHER, BUZZ_ONLY }
     sealed class Trial {
-        data class Tone(val hz: Double, val inFirst: Boolean) : Trial()
+        /** [levelDb]: the burst's level re the test tone's full level (DevTestSignal.FIT_TONE_AMP), at most 0. */
+        data class Tone(val hz: Double, val inFirst: Boolean, val levelDb: Double = 0.0) : Trial()
         object Catch : Trial()
+    }
+
+    /**
+     * Level of the burst at [hz]: [SL_DB] over the listener's own threshold at the reference ([refDb], from
+     * [RefLevelStaircase]), plus how much less sensitive hearing is at [hz] than at the reference (ISO 226). So a
+     * burst stops being heard where the speaker plays [SL_DB] less than at the reference: the floor is the speaker's
+     * -10 dB point, not the lowest note that is audible at all. Capped at 0 (the tone's full level).
+     */
+    fun levelDb(hz: Double): Double =
+        (refDb + SL_DB + HearingThreshold.db(hz) - HearingThreshold.db(RefLevelStaircase.REF_HZ)).coerceAtMost(0.0)
+
+    /** Missed trials whose wanted level was above the cap (the volume was too low for them). */
+    var cappedTrials = 0; private set
+    private val cappedMissHz = ArrayList<Double>()
+
+    /**
+     * A capped miss at or above the found floor: that note might have been heard at the right level, so the floor may
+     * be too high (misses well below the floor are expected and do not count).
+     */
+    fun cappedNearFloor(): Boolean {
+        val f = floorHz() ?: return false
+        return cappedMissHz.any { it >= f / 2.0.pow(1.0 / 12.0) }
     }
 
     val freqs: DoubleArray = generateSequence(startHz) { it / 2.0.pow(1.0 / 6.0) }.takeWhile { it >= minHz * 0.999 }
@@ -283,7 +318,7 @@ class FloorStaircase(
     private fun nextTrial(): Trial = when {
         reversals.size >= stopReversals -> Trial.Catch          // only the missing catch trials are left
         toneTrials + catchTrials >= 2 && rng.below(5) == 0 -> Trial.Catch
-        else -> Trial.Tone(freqs[idx], rng.bit())
+        else -> Trial.Tone(freqs[idx], rng.bit(), levelDb(freqs[idx]))
     }
 
     fun answer(c: Choice) {
@@ -293,6 +328,9 @@ class FloorStaircase(
             is Trial.Tone -> {
                 toneTrials++
                 val heard = (c == Choice.FIRST && t.inFirst) || (c == Choice.SECOND && !t.inFirst)
+                if (!heard && refDb + SL_DB + HearingThreshold.db(t.hz) - HearingThreshold.db(RefLevelStaircase.REF_HZ) > 0.0) {
+                    cappedTrials++; cappedMissHz += t.hz
+                }
                 val dir: Int
                 if (heard) {
                     streak++
@@ -319,6 +357,97 @@ class FloorStaircase(
     }
 
     /** Too many "heard" answers on silent catch trials (over a third) or too few reversals: don't apply. */
+    val reliable: Boolean
+        get() = reversals.size >= 4 && (catchTrials == 0 || falseAlarms * 3 <= catchTrials)
+}
+
+/**
+ * Threshold of hearing in quiet (ISO 226:2003, dB SPL) from 20 Hz to 1 kHz, log-frequency interpolation. Only the
+ * difference between two frequencies is used: how much louder a low note must be to be just heard.
+ */
+object HearingThreshold {
+    private val HZ = doubleArrayOf(20.0, 25.0, 31.5, 40.0, 50.0, 63.0, 80.0, 100.0, 125.0, 160.0, 200.0, 250.0, 315.0,
+        400.0, 500.0, 630.0, 800.0, 1000.0)
+    private val DB = doubleArrayOf(78.5, 68.7, 59.5, 51.1, 44.0, 37.5, 31.5, 26.5, 22.1, 17.9, 14.4, 11.4, 8.6, 6.2,
+        4.4, 3.0, 2.2, 2.4)
+
+    fun db(hz: Double): Double {
+        val f = hz.coerceIn(HZ.first(), HZ.last())
+        var i = 0
+        while (i < HZ.size - 2 && f > HZ[i + 1]) i++
+        val u = ln(f / HZ[i]) / ln(HZ[i + 1] / HZ[i])
+        return DB[i] + (DB[i + 1] - DB[i]) * u
+    }
+}
+
+/**
+ * Step 1, first part: the listener's own threshold for a [REF_HZ] tone at this volume, by the same two-interval
+ * question as the floor, 2-down/1-up (70.7 % right, Levitt 1971) from [startDb] (re the full tone): 6 dB steps until
+ * the second reversal, then 3 dB steps; [stopReversals] reversals of the small steps (a lucky guess in the fast
+ * descent then costs little). Catch trials as in [FloorStaircase] (at least
+ * [MIN_CATCH]). Threshold: mean of the last four reversal levels. The room's noise raises it, and the floor bursts
+ * that follow are set from it, so a not quite silent room shifts both alike.
+ */
+class RefLevelStaircase(
+    seed: Long,
+    val startDb: Double = -10.0,
+    val minDb: Double = -66.0,
+    val maxTrials: Int = 44,
+    val stopReversals: Int = 6,
+) {
+    companion object { const val REF_HZ = 300.0 }
+
+    private val rng = FitRng(seed)
+    private var levelDb = startDb
+    private var streak = 0
+    private var lastDir = 0
+    private var allReversals = 0
+    private val reversals = ArrayList<Double>()
+    var toneTrials = 0; private set
+    var catchTrials = 0; private set
+    var falseAlarms = 0; private set
+    var current: FloorStaircase.Trial = next(); private set
+
+    val done: Boolean get() = (reversals.size >= stopReversals && catchTrials >= MIN_CATCH) || toneTrials + catchTrials >= maxTrials
+
+    private fun next(): FloorStaircase.Trial = when {
+        reversals.size >= stopReversals -> FloorStaircase.Trial.Catch
+        toneTrials + catchTrials >= 2 && rng.below(5) == 0 -> FloorStaircase.Trial.Catch
+        else -> FloorStaircase.Trial.Tone(REF_HZ, rng.bit(), levelDb)
+    }
+
+    fun answer(c: FloorStaircase.Choice) {
+        check(!done) { "done" }
+        when (val t = current) {
+            is FloorStaircase.Trial.Catch -> { catchTrials++; if (c != FloorStaircase.Choice.NEITHER) falseAlarms++ }
+            is FloorStaircase.Trial.Tone -> {
+                toneTrials++
+                val heard = (c == FloorStaircase.Choice.FIRST && t.inFirst) || (c == FloorStaircase.Choice.SECOND && !t.inFirst)
+                val dir: Int
+                if (heard) {
+                    streak++
+                    if (streak >= 2) { streak = 0; dir = -1 } else dir = 0     // -1 = quieter (harder)
+                } else {
+                    streak = 0; dir = +1
+                }
+                if (dir != 0) {
+                    if (lastDir != 0 && dir != lastDir) {
+                        allReversals++
+                        // the first two reversals (big steps) only find the region; the threshold uses the rest
+                        if (allReversals > 2) reversals += levelDb
+                    }
+                    lastDir = dir
+                    val step = if (allReversals < 2) 6.0 else 3.0
+                    levelDb = (levelDb + dir * step).coerceIn(minDb, 0.0)
+                }
+            }
+        }
+        if (!done) current = next()
+    }
+
+    /** Mean of the last four reversal levels (dB re the full tone); null before two reversals. */
+    fun thresholdDb(): Double? = if (reversals.size < 2) null else reversals.takeLast(4).average()
+
     val reliable: Boolean
         get() = reversals.size >= 4 && (catchTrials == 0 || falseAlarms * 3 <= catchTrials)
 }

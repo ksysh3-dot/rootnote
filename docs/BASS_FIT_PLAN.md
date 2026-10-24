@@ -49,7 +49,7 @@ Before step 1, with the phone microphone (the permission the measurement feature
 
 | Step | What it finds | Method | Time |
 |---|---|---|---|
-| 1 | Speaker floor (lowest note the speaker itself plays cleanly) | Two-interval forced choice ("어느 쪽에서 소리가 났나요?"), tone bursts from 300 Hz down in 1/6-octave steps, 2-down/1-up staircase (Levitt 1971; QUEST/Psi possible later), option "윙·지직만 났어요" counts as not heard; optional phone-mic bass check alongside. Then ABX: edge at floor vs floor x 1.3 on a 150-250 Hz bass line; no difference keeps the lower | 3 min |
+| 1 | Speaker floor (lowest note the speaker itself plays cleanly) | First the listener's own threshold for a 300 Hz tone at this volume (same two-interval question, 2-down/1-up on level, 6 then 3 dB steps); then two-interval forced choice ("어느 쪽에서 소리가 났나요?"), tone bursts 10 dB over that threshold (plus the ISO 226 hearing-threshold difference to 300 Hz), from 300 Hz down in 1/6-octave steps, 2-down/1-up staircase (Levitt 1971; QUEST/Psi possible later), option "윙·지직만 났어요" counts as not heard; optional phone-mic bass check alongside. Then ABX: edge at floor vs floor x 1.3 on a 150-250 Hz bass line; no difference keeps the lower | 3 min |
 | 2 | Is the layer audible; preferred strength | ABX off vs +4; then blind A/B "better / no difference" climbing over 0..+8 dB in 2 dB steps from the middle (2 vs 4, then 0 vs 2 or 4 vs 6, then 6 vs 8); ties take the lower; the first pair is asked again for consistency | 2 min |
 | 3 | Break-up limit | Three answers on the bass clip: "깨끗해요 / 떨려요 / 지직거려요" (clean = the note alone, a hum felt in the hand included; rattle = a "brrr"/clatter added on the beat, something loose touching and shaking along; buzz = the sound itself cracks or tears; from tablet tests, where the two come apart). A "기준" pad plays the same clip with the layer off (what a catch trial plays) to compare with. Either kind counts as break-up for the staircase; the result also names the kind heard at the lower levels ("먼저 나는 소리"), and break-up of either kind with the layer off warns that the volume alone is too high. Bass clip, layer 0..12 dB in 2 dB steps, 1-up/1-down from the preferred strength (converges where break-up is heard half the time); catch trials with the layer off (a "buzz" there = false alarm; over a third = unreliable). Break-up = mean of the last four reversals; limit = break-up - 3 dB, whole dB. Clean three times in a row at 12 dB and never buzzing there: no limit. (Not an ABX of a level against 6 dB lower: any audible layer differs from itself by 6 dB, so that ABX only finds the levels differ.) | 2 min |
 | 4 (optional, precision) | Harmonic shape | Two knobs only: tilt (existing roll-off value) and low-order weight (H2 vs H3-5, existing harmonic offsets). 3 x 3 grid, ~18-20 blind pairs chosen where the ranking is uncertain, Bradley-Terry scores; Gaussian-process preference learning later if needed | 5-7 min |
@@ -158,3 +158,14 @@ people.
 - Session: whole runs with simulated listeners land on the floor, preferred strength, cap and shape they were given;
   the same seed replays the same questions, another seed changes the order and the sides.
 - Shape grid: the preferred cell found in 37-40 of 40 runs with 18 pairs (noisy listener).
+
+## Validation finding 2026-10-24: step 1 measured audibility, not the speaker floor
+
+One validation run (hidden 220 Hz high-pass on a Galaxy S26 Ultra, ordinary room) found the floor at 126 Hz: full-level
+bursts stay audible about 30 dB down. Step 1 now plays its bursts 10 dB over the listener's own 300 Hz threshold
+(RefLevelStaircase + FloorStaircase.levelDb), so a note stops being heard where the speaker plays 10 dB less than at
+300 Hz: the -10 dB point the published measurements use. Simulated listener (tools/pvb-harness/jvm/BassFitTest.kt):
+hidden high-pass 120/150/180/220 Hz found within a median 0.05-0.07 octave of the -10 dB point (90th 0.11-0.15) when
+unheard trials are answered "neither"; with forced guesses 0.1-0.14 (90th about 0.5). The old way found 112 Hz for
+220 Hz in the same simulation. The room gate is relaxed to 15 dB (an ordinary closed room measured 18): moderate
+noise raises the reference and the bursts alike.

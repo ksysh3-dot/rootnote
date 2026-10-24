@@ -335,8 +335,9 @@ class BassFitActivity : RnActivity() {
             is FloorStaircase.Trial.Tone -> if (trial.inFirst) DevTestKind.FIT_IFC_1 else DevTestKind.FIT_IFC_2
         }
         val hz = (trial as? FloorStaircase.Trial.Tone)?.hz ?: 100.0
+        val level = (trial as? FloorStaircase.Trial.Tone)?.levelDb ?: 0.0
         val mark = mic?.frames
-        DevTestSound.start(kind, hz)
+        DevTestSound.start(kind, hz, level)
         ui = ui.copy(playing = null, answerable = false, disturbed = false)
         val i1 = DevTestSignal.IFC_LEAD_S
         val i2 = i1 + DevTestSignal.IFC_LEN_S + DevTestSignal.IFC_GAP_S
@@ -629,6 +630,7 @@ class BassFitActivity : RnActivity() {
             rattles = r.breakupRattles.takeIf { !floor }, buzzes = r.breakupBuzzes.takeIf { !floor },
             catchRattles = r.breakupCatchRattles.takeIf { !floor }, catchBuzzes = r.breakupCatchBuzzes.takeIf { !floor },
             firstKind = r.breakupKind.takeIf { !floor },
+            refDb = r.refThresholdDb.takeIf { floor },
         ))
         ui = ui.copy(screen = FitScreen.VAL_NEXT, prompt = null, playing = null, logLines = logLines().coerceAtLeast(0))
     }

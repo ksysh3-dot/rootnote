@@ -3,6 +3,7 @@
 <resources>
     <string name="eq_info_title">Can I just crank up the bass?</string>
     <string name="eq_info_open">About EQ</string>
+    <string name="eq_story_more">More below</string>
     <string name="eq_story_brand_note">Part of brand A\'s bass may be harmonics. In another lab\'s measurement, the harmonics at 60-100 Hz were tens of times larger than the fundamental in places. One measurement at 100% volume, so not certain.</string>
     <string name="eq_try_title">Listen for yourself</string>
     <string name="eq_try_unavailable">You can try this while Rootnote is on and music plays on the speaker.</string>
@@ -100,5 +101,7 @@
         <item>5th</item>
         <item>Harmonics: tens of times the fundamental</item>
         <item>Another lab · 100% volume</item>
+        <item>S26 Ultra (measured)</item>
+        <item>Where 80% of phones fall</item>
     </string-array>
 </resources>
