@@ -10,7 +10,7 @@ The corresponding source is the tagged commit; `source-*.tar.gz` below contains 
 - Measured settings exist only for the Galaxy S26 Ultra; other phones start with conservative settings based on published measurements of 92 Android phones.
 - Privacy: only settings are stored; no song titles, no recordings, nothing sent (see PRIVACY.md).
 
-## 다음 버전 (작업 중)
+## 0.9.0-beta.9
 
 - 저음 맞추기 1단계를 바꿨어요. 먼저 가운데 음(300 Hz)으로 이 볼륨에서 얼마나 작은 소리까지 들리는지 재고, 낮은 음은 그보다 10 dB 크게만 들려줘요. 그래서 "아무리 작아도 들리는 가장 낮은 음"이 아니라 "스피커가 300 Hz보다 10 dB 작게 내는 지점"을 찾아요.
 - 조용함 기준을 완화했어요. 문 닫은 보통 방에서도 시작할 수 있어요.
