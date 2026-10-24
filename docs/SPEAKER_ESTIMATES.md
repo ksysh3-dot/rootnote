@@ -51,6 +51,14 @@ Caveat: the band limit was chosen after seeing the data. Good enough to use as t
 - Two labs disagreed about one Galaxy generation's bass; per-model starting values wait until that kind of
   disagreement can be checked with our own measurement.
 
+## In the app: the EQ story (home/BassStory.kt)
+
+The story draws per-band aggregates only (dataset as of 2026-10-24: 97 Android phone curves, 7 iPhones, same
+reviewer): the 10th/50th/90th percentile of the Android phones and the median of the iPhones, plus our own S26 Ultra
+curve. iPhones (median): 125-250 Hz about +7 dB re the S26 Ultra; 10 dB under the mids at about 155 Hz (Android
+median about 205 Hz; about 1 Android phone in 10 reaches that low); still about -14 dB at 125 Hz. Seven phones: a
+rough comparison.
+
 ## Why the bass limit sits where it does (notes E and F)
 
 - Phone speaker modules (about 11x15 to 18x16 mm) resonate at about 800-1100 Hz in the standard 1 cc test box
