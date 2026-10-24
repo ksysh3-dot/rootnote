@@ -189,6 +189,39 @@ fun main() {
         val b = breakup(8.0, 3)
         check(b.levelTrials + b.catchTrials <= 24, "break-up: at most 24 questions (${b.levelTrials + b.catchTrials})")
     }
+    run {
+        // three answers: a device that rattles from rattleDb and buzzes from buzzDb (the higher one wins when both)
+        fun kinds(rattleDb: Double, buzzDb: Double, seed: Long): BreakupStaircase {
+            val b = BreakupStaircase(seed, 4.0)
+            val r = FitRng(seed * 7919 + 3)
+            fun p(x: Double, t: Double) = (r.next() ushr 11).toDouble() / (1L shl 53) < 1 / (1 + exp(-(x - t) / 0.7))
+            while (!b.done) {
+                val a = when (val t = b.current) {
+                    is BreakupStaircase.Trial.Catch -> BreakupStaircase.Answer.CLEAN
+                    is BreakupStaircase.Trial.Level -> when {
+                        p(t.db, buzzDb) -> BreakupStaircase.Answer.BUZZ
+                        p(t.db, rattleDb) -> BreakupStaircase.Answer.RATTLE
+                        else -> BreakupStaircase.Answer.CLEAN
+                    }
+                }
+                b.answer(a)
+            }
+            return b
+        }
+        val rattleFirst = (0 until 200).map { kinds(6.0, 99.0, it.toLong()) }
+        check(rattleFirst.count { it.firstKind == BreakupStaircase.Answer.RATTLE } == 200 &&
+            rattleFirst.count { it.breakupDb()?.let { d -> abs(d - 6.0) < 1.5 } == true } >= 180,
+            "break-up: rattle alone counts as break-up (limit from it), kind 'rattle'")
+        val buzzOnly = (0 until 200).map { kinds(99.0, 7.0, it.toLong()) }
+        check(buzzOnly.count { it.firstKind == BreakupStaircase.Answer.BUZZ } == 200, "break-up: buzz alone, kind 'buzz'")
+        val clean = BreakupStaircase(1, 4.0).also { while (!it.done) it.answer(BreakupStaircase.Answer.CLEAN) }
+        check(clean.firstKind == null && clean.limitDb == 12.0, "break-up: always clean -> no kind, limit 12 dB")
+        val rattleCatch = BreakupStaircase(2, 4.0).also { b ->
+            while (!b.done) b.answer(if (b.current is BreakupStaircase.Trial.Catch) BreakupStaircase.Answer.RATTLE else BreakupStaircase.Answer.CLEAN)
+        }
+        check(rattleCatch.catchRattles == rattleCatch.catchTrials && rattleCatch.falseAlarms == rattleCatch.catchTrials && !rattleCatch.reliable,
+            "break-up: rattle with the layer off -> false alarm, counted as a rattle, unreliable")
+    }
 
     // --- shape grid: listener utility peaked at one cell, Thurstone noise
     fun grid(target: Int, seed: Long): ShapeGrid {

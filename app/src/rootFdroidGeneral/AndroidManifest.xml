@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Rootnote for rooted phones (general + root): no self-updater of upstream's root build (Rootnote updates come
+     from its GitHub releases), so its install permissions and service are removed. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" tools:node="remove" />
+    <uses-permission android:name="android.permission.UPDATE_PACKAGES_WITHOUT_USER_ACTION" tools:node="remove" />
+    <application>
+        <service
+            android:name="me.timschneeberger.rootlessjamesdsp.flavor.updates.SessionInstallerService"
+            tools:node="remove" />
+    </application>
+</manifest>

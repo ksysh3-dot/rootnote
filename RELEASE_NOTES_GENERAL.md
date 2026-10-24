@@ -10,6 +10,17 @@ The corresponding source is the tagged commit; `source-*.tar.gz` below contains 
 - Measured settings exist only for the Galaxy S26 Ultra; other phones start with conservative settings based on published measurements of 92 Android phones.
 - Privacy: only settings are stored; no song titles, no recordings, nothing sent (see PRIVACY.md).
 
+## 0.9.0-beta.7
+
+저음 맞추기 3단계(찌그러짐 한계)의 답을 셋으로 나눴어요.
+
+- **깨끗해요 / 떨려요 / 지직거려요:** 무언가 닿아 "드르르·덜걱" 같이 울리는 소리(떨림)와 소리 자체가 갈라지는 소리(지직거림)를 따로 고를 수 있어요. 손에 느껴지는 진동만 있으면 깨끗한 거예요. 둘 다 찌그러짐으로 쳐서 한계를 찾아요.
+- **기준 소리:** 같은 소리를 가상 저음 없이 들려주는 "기준" 버튼이 생겼어요. 비교하면서 답할 수 있어요.
+- **결과에 "먼저 나는 소리"가 나와요:** 이 기기가 떨림과 지직거림 중 어느 쪽이 먼저(더 낮은 세기에서) 나는지 보여 줘요.
+- **볼륨 경고:** 가상 저음을 끈 문제에서도 떨리거나 지직거렸다면 볼륨만으로도 너무 크다고 알려 줘요.
+- **EQ 설명 (i):** 고급 설정 「음색」 옆 (i)와 JamesDSP EQ 안내를 누르면, 공간감 설명과 같은 가로 화면 이야기로 "저음, 왕창 올려도 될까요?"를 보여 줘요. 안드로이드 폰 90여 대의 스피커 응답 그림(모아 낸 값만), 왜 맨 아래 칸을 올리면 손해인지, 그런데 왜 효과가 있어 보였는지, 고음 봉우리를 깎는 게 왜 도움이 되는지, Rootnote 실험 결과를 담았어요. 중간의 "직접 들어 보기"에서는 30초 안에 언제인지 알려 주지 않고 63 Hz를 10 dB 올렸다 내리고, 바뀐 것 같을 때 누르면 끝에 실제 시점을 보여 줘요(볼륨 절반 이하, 아무것도 저장하지 않음).
+- **검증 기록(CSV):** 떨림·지직거림 답 수와 먼저 나는 소리를 열로 더 남겨요.
+
 ## 0.9.0-beta.6
 
 개발자 모드에 "저음 맞추기"를 넣었어요. 귀로 들으며 내 폰 스피커에 맞는 저음 값을 찾는 시험이에요. 아직 실험 단계라 개발자 모드에서만 쓸 수 있어요.

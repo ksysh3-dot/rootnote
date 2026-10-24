@@ -149,14 +149,34 @@ fun RnDivider() {
     Box(Modifier.padding(horizontal = 16.dp).fillMaxWidth().height(1.dp).background(LocalRn.current.divider))
 }
 
-/** Section title: 13/18 secondary, a heading, 16 dp side margin (DevMode's section labels). */
+/**
+ * Section title: 13/18 secondary, a heading, 16 dp side margin (DevMode's section labels). With [onInfo], an (i) at
+ * the right end in a 48 dp target opens the section's long explanation (the home screen's spatial (i)).
+ */
 @Composable
-fun RnSectionTitle(text: String) {
+fun RnSectionTitle(text: String, onInfo: (() -> Unit)? = null, infoLabel: String = "") {
     val c = LocalRn.current
-    Text(
-        text, color = c.textSecondary, fontSize = 13.sp, lineHeight = 18.sp, fontWeight = FontWeight.Medium,
-        modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 4.dp).semantics { heading() },
-    )
+    if (onInfo == null) {
+        Text(
+            text, color = c.textSecondary, fontSize = 13.sp, lineHeight = 18.sp, fontWeight = FontWeight.Medium,
+            modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 4.dp).semantics { heading() },
+        )
+        return
+    }
+    Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp, top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text, color = c.textSecondary, fontSize = 13.sp, lineHeight = 18.sp, fontWeight = FontWeight.Medium,
+            modifier = Modifier.weight(1f).semantics { heading() },
+        )
+        Box(
+            Modifier.size(48.dp).clickable(role = Role.Button, onClick = onInfo).semantics { contentDescription = infoLabel },
+            contentAlignment = Alignment.Center,
+        ) {
+            Box(Modifier.size(22.dp).border(1.5.dp, c.accentText, CircleShape), contentAlignment = Alignment.Center) {
+                Text("i", color = c.accentText, fontSize = 13.sp, lineHeight = 13.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
 }
 
 // ------------------------------------------------------------------------------------------------ rows

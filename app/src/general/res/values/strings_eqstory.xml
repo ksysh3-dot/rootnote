@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EQ story (home/BassStory.kt): "저음, 왕창 올려도 될까요?", the spatial story's format. -->
+<resources>
+    <string name="eq_info_title">Can I just crank up the bass?</string>
+    <string name="eq_info_open">About EQ</string>
+    <string name="eq_story_brand_note">Part of brand A\'s bass may be harmonics. In another lab\'s measurement, the harmonics at 60-100 Hz were tens of times larger than the fundamental in places. One measurement at 100% volume, so not certain.</string>
+    <string name="eq_try_title">Listen for yourself</string>
+    <string name="eq_try_unavailable">You can try this while Rootnote is on and music plays on the speaker.</string>
+    <string name="eq_try_volume">The volume is high. Turn it below half first: at loud volume rattle comes before bass.</string>
+    <string name="eq_try_hint">Start music with some bass first. During the test, virtual bass and the low-mid lift are off for a moment.</string>
+    <string name="eq_try_start">Start</string>
+    <string name="eq_try_prep">Getting ready…</string>
+    <string name="eq_try_focus">Now listen closely to the speaker. Tap when you think it changed.</string>
+    <string name="eq_try_tap">I think it changed</string>
+    <string name="eq_try_tapped">You tapped at %1$d s. Keep listening to the end.</string>
+    <string name="eq_try_left">%1$d s left</string>
+    <string name="eq_try_none">Did not notice? 63 Hz was up 10 dB from %1$d s to %2$d s.</string>
+    <string name="eq_try_hit">Right. You tapped at %1$d s; it changed at %2$d-%3$d s. What did you hear?</string>
+    <string name="eq_try_miss">You tapped at %1$d s, but 63 Hz went up at %2$d-%3$d s. Expecting a change easily makes one heard.</string>
+    <string name="eq_try_kind_bass">More bass</string>
+    <string name="eq_try_kind_rattle">Rattle or buzz</string>
+    <string name="eq_try_kind_unsure">Not sure</string>
+    <string name="eq_try_ans_bass">This phone plays a little 63 Hz. Still, for the same loudness its cone moves 16 times as far as at 250 Hz; turn it up and rattle tends to come first.</string>
+    <string name="eq_try_ans_rattle">That was rattle instead of bass: scene 4, \"The cone reaches its limit first\".</string>
+    <string name="eq_try_ans_unsure">Try again and it gets clearer. The moment changes every time.</string>
+    <string name="eq_try_again">Try again</string>
+    <string name="eq_try_restored">Your own settings are back.</string>
+    <string-array name="eq_story">
+        <item>What a phone speaker plays</item>
+        <item>The picture shows how loud the speakers of about 90 Android phones play, from low to high notes, with the mids (about where voices are) at 0.\n\nBelow 200 Hz the sound drops fast. The median phone is about 23 dB under its mids at 125 Hz, and below that it is too quiet for this data to show.\n\nEstimates: one reviewer\'s measurements, all taken the same way, moved into Rootnote\'s frame. No per-model values are shown. The dashed line is the Galaxy S26 Ultra as Rootnote measured it.</item>
+        <item>And another maker\'s phones, known for their bass?</item>
+        <item>We looked at one maker\'s phones known for strong bass (brand A below). In both sets of measurements, brand A phones played 125-250 Hz about 6-9 dB louder than the median Android phone; about 1 Android phone in 10 plays that much. The picture is the median of 7 brand A phones measured by one reviewer: it reaches 10 dB under its mids at about 155 Hz, some 50 Hz lower than the median Android phone (about 205 Hz).\n\nThe gap to the Galaxy S26 Ultra differed between measurements: about 7 dB in this reviewer\'s data, about 1-2 dB in another lab\'s data taken at 100% volume. At full volume both phones\' protection seems to narrow it.\n\nStill, a brand A phone too is about 14 dB under its mids at 125 Hz, so boosting 32 or 63 Hz a lot has the same problems there. With only 5-7 brand A phones, take this as a rough comparison.</item>
+        <item>Raising 32 and 63 Hz a lot</item>
+        <item>Many phone EQs shared online push the lowest sliders far up. Those sliders sit in the grey part of the picture, where the speaker hardly plays.\n\nA 10 dB boost only takes a sound that was 23 dB down to 13 dB down, so the bass you hear grows very little. Two problems come with it instead.\n\nSamsung gives the same reason. The audio moderator of Samsung Members answered (June 2025) that since One UI 6.1.1 the lowest two bands (63 and 125 Hz) of the built-in speaker EQ are disabled by policy, because raising low-frequency gain can distort the sound.</item>
+        <item>The cone reaches its limit first</item>
+        <item>For the same loudness, the cone has to move 4 times as far for every octave lower. 63 Hz is two octaves under 250 Hz: 16 times.\n\nA phone speaker\'s cone is the size of a fingernail and reaches its limit quickly. Then a \"brrr\" rattle or a cracking buzz gets mixed in.</item>
+        <item>The phone turns itself down</item>
+        <item>A phone\'s speaker amplifier reduces its output in real time so the cone does not move too far or get too hot. When the bass crosses that line, voices and instruments are pushed down with it and the sound pumps.\n\nOn the Galaxy S26 Ultra the threshold measured about -15 dBFS at 50% volume and about -27 dBFS at 80%. The louder you listen, the less room there is.</item>
+        <item>Then why did it seem to work?</item>
+        <item>There are reasons the bass seems bigger, just not that 32 or 63 Hz itself is heard.\n\n• EQ bands are wider than they look. With a wide band, 63 Hz +10 dB also raises 200 Hz by about 2 dB and 250 Hz by about 1.5 dB. That skirt is what you hear. Many settings also raise several low bands together.\n• A cone pushed too far distorts, and that distortion is harmonics. The ear fills in the low note from harmonics the speaker can play: a crude virtual bass, with a \"brrr\" rattle mixed in.\n• Holding the phone, you feel the body shake in your hand. Studies found bass feels stronger with vibration.\n• Louder sounds better. Compared without matching the loudness, the louder side easily seems better. Samsung\'s answer also notes that other EQ apps usually adjust the overall volume to make their effect stand out.\n\nWe found no evidence that the amplifier deliberately turns the mids and treble down when the bass rises. Rather, some speaker protection turns the bass band down on its own.</item>
+        <item>Not convinced? Listen for yourself</item>
+        <item>Hearing it beats reading it. Once you start, the music plays for 30 seconds, and at a moment we do not tell you, 63 Hz goes up 10 dB for a while and back down.\n\nTap as soon as you think it changed. At the end you see when it really changed. Leaving this screen gives your own settings back; nothing is stored.</item>
+        <item>A little where it plays</item>
+        <item>200-400 Hz, where the speaker still plays, is different. Raising it just 2-3 dB makes the bass sound full.\n\nFor a heavier sound, add a little virtual bass rather than more EQ. Instead of the low note the speaker cannot play, it makes that note\'s harmonics where you can hear them.</item>
+        <item>Cutting the treble helps too</item>
+        <item>Phone speakers play 2.5-6 kHz more than 10 dB louder than their mids. Loud treble makes the bass sound thin next to it.\n\nCutting that peak by about 3 dB moves the balance toward the bass without raising the bass at all. Lowering all of the treble sounds dull, though: in a blind comparison, all treble 3 dB down lost 6 to 2 as \"muffled\". Cut only the peak.</item>
+        <item>What Rootnote\'s tests showed</item>
+        <item>We measured the Galaxy S26 Ultra with a measurement microphone and listened blind many times.\n\n• An EQ with the low mids a little up and the treble a little down beat no EQ 8 to 0.\n• Cutting everything under 160 Hz made no audible difference.\n• Virtual bass at +3 to +4 was cleaner than +6. Buzz appeared only when it was set too high.\n• 100 Hz was about 22 dB quieter than the 200 Hz region.</item>
+        <item>So try this</item>
+        <item>• Do not raise anything under 125 Hz. Take it out with the low cut instead.\n• Raise 200-400 Hz (low-mid lift) by 2-3 dB only.\n• Cut the treble peak (treble cut) by 2-3 dB.\n• For a heavier sound, add a little virtual bass.\n• The louder you listen, the less you raise.\n\nRootnote\'s defaults are already set this way. If you changed them, switch back and forth on the same song at the same volume.</item>
+    </string-array>
+    <string-array name="eq_story_a11y">
+        <item>Picture: frequency response of Android phone speakers. Median phone, 10-90% range and the S26 Ultra as measured. The sound drops fast under 200 Hz.</item>
+        <item>Picture: the median of the brand A phones rises above the median Android phone. Then 60-100 Hz is zoomed in: under a small fundamental, waves of the 2nd to 5th harmonics appear one by one, and the stacked harmonics grow to tens of times the fundamental.</item>
+        <item>Picture: the 31, 62 and 125 Hz EQ sliders go up 10 dB, and the median phone\'s curve rises only a little inside the grey part.</item>
+        <item>Picture: for the same loudness the cone moves a little at 250 Hz and 16 times as far at 63 Hz, where it hits its limit and rattles.</item>
+        <item>Picture: when the bass bar crosses the protection line, the voice and instrument bars go down too.</item>
+        <item>Picture: the EQ shape of 63 Hz +10 dB with a wide band. Its skirt still lifts 200-300 Hz by about 2 dB.</item>
+        <item>Picture: a 30-second time bar. At the end it shows when 63 Hz really went up and when you tapped.</item>
+        <item>Picture: the curve with 200-400 Hz raised 2-3 dB.</item>
+        <item>Picture: the curve with the 2.5-6 kHz treble peak cut 3 dB.</item>
+        <item>Four results: EQ won 8 to 0, cutting under 160 Hz made no difference, virtual bass at +3 to +4 cleaner than +6, loud volume takes 12 dB of headroom.</item>
+        <item>Picture: the recommended EQ shape. The lowest notes taken out, about 220 Hz up 2-3 dB, about 4.5 kHz down 3 dB.</item>
+    </string-array>
+    <string-array name="eq_story_labels">
+        <item>Hardly plays</item>
+        <item>Plays well</item>
+        <item>125 Hz: -23 dB</item>
+        <item>+10 dB</item>
+        <item>Still about -13 dB</item>
+        <item>Moves a little</item>
+        <item>16 times, same loudness</item>
+        <item>Voice</item>
+        <item>Instruments</item>
+        <item>Bass</item>
+        <item>Protection line</item>
+        <item>Everything pushed down</item>
+        <item>+2-3 dB</item>
+        <item>Treble peak -3 dB</item>
+        <item>8 : 0</item>
+        <item>EQ vs no EQ</item>
+        <item>160 Hz↓</item>
+        <item>Cut, no difference</item>
+        <item>+3 to +4</item>
+        <item>Virtual bass, cleaner than +6</item>
+        <item>-12 dB</item>
+        <item>Room lost at loud volume</item>
+        <item>Taken out</item>
+        <item>+2-3 dB</item>
+        <item>Treble peak -3 dB</item>
+        <item>EQ band: 63 Hz +10 dB</item>
+        <item>The skirt is what you hear</item>
+        <item>Median of 7 brand A phones</item>
+        <item>Median Android</item>
+        <item>60-100 Hz, zoomed</item>
+        <item>Fundamental</item>
+        <item>2nd</item>
+        <item>3rd</item>
+        <item>4th</item>
+        <item>5th</item>
+        <item>Harmonics: tens of times the fundamental</item>
+        <item>Another lab · 100% volume</item>
+    </string-array>
+</resources>

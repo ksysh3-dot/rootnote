@@ -377,7 +377,8 @@ class BassFitActivity : RnActivity() {
         val (variant, material, toneHz) = when (p) {
             is FitPrompt.Abx -> Triple(when (label) { "A" -> p.a; "B" -> p.b; else -> if (p.xIsA) p.a else p.b }, p.material, p.toneHz)
             is FitPrompt.Prefer -> Triple(if (label == "A") p.a else p.b, p.material, p.toneHz)
-            is FitPrompt.Buzz -> Triple(p.variant, FitMaterial.LOW, 0.0)
+            // "R": the clean reference, the same clip with the virtual bass off (what a catch trial plays)
+            is FitPrompt.Buzz -> Triple(if (label == "R") p.variant.copy(vbOn = false, levelDb = 0.0) else p.variant, FitMaterial.LOW, 0.0)
             else -> return
         }
         token++
@@ -528,7 +529,7 @@ class BassFitActivity : RnActivity() {
         onPlay = { label -> if (ui.paused == null) playClip(label) },
         onAbx = { xIsA -> answered { it.answerAbx(xIsA) } },
         onPrefer = { pick -> answered { it.answerPrefer(pick) } },
-        onBuzz = { buzz -> answered { it.answerBuzz(buzz) } },
+        onBreakup = { a -> answered { it.answerBreakup(a) } },
         onShape = { take ->
             session?.takeIf { it.stage == FitStage.SHAPE_OFFER && ui.screen == FitScreen.TEST }?.let { it.shapeChoice(take); present() }
         },
@@ -625,6 +626,9 @@ class BassFitActivity : RnActivity() {
             falseAlarms = if (floor) r.floorFalseAlarms else r.breakupFalseAlarms,
             micFloorHz = ui.micFloorHz.takeIf { conditionHp == null }, micClipped = ui.micClipped.takeIf { conditionHp == null }, latencyMs = latencyS * 1000, roomPass = ui.verdict?.pass?.takeIf { !ui.noisy } ?: false,
             roomMarginDb = ui.verdict?.worstSnrDb,
+            rattles = r.breakupRattles.takeIf { !floor }, buzzes = r.breakupBuzzes.takeIf { !floor },
+            catchRattles = r.breakupCatchRattles.takeIf { !floor }, catchBuzzes = r.breakupCatchBuzzes.takeIf { !floor },
+            firstKind = r.breakupKind.takeIf { !floor },
         ))
         ui = ui.copy(screen = FitScreen.VAL_NEXT, prompt = null, playing = null, logLines = logLines().coerceAtLeast(0))
     }

@@ -375,11 +375,12 @@ class StrengthBracket(private val seed: Long) {
 // ------------------------------------------------------------------------------------------------ step 3: break-up
 
 /**
- * Break-up limit: yes/no on the bass clip ("지직거림이나 찌그러짐이 들리나요?") with the layer at a level in
- * 0..[maxDb], [stepDb] apart. "Buzz" lowers the next level, "clean" raises it (1-up/1-down: converges where the
- * listener hears break-up half the time). About one trial in five after the first two (at least [MIN_CATCH]) is a
- * catch trial: the same clip with the layer off; "buzz" there is a false alarm (the volume alone makes the speaker
- * buzz, or "buzz" by habit).
+ * Break-up limit: the bass clip with the layer at a level in 0..[maxDb], [stepDb] apart, answered "깨끗해요",
+ * "떨려요" (rattle: the body or the cone flapping, a fluttering hum) or "지직거려요" (buzz: crackling, torn sound).
+ * Either kind of break-up lowers the next level, "clean" raises it (1-up/1-down: converges where the listener hears
+ * break-up half the time); the kind is kept apart for the result (which one comes first on this device). About one
+ * trial in five after the first two (at least [MIN_CATCH]) is a catch trial: the same clip with the layer off; break-up
+ * there is a false alarm (the volume alone makes the device rattle or buzz, or an answer by habit).
  *
  * Not an ABX of a level against a lower one: any audible layer differs from itself 6 dB lower, so an ABX would only
  * find that the two levels differ, not where the sound starts to break up.
@@ -395,7 +396,9 @@ class BreakupStaircase(
     val maxTrials: Int = 24,
     val stopReversals: Int = 6,
 ) {
-    enum class Answer { CLEAN, BUZZ }
+    enum class Answer { CLEAN, RATTLE, BUZZ;
+        val broke: Boolean get() = this != CLEAN
+    }
     sealed class Trial {
         data class Level(val db: Double) : Trial()
         object Catch : Trial()
@@ -408,7 +411,16 @@ class BreakupStaircase(
     var levelTrials = 0; private set
     var catchTrials = 0; private set
     var falseAlarms = 0; private set
+    /** Level trials answered "rattle" / "buzz" (either is break-up). */
+    var rattleAnswers = 0; private set
     var buzzAnswers = 0; private set
+    /** Catch trials (layer off) answered "rattle" / "buzz". */
+    var catchRattles = 0; private set
+    var catchBuzzes = 0; private set
+    val breakAnswers: Int get() = rattleAnswers + buzzAnswers
+    /** Levels of the level trials heard as rattle / buzz. */
+    private val rattleLevels = ArrayList<Double>()
+    private val buzzLevels = ArrayList<Double>()
     private var cleanAtMax = 0
     private var buzzAtMax = 0
     /** Clean three times in a row at the top and never buzzing there: no break-up within the range. */
@@ -429,16 +441,22 @@ class BreakupStaircase(
     fun answer(a: Answer) {
         check(!done) { "done" }
         when (current) {
-            is Trial.Catch -> { catchTrials++; if (a == Answer.BUZZ) falseAlarms++ }
+            is Trial.Catch -> {
+                catchTrials++
+                if (a.broke) falseAlarms++
+                if (a == Answer.RATTLE) catchRattles++
+                if (a == Answer.BUZZ) catchBuzzes++
+            }
             is Trial.Level -> {
                 levelTrials++
-                if (a == Answer.BUZZ) buzzAnswers++
-                val dir = if (a == Answer.BUZZ) -1 else 1
+                if (a == Answer.RATTLE) { rattleAnswers++; rattleLevels += levelDb }
+                if (a == Answer.BUZZ) { buzzAnswers++; buzzLevels += levelDb }
+                val dir = if (a.broke) -1 else 1
                 if (lastDir != 0 && dir != lastDir) reversals += levelDb
                 lastDir = dir
                 val atTop = levelDb >= maxDb - 1e-9
                 cleanAtMax = if (a == Answer.CLEAN && atTop) cleanAtMax + 1 else 0
-                if (a == Answer.BUZZ && atTop) buzzAtMax++
+                if (a.broke && atTop) buzzAtMax++
                 levelDb = (levelDb + dir * stepDb).coerceIn(0.0, maxDb)
             }
         }
@@ -452,11 +470,32 @@ class BreakupStaircase(
     val limitDb: Double?
         get() = when {
             !done -> null
-            cleanAtTop || buzzAnswers == 0 -> maxDb
+            cleanAtTop || breakAnswers == 0 -> maxDb
             else -> breakupDb()?.let { kotlin.math.floor(it - 3.0).coerceIn(0.0, maxDb) }
         }
 
-    /** Enough reversals (or clean at the top) and no more than a third of the catch trials heard as buzzing. */
+    /**
+     * The kind of break-up this device makes first: the one heard at the lower levels (mean level of its answers);
+     * the other kind only when it was never heard. Null when nothing broke up.
+     */
+    val firstKind: Answer?
+        get() = when {
+            rattleLevels.isEmpty() && buzzLevels.isEmpty() -> null
+            buzzLevels.isEmpty() -> Answer.RATTLE
+            rattleLevels.isEmpty() -> Answer.BUZZ
+            rattleLevels.average() < buzzLevels.average() - 1e-9 -> Answer.RATTLE
+            buzzLevels.average() < rattleLevels.average() - 1e-9 -> Answer.BUZZ
+            else -> if (rattleAnswers > buzzAnswers) Answer.RATTLE else Answer.BUZZ
+        }
+
+    /** Mean level of the answers of one kind (null: never heard). */
+    fun meanDb(kind: Answer): Double? = when (kind) {
+        Answer.RATTLE -> rattleLevels.takeIf { it.isNotEmpty() }?.average()
+        Answer.BUZZ -> buzzLevels.takeIf { it.isNotEmpty() }?.average()
+        Answer.CLEAN -> null
+    }
+
+    /** Enough reversals (or clean at the top) and no more than a third of the catch trials heard as breaking up. */
     val reliable: Boolean
         get() = (reversals.size >= 4 || cleanAtTop) && (catchTrials == 0 || falseAlarms * 3 <= catchTrials)
 }

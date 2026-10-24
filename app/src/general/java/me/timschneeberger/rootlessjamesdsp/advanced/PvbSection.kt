@@ -34,6 +34,7 @@ import me.timschneeberger.rootlessjamesdsp.ui.RnNote
 import me.timschneeberger.rootlessjamesdsp.ui.RnParagraph
 import me.timschneeberger.rootlessjamesdsp.ui.RnPrefsFile
 import me.timschneeberger.rootlessjamesdsp.ui.RnSectionTitle
+import me.timschneeberger.rootlessjamesdsp.home.BassStoryActivity
 import me.timschneeberger.rootlessjamesdsp.ui.RnSwitchRow
 import java.util.Locale
 import kotlin.math.abs
@@ -180,7 +181,8 @@ fun PvbSection(host: RnAdvancedActivity, showIcons: Boolean) {
         }
 
         // 음색 보정 (the general build's caps narrow some ranges)
-        RnSectionTitle(stringResource(R.string.rn_adv_section_tone))
+        RnSectionTitle(stringResource(R.string.rn_adv_section_tone), infoLabel = stringResource(R.string.eq_info_open),
+            onInfo = { host.startActivity(BassStoryActivity.intent(host)) })
         PrefSlider(p, P.KEY_LOW_DB, stringResource(R.string.pvb_low_db), 3f, -6f..(caps?.lowDbMax ?: 9f), 0.5f, "dB", 1)
         PrefSlider(p, P.KEY_LOW_HZ, stringResource(R.string.pvb_low_hz), 220f, 150f..350f, 5f, "Hz", 0)
         if (research) PrefSlider(p, P.KEY_LOW_Q, stringResource(R.string.pvb_low_q), 1f, 0.4f..(caps?.lowQMax ?: 3f), 0.05f, "", 2)

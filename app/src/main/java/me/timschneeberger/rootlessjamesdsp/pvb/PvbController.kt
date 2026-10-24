@@ -522,8 +522,20 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
         lastGate = inputs.gateDb
         lastTag = inputs.abTag
         engine.setParams(encoded.params)
+        lastParams = encoded.params.copyOf()
+        paramSink?.invoke(encoded.params)
         publish(lowDb)
     }
+
+    /**
+     * Root build: where the parameters really go (the Rootnote audio effect of every session, ROOT_BUILD_PLAN.md);
+     * the in-process [engine] then only keeps the controller's own bookkeeping. Called on the main thread.
+     */
+    var paramSink: ((FloatArray) -> Unit)? = null
+
+    /** The last parameter array sent (a session that opens later gets it at once). */
+    var lastParams: FloatArray? = null
+        private set
 
     private fun publish(lowDb: Float) {
         updateSeal()

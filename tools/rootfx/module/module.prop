@@ -1,0 +1,6 @@
+id=rootnote_jamesdsp
+name=Rootnote JamesDSP (virtual bass)
+version=0
+versionCode=0
+author=Rootnote
+description=JamesDSP audio effect with Rootnote's phone-speaker virtual bass. Use with the Rootnote root app. Replaces the stock JamesDSP module (remove that one first).

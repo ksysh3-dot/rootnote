@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Rootnote for rooted phones (root build, setup/RnRootSetup.kt). Keep values/ and values-ko/ in step. -->
+<resources>
+    <string name="root_no_su_title">Root access needed</string>
+    <string name="root_no_su_body">This version of Rootnote is for rooted phones. Allow root access for Rootnote in Magisk, then open it again. For phones without root, use the regular Rootnote (Android 10 or later).</string>
+    <string name="root_no_module_title">The Rootnote module isn\'t installed</string>
+    <string name="root_no_module_body">Install the Rootnote JamesDSP module (Rootnote-JamesDSP-module zip on the release page) in Magisk, then reboot.</string>
+    <string name="root_stock_module_title">The stock JamesDSP module is installed</string>
+    <string name="root_stock_module_body">The virtual bass needs the Rootnote JamesDSP module instead. Remove the JamesDSP module in Magisk, reboot, install the Rootnote module, then reboot again.</string>
+</resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Rootnote for rooted phones (root build, setup/RnRootSetup.kt). Keep values/ and values-ko/ in step. -->
+<resources>
+    <string name="root_no_su_title">루트 권한이 필요해요</string>
+    <string name="root_no_su_body">이 Rootnote는 루팅된 폰용이에요. Magisk에서 Rootnote에 루트 권한을 허용한 뒤 다시 열어 주세요. 루팅하지 않은 폰은 일반 Rootnote(Android 10 이상)를 쓰세요.</string>
+    <string name="root_no_module_title">Rootnote 모듈이 설치되지 않았어요</string>
+    <string name="root_no_module_body">릴리스 페이지의 Rootnote-JamesDSP-module zip을 Magisk에서 설치하고 재부팅해 주세요.</string>
+    <string name="root_stock_module_title">기본 JamesDSP 모듈이 설치되어 있어요</string>
+    <string name="root_stock_module_body">가상 저음은 Rootnote JamesDSP 모듈이 있어야 해요. Magisk에서 JamesDSP 모듈을 지우고 재부팅한 뒤, Rootnote 모듈을 설치하고 다시 재부팅해 주세요.</string>
+</resources>

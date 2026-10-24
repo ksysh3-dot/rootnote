@@ -38,7 +38,10 @@ import me.timschneeberger.rootlessjamesdsp.pvb.PvbMeter
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbRuntime
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbSettings
 import me.timschneeberger.rootlessjamesdsp.service.BaseAudioProcessorService
+import me.timschneeberger.rootlessjamesdsp.service.RootAudioProcessorService
 import me.timschneeberger.rootlessjamesdsp.service.RootlessAudioProcessorService
+import me.timschneeberger.rootlessjamesdsp.setup.RnRootSetup
+import me.timschneeberger.rootlessjamesdsp.utils.isRoot
 import me.timschneeberger.rootlessjamesdsp.utils.Constants
 import me.timschneeberger.rootlessjamesdsp.utils.SdkCheck
 import me.timschneeberger.rootlessjamesdsp.utils.extensions.AssetManagerExtensions.installPrivateAssets
@@ -180,7 +183,10 @@ class HomeActivity : BaseActivity() {
 
         // Permissions missing: the setup screens first, like MainActivity. On the first launch the welcome
         // (WelcomeActivity) comes before them and starts them itself after the answer.
-        if (!hasDumpPermission() || !hasRecordPermission()) {
+        // Root build (Magisk module): no capture permissions to set up; DUMP (finding the apps' audio sessions) is
+        // granted with su, and the Rootnote module must be the installed JamesDSP effect.
+        if (isRoot()) RnRootSetup.check(this)
+        else if (!hasDumpPermission() || !hasRecordPermission()) {
             Timber.i("Launching onboarding (first boot: $firstBoot)")
             if (FirstRun.mustShowNotice(PvbBuild.general, PvbBuild.firstRunConfirmed))
                 startActivity(WelcomeActivity.thenSetup(this, fixPerms = !firstBoot))
@@ -400,6 +406,12 @@ class HomeActivity : BaseActivity() {
                 refresh()
             })
             refresh()
+            return
+        }
+        if (isRoot()) {
+            // the audio effect does the work; the service attaches it to the apps' sessions
+            RootAudioProcessorService.startServiceEnhanced(this)
+            armPendingTimeout()
             return
         }
         if (app.mediaProjectionStartIntent != null && !SdkCheck.isVanillaIceCream) {

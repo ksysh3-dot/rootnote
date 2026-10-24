@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import me.timschneeberger.rootlessjamesdsp.R
 import me.timschneeberger.rootlessjamesdsp.pvb.BassFitSession
+import me.timschneeberger.rootlessjamesdsp.pvb.BreakupStaircase
 import me.timschneeberger.rootlessjamesdsp.pvb.CheckRound
 import me.timschneeberger.rootlessjamesdsp.pvb.DevParams
 import me.timschneeberger.rootlessjamesdsp.pvb.FitConditions
@@ -152,7 +153,7 @@ class FitActions(
     val onPlay: (String) -> Unit,
     val onAbx: (Boolean) -> Unit,
     val onPrefer: (BassFitSession.Pick) -> Unit,
-    val onBuzz: (Boolean) -> Unit,
+    val onBreakup: (BreakupStaircase.Answer) -> Unit,
     val onShape: (Boolean) -> Unit,
     val onCheckStart: () -> Unit,
     val onCheckSkip: () -> Unit,
@@ -358,7 +359,10 @@ private fun Question(ui: FitUi, actions: FitActions) {
         is FitPrompt.Buzz -> {
             Title(stringResource(R.string.fit_buzz_title))
             Stage {
-                Row(Modifier.fillMaxWidth()) { PlayPad("C", stringResource(R.string.fit_clip_label), ui, actions) }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    PlayPad("C", stringResource(R.string.fit_clip_label), ui, actions)
+                    PlayPad("R", stringResource(R.string.fit_buzz_ref_label), ui, actions)
+                }
             }
             RnParagraph(stringResource(R.string.fit_buzz_body))
         }
@@ -463,6 +467,9 @@ private fun Result(ui: FitUi) {
         r.breakupDb == null -> stringResource(R.string.fit_r_limit_none)
         else -> stringResource(R.string.fit_db, signed(r.limitDb))
     })
+    if (r.breakupKind != null) RnNavRow(stringResource(R.string.fit_r_kind), onClick = null, chevron = false,
+        value = stringResource(if (r.breakupKind == BreakupStaircase.Answer.RATTLE) R.string.fit_r_kind_rattle else R.string.fit_r_kind_buzz))
+    if (r.breakupCatchRattles + r.breakupCatchBuzzes > 0) RnNote(stringResource(R.string.fit_r_catch_broke), warning = true)
     RnNavRow(stringResource(R.string.fit_r_shape), onClick = null, chevron = false, value = when {
         !r.shapeTried -> stringResource(R.string.fit_r_skipped)
         r.shape == null -> unsure
@@ -670,8 +677,9 @@ private fun BottomAnswers(ui: FitUi, actions: FitActions) {
                     }
                 }
                 is FitPrompt.Buzz -> RnButtonRow {
-                    RnOutlineButton(stringResource(R.string.fit_buzz_clean), Modifier.weight(1f), enabled = on) { actions.onBuzz(false) }
-                    RnOutlineButton(stringResource(R.string.fit_buzz_buzz), Modifier.weight(1f), enabled = on) { actions.onBuzz(true) }
+                    RnOutlineButton(stringResource(R.string.fit_buzz_clean), Modifier.weight(1f), enabled = on) { actions.onBreakup(BreakupStaircase.Answer.CLEAN) }
+                    RnOutlineButton(stringResource(R.string.fit_buzz_rattle), Modifier.weight(1f), enabled = on) { actions.onBreakup(BreakupStaircase.Answer.RATTLE) }
+                    RnOutlineButton(stringResource(R.string.fit_buzz_buzz), Modifier.weight(1f), enabled = on) { actions.onBreakup(BreakupStaircase.Answer.BUZZ) }
                 }
                 is FitPrompt.ShapeOffer -> {
                     RnButtonRow { RnFilledButton(stringResource(R.string.fit_shape_take), Modifier.weight(1f)) { actions.onShape(true) } }
