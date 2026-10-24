@@ -1,0 +1,1399 @@
+built: /home/runner/work/rootnote/rootnote/tools/pvb-harness/build/libpvbcapi.so /home/runner/work/rootnote/rootnote/tools/pvb-harness/build/libpvbengine.so (source a131a63052c7)
+[PASS] response EQ v1.1 @ 44100: max_err_db=6.901e-05
+[PASS] response other @ 44100: max_err_db=9.918e-06
+[PASS] response cut @ 44100: max_err_db=0.0001382
+[PASS] response EQ v1.1 @ 48000: max_err_db=4.618e-05
+[PASS] response other @ 48000: max_err_db=1.768e-05
+[PASS] response cut @ 48000: max_err_db=7.74e-05
+[PASS] latency @ 44100: frames=82, ms=1.859
+[PASS] latency @ 48000: frames=88, ms=1.833
+[PASS] waveform vs reference (limiter idle): residual_db=-151.8
+[PASS] no clicks on parameter changes (HF > 2 kHz from a 100 Hz tone): ramped_dbfs=-97.41, abrupt_dbfs=-34.66
+[PASS] true peak <= -1 dBTP: fs/4 sine, +3 dB between samples: dbtp=-1.085
+[PASS] true peak <= -1 dBTP: full-scale 1 kHz square: dbtp=-1.098
+[PASS] true peak <= -1 dBTP: noise +12 dB into the limiter: dbtp=-0.995
+[PASS] true peak <= -1 dBTP: huge values (1e6): dbtp=-1.094
+[PASS] silence -> exact zeros: 
+[PASS] DC removed: tail_peak=0
+[PASS] NaN/Inf input -> finite output, counted: nan_events=1
+[PASS] denormal input -> finite output: 
+[PASS] block-size invariance (bit exact): max_diff=0
+[PASS] sample-rate switch 44.1 -> 48 kHz: rate=4.8e+04
+[PASS] absurd parameters are clamped: dbtp=-0.003667
+[PASS] bypass crossfade 1000 Hz: wet_db=-25.23, dry_db=-20, min_db=-25.23, max_db=-20
+[PASS] bypass crossfade 100 Hz: wet_db=-30.28, dry_db=-20, min_db=-36.35, max_db=-20
+[PASS] int16 path matches float path: max_lsb=0
+[PASS] meters: low gain, mix, rate, latency: low_db=4, latency=88
+[PASS] phone processor static curve hits the measured points: max_err=0
+[PASS] meters: limiter working time (quiet 0 %, 4 s loud > 70 %, a second read gives the same value, 8 s quiet < 10 %): quiet_pct=0, loud_pct=73.64, reread_pct=73.64, after_quiet_pct=5.524
+[PASS] reset: fade in from silence, no stale audio: first_10_peak=0, after_60ms_peak=0.2124
+[PASS] analysis 48 kHz: EQ curve = RBJ reference (no audio yet): max_err_db=1.822e-06
+[PASS] analysis 44.1 kHz: EQ curve = RBJ reference (no audio yet): max_err_db=1.853e-06
+[PASS] analysis 32 kHz: points above Nyquist are NaN: nan_points=8
+[PASS] analysis: EQ curve follows a glide, then lands on the new setting: mid_220hz_db=5.619, low_db_now=6, end_err_db=1.834e-06
+[PASS] analysis: 1 kHz sine peaks at 1 kHz, level is linear: peak_hz=989.9, step_db=20
+[PASS] analysis: pink noise flat with +3 dB/oct tilt; bypass shows no change: spread_db=0.8797, octave_means_spread_db=0.1169, bypass_change_db=0
+[PASS] analysis: measured change = EQ curve (limiter idle, 150 Hz - 12 kHz): max_err_db=0.1721, limiter_gr_db=0, out_db=-5
+[PASS] analysis: limiter reduction reported, measured change drops below the curve: limiter_gr_db=10.1, mean_below_curve_db=-6.832
+[PASS] analysis: fresh flag, 30 dB/s fall, 8192-frame blocks, cost per call: fall_db_in_100ms=3, ms_per_call_unchanged_audio=0.05742
+[PASS] analysis: clock-mode fall follows the time since the last new audio: fall_db=3.75, expected_db=3.75
+[PASS] analysis: cost per frame on the host (process 33 ms + analyze): ms_per_frame=0.7081
+[PASS] dynamic: off = static EQ (bit exact): 
+[PASS] dynamic: loud takes boost back (capped 4 dB, louder takes more): loud_db=-3.75, medium_db=-0.951, eq220_loud=-1.131
+[PASS] dynamic: quiet adds up to +2 dB, near silence holds: quiet_db=2, silence_db=0
+[PASS] dynamic: moves slowly (0.5 s rise); switching off restores the curve: after_100ms=2, after_4s=-3.993
+[PASS] dynamic default (headroom only): loud untouched, quiet +2 dB: loud_db=0, quiet_db=2
+[PASS] dynamic: level meter follows the stage (quiet ~-46, loud ~-14 dBFS; off -120): quiet_level_db=-47.96, loud_level_db=-16.36, off_db=-120
+[PASS] dynamic: no clicks on 220 Hz bursts, true peak held: hf_db=-43.07, hf_static_db=-43.07, dbtp=-2.042
+[PASS] high shelf = RBJ (analysis curve and audio path, -6/-3/+4 dB): max_err_db=2.4e-06
+[PASS] phone estimate: own band 10.2 dB at -13 dBFS (48 and 44.1 kHz), quiet 0, 2 kHz ducks 250 Hz 7.3 / 1.7 dB: own_db=10.27, level_db=-12.91, own_44k_db=10.28, quiet_db=0, cross_db=7.325, cross_m8_db=1.66, from_63hz_db=1.966
+[PASS] phone estimate: runs only while read (none without a reader; stops 3 s after the last read): unread_level_db=-120, unread_gr_db=0, after_4s_unread_level_db=-120
+[PASS] mute: -90 dB output, 150 ms glide without a click: muted_db=-94.02, after_glide_db=-94.02, hf_db=-148.7, hf_steady_db=-151.9
+[PASS] gate: mute after the mix holds through a bypass (old out-gain mute did not): old_mute_bypass_dbfs=-23.01, gate_mute_bypass_dbfs=-300, gate_mute_dbfs=-300, headroom_bypass_minus_dry_db=-10
+[PASS] gate: 150 ms glide to silence without a click: hf_db=-102.4, after_glide_db=-300
+[PASS] open time: counts only audible, processed, non-silent audio of the active tag: tag7_ms=500, other_tag=-1, muted_ms=0, bypassed_ms=0, silent_ms=0, after_unbypass_ms=250
+[PASS] phone estimate: R = -L reads like R = L (per-channel power), one channel 3 dB lower: level_same_db=-12.98, level_opposite_db=-12.98, level_one_channel_db=-15.99, gr_same_db=1.056, gr_opposite_db=1.056
+[PASS] analysis concurrent with audio: no torn windows: fresh_calls=2594, calls=7827, bad=0
+[PASS] muted: new setting applied at once; audible: it glides (150 ms): eq220_muted=8.619, eq220_audible=2.697, eq220_target=8.619
+[PASS] virtual bass: frozen reference (vb_port) == vbcore.layer_hpv: rel_db=-259.5
+[PASS] virtual bass hpv latency @ 48000: frames=7052, ms=146.9
+[PASS] virtual bass hpv latency @ 44100: frames=6479, ms=146.9
+[PASS] virtual bass hpv: C++ == Python reference (tone, fifth, kick+bass; 44.1 and 48 kHz): worst_rel_db=-257.4, tone_48000=-267.4, fifth_48000=-257.4, kick_bass_48000=-266.2, tone_44100=-266.1, fifth_44100=-258.5, kick_bass_44100=-271.2
+[PASS] virtual bass hpv: 44.1 kHz layer == 48 kHz layer (same 3 kHz core): rel_db=-70.37
+[PASS] Bankstown: C++ == formula reference, per channel, no latency @ 48000: left_rel_db=-257.5, right_rel_db=-255.4, latency=0
+[PASS] Bankstown: C++ == formula reference, per channel, no latency @ 44100: left_rel_db=-258.4, right_rel_db=-256.8, latency=0
+[PASS] virtual bass in the engine: EQ(input delayed) + layer, before output gain (limiter idle) @ 48 kHz, -3 and +9 dB: rel_db=-151.9, rel_db_plus9=-152.3, latency_frames=7140, latency_ms=148.8
+[PASS] Bankstown in the engine: EQ out + layer(EQ out) per channel, latency unchanged: rel_db=-151.9, latency_frames=88
+[PASS] latency meter @ 44.1 kHz with hpv: latency_frames=6561, latency_ms=148.8
+[PASS] virtual bass switch: on = fade, silence for the added latency, fade in, aligned; off = short dip; no click: silent_after_on_ms=145, added_latency_ms=146.9, delay_after_switch=7052, silent_after_off_ms=0, hf_db=-65.64, hf_steady_db=-165.8
+[PASS] virtual bass switch while muted: immediate, aligned when the sound returns: delay=7052, max_err=3.75e-09
+[PASS] virtual bass level change: 20 ms glide, no click: hf_at_change_db=-134.7, hf_before_db=-51.1
+[PASS] virtual bass CPU (host, 60 s stereo @ 48 kHz, whole engine): off_ms_per_s=2.669, hpv_ms_per_s=10.13, bankstown_ms_per_s=6.649
+[PASS] speed (host, 60 s stereo @ 48 kHz): seconds=0.1592, realtime_pct=0.2653
+
+71/71 checks passed
+Alpha2: five app profiles x two rates, actual DSP equivalence, chunk/prefix, switches/reset passed
+PASS: all six algorithms, 44.1/48k: hidden full mix and matcher unchanged, solo=actual component, same latency, exact return
+PASS: independent sum decomposition and normal-mode capture
+PASS: no layer/bypass leakage and gate cannot be escaped
+PASS: limiter stress, finite/true-peak safe output and rejected stale capture
+PASS: monitor change preserves in-flight gain and filter ramps
+[PASS] parameter count 57 (47 + 9 crosstalk-cancellation values + developer table scale) 
+[PASS] defaults: off, gentle, 40 cm, hat 57, 15.5 cm, 400-8000 Hz, balance 0 / 0 [np.float32(0.0), np.float32(-6.0), np.float32(40.0), np.float32(57.0), np.float32(15.5), np.float32(400.0), np.float32(8000.0), np.float32(0.0), np.float32(0.0)]
+[PASS] off: bit-identical whatever the other XTC values are 
+[PASS] 48000 Hz mode 1 g -6 40 cm hat 57: engine = prototype (after the fade-in) max_rel_err=3.20e-07
+[PASS] 48000 Hz mode 1 g -3 30 cm hat 54: engine = prototype (after the fade-in) max_rel_err=4.25e-07
+[PASS] 48000 Hz mode 1 g -4.5 50 cm hat 60: engine = prototype (after the fade-in) max_rel_err=3.75e-07
+[PASS] 48000 Hz mode 2 g -6 40 cm hat 57: engine = prototype (after the fade-in) max_rel_err=6.11e-07
+[PASS] 48000 Hz mode 2 g -3 30 cm hat 54: engine = prototype (after the fade-in) max_rel_err=7.10e-07
+[PASS] 48000 Hz mode 2 g -4.5 50 cm hat 60: engine = prototype (after the fade-in) max_rel_err=6.60e-07
+[PASS] 44100 Hz mode 1 g -6 40 cm hat 57: engine = prototype (after the fade-in) max_rel_err=2.07e-07
+[PASS] 44100 Hz mode 1 g -3 30 cm hat 54: engine = prototype (after the fade-in) max_rel_err=3.14e-07
+[PASS] 44100 Hz mode 1 g -4.5 50 cm hat 60: engine = prototype (after the fade-in) max_rel_err=2.59e-07
+[PASS] 44100 Hz mode 2 g -6 40 cm hat 57: engine = prototype (after the fade-in) max_rel_err=1.05e-06
+[PASS] 44100 Hz mode 2 g -3 30 cm hat 54: engine = prototype (after the fade-in) max_rel_err=1.56e-06
+[PASS] 44100 Hz mode 2 g -4.5 50 cm hat 60: engine = prototype (after the fade-in) max_rel_err=1.27e-06
+[PASS] switching on, mode change, off while playing: finite, no click (HF > 12 kHz not above the input + 1 dB) hf_out=0.1775 hf_in=0.3374
+[PASS] balance xtc_bal_lo_db +4 dB: left -2, right +2 in its band; the other band within 0.6 dB band L/R=-1.98/+1.98 other=-0.20/+0.20
+[PASS] balance xtc_bal_hi_db +4 dB: left -2, right +2 in its band; the other band within 0.6 dB band L/R=-1.99/+1.99 other=-0.31/+0.31
+[PASS] balance does nothing while spatial is off (bit-identical) 
+[PASS] moving the balance while playing: no dip (10 ms RMS stays above half the median) min/median=0.90
+[PASS] upright mono: both channels play the mono sum max_rel_err=1.9e-05
+[PASS] upright split 4: lows on channel 0 (>= 20 dB over the other), highs on the other, parts add up flat (mono +3 dB) low 36.2 dB, high 46.2 dB, sum within 0.00 dB
+[PASS] upright split 5: lows on channel 1 (>= 20 dB over the other), highs on the other, parts add up flat (mono +3 dB) low 36.2 dB, high 46.2 dB, sum within 0.00 dB
+[PASS] upright split 4 + virtual bass (P1): layer only on the low channel (earpiece >= 40 dB lower), power kept (low = landscape + 3 dB) low -27.0 dBFS (landscape -30.0), earpiece -144.2 dBFS
+[PASS] upright split 5 + virtual bass (P1): layer only on the low channel (earpiece >= 40 dB lower), power kept (low = landscape + 3 dB) low -27.0 dBFS (landscape -30.0), earpiece -144.2 dBFS
+[PASS] upright split 4 + virtual bass (Bankstown): layer only on the low channel (earpiece >= 40 dB lower), power kept (low = landscape + 3 dB) low -48.6 dBFS (landscape -51.6), earpiece -136.4 dBFS
+[PASS] upright split 5 + virtual bass (Bankstown): layer only on the low channel (earpiece >= 40 dB lower), power kept (low = landscape + 3 dB) low -48.6 dBFS (landscape -51.6), earpiece -136.4 dBFS
+[PASS] upright mono + virtual bass: the layer is mono too (bass on one input channel, same on both speakers) L -36.02 R -36.02 dBFS
+[PASS] 44100 Hz M/S widener 6 vs canceller 1, g -6 40 cm hat 57: mid and side within 0.4 dB per third octave 400 Hz-8 kHz, total level within 0.2 dB mid 0.01 side 0.08 total +0.00 dB, side boost up to 4.3 dB
+[PASS] 44100 Hz M/S widener 6 vs canceller 1, g -3 30 cm hat 54: mid and side within 0.4 dB per third octave 400 Hz-8 kHz, total level within 0.2 dB mid 0.01 side 0.20 total +0.00 dB, side boost up to 6.4 dB
+[PASS] 44100 Hz M/S widener 6 vs canceller 1, g -4.5 60 cm hat 60: mid and side within 0.4 dB per third octave 400 Hz-8 kHz, total level within 0.2 dB mid 0.01 side 0.07 total +0.00 dB, side boost up to 5.7 dB
+[PASS] 44100 Hz M/S widener 7 vs canceller 2, g -6 40 cm hat 57: mid and side within 0.4 dB per third octave 400 Hz-8 kHz, total level within 0.2 dB mid 0.05 side 0.08 total +0.00 dB, side boost up to 4.3 dB
+[PASS] 44100 Hz M/S widener 7 vs canceller 2, g -3 30 cm hat 54: mid and side within 0.4 dB per third octave 400 Hz-8 kHz, total level within 0.2 dB mid 0.07 side 0.20 total +0.00 dB, side boost up to 6.4 dB
+[PASS] 44100 Hz M/S widener 7 vs canceller 2, g -4.5 60 cm hat 60: mid and side within 0.4 dB per third octave 400 Hz-8 kHz, total level within 0.2 dB mid 0.05 side 0.07 total +0.00 dB, side boost up to 5.7 dB
+[PASS] 48000 Hz M/S widener 6 vs canceller 1, g -6 40 cm hat 57: mid and side within 0.4 dB per third octave 400 Hz-8 kHz, total level within 0.2 dB mid 0.01 side 0.09 total -0.00 dB, side boost up to 4.3 dB
+[PASS] 48000 Hz M/S widener 6 vs canceller 1, g -3 30 cm hat 54: mid and side within 0.4 dB per third octave 400 Hz-8 kHz, total level within 0.2 dB mid 0.01 side 0.24 total -0.00 dB, side boost up to 6.4 dB
+[PASS] 48000 Hz M/S widener 6 vs canceller 1, g -4.5 60 cm hat 60: mid and side within 0.4 dB per third octave 400 Hz-8 kHz, total level within 0.2 dB mid 0.01 side 0.10 total -0.00 dB, side boost up to 5.7 dB
+[PASS] 48000 Hz M/S widener 7 vs canceller 2, g -6 40 cm hat 57: mid and side within 0.4 dB per third octave 400 Hz-8 kHz, total level within 0.2 dB mid 0.05 side 0.09 total -0.00 dB, side boost up to 4.3 dB
+[PASS] 48000 Hz M/S widener 7 vs canceller 2, g -3 30 cm hat 54: mid and side within 0.4 dB per third octave 400 Hz-8 kHz, total level within 0.2 dB mid 0.07 side 0.24 total -0.00 dB, side boost up to 6.4 dB
+[PASS] 48000 Hz M/S widener 7 vs canceller 2, g -4.5 60 cm hat 60: mid and side within 0.4 dB per third octave 400 Hz-8 kHz, total level within 0.2 dB mid 0.06 side 0.10 total -0.00 dB, side boost up to 5.7 dB
+[PASS] M/S widener output differs from the canceller sample by sample 
+[PASS] switching to and from the M/S widener while playing: finite, no click (HF > 12 kHz not above the input + 1 dB) hf_out=0.1974 hf_in=0.3611
+[PASS] M/S widener: silence in, silence out 
+[PASS] mode above 9 is clamped to 9 
+[PASS] aligned canceller 8 = canceller 1 delayed by 256 samples; same latency as widener 6 max_rel_err=2.0e-05 lag(aligned, widener)=0 lag(canceller, widener)=-256
+[PASS] aligned canceller 9 = canceller 2 delayed by 256 samples; same latency as widener 7 max_rel_err=2.1e-05 lag(aligned, widener)=0 lag(canceller, widener)=-256
+[PASS] 8000 Hz, centre, full and both M/S widener modes: finite, no recovery events 
+[PASS] 11025 Hz, centre, full and both M/S widener modes: finite, no recovery events 
+[PASS] 12000 Hz, centre, full and both M/S widener modes: finite, no recovery events 
+[PASS] 14000 Hz, centre, full and both M/S widener modes: finite, no recovery events 
+[PASS] 16000 Hz, centre, full and both M/S widener modes: finite, no recovery events 
+[PASS] 22050 Hz, centre, full and both M/S widener modes: finite, no recovery events 
+[PASS] silence in, silence out (no self-oscillation) 
+[PASS] strong, 25 cm, loud noise: finite and limited peak=0.881
+[PASS] cost on the host (60 s at 48 kHz) off_s=0.162 full_xtc_s=0.231 added_pct_of_realtime=0.116
+[PASS] cost of the M/S widener (full, two 513-tap FIRs) on the host added_pct_of_realtime=2.359
+test_xtc: all passed
+[PASS] 30 cm full   g -6.0 dB: max deviation from the model 0.11 dB, tail energy 4.1e-209
+[PASS] 30 cm full   g -4.5 dB: max deviation from the model 0.13 dB, tail energy 3.6e-196
+[PASS] 30 cm full   g -3.0 dB: max deviation from the model 0.16 dB, tail energy 4.9e-183
+[PASS] 30 cm centre g -6.0 dB: max deviation from the model 0.11 dB, tail energy 0.0e+00
+[PASS] 30 cm centre g -4.5 dB: max deviation from the model 0.13 dB, tail energy 1.7e-281
+[PASS] 30 cm centre g -3.0 dB: max deviation from the model 0.16 dB, tail energy 3.4e-228
+[PASS] 40 cm full   g -6.0 dB: max deviation from the model 0.18 dB, tail energy 1.0e-214
+[PASS] 40 cm full   g -4.5 dB: max deviation from the model 0.21 dB, tail energy 1.6e-201
+[PASS] 40 cm full   g -3.0 dB: max deviation from the model 0.26 dB, tail energy 4.6e-188
+[PASS] 40 cm centre g -6.0 dB: max deviation from the model 0.18 dB, tail energy 0.0e+00
+[PASS] 40 cm centre g -4.5 dB: max deviation from the model 0.21 dB, tail energy 0.0e+00
+[PASS] 40 cm centre g -3.0 dB: max deviation from the model 0.26 dB, tail energy 2.9e-266
+[PASS] 50 cm full   g -6.0 dB: max deviation from the model 0.15 dB, tail energy 2.6e-218
+[PASS] 50 cm full   g -4.5 dB: max deviation from the model 0.19 dB, tail energy 5.9e-205
+[PASS] 50 cm full   g -3.0 dB: max deviation from the model 0.25 dB, tail energy 2.7e-191
+[PASS] 50 cm centre g -6.0 dB: max deviation from the model 0.11 dB, tail energy 0.0e+00
+[PASS] 50 cm centre g -4.5 dB: max deviation from the model 0.13 dB, tail energy 0.0e+00
+[PASS] 50 cm centre g -3.0 dB: max deviation from the model 0.15 dB, tail energy 3.5e-301
+check_eel_port: all passed
+xtc_native_check: 108/108 match the prototype port (max error < 1e-9)
+fatal: Not a valid object name 9978f145317183527b15f83d91fe9c6de748ae14^{commit}
+PASS defaults: all four options off
+PASS all options off = engine at 9978f14531 (bit exact; VB off and all 11 models, 44.1/48 kHz, switch + level)  cases=24 worst=0
+PASS x_smooth: on changes the output, off again returns to the never-on output exactly (after 0.5 s)  max_diff_after=0
+PASS x_rise: on changes the output, off again returns to the never-on output exactly (after 0.5 s)  max_diff_after=0
+PASS x_dense: on changes the output, off again returns to the never-on output exactly (after 0.5 s)  max_diff_after=0
+PASS x_s1m on a model other than P1 (D2): output unchanged (bit exact)
+PASS virtual bass off: all four options on change nothing (bit exact)
+PASS all options on: block-size invariance (bit exact)
+PASS x_smooth @ 48000: finite, never boosts (gain <= 1), floor held  max_gain=1 min_gain_db=-10.46 mean_cut_db=-3.699
+PASS x_rise @ 48000: finite, never boosts (gain <= 1), floor held  max_gain=1 min_gain_db=-13.98 mean_cut_db=-4.832
+PASS x_dense @ 48000: finite, never boosts (gain <= 1), floor held  max_gain=1 min_gain_db=-6 mean_cut_db=-0.8284
+PASS all3 @ 48000: finite, never boosts (gain <= 1), floor held  max_gain=0.9839 min_gain_db=-27.03 mean_cut_db=-7.449
+PASS x_smooth @ 44100: finite, never boosts (gain <= 1), floor held  max_gain=1 min_gain_db=-10.46 mean_cut_db=-3.704
+PASS x_rise @ 44100: finite, never boosts (gain <= 1), floor held  max_gain=1 min_gain_db=-13.98 mean_cut_db=-4.836
+PASS x_dense @ 44100: finite, never boosts (gain <= 1), floor held  max_gain=1 min_gain_db=-6 mean_cut_db=-0.8452
+PASS all3 @ 44100: finite, never boosts (gain <= 1), floor held  max_gain=0.9794 min_gain_db=-27 mean_cut_db=-7.446
+PASS all four on: NaN/Inf and +12 dB overload input -> finite output
+PASS x_smooth: 4 Hz layer wobble smaller (5-95% envelope range), tail energy not larger  wobble_off_db=28.67 wobble_on_db=12.43 tail_change_db=-1.814
+PASS x_rise: layer onset after silence cut >= 6 dB (first 30 ms), held note within 0.5 dB, never boosts  onset_cut_db=12.93 steady_cut_db=0.382
+PASS x_dense: ~0 dB at the usual level, about -6 dB (cap) while the band is +10 dB, back within 1.5 s  before_db=-0.4091 during_db=-6 after_db=-0.05294
+PASS x_s1m: layer = research hook GenResearch52 (S1 envelope) 2 dB lower; differs from P1; finite  max_rel_err=0 change_vs_p1_db=-6.772 layer_rms_vs_p1_db=0.4171
+PASS x_s1m switched on and off while playing: same latency, finite, no click (HF > 6 kHz not above the input)  hf_peak=0.005074 hf_input_peak=0.0093
+PASS cost on the host (ms per second of audio)  off_ms=40.16 all_on_ms=47.03 conditioning_only_ms=44.11
+23/23 passed
+fatal: Not a valid object name 65c0086f01caaeffc8fdea1614560076f9a860cd^{commit}
+PASS defaults: developer mode off, meters off, model values
+PASS never used = engine at 65c0086f01 (bit exact; dev off with values moved, dev on at defaults, meters on; VB off and all 11 models, 44.1/48 kHz, switch + level)  cases=96 worst=0 bad=[]
+PASS in tree: dev off / dev on at defaults / meters on all equal the plain engine (bit exact)  bad=[]
+PASS out-of-range and NaN/Inf developer values: clamped, finite output
+PASS most extreme developer settings (+12 dB everywhere, out gain +12, ceiling asked 0 dBTP): true peak <= -1 dBTP  worst_true_peak_dbtp=-1.094
+PASS dev off: ceiling parameter as before (0 dBTP reachable)  true_peak_dbtp=-0.09416
+PASS extreme developer values + NaN/Inf/overload input: finite
+PASS developer values moved: block-size invariance (bit exact)
+PASS every developer value changes the P1 output when moved  unchanged=[]
+PASS harmonic offsets re the model table: k=3 +6 dB -> 165 Hz about +6 dB (220 Hz unchanged); k=2 -6 dB on a 90 Hz note -> 180 Hz about -6 dB  k3_db=6 k2_db=-6 k4_change_db=1.467e-06
+PASS sustained path -6 dB on a steady tone: layer about -6 dB  layer_change_db=-6.000000953674316
+PASS roll-off +12 dB/oct: 275 Hz lower (by about 12 x log2(275/220) = 3.9 dB), 165 Hz unchanged  k5_db=-3.863 k3_db=4.128e-07
+PASS output band from 250 Hz: 110 Hz component down by more than 15 dB  k2_db=-17.93
+PASS generator edge 100 Hz: a 150 Hz note makes at least 10 dB less layer  change_db=-12.98493480682373
+PASS release 250 ms (vs 32 ms): more layer energy after the notes stop  tail_change_db=17.556785583496094
+PASS attack 100 ms (vs 11 ms): onset (first 60 ms) at least 2 dB lower, held note within 0.6 dB  onset_change_db=-11.527629852294922 held_change_db=-0.43925079703330994
+PASS meter layout: 32 fields + 512 (dry, layer) pairs  size=1056
+PASS meters on a 55 Hz tone: fundamental found, harmonics finite, k=3, 4 above -60 dBFS (k=2 not in the model)  f0=55 h2=-120 h3=-26.37 h4=-25.34
+PASS meters: ring advances every 5 ms (3 s -> 600 entries), bin 5 ms, band levels finite  ring_count=600 dry_band=-33.05 layer_band=-23.4
+PASS meters: dry low band near the tone level and the layer present in the last second  dry_db=-11.11 layer_db=-23.92
+PASS meters: after the tone stops both envelopes fall below -80 dBFS  last_max=-120
+PASS meters read every 40 ms on a steady 55 Hz tone: fundamental shown at every read after 1 s  blanks=0 reads=50
+PASS meters on 55 + 82 Hz together: both fundamentals held at most reads after 1 s  reads_with_both=49
+PASS meters: source-bass line rejects low-mid notes (262 Hz >= 20 dB below 55 Hz)  bass_db=-9.773 lowmid_db=-32.81
+PASS copy_dev_meters rejects a short buffer
+25/25 passed
+{
+  "schema": "pvb.harmonic_research.v1",
+  "listening_validated": false,
+  "adopted_in_app": false,
+  "quality_acceptance": "not established; engineering checks only",
+  "cases": [
+    {
+      "name": "trace_invariance_clock_bounds",
+      "sample_rate": 44100,
+      "hops": 533,
+      "ok": true
+    },
+    {
+      "name": "trace_invariance_clock_bounds",
+      "sample_rate": 48000,
+      "hops": 533,
+      "ok": true
+    },
+    {
+      "name": "steady",
+      "baseline": {
+        "hops": 908,
+        "observed_tracks": 916,
+        "birth_tracks": 4,
+        "held_tracks": 0,
+        "releasing_tracks": 0,
+        "ended_tracks": 3,
+        "lost_track_hops": 3,
+        "fit_rejected_track_hops": 0,
+        "grid_rejected_harmonic_hops": 37,
+        "capacity_omissions": 0,
+        "capacity_hops": 0,
+        "emitted_harmonic_hops": 3648,
+        "permission_held_harmonic_hops": 0,
+        "zero_pre_envelope_hops": 0,
+        "tracks_with_id": 923
+      },
+      "c1": {
+        "hops": 908,
+        "observed_tracks": 916,
+        "birth_tracks": 4,
+        "held_tracks": 18,
+        "releasing_tracks": 15,
+        "ended_tracks": 3,
+        "lost_track_hops": 36,
+        "fit_rejected_track_hops": 0,
+        "grid_rejected_harmonic_hops": 136,
+        "capacity_omissions": 0,
+        "capacity_hops": 0,
+        "emitted_harmonic_hops": 3692,
+        "permission_held_harmonic_hops": 0,
+        "zero_pre_envelope_hops": 0,
+        "tracks_with_id": 956
+      },
+      "changed": true,
+      "baseline_rms_db": -44.67464828491211,
+      "c1_rms_db": -44.6778450012207,
+      "ok": true
+    },
+    {
+      "name": "am",
+      "baseline": {
+        "hops": 908,
+        "observed_tracks": 1344,
+        "birth_tracks": 138,
+        "held_tracks": 0,
+        "releasing_tracks": 0,
+        "ended_tracks": 137,
+        "lost_track_hops": 137,
+        "fit_rejected_track_hops": 1384,
+        "grid_rejected_harmonic_hops": 1506,
+        "capacity_omissions": 0,
+        "capacity_hops": 0,
+        "emitted_harmonic_hops": 784,
+        "permission_held_harmonic_hops": 0,
+        "zero_pre_envelope_hops": 742,
+        "tracks_with_id": 1619
+      },
+      "c1": {
+        "hops": 908,
+        "observed_tracks": 1344,
+        "birth_tracks": 138,
+        "held_tracks": 811,
+        "releasing_tracks": 665,
+        "ended_tracks": 133,
+        "lost_track_hops": 1609,
+        "fit_rejected_track_hops": 1384,
+        "grid_rejected_harmonic_hops": 6345,
+        "capacity_omissions": 0,
+        "capacity_hops": 0,
+        "emitted_harmonic_hops": 1052,
+        "permission_held_harmonic_hops": 2465,
+        "zero_pre_envelope_hops": 742,
+        "tracks_with_id": 3091
+      },
+      "changed": true,
+      "baseline_rms_db": -54.89082717895508,
+      "c1_rms_db": -55.17192840576172,
+      "ok": true
+    },
+    {
+      "name": "vibrato",
+      "baseline": {
+        "hops": 908,
+        "observed_tracks": 1388,
+        "birth_tracks": 51,
+        "held_tracks": 0,
+        "releasing_tracks": 0,
+        "ended_tracks": 50,
+        "lost_track_hops": 50,
+        "fit_rejected_track_hops": 1253,
+        "grid_rejected_harmonic_hops": 972,
+        "capacity_omissions": 0,
+        "capacity_hops": 0,
+        "emitted_harmonic_hops": 3681,
+        "permission_held_harmonic_hops": 0,
+        "zero_pre_envelope_hops": 0,
+        "tracks_with_id": 1489
+      },
+      "c1": {
+        "hops": 908,
+        "observed_tracks": 1388,
+        "birth_tracks": 51,
+        "held_tracks": 300,
+        "releasing_tracks": 245,
+        "ended_tracks": 49,
+        "lost_track_hops": 594,
+        "fit_rejected_track_hops": 1253,
+        "grid_rejected_harmonic_hops": 2500,
+        "capacity_omissions": 0,
+        "capacity_hops": 0,
+        "emitted_harmonic_hops": 3788,
+        "permission_held_harmonic_hops": 1833,
+        "zero_pre_envelope_hops": 0,
+        "tracks_with_id": 2033
+      },
+      "changed": true,
+      "baseline_rms_db": -54.02363586425781,
+      "c1_rms_db": -54.06317138671875,
+      "ok": true
+    },
+    {
+      "name": "glide",
+      "baseline": {
+        "hops": 908,
+        "observed_tracks": 914,
+        "birth_tracks": 3,
+        "held_tracks": 0,
+        "releasing_tracks": 0,
+        "ended_tracks": 2,
+        "lost_track_hops": 2,
+        "fit_rejected_track_hops": 0,
+        "grid_rejected_harmonic_hops": 38,
+        "capacity_omissions": 0,
+        "capacity_hops": 0,
+        "emitted_harmonic_hops": 3627,
+        "permission_held_harmonic_hops": 0,
+        "zero_pre_envelope_hops": 1,
+        "tracks_with_id": 919
+      },
+      "c1": {
+        "hops": 908,
+        "observed_tracks": 914,
+        "birth_tracks": 3,
+        "held_tracks": 12,
+        "releasing_tracks": 10,
+        "ended_tracks": 2,
+        "lost_track_hops": 24,
+        "fit_rejected_track_hops": 0,
+        "grid_rejected_harmonic_hops": 104,
+        "capacity_omissions": 0,
+        "capacity_hops": 0,
+        "emitted_harmonic_hops": 3638,
+        "permission_held_harmonic_hops": 0,
+        "zero_pre_envelope_hops": 1,
+        "tracks_with_id": 941
+      },
+      "changed": true,
+      "baseline_rms_db": -42.500732421875,
+      "c1_rms_db": -42.50181579589844,
+      "ok": true
+    },
+    {
+      "name": "close_pair",
+      "baseline": {
+        "hops": 908,
+        "observed_tracks": 1181,
+        "birth_tracks": 47,
+        "held_tracks": 0,
+        "releasing_tracks": 0,
+        "ended_tracks": 45,
+        "lost_track_hops": 45,
+        "fit_rejected_track_hops": 650,
+        "grid_rejected_harmonic_hops": 1053,
+        "capacity_omissions": 0,
+        "capacity_hops": 0,
+        "emitted_harmonic_hops": 4042,
+        "permission_held_harmonic_hops": 0,
+        "zero_pre_envelope_hops": 0,
+        "tracks_with_id": 1273
+      },
+      "c1": {
+        "hops": 908,
+        "observed_tracks": 1196,
+        "birth_tracks": 32,
+        "held_tracks": 227,
+        "releasing_tracks": 146,
+        "ended_tracks": 29,
+        "lost_track_hops": 402,
+        "fit_rejected_track_hops": 650,
+        "grid_rejected_harmonic_hops": 2413,
+        "capacity_omissions": 0,
+        "capacity_hops": 0,
+        "emitted_harmonic_hops": 4774,
+        "permission_held_harmonic_hops": 404,
+        "zero_pre_envelope_hops": 0,
+        "tracks_with_id": 1630
+      },
+      "changed": true,
+      "baseline_rms_db": -54.99550247192383,
+      "c1_rms_db": -54.993202209472656,
+      "ok": true
+    },
+    {
+      "name": "note_change",
+      "baseline": {
+        "hops": 908,
+        "observed_tracks": 951,
+        "birth_tracks": 11,
+        "held_tracks": 0,
+        "releasing_tracks": 0,
+        "ended_tracks": 10,
+        "lost_track_hops": 10,
+        "fit_rejected_track_hops": 66,
+        "grid_rejected_harmonic_hops": 218,
+        "capacity_omissions": 0,
+        "capacity_hops": 0,
+        "emitted_harmonic_hops": 3553,
+        "permission_held_harmonic_hops": 0,
+        "zero_pre_envelope_hops": 17,
+        "tracks_with_id": 972
+      },
+      "c1": {
+        "hops": 908,
+        "observed_tracks": 951,
+        "birth_tracks": 11,
+        "held_tracks": 54,
+        "releasing_tracks": 42,
+        "ended_tracks": 10,
+        "lost_track_hops": 106,
+        "fit_rejected_track_hops": 66,
+        "grid_rejected_harmonic_hops": 573,
+        "capacity_omissions": 0,
+        "capacity_hops": 0,
+        "emitted_harmonic_hops": 3660,
+        "permission_held_harmonic_hops": 103,
+        "zero_pre_envelope_hops": 0,
+        "tracks_with_id": 1068
+      },
+      "changed": true,
+      "baseline_rms_db": -42.60780334472656,
+      "c1_rms_db": -42.60910415649414,
+      "ok": true
+    },
+    {
+      "name": "note_off",
+      "baseline": {
+        "hops": 908,
+        "observed_tracks": 489,
+        "birth_tracks": 9,
+        "held_tracks": 0,
+        "releasing_tracks": 0,
+        "ended_tracks": 9,
+        "lost_track_hops": 9,
+        "fit_rejected_track_hops": 27,
+        "grid_rejected_harmonic_hops": 127,
+        "capacity_omissions": 0,
+        "capacity_hops": 0,
+        "emitted_harmonic_hops": 1872,
+        "permission_held_harmonic_hops": 0,
+        "zero_pre_envelope_hops": 444,
+        "tracks_with_id": 507
+      },
+      "c1": {
+        "hops": 908,
+        "observed_tracks": 489,
+        "birth_tracks": 9,
+        "held_tracks": 51,
+        "releasing_tracks": 30,
+        "ended_tracks": 9,
+        "lost_track_hops": 90,
+        "fit_rejected_track_hops": 27,
+        "grid_rejected_harmonic_hops": 436,
+        "capacity_omissions": 0,
+        "capacity_hops": 0,
+        "emitted_harmonic_hops": 1960,
+        "permission_held_harmonic_hops": 72,
+        "zero_pre_envelope_hops": 433,
+        "tracks_with_id": 588
+      },
+      "changed": true,
+      "baseline_rms_db": -47.65715026855469,
+      "c1_rms_db": -47.662845611572266,
+      "ok": true
+    },
+    {
+      "name": "silence",
+      "baseline": {
+        "hops": 908,
+        "observed_tracks": 0,
+        "birth_tracks": 0,
+        "held_tracks": 0,
+        "releasing_tracks": 0,
+        "ended_tracks": 0,
+        "lost_track_hops": 0,
+        "fit_rejected_track_hops": 0,
+        "grid_rejected_harmonic_hops": 0,
+        "capacity_omissions": 0,
+        "capacity_hops": 0,
+        "emitted_harmonic_hops": 0,
+        "permission_held_harmonic_hops": 0,
+        "zero_pre_envelope_hops": 908,
+        "tracks_with_id": 0
+      },
+      "c1": {
+        "hops": 908,
+        "observed_tracks": 0,
+        "birth_tracks": 0,
+        "held_tracks": 0,
+        "releasing_tracks": 0,
+        "ended_tracks": 0,
+        "lost_track_hops": 0,
+        "fit_rejected_track_hops": 0,
+        "grid_rejected_harmonic_hops": 0,
+        "capacity_omissions": 0,
+        "capacity_hops": 0,
+        "emitted_harmonic_hops": 0,
+        "permission_held_harmonic_hops": 0,
+        "zero_pre_envelope_hops": 908,
+        "tracks_with_id": 0
+      },
+      "changed": false,
+      "baseline_rms_db": -300.0,
+      "c1_rms_db": -300.0,
+      "ok": true
+    },
+    {
+      "name": "mixed",
+      "baseline": {
+        "hops": 908,
+        "observed_tracks": 1350,
+        "birth_tracks": 137,
+        "held_tracks": 0,
+        "releasing_tracks": 0,
+        "ended_tracks": 136,
+        "lost_track_hops": 136,
+        "fit_rejected_track_hops": 1386,
+        "grid_rejected_harmonic_hops": 1624,
+        "capacity_omissions": 0,
+        "capacity_hops": 0,
+        "emitted_harmonic_hops": 773,
+        "permission_held_harmonic_hops": 0,
+        "zero_pre_envelope_hops": 741,
+        "tracks_with_id": 1623
+      },
+      "c1": {
+        "hops": 908,
+        "observed_tracks": 1350,
+        "birth_tracks": 137,
+        "held_tracks": 806,
+        "releasing_tracks": 660,
+        "ended_tracks": 132,
+        "lost_track_hops": 1598,
+        "fit_rejected_track_hops": 1386,
+        "grid_rejected_harmonic_hops": 6354,
+        "capacity_omissions": 0,
+        "capacity_hops": 0,
+        "emitted_harmonic_hops": 1003,
+        "permission_held_harmonic_hops": 1907,
+        "zero_pre_envelope_hops": 728,
+        "tracks_with_id": 3085
+      },
+      "changed": true,
+      "baseline_rms_db": -49.54421615600586,
+      "c1_rms_db": -49.62555694580078,
+      "ok": true
+    }
+  ]
+}
+PASS:24 production-grain oracle cases; calibrated AM and eligibility controls
+PASS: shared native OLA, temporal and lifecycle controls
+P2-O implementation checks passed; no listening quality verdict.
+Detected ratio_zero
+Detected freeze_am
+Detected reverse_curvature
+Detected phase_reset
+Detected sample_offset
+Detected uncleared_ring
+Detected minus12db
+Detected future_read
+PASS:8 isolated native/API faults rejected by stream and P1 gates
+Saved modulation-p1-report.json
+{
+  "seed": 20261021,
+  "groups": {
+    "steady": {
+      "cases": 48,
+      "accepted": 48,
+      "numerically_accepted_ambiguous_or_negative": 0,
+      "pitch_cents_median": 0.0,
+      "pitch_cents_p95": 3.8441118045779003e-13,
+      "native_grain_nmse_db_median": -300.0,
+      "stationary_grain_nmse_db_median": -300.0,
+      "derivative_grain_nmse_db_median": -300.0,
+      "residual_db_median": -300.0,
+      "qr_diagonal_ratio_max": 30.87013502754935,
+      "python_svd_condition_max": 35.2472508258027
+    },
+    "am": {
+      "cases": 48,
+      "accepted": 48,
+      "numerically_accepted_ambiguous_or_negative": 0,
+      "pitch_cents_median": 0.0014848971889313259,
+      "pitch_cents_p95": 0.014667412796811425,
+      "native_grain_nmse_db_median": -66.21604215542285,
+      "stationary_grain_nmse_db_median": -27.959966948157017,
+      "derivative_grain_nmse_db_median": -53.498232788236415,
+      "residual_db_median": -57.43211654094213,
+      "qr_diagonal_ratio_max": 30.559569602821387,
+      "python_svd_condition_max": 34.92091164216237
+    },
+    "vibrato": {
+      "cases": 48,
+      "accepted": 48,
+      "numerically_accepted_ambiguous_or_negative": 0,
+      "pitch_cents_median": 0.1557105981683656,
+      "pitch_cents_p95": 1.6038417596399872,
+      "native_grain_nmse_db_median": -62.91350245675531,
+      "stationary_grain_nmse_db_median": -48.854842262519696,
+      "derivative_grain_nmse_db_median": -65.21870818366494,
+      "residual_db_median": -63.761703755274404,
+      "qr_diagonal_ratio_max": 30.821555156210966,
+      "python_svd_condition_max": 35.309969628852286
+    },
+    "chirp": {
+      "cases": 48,
+      "accepted": 48,
+      "numerically_accepted_ambiguous_or_negative": 0,
+      "pitch_cents_median": 0.0,
+      "pitch_cents_p95": 3.8441118045779003e-13,
+      "native_grain_nmse_db_median": -298.2820639855212,
+      "stationary_grain_nmse_db_median": -47.78488638228892,
+      "derivative_grain_nmse_db_median": -300.0,
+      "residual_db_median": -300.0,
+      "qr_diagonal_ratio_max": 30.50011168150812,
+      "python_svd_condition_max": 35.22323205530576
+    },
+    "decay": {
+      "cases": 48,
+      "accepted": 48,
+      "numerically_accepted_ambiguous_or_negative": 0,
+      "pitch_cents_median": 5.884470247662754e-09,
+      "pitch_cents_p95": 3.810464102167339e-07,
+      "native_grain_nmse_db_median": -163.7336024838431,
+      "stationary_grain_nmse_db_median": -41.33678911586969,
+      "derivative_grain_nmse_db_median": -86.192903847885,
+      "residual_db_median": -154.94228386017267,
+      "qr_diagonal_ratio_max": 30.444696775750813,
+      "python_svd_condition_max": 34.7987023029104
+    },
+    "neighbor": {
+      "cases": 48,
+      "accepted": 48,
+      "numerically_accepted_ambiguous_or_negative": 0,
+      "pitch_cents_median": 0.0,
+      "pitch_cents_p95": 0.0,
+      "native_grain_nmse_db_median": -300.0,
+      "stationary_grain_nmse_db_median": -300.0,
+      "derivative_grain_nmse_db_median": -300.0,
+      "residual_db_median": -300.0,
+      "qr_diagonal_ratio_max": 30.908933708269263,
+      "python_svd_condition_max": 35.32213162122088
+    },
+    "close_pair": {
+      "cases": 48,
+      "accepted": 46,
+      "numerically_accepted_ambiguous_or_negative": 46,
+      "pitch_cents_median": null,
+      "pitch_cents_p95": null,
+      "native_grain_nmse_db_median": null,
+      "stationary_grain_nmse_db_median": null,
+      "derivative_grain_nmse_db_median": null,
+      "residual_db_median": -69.20239838080182,
+      "qr_diagonal_ratio_max": 30.491978129771958,
+      "python_svd_condition_max": 34.84686559711734
+    },
+    "noise": {
+      "cases": 48,
+      "accepted": 0,
+      "numerically_accepted_ambiguous_or_negative": 0,
+      "pitch_cents_median": null,
+      "pitch_cents_p95": null,
+      "native_grain_nmse_db_median": null,
+      "stationary_grain_nmse_db_median": null,
+      "derivative_grain_nmse_db_median": null,
+      "residual_db_median": -0.1758464187162778,
+      "qr_diagonal_ratio_max": 33.10400496694522,
+      "python_svd_condition_max": 38.3748744713277
+    },
+    "silence": {
+      "cases": 48,
+      "accepted": 0,
+      "numerically_accepted_ambiguous_or_negative": 0,
+      "pitch_cents_median": null,
+      "pitch_cents_p95": null,
+      "native_grain_nmse_db_median": null,
+      "stationary_grain_nmse_db_median": null,
+      "derivative_grain_nmse_db_median": null,
+      "residual_db_median": null,
+      "qr_diagonal_ratio_max": null,
+      "python_svd_condition_max": null
+    }
+  },
+  "max_python_cpp_parameter_absolute_difference": 8.003553375601768e-11,
+  "native_frame_fit_ms": {
+    "p50": 0.06191600002125597,
+    "p95": 0.0741154999786886,
+    "max": 0.2131480000002739
+  },
+  "note": "Native raw aggregate grain; table weights held at estimated center frequency for all comparisons. No OLA/filter/listening oracle. Nearby tones can be indistinguishable from AM."
+}
+{"checks": {"correctness": "pass", "quality": "fail", "device": "not_evaluated", "listening": "not_evaluated"}, "promotion": {"candidate": "C1+P1-AS", "status": "blocked", "reasons": ["quality:fail", "device:not_evaluated", "listening:not_evaluated"]}}
+am_f40_r2 0 pass 0.0
+am_f40_r2 18 pass 1.0
+am_f40_r7 0 fail 0.0
+am_f40_r7 18 fail 1.0
+am_f40_r15 0 fail 0.0
+am_f40_r15 18 fail 0.18895238095238095
+am_f40_r20 0 not_evaluated 0.0
+am_f40_r20 18 not_evaluated 0.2925714285714286
+am_f55_r2 0 pass 0.0
+am_f55_r2 18 pass 1.0
+am_f55_r7 0 fail 0.0
+am_f55_r7 2 fail 0.0
+am_f55_r7 16 fail 0.993904761904762
+am_f55_r7 18 pass 0.993904761904762
+am_f55_r15 0 fail 0.0
+am_f55_r15 18 fail 0.384
+am_f55_r20 0 fail 0.0
+am_f55_r20 18 fail 0.6003809523809523
+am_f80_r2 0 pass 0.0
+am_f80_r2 18 pass 1.0
+am_f80_r7 0 pass 0.0
+am_f80_r7 18 pass 1.0
+am_f80_r15 0 fail 0.0
+am_f80_r15 18 fail 0.4876190476190476
+am_f80_r20 0 fail 0.0
+am_f80_r20 18 fail 0.8689523809523809
+am_f120_r2 0 pass 0.0
+am_f120_r2 18 pass 1.0
+am_f120_r7 0 pass 0.0
+am_f120_r7 18 pass 0.993904761904762
+am_f120_r15 0 fail 0.0
+am_f120_r15 18 fail 0.5577142857142857
+am_f120_r20 0 fail 0.0
+am_f120_r20 18 fail 0.8415238095238096
+fm55_7_35 0 pass 0.0
+fm55_7_35 2 pass 0.0
+fm55_7_35 16 pass 1.0
+fm55_7_35 18 pass 1.0
+close_pair 0 not_evaluated 0.0
+close_pair 18 not_evaluated 1.0
+off 0 None 0.0
+off 18 None 0.30952380952380953
+am_f40_r2 18 pass 0.0
+am_f40_r2 112 pass 0.0
+am_f40_r2 240 pass 0.0
+am_f40_r7 18 fail 0.0
+am_f40_r7 112 pass 1.0
+am_f40_r7 240 pass 1.0
+am_f40_r15 18 fail 0.0
+am_f40_r15 112 fail 1.0
+am_f40_r15 240 pass 1.0
+am_f40_r20 18 not_evaluated 0.0
+am_f40_r20 112 not_evaluated 1.0
+am_f40_r20 240 not_evaluated 1.0
+am_f55_r2 18 pass 0.0
+am_f55_r2 112 pass 0.0
+am_f55_r2 240 pass 0.0
+am_f55_r7 18 pass 0.0
+am_f55_r7 112 pass 1.0
+am_f55_r7 240 pass 1.0
+am_f55_r15 18 fail 0.0
+am_f55_r15 112 pass 1.0
+am_f55_r15 240 pass 1.0
+am_f55_r20 18 fail 0.0
+am_f55_r20 112 pass 1.0
+am_f55_r20 240 pass 1.0
+am_f80_r2 18 pass 0.0
+am_f80_r2 112 pass 0.0
+am_f80_r2 240 pass 0.0
+am_f80_r7 18 pass 0.0
+am_f80_r7 112 pass 1.0
+am_f80_r7 240 pass 1.0
+am_f80_r15 18 fail 0.0
+am_f80_r15 112 pass 1.0
+am_f80_r15 240 pass 1.0
+am_f80_r20 18 fail 0.0
+am_f80_r20 112 fail 1.0
+am_f80_r20 240 pass 1.0
+am_f120_r2 18 pass 0.0
+am_f120_r2 112 pass 0.0
+am_f120_r2 240 pass 0.0
+am_f120_r7 18 pass 0.0
+am_f120_r7 112 pass 1.0
+am_f120_r7 240 pass 1.0
+am_f120_r15 18 fail 0.0
+am_f120_r15 112 fail 1.0
+am_f120_r15 240 pass 1.0
+am_f120_r20 18 fail 0.0
+am_f120_r20 112 fail 1.0
+am_f120_r20 240 pass 1.0
+fm complete
+pair complete
+off complete
+validation 0 pass
+validation 1 pass
+validation 2 pass
+validation 3 pass
+validation 4 pass
+validation 5 pass
+validation 6 pass
+validation 7 pass
+{
+  "seed": 2026101805,
+  "groups": {
+    "am": {
+      "cases": 48,
+      "accepted": 48,
+      "pitch_cents_max": 6.248603738342506e-10,
+      "rate_error_hz_max": 4.4644288266226795e-10,
+      "depth_error_max": 1.0730027977245982e-10,
+      "coherence_median": 2.0925062151538133e-13
+    },
+    "steady": {
+      "cases": 48,
+      "accepted": 0,
+      "pitch_cents_max": null,
+      "rate_error_hz_max": null,
+      "depth_error_max": null,
+      "coherence_median": 0.9999973525759918
+    },
+    "one_sideband": {
+      "cases": 48,
+      "accepted": 0,
+      "pitch_cents_max": null,
+      "rate_error_hz_max": null,
+      "depth_error_max": null,
+      "coherence_median": 0.9999999999998741
+    },
+    "incoherent_triplet": {
+      "cases": 48,
+      "accepted": 0,
+      "pitch_cents_max": null,
+      "rate_error_hz_max": null,
+      "depth_error_max": null,
+      "coherence_median": 0.564642473395039
+    },
+    "fm": {
+      "cases": 48,
+      "accepted": 0,
+      "pitch_cents_max": null,
+      "rate_error_hz_max": null,
+      "depth_error_max": null,
+      "coherence_median": 0.9984500168560387
+    },
+    "noise": {
+      "cases": 48,
+      "accepted": 0,
+      "pitch_cents_max": null,
+      "rate_error_hz_max": null,
+      "depth_error_max": null,
+      "coherence_median": 0.8255587186057256
+    },
+    "silence": {
+      "cases": 48,
+      "accepted": 0,
+      "pitch_cents_max": null,
+      "rate_error_hz_max": null,
+      "depth_error_max": null,
+      "coherence_median": 0.0
+    },
+    "equivalent_triplet": {
+      "cases": 48,
+      "accepted": 48,
+      "pitch_cents_max": 1.4044462478031058e-09,
+      "rate_error_hz_max": 6.616431846850901e-10,
+      "depth_error_max": 1.8474288765446545e-10,
+      "coherence_median": 3.4849716359930844e-14
+    }
+  },
+  "native_fit_ms_p50": 0.6513169999777801,
+  "native_fit_ms_p95": 0.9063183500103378,
+  "ambiguity": "A coherent triplet is mathematically indistinguishable from AM; expected acceptance is not a source label."
+}
+crossing {'0': (37, 5), '256': (37, 5), '240': (37, 5), '496': (37, 5)}
+near_pair {'0': (31, 1), '256': (31, 1), '240': (31, 1), '496': (31, 1)}
+note_change {'0': (7, 0), '256': (7, 0), '240': (7, 0), '496': (7, 0)}
+off {'0': (11, 283), '256': (11, 283), '240': (11, 283), '496': (11, 283)}
+am20 {'0': (3, 0), '256': (3, 0), '240': (3, 0), '496': (3, 0)}
+steady {'constant': (1.0, 0), 'linear': (1.0, 0), 'burg2': (1.0, 0)}
+glide {'constant': (1.0, 0), 'linear': (1.0, 0), 'burg2': (1.0, 0)}
+vibrato {'constant': (1.0, 0), 'linear': (1.0, 0), 'burg2': (1.0, 0)}
+crossing {'constant': (0.8657407407407407, 0), 'linear': (0.8657407407407407, 0), 'burg2': (0.8657407407407407, 0)}
+near_pair {'constant': (None, 0), 'linear': (None, 0), 'burg2': (None, 0)}
+am7 {'constant': (0.9886621315192744, 0), 'linear': (0.9886621315192744, 0), 'burg2': (0.9886621315192744, 0)}
+off {'constant': (1.0, 0), 'linear': (1.0, 0), 'burg2': (1.0, 0)}
+Detected linear_dispatch
+Detected burg_dispatch
+C1 permission: birth,32ms gap/reacquire, bounded release, hysteresis, fast stop passed
+frames 24004, accepted by the original 9148, decisions differing 0 (+0 on a threshold)
+accepted fits, largest difference: frequency 3.13e-09 Hz, amplitude 4.47e-10 (rel), phase 1.38e-09 rad,
+  amplitude slope 1.97e-09 (rel), frequency slope 2.44e-06 Hz/s, residual 2.42e-08 dB, diagonal ratio 3.22e-10 (rel)
+time per fit: original 586.4 us, now 87.2 us (6.7x)
+[PASS] the synthetic set has plenty of accepted fits
+[PASS] no acceptance decision differs (away from a threshold)
+[PASS] accepted parameters agree far below audibility (< 1e-7)
+[PASS] a well-conditioned solve uses the normal equations
+[PASS] a nearly collinear solve falls back to the original method
+AM family: frames 960, accepted by the original 103, decisions differing 0
+  largest difference: carrier 1.14e-10 Hz, rate 2.57e-09 Hz, amplitude 3.72e-11 (rel), modulation 1.38e-11, coherence 2.56e-11
+  time per fit: original 1472 us, now 721 us (2.0x)
+[PASS] AM family: plenty of accepted fits
+[PASS] AM family: no acceptance decision differs
+[PASS] AM family: accepted parameters agree far below audibility (< 1e-7)
+fit_equivalence: all passed
+|x| < 0.785   fastmath: sin 0.725 ulp, cos 0.756 ulp   C library: sin 0.515, cos 0.503
+|x| < 100     fastmath: sin 0.767 ulp, cos 0.775 ulp   C library: sin 0.515, cos 0.515
+|x| < 1000    fastmath: sin 0.779 ulp, cos 0.783 ulp   C library: sin 0.515, cos 0.514
+next to multiples of pi/2 (|x| < 950): largest absolute error 5.28e-24
+[PASS] within 1 ulp for |x| < 1000 (random arguments)
+[PASS] next to the zeros: absolute error < 1e-23
+[PASS] sin 0 = 0, cos 0 = 1
+fastmath_check: all passed
+frames 24004, accepted by the original 9148, decisions differing 0 (+0 on a threshold)
+accepted fits, largest difference: frequency 2.66e-09 Hz, amplitude 3.81e-10 (rel), phase 1.17e-09 rad,
+  amplitude slope 1.67e-09 (rel), frequency slope 3.50e-06 Hz/s, residual 1.89e-08 dB, diagonal ratio 1.40e-10 (rel)
+time per fit: original 626.5 us, now 40.2 us (15.6x)
+[PASS] the synthetic set has plenty of accepted fits
+[PASS] no acceptance decision differs (away from a threshold)
+[PASS] accepted parameters agree far below audibility (< 1e-7)
+[PASS] a well-conditioned solve uses the normal equations
+[PASS] a nearly collinear solve falls back to the original method
+AM family: frames 960, accepted by the original 103, decisions differing 0
+  largest difference: carrier 2.16e-12 Hz, rate 3.13e-11 Hz, amplitude 7.90e-14 (rel), modulation 5.46e-12, coherence 1.63e-13
+  time per fit: original 1555 us, now 288 us (5.4x)
+[PASS] AM family: plenty of accepted fits
+[PASS] AM family: no acceptance decision differs
+[PASS] AM family: accepted parameters agree far below audibility (< 1e-7)
+fit_equivalence: all passed
+|x| < 0.785   fastmath: sin 0.681 ulp, cos 0.752 ulp   C library: sin 0.515, cos 0.503
+|x| < 100     fastmath: sin 0.767 ulp, cos 0.767 ulp   C library: sin 0.515, cos 0.515
+|x| < 1000    fastmath: sin 0.771 ulp, cos 0.760 ulp   C library: sin 0.515, cos 0.515
+next to multiples of pi/2 (|x| < 950): largest absolute error 5.28e-24
+[PASS] within 1 ulp for |x| < 1000 (random arguments)
+[PASS] next to the zeros: absolute error < 1e-23
+[PASS] sin 0 = 0, cos 0 = 1
+fastmath_check: all passed
+[PASS] hpv52m: frozen 10 s NPZ: rel_db=-270.5, max_abs=2.343e-14, latency=7052, cpu_ms_per_s=14.93
+[PASS] hpv52m: Python at 44.1 kHz: rel_db=-271.3, latency=6479
+[PASS] hpv52m: full engine, custom EQ phase @ 44100: rel_db=-151.8, latency_frames=6561
+[PASS] hpv52m: +9 dB true peak @ 44100: dbtp=-1.078
+[PASS] hpv52m: matched bypass keeps delay @ 44100: 
+[PASS] hpv52m: bypass obeys mute @ 44100: 
+[PASS] hpv52m: switch algorithms @ 44100: largest_step=0.006261
+[PASS] hpv52m: full engine, custom EQ phase @ 48000: rel_db=-151.7, latency_frames=7140
+[PASS] hpv52m: +9 dB true peak @ 48000: dbtp=-1.075
+[PASS] hpv52m: matched bypass keeps delay @ 48000: 
+[PASS] hpv52m: bypass obeys mute @ 48000: 
+[PASS] hpv52m: switch algorithms @ 48000: largest_step=0.005748
+[PASS] hpv52m: host CPU, full engine + match: ms_per_audio_second=22.31
+[PASS] gentle: independent layer reference @ 44100: rel_db=-267.8, latency_frames=6479
+[PASS] gentle: full engine custom EQ +6 @ 44100: rel_db=-152, latency_frames=6561
+[PASS] gentle: research observations available @ 44100: scene_counts=[123.0, 547.0, 2.0, 242.0]
+[PASS] gentle: matched bypass preserves latency @ 44100: 
+[PASS] gentle: matched bypass obeys final mute @ 44100: 
+[PASS] gentle: hot +0 true peak @ 44100: dbtp=-1.094
+[PASS] gentle: hot +6 true peak @ 44100: dbtp=-1.094
+[PASS] gentle: hot +9 true peak @ 44100: dbtp=-1.094
+[PASS] gentle: algorithm switch @ 44100: largest_step=0.006261
+[PASS] gentle: observations cleared after leaving mode @ 44100: 
+[PASS] gentle: independent layer reference @ 48000: rel_db=-271.3, latency_frames=7052
+[PASS] gentle: full engine custom EQ +6 @ 48000: rel_db=-152, latency_frames=7140
+[PASS] gentle: research observations available @ 48000: scene_counts=[123.0, 547.0, 2.0, 242.0]
+[PASS] gentle: matched bypass preserves latency @ 48000: 
+[PASS] gentle: matched bypass obeys final mute @ 48000: 
+[PASS] gentle: hot +0 true peak @ 48000: dbtp=-1.079
+[PASS] gentle: hot +6 true peak @ 48000: dbtp=-1.079
+[PASS] gentle: hot +9 true peak @ 48000: dbtp=-1.079
+[PASS] gentle: algorithm switch @ 48000: largest_step=0.005748
+[PASS] gentle: observations cleared after leaving mode @ 48000: 
+[PASS] gentle: lower partials retained and upper partials attenuated: error_db={165: 0.0001093546478647852, 220: -0.0027284099317850495, 275: -0.005284887617372558, 330: -0.005151703724465939}
+PASS: evidence, chatter, dwell, bounded slew, endpoints, reset
+[PASS] fixed24: independent reference @ 44100: rel_db=-270.6
+[PASS] adaptive: settled stationary note equals gentle12 @ 44100: rel_db=None, bit_exact=True
+[PASS] adaptive: settled complex source equals fixed24 @ 44100: rel_db=None, bit_exact=True
+[PASS] fixed24: lower partial levels retained @ 44100: error_db={165: 6.679434544310141e-05, 220: -0.0019522534643815139}
+[PASS] adaptive: block invariant waveform @ 44100: 
+[PASS] adaptive: actual controls and transitions published @ 44100: blend=1, target=1, transitions=2
+[PASS] budget4: +0 output ceiling @ 44100: dbtp=-1.08
+[PASS] budget4: +6 output ceiling @ 44100: dbtp=-1.079
+[PASS] budget4: matched bypass alignment/mute @ 44100: 
+[PASS] budget4: +9 output ceiling @ 44100: dbtp=-1.094
+[PASS] budget5: +0 output ceiling @ 44100: dbtp=-1.08
+[PASS] budget5: +6 output ceiling @ 44100: dbtp=-1.079
+[PASS] budget5: matched bypass alignment/mute @ 44100: 
+[PASS] budget5: +9 output ceiling @ 44100: dbtp=-1.094
+[PASS] adaptive: manual algorithm transitions @ 44100: largest_step=0.006261
+[PASS] fixed24: independent reference @ 48000: rel_db=-266.5
+[PASS] adaptive: settled stationary note equals gentle12 @ 48000: rel_db=None, bit_exact=True
+[PASS] adaptive: settled complex source equals fixed24 @ 48000: rel_db=None, bit_exact=True
+[PASS] fixed24: lower partial levels retained @ 48000: error_db={165: 6.67943386523596e-05, 220: -0.001952253630613961}
+[PASS] adaptive: block invariant waveform @ 48000: 
+[PASS] adaptive: actual controls and transitions published @ 48000: blend=1, target=1, transitions=2
+[PASS] budget4: +0 output ceiling @ 48000: dbtp=-1.078
+[PASS] budget4: +6 output ceiling @ 48000: dbtp=-1.077
+[PASS] budget4: matched bypass alignment/mute @ 48000: 
+[PASS] budget4: +9 output ceiling @ 48000: dbtp=-1.094
+[PASS] budget5: +0 output ceiling @ 48000: dbtp=-1.078
+[PASS] budget5: +6 output ceiling @ 48000: dbtp=-1.077
+[PASS] budget5: matched bypass alignment/mute @ 48000: 
+[PASS] budget5: +9 output ceiling @ 48000: dbtp=-1.094
+[PASS] adaptive: manual algorithm transitions @ 48000: largest_step=0.005748
+[PASS] research baseline equals build-14 C++: rel_db=-273.8
+[PASS] reference globals restored: 
+[PASS] layer separated into two paths: 
+[PASS] phase-off control actually disables matching while preserving grid mask: difference_rms=0.01796
+[PASS] stage renderer equals full C++ engine at +0: rel_db=-147.6
+[PASS] stage renderer equals full C++ engine at +9: rel_db=-149
+[PASS] causal emitted prefix: baseline: max_abs=0
+[PASS] finite and additive stages: baseline: 
+[PASS] causal emitted prefix: smooth128: max_abs=0
+[PASS] finite and additive stages: smooth128: 
+[PASS] causal emitted prefix: smooth256: max_abs=0
+[PASS] finite and additive stages: smooth256: 
+[PASS] causal emitted prefix: smooth512: max_abs=0
+[PASS] finite and additive stages: smooth512: 
+[PASS] causal emitted prefix: existing512: max_abs=0
+[PASS] finite and additive stages: existing512: 
+[PASS] causal emitted prefix: multi512: max_abs=0
+[PASS] finite and additive stages: multi512: 
+[PASS] causal emitted prefix: continuous128: max_abs=0
+[PASS] finite and additive stages: continuous128: 
+[PASS] causal emitted prefix: continuous_smooth128: max_abs=0
+[PASS] finite and additive stages: continuous_smooth128: 
+[PASS] causal emitted prefix: follow128: max_abs=0
+[PASS] finite and additive stages: follow128: 
+[PASS] causal emitted prefix: gentle128: max_abs=0
+[PASS] finite and additive stages: gentle128: 
+[PASS] window changes preserve nominal mix-point phase at 165 Hz: max_difference_rad=0.0008014, phases={'baseline': 1.628424093245893, 'long256': 1.6285709224099183, 'long512': 1.6292255093003836, 'continuous128': 1.6284240932458895, 'continuous_smooth128': 1.6284240932458898, 'follow128': 1.6286274282426734}
+[PASS] upper-partial attenuation retains lower partial levels without redistribution: error_db={165: 0.00010935464786092795, 220: -0.0027284099317908374, 275: -0.005284887617372558, 330: -0.005151703724489032}
+[PASS] upper-partial attenuation leaves percussion unchanged: 
+[PASS] short silent input: baseline: 
+[PASS] short silent input: smooth512: 
+[PASS] match: weighting fit 44100: fs=44100, offset_db=-2.272, rms_db=0.5804, max_db=1.628
+[PASS] match: weighting fit 48000: fs=48000, offset_db=-2.178, rms_db=0.5653, max_db=1.534
+[PASS] match: custom EQ pink 44100 stereo: delta_db=0.003293, gain_db=-7.338
+[PASS] match: A/B hold 44100 stereo: 
+[PASS] match: custom EQ pink 44100 antiphase: delta_db=0.003036, gain_db=-7.344
+[PASS] match: A/B hold 44100 antiphase: 
+[PASS] match: synthetic music 44100: delta_db=-0.05617
+[PASS] match: custom EQ pink 48000 stereo: delta_db=-0.005538, gain_db=-7.348
+[PASS] match: A/B hold 48000 stereo: 
+[PASS] match: custom EQ pink 48000 antiphase: delta_db=-0.00231, gain_db=-7.358
+[PASS] match: A/B hold 48000 antiphase: 
+[PASS] match: synthetic music 48000: delta_db=-0.09583
+[PASS] match: flat bypass retains sub-bass: gain_db=-6
+[PASS] match: final mute still covers flat bypass: 
+[PASS] match: repeated transition has no discontinuity: largest_step=0.007164
+[PASS] match: quiet output range: gain_db=-19.98
+[PASS] match: silence preserves gain: drift_db=-3.624e-05
+built: /home/runner/work/rootnote/rootnote/tools/pvb-harness/build/libjdspcapi.so
+built: /home/runner/work/rootnote/rootnote/tools/rootfx/build/librootnotefx.so
+[PASS] the effect library loads (all symbols resolved)
+[PASS] AELI symbol exported
+[PASS] descriptor: the JamesDSP type and UUID, named as Rootnote's
+[PASS] PVB C API loads (reference)
+[PASS] create + SET_CONFIG (48 kHz float stereo) + ENABLE
+[PASS] version command answers; engine not active before parameters
+[PASS] JamesDSP chain output finite
+[PASS] SET_PARAM 41000 with the parameter array: accepted, engine active
+[PASS] empty parameter array rejected
+       max |effect - (JamesDSP then PVB C API)| = 0, max |effect - JamesDSP alone| = 0.454473
+[PASS] float: effect = JamesDSP chain then the PVB engine, bit exact
+[PASS] float: the engine changes the sound (it is really in the path)
+[PASS] 16-bit: configured, parameters accepted
+[PASS] 16-bit: the engine is in the path
+test_rootfx: 13 checks passed
+[PASS] jdsp sealed with nothing on is bit-transparent (incl. +10.9 dBFS): max_diff=0
+[PASS] chain with neutral JamesDSP == PVB alone (bit exact): 
+[PASS] unsealed JamesDSP limiter (-0.1 dBFS) would clamp it (reason for sealing): peak=0.9886
+[PASS] jdsp eq latency (blocks 4096/1024/480): frames=0,0,0, ms_4096=0
+[PASS] jdsp compressor latency (blocks 4096/1024/480): frames=1792,1792,2016, ms_4096=37.33
+[PASS] PVB latency (reported; unchanged by the chain): pvb_eq_frames=88, pvb_vb_p1_frames=7140
+[PASS] typical: EQ +6 dB low shelf, PVB out -5 dB, vb off, block 4096: tp=-1.171, nan=0, gr_mean=0, gr_p95=0, gr_max=0
+[PASS] typical: EQ +6 dB low shelf, PVB out -5 dB, vb off, block 1024: tp=-1.171, nan=0, gr_mean=0, gr_p95=0, gr_max=0
+[PASS] typical: EQ +6 dB low shelf, PVB out -5 dB, vb on, block 4096: tp=-1.113, nan=0, gr_mean=0.01233, gr_p95=0.0001785, gr_max=0.8646
+[PASS] typical: EQ +6 dB low shelf, PVB out -5 dB, vb on, block 1024: tp=-1.113, nan=0, gr_mean=0.005303, gr_p95=4.282e-05, gr_max=0.8646
+[PASS] typical: EQ +6 dB low shelf, PVB out -3 dB, vb off, block 4096: tp=-1.066, nan=0, gr_mean=0.3755, gr_p95=1.375, gr_max=1.937
+[PASS] typical: EQ +6 dB low shelf, PVB out -3 dB, vb off, block 1024: tp=-1.066, nan=0, gr_mean=0.2259, gr_p95=0.9828, gr_max=1.937
+[PASS] typical: EQ +6 dB low shelf, PVB out -3 dB, vb on, block 4096: tp=-1.064, nan=0, gr_mean=0.5543, gr_p95=1.555, gr_max=2.865
+[PASS] typical: EQ +6 dB low shelf, PVB out -3 dB, vb on, block 1024: tp=-1.064, nan=0, gr_mean=0.3315, gr_p95=1.19, gr_max=2.865
+[PASS] typical: compressor +0.6, PVB out -5 dB, vb off, block 4096: tp=-1.954, nan=0, gr_mean=0, gr_p95=0, gr_max=0
+[PASS] typical: compressor +0.6, PVB out -5 dB, vb off, block 1024: tp=-1.954, nan=0, gr_mean=0, gr_p95=0, gr_max=0
+[PASS] typical: compressor +0.6, PVB out -5 dB, vb on, block 4096: tp=-1.75, nan=0, gr_mean=0.0008144, gr_p95=6.006e-06, gr_max=0.08537
+[PASS] typical: compressor +0.6, PVB out -5 dB, vb on, block 1024: tp=-1.75, nan=0, gr_mean=0.001445, gr_p95=1.214e-05, gr_max=0.2275
+[PASS] typical: compressor +0.6, PVB out -3 dB, vb off, block 4096: tp=-1.082, nan=0, gr_mean=0.1087, gr_p95=0.7611, gr_max=1.187
+[PASS] typical: compressor +0.6, PVB out -3 dB, vb off, block 1024: tp=-1.082, nan=0, gr_mean=0.06189, gr_p95=0.4345, gr_max=1.187
+[PASS] typical: compressor +0.6, PVB out -3 dB, vb on, block 4096: tp=-1.064, nan=0, gr_mean=0.139, gr_p95=0.791, gr_max=1.355
+[PASS] typical: compressor +0.6, PVB out -3 dB, vb on, block 1024: tp=-1.064, nan=0, gr_mean=0.08573, gr_p95=0.4782, gr_max=2.228
+[PASS] typical: EQ +6 dB low shelf + compressor +0.6, PVB out -5 dB, vb off, block 4096: tp=-1.084, nan=0, gr_mean=0.2181, gr_p95=1.374, gr_max=2.216
+[PASS] typical: EQ +6 dB low shelf + compressor +0.6, PVB out -5 dB, vb off, block 1024: tp=-1.084, nan=0, gr_mean=0.1213, gr_p95=0.7747, gr_max=2.216
+[PASS] typical: EQ +6 dB low shelf + compressor +0.6, PVB out -5 dB, vb on, block 4096: tp=-1.081, nan=0, gr_mean=0.2669, gr_p95=1.513, gr_max=2.531
+[PASS] typical: EQ +6 dB low shelf + compressor +0.6, PVB out -5 dB, vb on, block 1024: tp=-1.081, nan=0, gr_mean=0.1706, gr_p95=1.009, gr_max=3.481
+[PASS] typical: EQ +6 dB low shelf + compressor +0.6, PVB out -3 dB, vb off, block 4096: tp=-1.06, nan=0, gr_mean=0.9812, gr_p95=3.259, gr_max=4.216
+[PASS] typical: EQ +6 dB low shelf + compressor +0.6, PVB out -3 dB, vb off, block 1024: tp=-1.06, nan=0, gr_mean=0.5996, gr_p95=2.241, gr_max=4.216
+[PASS] typical: EQ +6 dB low shelf + compressor +0.6, PVB out -3 dB, vb on, block 4096: tp=-1.066, nan=0, gr_mean=1.172, gr_p95=3.379, gr_max=4.531
+[PASS] typical: EQ +6 dB low shelf + compressor +0.6, PVB out -3 dB, vb on, block 1024: tp=-1.066, nan=0, gr_mean=0.753, gr_p95=2.504, gr_max=5.481
+[PASS] typical: EQ +6 dB low shelf + compressor (default curve), PVB out -5 dB, vb off, block 4096: tp=-1.171, nan=0, gr_mean=0, gr_p95=0, gr_max=0
+[PASS] typical: EQ +6 dB low shelf + compressor (default curve), PVB out -5 dB, vb off, block 1024: tp=-1.171, nan=0, gr_mean=0, gr_p95=0, gr_max=0
+[PASS] typical: EQ +6 dB low shelf + compressor (default curve), PVB out -5 dB, vb on, block 4096: tp=-1.113, nan=0, gr_mean=0.008946, gr_p95=8.014e-05, gr_max=0.8646
+[PASS] typical: EQ +6 dB low shelf + compressor (default curve), PVB out -5 dB, vb on, block 1024: tp=-1.113, nan=0, gr_mean=0.006486, gr_p95=5.553e-05, gr_max=0.8646
+[PASS] typical: EQ +6 dB low shelf + compressor (default curve), PVB out -3 dB, vb off, block 4096: tp=-1.066, nan=0, gr_mean=0.3789, gr_p95=1.381, gr_max=1.937
+[PASS] typical: EQ +6 dB low shelf + compressor (default curve), PVB out -3 dB, vb off, block 1024: tp=-1.066, nan=0, gr_mean=0.2284, gr_p95=1.024, gr_max=1.937
+[PASS] typical: EQ +6 dB low shelf + compressor (default curve), PVB out -3 dB, vb on, block 4096: tp=-1.064, nan=0, gr_mean=0.5135, gr_p95=1.522, gr_max=2.865
+[PASS] typical: EQ +6 dB low shelf + compressor (default curve), PVB out -3 dB, vb on, block 1024: tp=-1.064, nan=0, gr_mean=0.3259, gr_p95=1.143, gr_max=2.865
+[PASS] heavy: EQ +12 dB low shelf, PVB out -5 dB, vb off, block 4096: tp=-1.08, nan=0, gr_mean=0.6503, gr_p95=2.335, gr_max=2.983
+[PASS] heavy: EQ +12 dB low shelf, PVB out -5 dB, vb off, block 1024: tp=-1.08, nan=0, gr_mean=0.3738, gr_p95=1.639, gr_max=2.983
+[PASS] heavy: EQ +12 dB low shelf, PVB out -5 dB, vb on, block 4096: tp=-1.075, nan=0, gr_mean=1.005, gr_p95=2.931, gr_max=3.321
+[PASS] heavy: EQ +12 dB low shelf, PVB out -5 dB, vb on, block 1024: tp=-1.075, nan=0, gr_mean=0.6412, gr_p95=2.181, gr_max=3.321
+[PASS] heavy: EQ +12 dB low shelf, PVB out -3 dB, vb off, block 4096: tp=-1.068, nan=0, gr_mean=2.218, gr_p95=4.287, gr_max=4.983
+[PASS] heavy: EQ +12 dB low shelf, PVB out -3 dB, vb off, block 1024: tp=-1.068, nan=0, gr_mean=1.529, gr_p95=3.398, gr_max=4.983
+[PASS] heavy: EQ +12 dB low shelf, PVB out -3 dB, vb on, block 4096: tp=-1.063, nan=0, gr_mean=2.739, gr_p95=4.931, gr_max=5.321
+[PASS] heavy: EQ +12 dB low shelf, PVB out -3 dB, vb on, block 1024: tp=-1.063, nan=0, gr_mean=2.017, gr_p95=4.107, gr_max=5.321
+[PASS] heavy: EQ +6 dB low shelf + compressor +1.2 (max), PVB out -5 dB, vb off, block 4096: tp=-1.08, nan=0, gr_mean=0.8153, gr_p95=3.617, gr_max=5.369
+[PASS] heavy: EQ +6 dB low shelf + compressor +1.2 (max), PVB out -5 dB, vb off, block 1024: tp=-1.08, nan=0, gr_mean=0.4693, gr_p95=2.429, gr_max=5.369
+[PASS] heavy: EQ +6 dB low shelf + compressor +1.2 (max), PVB out -5 dB, vb on, block 4096: tp=-1.068, nan=0, gr_mean=0.8846, gr_p95=3.773, gr_max=5.331
+[PASS] heavy: EQ +6 dB low shelf + compressor +1.2 (max), PVB out -5 dB, vb on, block 1024: tp=-1.068, nan=0, gr_mean=0.5537, gr_p95=2.8, gr_max=8.897
+[PASS] heavy: EQ +6 dB low shelf + compressor +1.2 (max), PVB out -3 dB, vb off, block 4096: tp=-1.058, nan=0, gr_mean=1.836, gr_p95=5.617, gr_max=7.369
+[PASS] heavy: EQ +6 dB low shelf + compressor +1.2 (max), PVB out -3 dB, vb off, block 1024: tp=-1.058, nan=0, gr_mean=1.152, gr_p95=4.353, gr_max=7.369
+[PASS] heavy: EQ +6 dB low shelf + compressor +1.2 (max), PVB out -3 dB, vb on, block 4096: tp=-1.058, nan=0, gr_mean=2.065, gr_p95=5.773, gr_max=7.331
+[PASS] heavy: EQ +6 dB low shelf + compressor +1.2 (max), PVB out -3 dB, vb on, block 1024: tp=-1.058, nan=0, gr_mean=1.346, gr_p95=4.57, gr_max=10.9
+
+54/54 checks passed
+[PASS] engine created 
+[PASS] latency 88 frames at 48 kHz (88)
+[PASS] output finite 
+[PASS] analysis runs (eq@220=2.619287)
+[PASS] analysis rejects mismatched arrays 
+[PASS] meters readable (rate=48000.0 mix=1.0 load=0.26414466%)
+[PASS] odd length keeps the last sample 
+[PASS] partial length leaves the rest alone 
+[PASS] 16-bit path runs 
+[PASS] wrong parameter count rejected 
+[PASS] parameter reaches the engine (low=6.0)
+[PASS] closed engine passes through 
+[PASS] closed engine: other calls do nothing 
+[PASS] close while 4 threads use the engine (30 rounds): no crash, passes through after (calls=6187981)
+[PASS] vol: reference volume keeps the base gain 
+[PASS] vol: 10 dB quieter adds 1.9 dB 
+[PASS] vol: cap at +6 dB 
+[PASS] vol: max volume goes to +1 dB 
+[PASS] vol: halfway up goes halfway 
+[PASS] vol: NaN drop keeps base 
+[PASS] vol: fallback curve 
+all JVM checks passed
+[PASS] JNI output == C API output (bit exact), max diff 0
+[PASS] JNI analysis == C API analysis (bit exact, NaN where nothing to show)
+[PASS] sine level in its band and broadband 1k=-13.01 broad=-13.01 125=-128.1
+[PASS] pink noise: unit RMS, flat per octave (500 Hz - 4 kHz) rms_db=0.06 octaves=-8.7, -8.6, -8.8, -8.7
+[PASS] stage plan picks 2 steps and 10 dB plan=StagePlan(steps=2, outDropDb=10.099999999999985, volumeGainDb=6.0, phoneLossDb=6.099999999999987)
+[PASS] stage plan: none when the base step is unmeasured 
+[PASS] accept: a good point 
+[PASS] accept: unstable point rejected 
+[PASS] accept: volume readback mismatch rejected 
+[PASS] accept: mic peak 0.990 rejected (the -18 dBFS point of the 08:18 measurement) 
+[PASS] accept: low SNR / NaN rejected 
+[PASS] curve: 08:18 accepted points usable 
+[PASS] curve: a real dip or unsorted points are not 
+[PASS] stage plan: X stays inside the measured curve (from -26 dBFS: X <= 8 dB) plan=StagePlan(steps=1, outDropDb=6.0, volumeGainDb=3.0, phoneLossDb=3.0)
+[PASS] stage check: same volume, same plan, both sides ok, within 0.5 dB 
+all measurement math checks passed
+[PASS] guessing odds: 7/8 = 9/256, 6/6 = 1/64
+[PASS] quiet room passes (worst SNR 68.5 dB)
+[PASS] noisy room fails on SNR (13.8 dB)
+[PASS] a voice-like burst in the room fails (jump 43.0 dB)
+[PASS] no microphone: says so
+[PASS] quiet room, speaker silent below 125 Hz: passes (worst margin 68.5 dB at 500 Hz)
+[PASS] a 63 Hz rumble 28 dB under the speaker's strongest band fails (28.2 dB at 63 Hz)
+[PASS] latency: onset found at 230.0 ms (230)
+[PASS] latency: no reference -> null (typical latency used)
+[PASS] silent interval: room noise passes, a 160 Hz sound 25 dB over it discards the trial
+[PASS] ABX: a perfect listener stops at 6/6
+[PASS] ABX: a guessing listener is 'distinguished' in 3.6 % of runs (< 6 %)
+[PASS] ABX: a 95 %-right listener is distinguished in 94 % of runs (> 90 %)
+[PASS] floor 130 Hz: median error 0.08 oct, 90th 0.25 oct (< 1/6, < 1/3)
+[PASS] floor 150 Hz: median error 0.08 oct, 90th 0.25 oct (< 1/6, < 1/3)
+[PASS] floor 200 Hz: median error 0.08 oct, 90th 0.29 oct (< 1/6, < 1/3)
+[PASS] floor 240 Hz: median error 0.09 oct, 90th 0.26 oct (< 1/6, < 1/3)
+[PASS] floor: a listener who 'hears' silent catch trials is marked unreliable
+[PASS] floor: an honest listener is reliable within 30 trials
+[PASS] strength: lands on the level nearest the listener's ideal (0, 2, 4, 6, 8), consistent, 4 pairs at most
+[PASS] strength: ideal halfway between 2 and 4 -> ties keep the lower
+[PASS] strength: a reversed answer on the repeated first pair -> inconsistent
+[PASS] break-up at 5.0 dB: median error 0.50 dB, 90th 1.50 dB, limits 0.0..4.0, 200 / 200 at least 1 dB under it (break-up - 3, whole dB)
+[PASS] break-up at 8.0 dB: median error 0.50 dB, 90th 1.00 dB, limits 3.0..6.0, 200 / 200 at least 1 dB under it (break-up - 3, whole dB)
+[PASS] break-up at 10.0 dB: median error 0.50 dB, 90th 1.00 dB, limits 4.0..8.0, 200 / 200 at least 1 dB under it (break-up - 3, whole dB)
+[PASS] break-up at 11.5 dB: median error 0.50 dB, 90th 1.00 dB, limits 6.0..12.0, 193 / 200 at least 1 dB under it (break-up - 3, whole dB)
+[PASS] break-up: never buzzes -> limit 12 dB in 200 / 200 runs
+[PASS] break-up: 'buzz' on catch trials (layer off) -> unreliable in 100 / 100 runs
+[PASS] break-up: at most 24 questions (12)
+[PASS] break-up: rattle alone counts as break-up (limit from it), kind 'rattle'
+[PASS] break-up: buzz alone, kind 'buzz'
+[PASS] break-up: always clean -> no kind, limit 12 dB
+[PASS] break-up: rattle with the layer off -> false alarm, counted as a rattle, unreliable
+[PASS] shape: the first pair (centre vs a corner) changes with the seed
+[PASS] shape: preferred cell 0 found in 37 / 40 runs (18 pairs)
+[PASS] shape: preferred cell 4 found in 37 / 40 runs (18 pairs)
+[PASS] shape: preferred cell 8 found in 36 / 40 runs (18 pairs)
+[PASS] shape: preferred cell 5 found in 38 / 40 runs (18 pairs)
+[PASS] floor 150 Hz gives the S26 Ultra's own values (HP 100, edge 190, out low 150, scale 1)
+[PASS] floor 200 Hz: HP 133, edge 253, out low 200, scale 1.33
+[PASS] mapping stays inside the engine's ranges
+[PASS] low-order weight: k=2 +w, others -w/3
+BassFitTest: 42 checks passed
+tools/pvb-harness/jvm/BassFitSessionTest.kt:98:101: warning: unnecessary non-null assertion (!!) on a non-null receiver of type Double
+        check(s.stage == FitStage.DONE && r.floorReliable && r.floorHz != null && abs(log2(r.floorHz!! / 200.0)) < 0.25,
+                                                                                                    ^
+tools/pvb-harness/jvm/BassFitSessionTest.kt:102:64: warning: unnecessary non-null assertion (!!) on a non-null receiver of type Double
+        check(r.limitReliable && r.limitDb != null && r.limitDb!! in 6.0..9.0 && r.strengthDb == 6.0,
+                                                               ^
+tools/pvb-harness/jvm/BassFitSessionTest.kt:108:80: warning: unnecessary non-null assertion (!!) on a non-null receiver of type Double
+        check(at(DevParams.TABLE_FLOOR) == DevParams.TABLE_FLOOR.snap(r.floorHz!!.toFloat()) &&
+                                                                               ^
+tools/pvb-harness/jvm/BassFitSessionTest.kt:118:67: warning: unnecessary non-null assertion (!!) on a non-null receiver of type Double
+        check(r.preferredDb == 8 && r.limitDb != null && r.limitDb!! <= 5.0 && r.strengthDb == r.limitDb,
+                                                                  ^
+tools/pvb-harness/jvm/BassFitSessionTest.kt:125:62: warning: unnecessary non-null assertion (!!) on a non-null receiver of type Double
+        check(r.floor != null && r.edgeHz != null && r.edgeHz!! > r.floor!!.boundaryHz * 1.25,
+                                                             ^
+tools/pvb-harness/jvm/BassFitSessionTest.kt:125:74: warning: unnecessary non-null assertion (!!) on a non-null receiver of type BassFitMapping.FloorSettings
+        check(r.floor != null && r.edgeHz != null && r.edgeHz!! > r.floor!!.boundaryHz * 1.25,
+                                                                         ^
+tools/pvb-harness/jvm/BassFitSessionTest.kt:163:86: warning: parameter 'l' is never used, could be renamed to _
+            Listener(floorHz = 150.0, idealDb = 4.0, breakDb = 12.0, seed = 1).let { l ->
+                                                                                     ^
+[PASS] floor 200 Hz found (224 Hz), reliable
+[PASS] edge: no difference heard -> the lower edge (280 Hz)
+[PASS] layer heard, preferred +6
+[PASS] break-up near 11 dB -> limit 7.0, strength +6 kept
+[PASS] shape skipped: roll-off and harmonics unchanged
+[PASS] applied: table floor 225.0, out low 220.0, edge 280.0, HP 150.0, strength 6.0
+[PASS] untested values untouched
+[PASS] preferred +8, break-up at 7 -> strength capped at the limit (4.0)
+[PASS] edge told apart and preferred -> 1.3 times higher (213 -> 277 Hz)
+[PASS] layer not heard -> no strength pairs, stored strength kept
+[PASS] floor unreliable -> high-pass, edge, band and table floor unchanged
+[PASS] shape taken: cell (-6 dB/oct, +4) -> roll-off -6, H2 +4, H3..5 -1
+[PASS] same seed -> the same questions in the same order (a run can be replayed)
+[PASS] another seed -> another order of the questions and other A/B/X sides
+[PASS] first tone in interval 1 in 10 of 30 runs (about half)
+[PASS] first X of the ABX is A in 21 of 40 runs (about half)
+[PASS] floor only: 22 questions (4 catch), floor 188 Hz, nothing else asked
+[PASS] break-up only: starts at step 3
+[PASS] break-up only: 14 questions, limit 4.0, no other step
+[PASS] plan: every virtual speaker 3 times, another order for another seed
+[PASS] plan: no condition twice in a row
+[PASS] log line: 2026-10-24T09:40,SM-S948N,0.9.0-beta.6,ear_floor_hz,hp150,0000000000001234,8,15,162.3,1,22,4,0,158.0,0,152,1,41.3,,,,,
+[PASS] step 1 plays the speaker alone (no layer, flat, high-pass 20 Hz)
+[PASS] a clip with a found floor: table floor 200, out low 200, edge 255, HP 135, strength as asked, EQ kept
+[PASS] layer off: same band, no layer
+[PASS] no floor: stored band values
+[PASS] two clip materials
+[PASS] music check: picking the new settings each time counts 3 of 3
+[PASS] music check: which side is new changes with the seed
+BassFitSessionTest: 29 checks passed
+[PASS] speaker -10 dB at 113 Hz: microphone reference floor 126 Hz (within 1/6 octave)
+[PASS] speaker -10 dB at 151 Hz: microphone reference floor 160 Hz (within 1/6 octave)
+[PASS] speaker -10 dB at 197 Hz: microphone reference floor 201 Hz (within 1/6 octave)
+[PASS] level 18 dB apart: same floor (142.5437949024543, 142.5437949024543)
+[PASS] latency off by 0.3 s: 142.5437949024543 vs 142.5437949024543 Hz
+[PASS] buzzy speaker: low bins 'buzz only', floor 126 Hz
+[PASS] clean speaker (buzz 35 dB down): just below the floor weak, not buzz
+[PASS] nothing recorded: no floor
+[PASS] clipped recording: flagged, no floor
+[PASS] live: now 164 Hz, fundamental 33 dB over its harmonics
+[PASS] the app's own sweep, unfiltered: every bin plays, floor 40 Hz
+SpeakerProbeTest: 11 checks passed
+[PASS] random short reads, 0, errors, partial writes (20 runs): every sample read is played once, in order, in whole frames last: buffer 2605, played 200000 of 200000
+[PASS] write error code returned, earlier samples kept in order r=-6 written=514
+[PASS] stop ends a blocking write loop r=30 calls=3
+[PASS] repeated empty writes drop the block calls=4
+[PASS] odd counts: whole frames only 
+all PCM pump checks passed
+[PASS] sweeps carry signal 
+[PASS] cross method: per-band speaker difference within 0.5 dB (mics and distances cancel) max_err=0.01 lo=6.0 hi=2.5
+[PASS] band averages match (half-dB steps) lo 6.0 vs 5.76, hi 2.5 vs 2.45
+[PASS] channels differ, enough valid bands 
+[PASS] one microphone on both channels: flagged 
+[PASS] two real microphones, steady runs: consistent recording spread=18.2 repeat=0.00
+[PASS] one microphone copied (half gain): channels do not differ, not consistent spread=-0.00
+[PASS] one microphone copied (one sample later): channels do not differ, not consistent spread=-0.00
+[PASS] one microphone copied (half gain, 20 samples later): channels do not differ, not consistent spread=-0.00
+[PASS] one microphone copied (through a different filter): channels do not differ, not consistent spread=0.01
+[PASS] recorder reports one microphone: not two microphones 
+[PASS] asymmetric paths: bias equals 10*log10(HL0*HL1/(HR0*HR1)) (a known limit, not detectable) lo=-3.0 hi=-3.0 expected=-3.01
+[PASS] runs that disagree by 3 dB: not consistent repeat=2.98
+[PASS] a burst in two bands of one run: not consistent repeat=0.19 worst=8.40
+[PASS] nothing played (noise only): not enough valid bands, balance 0 
+SpatialBalanceTest: all passed
+[PASS] pauses once after the hold pauses=[33]
+[PASS] no resume while silent 
+[PASS] silent blocks after the pause are not written skipped=36
+[PASS] hold is at least 2 s 
+[PASS] pause, resume on the first sound, pause again p=[23, 56] r=[30]
+[PASS] the sounding blocks are always written 
+[PASS] short gaps never pause p=[]
+[PASS] never pauses while not allowed 
+[PASS] resumes when pausing stops being allowed p=[23] r=[40]
+[PASS] zeros are silent 
+[PASS] one 16-bit step is silent 
+[PASS] more than one step is not 
+[PASS] only the first n samples count 
+[PASS] NaN is not silent 
+[PASS] short: +-1 is silent 
+[PASS] short: 2 is not 
+[PASS] paused before reset 
+[PASS] reset clears the pause 
+[PASS] setting 30 = 30 s of frames 
+[PASS] setting 0 / junk / negative = off 
+[PASS] deep sleep due after 30 s of rest dueAt=375
+[PASS] never due when off 
+[PASS] rearm: not due again until the full time 
+[PASS] sound resumes and clears the rest count 
+[PASS] reset clears the rest count 
+[PASS] hold setting 5 = 5 s 
+[PASS] hold junk / 0 / null = 2 s 
+[PASS] 10 s hold pauses after 10 s p=[117]
+SilenceGateTest: all passed
+[PASS] plain entries resolve inside 
+[PASS] traversal, absolute, empty and odd names rejected 
+[PASS] entry through a symbolic link leaving the folder rejected 
+[PASS] display names: last segment, no control/reserved chars, no dot files 
+[PASS] import target stays in its folder 
+all safe path checks passed
+Detailed diagnostics: aligned stems, wrap, owned block timeline, complete coverage and unavailable markers passed
+BuzzRing/WAV: rolling pre/post, wrap, freeze race, partial stop, PCM16 and float WAV passed
+BuzzMute: 5s watchdog, fade, early stop, repeated restore and stale-callback cancellation passed
+Diagnostic JNI: float/int16 stems, field schema, harmonic hops, solo and disabled capture passed
+tools/pvb-harness/jvm/HarmonicHistoryTest.kt:33:67: warning: unnecessary non-null assertion (!!) on a non-null receiver of type HarmonicHistory
+    check(w.frames==8*48000 && rows==1500 && !ring.harmonicHistory!!.truncated(w.start))
+                                                                  ^
+Harmonic history: wrap/ownership, explicit missing/malformed blocks and complete1500-hop8s passed
+Alpha3 settings: catalogue (7 models, P1 default), reference->P1 once, other models kept, alpha1/corrupt, level clamp 0..12 (-3->0, 9->9, 15->12), presets and fresh install passed
+Track level memory: key normalisation (case, spaces, NFC, no title -> none), player selection, LRU cap 3/500 and text round trip, recall/default/save, toggle off, delete/clear, restart restore passed
+VolumeLevelLinkTest: ok
+PvbEngineParamsTest: all checks passed
+[PASS] nothing known: no main window
+[PASS] Spotify playing behind, YouTube in front: main = YouTube, paused
+[PASS] YouTube in PIP, launcher in front: not paused
+[PASS] both resumed (PIP or split), Spotify opened last: main = Spotify, not paused
+[PASS] split screen, YouTube opened last: paused
+[PASS] YouTube leaves: the earlier resumed app is main again
+[PASS] screen off: never paused
+[PASS] comparison/measurement running: never paused
+[PASS] option off: never paused
+[PASS] not excluded app in front: not paused
+[PASS] unknown main window: not paused
+[PASS] clear: no main window
+ForegroundPauseTest: all checks passed
+LiveAb shuffle fixture (seed 20261022): [201, 210, 021, 021, 120, 201, 120, 201]
+LiveAbTest OK
+Alpha2/3 JNI: seven selectable models (incl. gentle12 ID3) at 44.1/48kHz, finite audio, IDs and latency passed
+Alpha2 JNI/CAPI: 14/14 bit exact for actual input/output PCM
+General build: profiles (s26u SM-S948*, neutral fallback), caps (out -3, ceil -1, low +6, Q 2, HP 80, release 30, VB 9), first-run gate, ADB commands, backup/transfer exclusions (8 files) passed
+ExperimentalSettingsTest: keys, defaults off (settings + XML), not in profiles, indices 29..32, en/ko strings: OK
+Home screen: caps 0..9, chips derived from model + level (custom pinned), preset writes within caps, master/headline with the first-run gate, volume-link line (60 % -> −4 dB, applied +2 dB), strings en/ko: OK
+Exception in thread "main" java.lang.AssertionError: app/src/general/res/values/strings_overrides.xml: same keys (en-only [pvb_jamesdsp_eq_info], ko-only [])
+	at FirstWeekTestKt.expect(FirstWeekTest.kt:15)
+	at FirstWeekTestKt.main(FirstWeekTest.kt:112)
