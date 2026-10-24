@@ -230,9 +230,11 @@ class AbxRun(private val seed: Long, val maxTrials: Int = 8, val passAt: Int = 7
     /** Whether X is A in the current trial. */
     fun xIsA(trial: Int = trials): Boolean = FitRng(seed xor (trial.toLong() * 0x9E3779B97F4A7C15uL.toLong())).bit()
 
-    fun answer(saidXIsA: Boolean): State {
+    /** [saidXIsA] null: "잘 모르겠어요", counted as a wrong answer (so it can only make passing harder; two of
+     *  them end an 8-trial run as not distinguished). */
+    fun answer(saidXIsA: Boolean?): State {
         check(state == State.RUNNING) { "decided" }
-        if (saidXIsA == xIsA()) correct++
+        if (saidXIsA != null && saidXIsA == xIsA()) correct++
         trials++
         state = when {
             correct >= passAt -> State.DISTINGUISHED

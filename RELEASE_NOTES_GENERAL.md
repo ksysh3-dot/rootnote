@@ -10,6 +10,10 @@ The corresponding source is the tagged commit; `source-*.tar.gz` below contains 
 - Measured settings exist only for the Galaxy S26 Ultra; other phones start with conservative settings based on published measurements of 92 Android phones.
 - Privacy: only settings are stored; no song titles, no recordings, nothing sent (see PRIVACY.md).
 
+## 다음 버전 (작업 중)
+
+- "X는 A와 B 중 어느 쪽과 같나요?" 질문에 "잘 모르겠어요"를 넣었어요. 틀린 답으로 세어서, 두 번 고르면 그 검사는 끝나고 지금 설정이 그대로 남아요. 배음 경계 검사는 차이가 아주 작아 구분이 안 되는 게 보통이라고 안내해요.
+
 ## 0.9.0-beta.10
 
 - 저음 맞추기 2단계 "좋아하는 세기"의 간격을 2 dB에서 3 dB로 넓혔어요(0 / 3 / 6 / 9). 2 dB 차이는 구분하기 어려웠어요.

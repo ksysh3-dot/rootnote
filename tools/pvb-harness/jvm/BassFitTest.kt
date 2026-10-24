@@ -307,6 +307,14 @@ fun main() {
         check(right >= 30, "shape: preferred cell $target found in $right / 40 runs (18 pairs)")
     }
 
+    // --- ABX "not sure": counted as wrong, two of them end the run
+    val unsure = AbxRun(5)
+    unsure.answer(null); check(unsure.state == AbxRun.State.RUNNING, "ABX: one 'not sure' keeps going")
+    unsure.answer(null); check(unsure.state == AbxRun.State.NOT_DISTINGUISHED && unsure.correct == 0, "ABX: two 'not sure' end as not distinguished")
+    val oneUnsure = AbxRun(6)
+    oneUnsure.answer(null); for (t in 1 until 8) if (oneUnsure.state == AbxRun.State.RUNNING) oneUnsure.answer(oneUnsure.xIsA())
+    check(oneUnsure.state == AbxRun.State.DISTINGUISHED, "ABX: one 'not sure' then all right still passes (7 / 8)")
+
     // --- noise correction (optional "소음 보정")
     val silent = DoubleArray(NoiseGate.TEST_BANDS.size) { -200.0 }
     check(abs(NoiseMasking.correctionDb(silent, 100.0)) < 1e-6, "noise correction: a silent room changes nothing")

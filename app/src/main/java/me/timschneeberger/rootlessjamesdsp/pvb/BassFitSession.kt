@@ -247,7 +247,7 @@ class BassFitSession(val seed: Long, val storedStrengthDb: Double, val scope: Fi
     }
 
     /** ABX of the edge check, the layer check (X is A?). */
-    fun answerAbx(saidXIsA: Boolean) {
+    fun answerAbx(saidXIsA: Boolean?) {
         when (stage) {
             FitStage.EDGE -> {
                 val abx = edgeAbx ?: error("edge preference, not ABX")
