@@ -149,6 +149,7 @@ class BassFitActivity : RnActivity() {
         ready = engineReady(),
         lastRecord = flags.getString(KEY_FIT_RECORD, null),
         canRestore = flags.getString(KEY_FIT_BEFORE, null) != null,
+        noiseCorr = flags.getBoolean(KEY_FIT_NOISE_CORR, false),
     )
 
     /** Ends what plays and records; the stored settings and JamesDSP play again. Stores nothing. */
@@ -300,6 +301,7 @@ class BassFitActivity : RnActivity() {
                     if (t != token || isFinishing) return@post
                     latencyS = lat
                     roomBands = bands
+                    if (ui.noiseCorr) session?.noiseBandsDb = bands
                     ui = ui.copy(micFloorHz = probe?.floorHz(), micClipped = probe?.clipped == true)
                     if (verdict.pass) {
                         ui = ui.copy(verdict = verdict)
@@ -527,6 +529,7 @@ class BassFitActivity : RnActivity() {
         onBack = { finish() },
         onStart = { start() },
         onShapeOnly = { startShape() },
+        onNoiseCorr = { on -> flags.edit().putBoolean(KEY_FIT_NOISE_CORR, on).apply(); ui = ui.copy(noiseCorr = on) },
         onRestore = { restoreBefore() },
         onRoomRetry = { stopAll(); if (ui.validating) { endValidation(); ui = validateState() } else ui = introState() },
         onRoomProceed = {
@@ -612,6 +615,7 @@ class BassFitActivity : RnActivity() {
         conditionHp = p.runs[planIndex]
         planIndex++
         session = BassFitSession(SecureRandom().nextLong(), stored().vbLevelDb.toDouble(), ui.valScope)
+            .also { if (ui.noiseCorr) it.noiseBandsDb = roomBands }
         // the microphone (silent-interval checks) only for the step-1 runs
         if (ui.valScope == FitScope.FLOOR && mic == null &&
             ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED)
@@ -644,6 +648,7 @@ class BassFitActivity : RnActivity() {
             catchRattles = r.breakupCatchRattles.takeIf { !floor }, catchBuzzes = r.breakupCatchBuzzes.takeIf { !floor },
             firstKind = r.breakupKind.takeIf { !floor },
             refDb = r.refThresholdDb.takeIf { floor },
+            noiseCorrDb = r.noiseCorrectionDb.takeIf { floor },
         ))
         ui = ui.copy(screen = FitScreen.VAL_NEXT, prompt = null, playing = null, logLines = logLines().coerceAtLeast(0))
     }
@@ -752,6 +757,7 @@ class BassFitActivity : RnActivity() {
         const val KEY_FIT_BEFORE = "bass_fit_before"
         /** One line describing the last saved fit. */
         const val KEY_FIT_RECORD = "bass_fit_record"
+        const val KEY_FIT_NOISE_CORR = "bass_fit_noise_corr"
         /** Speaker floor found by the last saved fit (Hz): the developer-mode graphs draw it instead of the profile's. */
         const val KEY_FIT_FLOOR_HZ = "bass_fit_floor_hz"
         private const val CHECK_SALT = 0x5EEDC0DEL

@@ -169,4 +169,7 @@
     <string name="fit_val_logged">검증을 마치고 기록했어요</string>
     <string name="fit_val_log_failed">기록을 저장하지 못했어요</string>
     <string name="fit_val_copied">기록을 복사했어요</string>
+    <string name="fit_noise_corr">소음 보정</string>
+    <string name="fit_noise_corr_line">방이 완전히 조용하지 않을 때 켜세요. 마이크로 잰 방의 소음에 맞춰 1단계 소리 크기를 고쳐요. 대략적인 보정이에요.</string>
+    <string name="fit_r_noise_line">1단계 100Hz 소리에 더한 값</string>
 </resources>

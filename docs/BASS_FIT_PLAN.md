@@ -169,3 +169,13 @@ hidden high-pass 120/150/180/220 Hz found within a median 0.05-0.07 octave of th
 unheard trials are answered "neither"; with forced guesses 0.1-0.14 (90th about 0.5). The old way found 112 Hz for
 220 Hz in the same simulation. The room gate is relaxed to 15 dB (an ordinary closed room measured 18): moderate
 noise raises the reference and the bursts alike.
+
+Later finding (0.9.0-beta.10): "raises the reference and the bursts alike" holds only for noise with the shape of the
+hearing threshold. A room's noise is mostly in the mids, so it raises the 300 Hz threshold more than a low note's; the
+bursts then play too loud and the floor comes out low (a run in an ordinary room at 30 % volume found 112 Hz, the
+microphone 160 Hz). Low bursts can also be felt in the hand before they are heard; step 1 now asks for what is heard
+and counts a felt hum as "only a feel or noise". An optional "소음 보정" (NoiseMasking, off by default) adds back the
+difference: each threshold's rise is the room's third-octave level (dB SPL by Android's nominal input sensitivity,
+90 dB SPL = RMS 2500 of 32768) as a masked tone 2 dB under the band, power-added to the ISO 226 threshold; the burst
+moves by its rise minus the 300 Hz one, limited to -12..+6 dB. Uncalibrated, so the validation log keeps the value at
+100 Hz (`noise_corr_100_db`) to check against the UMIK-1.

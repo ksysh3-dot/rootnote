@@ -169,4 +169,7 @@
     <string name="fit_val_logged">Validation done and logged</string>
     <string name="fit_val_log_failed">The log couldn\'t be saved</string>
     <string name="fit_val_copied">Log copied</string>
+    <string name="fit_noise_corr">Noise correction</string>
+    <string name="fit_noise_corr_line">Turn on when the room is not fully quiet. Step 1 adjusts its sounds for the room noise the microphone measured. A rough correction.</string>
+    <string name="fit_r_noise_line">Added to the 100 Hz sound in step 1</string>
 </resources>

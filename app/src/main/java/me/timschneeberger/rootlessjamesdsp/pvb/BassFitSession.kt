@@ -98,6 +98,8 @@ data class FitResult(
     val breakupBuzzes: Int = 0,
     val breakupCatchRattles: Int = 0,
     val breakupCatchBuzzes: Int = 0,
+    /** "소음 보정": the correction of the 100 Hz burst, dB (null: off). */
+    val noiseCorrectionDb: Double? = null,
     /** Only the harmonic shape was asked ([FitScope.SHAPE]): the other rows of the result are not shown. */
     val shapeOnly: Boolean = false,
 ) {
@@ -137,6 +139,8 @@ class BassFitSession(val seed: Long, val storedStrengthDb: Double, val scope: Fi
     /** Step 1 starts with the listener's threshold at 300 Hz; the floor bursts are set from it. */
     private val refTest = RefLevelStaircase(floorSeed xor 0x52454631L)
     private var floorTest = FloorStaircase(floorSeed)
+    /** Room levels of the room check when "소음 보정" is on ([NoiseMasking]); null = no correction. */
+    var noiseBandsDb: DoubleArray? = null
     private var refDone = false
     private var floor: BassFitMapping.FloorSettings? = null
     private val edgeSeed = sub()
@@ -210,7 +214,9 @@ class BassFitSession(val seed: Long, val storedStrengthDb: Double, val scope: Fi
             refTest.answer(c)
             if (refTest.done) {
                 refDone = true
-                floorTest = FloorStaircase(floorSeed, refDb = refTest.thresholdDb() ?: -FloorStaircase.SL_DB)
+                val bands = noiseBandsDb
+                floorTest = FloorStaircase(floorSeed, refDb = refTest.thresholdDb() ?: -FloorStaircase.SL_DB,
+                    noiseDb = bands?.let { b -> { hz: Double -> NoiseMasking.correctionDb(b, hz) } })
             }
             return
         }
@@ -375,6 +381,7 @@ class BassFitSession(val seed: Long, val storedStrengthDb: Double, val scope: Fi
                 breakupCatchRattles = b?.catchRattles ?: 0,
                 breakupCatchBuzzes = b?.catchBuzzes ?: 0,
                 shapeOnly = scope == FitScope.SHAPE,
+                noiseCorrectionDb = noiseBandsDb?.let { NoiseMasking.correctionDb(it, 100.0) },
             )
         }
 }

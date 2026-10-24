@@ -10,12 +10,14 @@ The corresponding source is the tagged commit; `source-*.tar.gz` below contains 
 - Measured settings exist only for the Galaxy S26 Ultra; other phones start with conservative settings based on published measurements of 92 Android phones.
 - Privacy: only settings are stored; no song titles, no recordings, nothing sent (see PRIVACY.md).
 
-## 다음 버전 (작업 중)
+## 0.9.0-beta.10
 
 - 저음 맞추기 2단계 "좋아하는 세기"의 간격을 2 dB에서 3 dB로 넓혔어요(0 / 3 / 6 / 9). 2 dB 차이는 구분하기 어려웠어요.
 - 3단계 안내를 고쳤어요. 가상 저음이 켜지면 기준보다 저음이 커지고 묵직해지는 게 정상이고, "떨려요"는 거친 "드르르" 소리가 섞일 때만 고르면 돼요.
 - 찌그러짐 한계를 찾지 못했을 때는 "먼저 나는 소리" 줄을 보여 주지 않아요.
 - "배음 모양만 맞추기"를 따로 할 수 있어요(4단계만, 마이크와 소음 검사 없이).
+- 1단계는 귀에 들리는 소리로만 답해요. 손에 "웅" 하는 진동만 느껴졌다면 "느낌·잡음만 났어요"를 고르면 돼요(낮은 음은 크게 나와서 손에 먼저 느껴질 수 있어요).
+- "소음 보정"을 켤 수 있어요(기본은 꺼짐). 마이크로 잰 방의 소음에 맞춰 1단계 소리 크기를 고쳐요. 보통 방의 소음은 가운데 음을 더 가려서 낮은 음이 너무 크게 나오고, 그러면 결과가 실제보다 낮게 나와요. 보정은 대략적이고, 결과 화면에 100 Hz에서 고친 양이 나와요.
 
 ## 0.9.0-beta.9
 
