@@ -48,7 +48,7 @@ NEUTRAL = dict(low_db=0, hi_db=0, hs_db=0, hp_hz=20, out_db=0, ceil_db=0)
 
 def main():
     lib = te.load_lib(os.path.join(HERE, 'build/libpvbcapi.so'))
-    check('parameter count 56 (47 + 9 crosstalk-cancellation values)', lib.pvb_param_count() == 56)
+    check('parameter count 57 (47 + 9 crosstalk-cancellation values + developer table scale)', lib.pvb_param_count() == 57)
     d = np.zeros(lib.pvb_param_count(), np.float32)
     lib.pvb_default_params(d.ctypes.data_as(te.FP))
     check('defaults: off, gentle, 40 cm, hat 57, 15.5 cm, 400-8000 Hz, balance 0 / 0',

@@ -59,6 +59,7 @@ data class PvbSettings(
     val devPercDb: Float = 0f,
     val devAttackMs: Float = DevParams.ATTACK_DEFAULT,
     val devReleaseMs: Float = DevParams.RELEASE_DEFAULT,
+    val devTableFloorHz: Float = DevParams.TABLE_FLOOR.default,
     // Crosstalk cancellation ("공간감", pvb_xtc.h): off by default; applied on the speaker in landscape only
     // (PvbController). Head size is a hat-size preset, never measured. Not part of device profiles or comparisons.
     val xtcMode: Int = XTC_OFF,
@@ -308,6 +309,7 @@ data class PvbSettings(
                 devPercDb = DevParams.clampStored(DevParams.KEY_PERC, p.float(DevParams.KEY_PERC, d.devPercDb)),
                 devAttackMs = DevParams.clampStored(DevParams.KEY_ATTACK, p.float(DevParams.KEY_ATTACK, d.devAttackMs)),
                 devReleaseMs = DevParams.clampStored(DevParams.KEY_RELEASE, p.float(DevParams.KEY_RELEASE, d.devReleaseMs)),
+                devTableFloorHz = DevParams.clampStored(DevParams.KEY_TABLE_FLOOR, p.float(DevParams.KEY_TABLE_FLOOR, d.devTableFloorHz)),
                 xtcMode = p.str(KEY_XTC_MODE, "0").trim().toIntOrNull()?.takeIf { it in XTC_OFF..XTC_FULL } ?: d.xtcMode,
                 xtcStrengthDb = p.str(KEY_XTC_STRENGTH, "-6").trim().toFloatOrNull()?.takeIf { it in XTC_STRENGTHS }
                     ?: d.xtcStrengthDb,

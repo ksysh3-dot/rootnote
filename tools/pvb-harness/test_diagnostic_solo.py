@@ -11,7 +11,7 @@ lib.pvb_set_diagnostic_capture.argtypes = [ctypes.c_void_p, ctypes.c_int]
 lib.pvb_copy_diagnostic.argtypes = [ctypes.c_void_p, FP, FP, ctypes.c_int, FP, ctypes.c_int]
 lib.pvb_copy_diagnostic.restype = ctypes.c_int
 FIELDS = 32 + lib.pvb_param_count()
-assert FIELDS == 88  # 32 observed + 56 parameters (33 + 14 developer-mode + 9 crosstalk-cancellation values)
+assert FIELDS == 89  # 32 observed + 57 parameters (33 + 14 developer-mode + 9 crosstalk-cancellation values + table scale)
 
 def capture(e, x, block=4096):
     lib.pvb_set_diagnostic_capture(e.h, 1)

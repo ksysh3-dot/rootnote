@@ -120,6 +120,9 @@ import me.timschneeberger.rootlessjamesdsp.pvb.DevSpec
 import me.timschneeberger.rootlessjamesdsp.pvb.DevTestKind
 import me.timschneeberger.rootlessjamesdsp.pvb.DevUnit
 import me.timschneeberger.rootlessjamesdsp.pvb.DevWarning
+import me.timschneeberger.rootlessjamesdsp.ui.RnDivider
+import me.timschneeberger.rootlessjamesdsp.ui.RnNavRow
+import me.timschneeberger.rootlessjamesdsp.ui.RnTheme
 import java.util.Locale
 import kotlin.math.roundToInt
 
@@ -166,6 +169,8 @@ data class DevUiState(
     val pasteText: String = "",
     val pasteResult: DevShareCode.Result? = null,
     val previewing: Boolean = false,
+    /** "스피커 확인 (마이크)": null until first used; the last result stays after it stops. */
+    val probe: ProbeView? = null,
 )
 
 class DevActions(
@@ -193,6 +198,10 @@ class DevActions(
     val onGaugeStyle: (Boolean) -> Unit,
     val onRestoreWarnings: () -> Unit,
     val onTurnOff: () -> Unit,
+    /** Opens "저음 맞추기" (BassFitActivity). */
+    val onBassFit: () -> Unit,
+    /** Starts or stops "스피커 확인 (마이크)". */
+    val onProbe: (Boolean) -> Unit,
 )
 
 /** Rootnote palette plus the semantic tokens of docs/DESIGN.md 2.2 (res/values{,-night}/colors_rootnote.xml). */
@@ -274,6 +283,7 @@ private fun DevContent(state: DevUiState, actions: DevActions) {
     Column(Modifier.fillMaxSize().background(c.bg).statusBarsPadding().navigationBarsPadding()) {
         TopBar(actions)
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
+            BassFitEntry(actions)
             TestSounds(state, actions)
             val pager = rememberPagerState(initialPage = state.tab, pageCount = { 3 })
             val tabNow by rememberUpdatedState(state.tab)
@@ -360,6 +370,15 @@ private fun TopBar(actions: DevActions) {
     }
 }
 
+/** The row that opens "저음 맞추기": the shared kit's navigation row (ui/RnRows.kt), then a divider. */
+@Composable
+private fun BassFitEntry(actions: DevActions) {
+    RnTheme(LocalDevReduceMotion.current) {
+        RnNavRow(stringResource(R.string.fit_title), line = stringResource(R.string.fit_entry_line), onClick = actions.onBassFit)
+        RnDivider()
+    }
+}
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun TestSounds(state: DevUiState, actions: DevActions) {
@@ -373,10 +392,12 @@ private fun TestSounds(state: DevUiState, actions: DevActions) {
             Chip(stringResource(R.string.dev_test_sweep), state.testKind == DevTestKind.SWEEP) { actions.onTest(DevTestKind.SWEEP) }
             Chip(stringResource(R.string.dev_test_kick), state.testKind == DevTestKind.KICK) { actions.onTest(DevTestKind.KICK) }
             Chip(stringResource(R.string.dev_test_bass_chord), state.testKind == DevTestKind.BASS_CHORD) { actions.onTest(DevTestKind.BASS_CHORD) }
-            Chip(stringResource(R.string.dev_test_music), state.testKind == null) { actions.onTest(null) }
+            Chip(stringResource(R.string.dev_test_music), state.testKind == null && state.probe?.running != true) { actions.onTest(null) }
+            Chip(stringResource(R.string.dev_test_probe), state.probe?.running == true) { actions.onProbe(state.probe?.running != true) }
         }
         if (!state.serviceRunning) Text(stringResource(R.string.dev_test_off_note), color = c.warnText, fontSize = 13.sp,
             lineHeight = 18.sp, modifier = Modifier.padding(top = 4.dp))
+        state.probe?.let { ProbePanel(it) }
     }
 }
 

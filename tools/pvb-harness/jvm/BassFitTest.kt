@@ -1,0 +1,226 @@
+import me.timschneeberger.rootlessjamesdsp.pvb.AbxRun
+import me.timschneeberger.rootlessjamesdsp.pvb.BassFitMapping
+import me.timschneeberger.rootlessjamesdsp.pvb.BreakupStaircase
+import me.timschneeberger.rootlessjamesdsp.pvb.FitLatency
+import me.timschneeberger.rootlessjamesdsp.pvb.FitRng
+import me.timschneeberger.rootlessjamesdsp.pvb.FitStats
+import me.timschneeberger.rootlessjamesdsp.pvb.FloorStaircase
+import me.timschneeberger.rootlessjamesdsp.pvb.NoiseGate
+import me.timschneeberger.rootlessjamesdsp.pvb.ShapeGrid
+import me.timschneeberger.rootlessjamesdsp.pvb.StrengthBracket
+import kotlin.math.PI
+import kotlin.math.abs
+import kotlin.math.exp
+import kotlin.math.ln
+import kotlin.math.log2
+import kotlin.math.pow
+import kotlin.math.sin
+import kotlin.system.exitProcess
+
+// "저음 맞추기" pure logic (BassFit.kt) against simulated listeners and rooms.
+
+private var passed = 0
+private fun check(ok: Boolean, what: String) {
+    if (!ok) { println("[FAIL] $what"); exitProcess(1) }
+    println("[PASS] $what"); passed++
+}
+
+private const val FS = 48000.0
+
+private fun noise(n: Int, db: Double, seed: Long): FloatArray {
+    val r = FitRng(seed)
+    val a = 10.0.pow(db / 20) * Math.sqrt(3.0)
+    return FloatArray(n) { (((r.next() ushr 11).toDouble() / (1L shl 53)) * 2 - 1).times(a).toFloat() }
+}
+
+private fun tones(n: Int, db: Double, hz: DoubleArray): FloatArray {
+    val a = 10.0.pow(db / 20) * Math.sqrt(2.0)
+    return FloatArray(n) { i -> hz.sumOf { a * sin(2 * PI * it * i / FS) }.toFloat() }
+}
+
+private fun add(a: FloatArray, b: FloatArray) = FloatArray(a.size) { a[it] + b[it] }
+
+fun main() {
+    // --- statistics
+    check(abs(FitStats.guessP(7, 8) - 9.0 / 256) < 1e-12 && abs(FitStats.guessP(6, 6) - 1.0 / 64) < 1e-12,
+        "guessing odds: 7/8 = 9/256, 6/6 = 1/64")
+
+    // --- noise gate
+    val n3 = (3 * FS).toInt(); val n2 = (2 * FS).toInt()
+    val bands = NoiseGate.TEST_BANDS
+    val quiet = noise(n3, -75.0, 1)
+    val ref = tones(n2, -30.0, bands)
+    val okV = NoiseGate.judge(quiet, add(noise(n2, -75.0, 2), ref), FS)
+    check(okV.pass && okV.worstSnrDb > 35, "quiet room passes (worst SNR ${"%.1f".format(okV.worstSnrDb)} dB)")
+    val loud = noise(n3, -20.0, 3)   // broadband: about -53 dB per low third-octave, a TV or fan in the room
+    val loudV = NoiseGate.judge(loud, add(noise(n2, -20.0, 4), ref), FS)
+    check(!loudV.pass && NoiseGate.Reason.SNR_LOW in loudV.reasons, "noisy room fails on SNR (${"%.1f".format(loudV.worstSnrDb)} dB)")
+    val bursty = quiet.copyOf().also { for (i in 60000 until 64800) it[i] += (0.05 * sin(2 * PI * 300 * i / FS)).toFloat() }
+    val burstV = NoiseGate.judge(bursty, add(noise(n2, -75.0, 5), ref), FS)
+    check(!burstV.pass && NoiseGate.Reason.ROOM_UNSTEADY in burstV.reasons, "a voice-like burst in the room fails (jump ${"%.1f".format(burstV.jumpDb)} dB)")
+    check(NoiseGate.judge(null, null, FS).reasons == listOf(NoiseGate.Reason.NO_MIC), "no microphone: says so")
+    // a phone speaker barely plays 63-100 Hz: in a quiet room that is not "noise"
+    val phoneRef = add(tones(n2, -30.0, bands.filter { it >= 125.0 }.toDoubleArray()), tones(n2, -62.0, bands.filter { it < 125.0 }.toDoubleArray()))
+    val phoneV = NoiseGate.judge(quiet, add(noise(n2, -75.0, 8), phoneRef), FS)
+    check(phoneV.pass, "quiet room, speaker silent below 125 Hz: passes (worst margin ${"%.1f".format(phoneV.worstSnrDb)} dB at ${phoneV.worstBandHz.toInt()} Hz)")
+    // ... but a rumble there still fails (it masks the tones above it)
+    val rumble = add(quiet, tones(n3, -58.0, doubleArrayOf(63.0)))
+    val rumbleV = NoiseGate.judge(rumble, add(add(noise(n2, -75.0, 9), tones(n2, -58.0, doubleArrayOf(63.0))), phoneRef), FS)
+    check(!rumbleV.pass && rumbleV.worstBandHz == 63.0 && NoiseGate.Reason.SNR_LOW in rumbleV.reasons,
+        "a 63 Hz rumble 28 dB under the speaker's strongest band fails (${"%.1f".format(rumbleV.worstSnrDb)} dB at ${rumbleV.worstBandHz.toInt()} Hz)")
+    // latency: the reference starts 230 ms after it was asked for
+    run {
+        val from = (1.0 * FS).toInt(); val lat = (0.23 * FS).toInt()
+        val x = noise((3.0 * FS).toInt(), -75.0, 10)
+        val r = tones(x.size, -30.0, doubleArrayOf(160.0, 315.0))
+        for (i in from + lat until x.size) x[i] += r[i]
+        val on = FitLatency.onsetFrame(x, FS, from)
+        check(on != null && abs(on - (from + lat)) <= (0.012 * FS).toInt(), "latency: onset found at ${on?.let { (it - from) * 1000 / FS }} ms (230)")
+        check(FitLatency.onsetFrame(noise(x.size, -75.0, 11), FS, from) == null, "latency: no reference -> null (typical latency used)")
+    }
+    val roomBands = NoiseGate.bandLevels(quiet, FS, bands)
+    check(!NoiseGate.disturbed(noise(n2, -75.0, 6), FS, roomBands) &&
+        NoiseGate.disturbed(add(noise(n2, -75.0, 7), tones(n2, -50.0, doubleArrayOf(160.0))), FS, roomBands),
+        "silent interval: room noise passes, a 160 Hz sound 25 dB over it discards the trial")
+
+    // --- ABX
+    run {
+        val perfect = AbxRun(42)
+        while (perfect.state == AbxRun.State.RUNNING) perfect.answer(perfect.xIsA())
+        check(perfect.state == AbxRun.State.DISTINGUISHED && perfect.trials == 6, "ABX: a perfect listener stops at 6/6")
+        var falsePos = 0
+        val runs = 4000
+        for (s in 0 until runs) {
+            val r = FitRng(s * 7919L + 1)
+            val a = AbxRun(s.toLong())
+            while (a.state == AbxRun.State.RUNNING) a.answer(r.bit())
+            if (a.state == AbxRun.State.DISTINGUISHED) falsePos++
+        }
+        val rate = falsePos.toDouble() / runs
+        check(rate < 0.06, "ABX: a guessing listener is 'distinguished' in ${"%.1f".format(100 * rate)} % of runs (< 6 %)")
+        var hits = 0
+        for (s in 0 until 2000) {
+            val r = FitRng(s * 104729L + 3)
+            val a = AbxRun(s.toLong() + 99)
+            while (a.state == AbxRun.State.RUNNING) { val right = r.below(100) < 95; a.answer(if (right) a.xIsA() else !a.xIsA()) }
+            if (a.state == AbxRun.State.DISTINGUISHED) hits++
+        }
+        check(hits / 2000.0 > 0.9, "ABX: a 95 %-right listener is distinguished in ${hits / 20} % of runs (> 90 %)")
+    }
+
+    // --- floor staircase: listener with a logistic psychometric function around the true floor
+    fun floorRun(trueHz: Double, seed: Long, catchLiar: Boolean = false): FloorStaircase {
+        val st = FloorStaircase(seed)
+        val r = FitRng(seed * 31 + 7)
+        while (!st.done) {
+            when (val t = st.current) {
+                is FloorStaircase.Trial.Catch -> st.answer(if (catchLiar) FloorStaircase.Choice.FIRST else FloorStaircase.Choice.NEITHER)
+                is FloorStaircase.Trial.Tone -> {
+                    val pHear = 1 / (1 + exp(-log2(t.hz / trueHz) / 0.06))
+                    val heard = (r.next() ushr 11).toDouble() / (1L shl 53) < pHear
+                    val c = if (heard) (if (t.inFirst) FloorStaircase.Choice.FIRST else FloorStaircase.Choice.SECOND)
+                            else if (r.bit()) FloorStaircase.Choice.FIRST else FloorStaircase.Choice.SECOND   // guess
+                    st.answer(c)
+                }
+            }
+        }
+        return st
+    }
+    for (f in doubleArrayOf(130.0, 150.0, 200.0, 240.0)) {
+        val errs = (0 until 200).map { s -> floorRun(f, s.toLong()).floorHz()?.let { abs(log2(it / f)) } ?: 9.0 }.sorted()
+        val med = errs[errs.size / 2]; val p90 = errs[errs.size * 9 / 10]
+        check(med < 1.0 / 6 && p90 < 1.0 / 3,
+            "floor ${f.toInt()} Hz: median error ${"%.2f".format(med)} oct, 90th ${"%.2f".format(p90)} oct (< 1/6, < 1/3)")
+    }
+    run {
+        val st = floorRun(150.0, 5, catchLiar = true)
+        check(!st.reliable && st.catchTrials > 0, "floor: a listener who 'hears' silent catch trials is marked unreliable")
+        val ok = floorRun(150.0, 5)
+        check(ok.reliable && ok.toneTrials + ok.catchTrials <= 30, "floor: an honest listener is reliable within 30 trials")
+    }
+
+    // --- strength bracket: listener preferring the level nearest an ideal; equal distance = no difference
+    fun bracket(ideal: Double, seed: Long, flip: Boolean = false): StrengthBracket {
+        val b = StrengthBracket(seed)
+        var k = 0
+        while (!b.done) {
+            val p = b.current!!
+            val dLo = abs(p.lo - ideal); val dHi = abs(p.hi - ideal)
+            var pref: Int? = when { abs(dLo - dHi) < 1e-9 -> null; dLo < dHi -> p.lo; else -> p.hi }
+            if (flip && b.result != null) pref = if (pref == p.lo) p.hi else p.lo   // the repeat answered the other way
+            val a = when (pref) { null -> StrengthBracket.Answer.SAME; p.lo -> if (p.loIsA) StrengthBracket.Answer.A else StrengthBracket.Answer.B
+                else -> if (p.loIsA) StrengthBracket.Answer.B else StrengthBracket.Answer.A }
+            b.answer(a); k++
+        }
+        return b
+    }
+    val want = mapOf(0.0 to 0, 1.6 to 2, 4.2 to 4, 5.8 to 6, 9.0 to 8)
+    check(want.all { (ideal, lvl) -> (0 until 20).all { s -> bracket(ideal, s.toLong()).let { it.result == lvl && it.consistent } } },
+        "strength: lands on the level nearest the listener's ideal (0, 2, 4, 6, 8), consistent, 4 pairs at most")
+    check((0 until 20).all { s -> bracket(3.0, s.toLong()).result == 2 }, "strength: ideal halfway between 2 and 4 -> ties keep the lower")
+    check(bracket(6.0, 3, flip = true).let { !it.consistent }, "strength: a reversed answer on the repeated first pair -> inconsistent")
+
+    // --- break-up staircase: yes/no listener, logistic around the true break-up level, honest on catch trials
+    fun breakup(trueDb: Double, seed: Long, start: Double = 4.0, liar: Boolean = false): BreakupStaircase {
+        val b = BreakupStaircase(seed, start)
+        val r = FitRng(seed * 6151 + 11)
+        while (!b.done) {
+            val buzz = when (val t = b.current) {
+                is BreakupStaircase.Trial.Catch -> liar
+                is BreakupStaircase.Trial.Level -> (r.next() ushr 11).toDouble() / (1L shl 53) < 1 / (1 + exp(-(t.db - trueDb) / 0.7))
+            }
+            b.answer(if (buzz) BreakupStaircase.Answer.BUZZ else BreakupStaircase.Answer.CLEAN)
+        }
+        return b
+    }
+    for (t in doubleArrayOf(5.0, 8.0, 10.0, 11.5)) {
+        val runs = (0 until 200).map { breakup(t, it.toLong()) }
+        val errs = runs.map { it.breakupDb()?.let { b -> abs(b - t) } ?: 99.0 }.sorted()
+        val med = errs[errs.size / 2]; val p90 = errs[errs.size * 9 / 10]
+        val limits = runs.mapNotNull { it.limitDb }
+        check(med < 1.0 && p90 < 2.5 && runs.count { it.reliable } >= 180 && limits.count { it <= t - 1.0 } >= 190,
+            "break-up at $t dB: median error ${"%.2f".format(med)} dB, 90th ${"%.2f".format(p90)} dB, limits ${limits.minOrNull()}..${limits.maxOrNull()}, ${limits.count { it <= t - 1.0 }} / 200 at least 1 dB under it (break-up - 3, whole dB)")
+    }
+    run {
+        val never = (0 until 200).count { s -> breakup(99.0, s.toLong()).let { it.limitDb == 12.0 && it.reliable } }
+        check(never >= 195, "break-up: never buzzes -> limit 12 dB in $never / 200 runs")
+        val lie = (0 until 100).count { s -> !breakup(8.0, s.toLong(), liar = true).reliable }
+        check(lie >= 95, "break-up: 'buzz' on catch trials (layer off) -> unreliable in $lie / 100 runs")
+        val b = breakup(8.0, 3)
+        check(b.levelTrials + b.catchTrials <= 24, "break-up: at most 24 questions (${b.levelTrials + b.catchTrials})")
+    }
+
+    // --- shape grid: listener utility peaked at one cell, Thurstone noise
+    fun grid(target: Int, seed: Long): ShapeGrid {
+        val g = ShapeGrid(seed)
+        val r = FitRng(seed * 13 + 5)
+        fun u(i: Int): Double { val c = g.cells[i]; val t = g.cells[target]
+            return -((c.rolloffDbOct - t.rolloffDbOct) / 6).pow(2) - ((c.lowOrderDb - t.lowOrderDb) / 4).pow(2) }
+        while (!g.done) {
+            val (i, j, iIsA) = g.current!!
+            val d = u(i) - u(j) + 0.35 * (((r.next() ushr 11).toDouble() / (1L shl 53)) * 2 - 1)
+            val a = when { abs(d) < 0.08 -> ShapeGrid.Answer.SAME; (d > 0) == iIsA -> ShapeGrid.Answer.A; else -> ShapeGrid.Answer.B }
+            g.answer(a)
+        }
+        return g
+    }
+    check((0 until 40).map { ShapeGrid(it.toLong()).current!!.let { (i, j, _) -> i * 10 + j } }.toSet().size == 4,
+        "shape: the first pair (centre vs a corner) changes with the seed")
+    for (target in intArrayOf(0, 4, 8, 5)) {
+        val right = (0 until 40).count { s -> grid(target, s.toLong()).best() == ShapeGrid(0).cells[target] }
+        check(right >= 30, "shape: preferred cell $target found in $right / 40 runs (18 pairs)")
+    }
+
+    // --- mapping
+    val m150 = BassFitMapping.fromFloor(150.0)
+    check(m150.hpHz == 100.0 && m150.boundaryHz == 190.0 && m150.outLoHz == 150.0 && m150.tableScale == 1.0,
+        "floor 150 Hz gives the S26 Ultra's own values (HP 100, edge 190, out low 150, scale 1)")
+    val m200 = BassFitMapping.fromFloor(200.0)
+    check(abs(m200.hpHz - 133.33) < 0.01 && abs(m200.boundaryHz - 253.33) < 0.01 && m200.outLoHz == 200.0 &&
+        abs(m200.tableScale - 4.0 / 3) < 1e-9, "floor 200 Hz: HP 133, edge 253, out low 200, scale 1.33")
+    check(BassFitMapping.fromFloor(500.0).boundaryHz <= 280.0 && BassFitMapping.fromFloor(50.0).tableScale >= 0.75,
+        "mapping stays inside the engine's ranges")
+    check(BassFitMapping.harmonicOffsets(3.0).let { it[0] == 3.0 && it[1] == -1.0 }, "low-order weight: k=2 +w, others -w/3")
+
+    println("BassFitTest: $passed checks passed")
+}

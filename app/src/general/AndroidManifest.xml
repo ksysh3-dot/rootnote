@@ -80,6 +80,12 @@
             android:exported="false"
             android:label="@string/dev_title"
             android:theme="@style/Theme.RootlessJamesDSP" />
+        <!-- "저음 맞추기" (bass fit, devmode/BassFitActivity.kt): listening tests opened from developer mode. -->
+        <activity
+            android:name="me.timschneeberger.rootlessjamesdsp.devmode.BassFitActivity"
+            android:exported="false"
+            android:label="@string/fit_title"
+            android:theme="@style/Theme.RootlessJamesDSP" />
         <!-- Settings and About in Compose (settings/RnSettingsActivity.kt); one instance per page (extra "route").
              The legacy SettingsActivity forwards here in this build. Not exported. -->
         <activity

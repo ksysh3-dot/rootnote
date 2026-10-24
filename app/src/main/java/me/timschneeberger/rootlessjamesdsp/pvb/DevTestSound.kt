@@ -19,6 +19,18 @@ enum class DevTestKind {
     XTC_BAND_LO, XTC_BAND_HI,
     /** Spatial self-measurement: a log sweep 300 Hz-10 kHz in one channel only (3 s, then 1.5 s silence), -18 dBFS. */
     XTC_SWEEP_L, XTC_SWEEP_R,
+    /**
+     * "저음 맞추기" (BassFitSession): [FIT_SILENCE] keeps the music out between questions; [FIT_REF] the room check's
+     * reference, band noise 56-560 Hz at -22 dBFS RMS; [FIT_IFC_1] / [FIT_IFC_2] / [FIT_IFC_0] one two-interval trial,
+     * a tone burst at the requested frequency in the first, the second or neither interval (then silence);
+     * [FIT_LOW] a 3.6 s sustained bass line (41-73 Hz) under a soft chord, [FIT_MID] 3.6 s of notes 4-27 % above the
+     * requested frequency (the generator edge), both then silence.
+     */
+    FIT_SILENCE, FIT_REF, FIT_IFC_1, FIT_IFC_2, FIT_IFC_0, FIT_LOW, FIT_MID,
+    /** "마이크가 듣는 값" ([SpeakerProbe]): a log sweep 40-500 Hz in 9 s, then 1 s silence, repeating, -15 dBFS. */
+    PROBE_SWEEP,
+    /** Validation: pink noise 40-4000 Hz, about -22 dBFS RMS, for the UMIK-1 in REW's RTA. */
+    FIT_PINK,
 }
 
 class DevTestSignal {
@@ -74,6 +86,8 @@ class DevTestSignal {
         val (lo, hi) = when (kind) {
             DevTestKind.XTC_BAND_LO -> 400.0 to 1500.0
             DevTestKind.XTC_BAND_HI -> 1500.0 to 8000.0
+            DevTestKind.FIT_REF -> 56.0 to 560.0
+            DevTestKind.FIT_PINK -> 40.0 to 4000.0
             else -> return
         }
         for (i in 0 until 4) {
@@ -91,7 +105,12 @@ class DevTestSignal {
         }
         bz.fill(0.0)
         // white noise of RMS 1 keeps sqrt(band / (sr / 2)) of its power in the band
-        bandGain = BAND_RMS / kotlin.math.sqrt((hi - lo) / (sr / 2.0))
+        bandGain = when (kind) {
+            DevTestKind.FIT_REF -> FIT_REF_RMS / kotlin.math.sqrt((hi - lo) / (sr / 2.0))
+            DevTestKind.FIT_PINK -> PINK_GAIN
+            else -> BAND_RMS / kotlin.math.sqrt((hi - lo) / (sr / 2.0))
+        }
+        pk.fill(0.0)
     }
 
     private fun white(): Double {
@@ -100,8 +119,18 @@ class DevTestSignal {
         return ((rng ushr 11).toDouble() / (1L shl 53).toDouble() * 2.0 - 1.0) * 1.7320508075688772
     }
 
+    // Paul Kellet's economy pink filter (-3 dB/octave within 0.5 dB over the audio band)
+    private val pk = DoubleArray(3)
+    private fun pinkSource(): Double {
+        val w = white()
+        pk[0] = 0.99765 * pk[0] + w * 0.0990460
+        pk[1] = 0.96300 * pk[1] + w * 0.2965164
+        pk[2] = 0.57000 * pk[2] + w * 1.0526913
+        return pk[0] + pk[1] + pk[2] + w * 0.1848
+    }
+
     private fun band(): Double {
-        var x = white()
+        var x = if (kind == DevTestKind.FIT_PINK) pinkSource() else white()
         for (i in 0 until 4) {
             val o = 5 * i
             val z = 2 * i
@@ -132,9 +161,61 @@ class DevTestSignal {
             DevTestKind.SWEEP -> sweep(time)
             DevTestKind.KICK -> kick(time)
             DevTestKind.BASS_CHORD -> bassChord(time)
-            DevTestKind.XTC_BAND_LO, DevTestKind.XTC_BAND_HI -> band()
+            DevTestKind.XTC_BAND_LO, DevTestKind.XTC_BAND_HI, DevTestKind.FIT_REF, DevTestKind.FIT_PINK -> band()
             DevTestKind.XTC_SWEEP_L, DevTestKind.XTC_SWEEP_R -> xtcSweep(time)
+            DevTestKind.FIT_SILENCE, DevTestKind.FIT_IFC_0 -> 0.0
+            DevTestKind.FIT_IFC_1 -> ifcTone(time, IFC_LEAD_S)
+            DevTestKind.FIT_IFC_2 -> ifcTone(time, IFC_LEAD_S + IFC_LEN_S + IFC_GAP_S)
+            DevTestKind.FIT_LOW -> fitLow(time)
+            DevTestKind.FIT_MID -> fitMid(time)
+            DevTestKind.PROBE_SWEEP -> probeSweep(time)
         }
+    }
+
+    private fun probeSweep(time: Double): Double {
+        val x = time % PROBE_PERIOD_S
+        val env = noteEnv(x, PROBE_SWEEP_S, 0.02)
+        if (env == 0.0) return 0.0
+        val k = ln(PROBE_HI_HZ / PROBE_LO_HZ)
+        val ph = 2 * PI * PROBE_LO_HZ * PROBE_SWEEP_S / k * (exp(k * x / PROBE_SWEEP_S) - 1)
+        return FIT_TONE_AMP * env * sin(ph)
+    }
+
+    /** Raised-cosine edges of [fade] s on a note of [len] s at x s into it (0 outside). */
+    private fun noteEnv(x: Double, len: Double, fade: Double): Double = when {
+        x < 0 || x >= len -> 0.0
+        x < fade -> 0.5 - 0.5 * cos(PI * x / fade)
+        x > len - fade -> 0.5 - 0.5 * cos(PI * (len - x) / fade)
+        else -> 1.0
+    }
+
+    // Two-interval trial: one burst of [IFC_LEN_S] starting at [start], 40 ms raised-cosine edges (no click to hear).
+    private fun ifcTone(time: Double, start: Double): Double {
+        val env = noteEnv(time - start, IFC_LEN_S, 0.04)
+        return if (env == 0.0) 0.0 else FIT_TONE_AMP * env * sin(advance(0, toneHz))
+    }
+
+    // E1 A1 D2 G1, 0.9 s each, bass with a little second harmonic under a soft chord (Em Am Dm G); once, then silence.
+    private fun fitLow(time: Double): Double {
+        if (time >= CLIP_S) return 0.0
+        val i = (time / FIT_NOTE_S).toInt().coerceIn(0, 3)
+        val x = time - i * FIT_NOTE_S
+        if (x < 1.0 / sr) { phase[0] = 0.0 }
+        val env = noteEnv(x, FIT_NOTE_S, 0.03)
+        val bass = FIT_BASS_AMP * env * (sin(advance(0, FIT_LOW_NOTES[i])) + 0.3 * sin(2 * phase[0]))
+        var chord = 0.0
+        for (j in 0 until 3) chord += sin(advance(1 + j, FIT_CHORDS[i][j]))
+        return bass + CHORD_AMP * env * chord
+    }
+
+    // Four notes 4-27 % above the requested frequency (the band between the generator edge and 1.3 times it).
+    private fun fitMid(time: Double): Double {
+        if (time >= CLIP_S) return 0.0
+        val i = (time / FIT_NOTE_S).toInt().coerceIn(0, 3)
+        val x = time - i * FIT_NOTE_S
+        if (x < 1.0 / sr) { phase[0] = 0.0 }
+        val env = noteEnv(x, FIT_NOTE_S, 0.03)
+        return FIT_BASS_AMP * env * (sin(advance(0, toneHz * FIT_MID_RATIOS[i])) + 0.25 * sin(2 * phase[0]))
     }
 
     private fun advance(i: Int, hz: Double): Double {
@@ -205,6 +286,29 @@ class DevTestSignal {
         const val SWEEP_S = 8.0
         const val SWEEP_PERIOD = 8.5
         val TONE_CHOICES = doubleArrayOf(40.0, 55.0, 80.0)
+        // "저음 맞추기"
+        const val FIT_REF_RMS = 0.08       // -22 dBFS RMS band noise
+        const val PINK_GAIN = 0.04         // pink noise 40-4000 Hz at about -22 dBFS RMS (peak about -10 dBFS)
+        const val FIT_TONE_AMP = 0.18      // -15 dBFS peak
+        const val FIT_BASS_AMP = 0.2
+        /** Two-interval trial: interval 1 at [IFC_LEAD_S], interval 2 [IFC_LEN_S] + [IFC_GAP_S] later. */
+        const val IFC_LEAD_S = 0.3
+        const val IFC_LEN_S = 0.5
+        const val IFC_GAP_S = 0.5
+        const val IFC_END_S = IFC_LEAD_S + 2 * IFC_LEN_S + IFC_GAP_S
+        const val FIT_NOTE_S = 0.9
+        const val CLIP_S = 4 * FIT_NOTE_S
+        private val FIT_LOW_NOTES = doubleArrayOf(41.2, 55.0, 73.42, 49.0)
+        private val FIT_CHORDS = arrayOf(
+            doubleArrayOf(164.81, 196.0, 246.94), doubleArrayOf(220.0, 261.63, 329.63),
+            doubleArrayOf(146.83, 174.61, 220.0), doubleArrayOf(196.0, 246.94, 293.66),
+        )
+        private val FIT_MID_RATIOS = doubleArrayOf(1.04, 1.11, 1.19, 1.27)
+        /** Probe sweep ([SpeakerProbe]): 40-500 Hz, 9 s, then 1 s silence. */
+        const val PROBE_LO_HZ = 40.0
+        const val PROBE_HI_HZ = 500.0
+        const val PROBE_SWEEP_S = 9.0
+        const val PROBE_PERIOD_S = 10.0
         private val BASS = doubleArrayOf(55.0, 43.65, 65.41, 49.0)
         private val CHORDS = arrayOf(
             doubleArrayOf(220.0, 261.63, 329.63), doubleArrayOf(174.61, 220.0, 261.63),

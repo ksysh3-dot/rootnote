@@ -90,7 +90,7 @@ void sanitizeParams(float* v) {
     // Developer mode: hard engine limits (the app's sliders stay inside them).
     v[P_DEV_ON] = v[P_DEV_ON] >= 0.5f ? 1.f : 0.f;
     v[P_DEV_METER] = v[P_DEV_METER] >= 0.5f ? 1.f : 0.f;
-    v[P_D_BOUNDARY_HZ] = clampv(v[P_D_BOUNDARY_HZ], 80.f, 220.f);
+    v[P_D_BOUNDARY_HZ] = clampv(v[P_D_BOUNDARY_HZ], 80.f, 280.f);   // up to 280: generator edge follows a higher speaker floor
     v[P_D_OUT_LO_HZ] = clampv(v[P_D_OUT_LO_HZ], 60.f, 300.f);
     v[P_D_OUT_HI_HZ] = std::max(clampv(v[P_D_OUT_HI_HZ], 250.f, 1200.f), 1.5f * v[P_D_OUT_LO_HZ]);
     for (int i : {P_D_H2_DB, P_D_H3_DB, P_D_H4_DB, P_D_H5_DB}) v[i] = clampv(v[i], -24.f, 12.f);
@@ -99,6 +99,7 @@ void sanitizeParams(float* v) {
     v[P_D_PERC_DB] = clampv(v[P_D_PERC_DB], -24.f, 12.f);
     v[P_D_ATTACK_MS] = clampv(v[P_D_ATTACK_MS], 1.f, 200.f);
     v[P_D_RELEASE_MS] = clampv(v[P_D_RELEASE_MS], 1.f, 1000.f);
+    v[P_D_TABLE_SCALE] = v[P_D_TABLE_SCALE] < 0.5f ? 1.f : clampv(v[P_D_TABLE_SCALE], 0.75f, 1.75f);
     v[P_XTC_MODE] = clampv(std::nearbyint(v[P_XTC_MODE]), 0.f, static_cast<float>(Xtc::kModeMax));
     v[P_XTC_STRENGTH_DB] = clampv(v[P_XTC_STRENGTH_DB], -12.f, -1.f);
     v[P_XTC_DIST_CM] = clampv(v[P_XTC_DIST_CM], 20.f, 80.f);
@@ -180,6 +181,7 @@ void defaultParams(float* v) {
     v[P_XTC_HI_HZ] = 8000.f;
     v[P_XTC_BAL_LO_DB] = 0.f;        // speakers taken as equal
     v[P_XTC_BAL_HI_DB] = 0.f;
+    v[P_D_TABLE_SCALE] = 1.f;
 }
 
 double estimatePhoneLimiterGr(double levelDb) { return PhoneModel::staticGr(levelDb); }
@@ -277,6 +279,7 @@ void Engine::applyDev(const float* v) {
         d.percDb = v[P_D_PERC_DB];
         d.attackHops = msToHops(v[P_D_ATTACK_MS]);
         d.releaseHops = msToHops(v[P_D_RELEASE_MS]);
+        d.tableScale = v[P_D_TABLE_SCALE];
     }
     if (d != devApplied_) {
         devApplied_ = d;
@@ -286,17 +289,21 @@ void Engine::applyDev(const float* v) {
     if (meter != devMeterOn_) {
         devMeterOn_ = meter;
         for (VbModule* m : vbMods_) m->setDevMeter(meter);
-        sDevLp_.reset(); sDevBpDry_.reset(); sDevBpLay_.reset();
+        for (auto& st : sDevLp_) st.reset();
+        sDevBpDry_.reset(); sDevBpLay_.reset();
         devBinDry_ = devBinLay_ = devPowDry_ = devPowLay_ = 0.0;
         devBinN_ = 0;
         for (auto& sl : devSlots_) sl = DevSlot{};
     }
     if (meter) {
-        SvfCoef lp;
-        lp.g = prewarp(sr_, d.boundaryHz);
-        lp.k = std::sqrt(2.0);
-        lp.m0 = 0.0; lp.m1 = 0.0; lp.m2 = 1.0;
-        devLp_.snap(lp);
+        // Butterworth 8th order: section Q = 1 / (2 cos(theta)), theta = pi (2i + 1) / 16
+        for (int i = 0; i < kDevLpSections; ++i) {
+            SvfCoef lp;
+            lp.g = prewarp(sr_, d.boundaryHz);
+            lp.k = 2.0 * std::cos(kPi * (2 * i + 1) / 16.0);
+            lp.m0 = 0.0; lp.m1 = 0.0; lp.m2 = 1.0;
+            devLp_[i].snap(lp);
+        }
     }
 }
 
@@ -678,7 +685,8 @@ void Engine::process(float* io, int frames) {
         if (devMeterOn_) {
             // Developer-mode display only (nothing here reaches the output): dry low band (aligned with the layer),
             // layer, and both in the 150-400 Hz band where the phone's protection acts.
-            const double low = devLp_.tick(sDevLp_, 0.5 * (alignedL + alignedR));
+            double low = 0.5 * (alignedL + alignedR);
+            for (int i = 0; i < kDevLpSections; ++i) low = devLp_[i].tick(sDevLp_[i], low);
             const double lay = vg * layMid * og;
             devBinDry_ += low * low;
             devBinLay_ += lay * lay;
@@ -825,7 +833,8 @@ void Engine::process(float* io, int frames) {
     if (matchOn) match_.flushTiny();
     cond_.flushTiny();
     if (devMeterOn_) {
-        sDevLp_.flushTiny(); sDevBpDry_.flushTiny(); sDevBpLay_.flushTiny();
+        for (auto& st : sDevLp_) st.flushTiny();
+        sDevBpDry_.flushTiny(); sDevBpLay_.flushTiny();
         if (devPowDry_ < 1e-24) devPowDry_ = 0.0;
         if (devPowLay_ < 1e-24) devPowLay_ = 0.0;
         DevHarmonics h;

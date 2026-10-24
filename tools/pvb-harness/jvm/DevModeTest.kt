@@ -153,8 +153,10 @@ fun main(args: Array<String>) {
 
     // ---------------------------------------------------------------------------------------- specs
     val specs = DevParams.ALL
-    check(specs.size == 21 && specs.map { it.id }.toSet().size == 21 && specs.map { it.key }.toSet().size == 21,
-        "21 values, unique ids and keys")
+    check(specs.size == 22 && specs.map { it.id }.toSet().size == 22 && specs.map { it.key }.toSet().size == 22,
+        "22 values, unique ids and keys")
+    check(DevParams.ALL.last() === DevParams.TABLE_FLOOR && DevParams.TABLE_FLOOR.default == 150f &&
+        DevParams.BOUNDARY.max == 280f, "table floor appended (share-code order kept), 150 Hz = model; edge up to 280 Hz")
     for (s in specs) {
         check(s.min < s.max && s.recMin >= s.min - 1e-4f && s.recMax <= s.max + 1e-4f && s.recMin <= s.recMax,
             "${s.id}: recommended range inside the range")
@@ -164,8 +166,8 @@ fun main(args: Array<String>) {
         check(s.snap(Float.NaN) == s.snap(s.default) && s.snap(1e9f) == s.valueAt(s.steps) && s.snap(-1e9f) == s.valueAt(0),
             "${s.id}: NaN -> default, out of range -> clamped")
     }
-    check(DevParams.group(DevGroup.BAND).size == 11 && DevParams.group(DevGroup.TIME).size == 5 &&
-        DevParams.group(DevGroup.SIZE).size == 5, "groups: band 11, time 5, level 5")
+    check(DevParams.group(DevGroup.BAND).size == 12 && DevParams.group(DevGroup.TIME).size == 5 &&
+        DevParams.group(DevGroup.SIZE).size == 5, "groups: band 12, time 5, level 5")
     check(DevParams.STRENGTH.max == 12f && DevParams.HP.min == 80f, "strength up to +12, high-pass from 80 Hz (general cap)")
     check(DevParams.ATTACK.default == 32f / 3f && abs(DevParams.RELEASE.snap(DevParams.RELEASE.default) - 32f) < 1e-4f,
         "attack 2 hops (10.7 ms), release 6 hops (32 ms) = model")
@@ -173,7 +175,7 @@ fun main(args: Array<String>) {
         "roll-off offset range keeps the absolute slope within 0..48 dB/oct")
     // engine indices and defaults
     check(PvbParam.DEV_ON == 33 && PvbParam.DEV_METER == 34 && PvbParam.D_BOUNDARY_HZ == 35 && PvbParam.D_RELEASE_MS == 46 &&
-        PvbParam.COUNT == 56, "parameter indices follow pvb_engine.h")
+        PvbParam.COUNT == 57 && PvbParam.D_TABLE_SCALE == 56, "parameter indices follow pvb_engine.h")
     val dp = PvbEngine.defaultParams()
     check(dp.size == PvbParam.COUNT && dp[PvbParam.DEV_ON] == 0f && dp[PvbParam.DEV_METER] == 0f &&
         dp[PvbParam.D_BOUNDARY_HZ] == 190f && dp[PvbParam.D_OUT_LO_HZ] == 150f && dp[PvbParam.D_OUT_HI_HZ] == 600f &&
@@ -202,7 +204,7 @@ fun main(args: Array<String>) {
     check(!d.devOn && DevParams.read(d).contentEquals(DevParams.read(PvbSettings())), "general: defaults, developer mode off")
     val on = PvbSettings.load(DPrefs(mapOf(DevParams.KEY_DEV_ON to true, DevParams.KEY_H3 to 6.4f,
         DevParams.KEY_BOUNDARY to 999f, DevParams.KEY_RELEASE to 120f, PvbSettings.KEY_VB_STRENGTH_DB to 12f)))
-    check(on.devOn && on.devH3Db == 6f && on.devBoundaryHz == 210f && on.devReleaseMs == DevParams.RELEASE.snap(120f) && abs(on.devReleaseMs - 120f) < 3f,
+    check(on.devOn && on.devH3Db == 6f && on.devBoundaryHz == 280f && on.devReleaseMs == DevParams.RELEASE.snap(120f) && abs(on.devReleaseMs - 120f) < 3f,
         "general: stored values read, snapped to the grid and clamped (${on.devOn} ${on.devH3Db} ${on.devBoundaryHz} ${on.devReleaseMs})")
     check(on.vbLevelDb == 12f, "developer mode: strength cap +12")
     val off12 = PvbSettings.load(DPrefs(mapOf(PvbSettings.KEY_VB_STRENGTH_DB to 12f)))
@@ -218,7 +220,7 @@ fun main(args: Array<String>) {
     check(specs.indices.all { specs[it].indexOf(back[it]) == specs[it].indexOf(vals[it]) }, "apply then read returns the same values")
     val written = HashMap<String, Any>()
     DevParams.write(vals, { k, v -> written[k] = v }, { k, v -> written[k] = v })
-    check(written.size == 21 && written[PvbSettings.KEY_X_RISE] is Boolean && written[DevParams.KEY_H3] == 6f,
+    check(written.size == 22 && written[PvbSettings.KEY_X_RISE] is Boolean && written[DevParams.KEY_H3] == 6f,
         "write: floats and switches under their keys")
     val profileSettings = mapOf<String, Any>(PvbSettings.KEY_HP_HZ to 100f, PvbSettings.KEY_VB_STRENGTH_DB to 4f)
     val defaults = DevParams.defaults(profileSettings)
@@ -438,12 +440,17 @@ fun main(args: Array<String>) {
         DevMath.gaugeStatus(-0.1f) == DevMath.GaugeStatus.DANGER, "gauge status words: 여유 있음 / 빠듯함 / 지직 위험")
 
     // ---------------------------------------------------------------------------------------- test sounds
+    val silentKinds = setOf(DevTestKind.FIT_SILENCE, DevTestKind.FIT_IFC_0)
     for (kind in DevTestKind.values()) {
         val g = DevTestSignal()
         g.set(kind, 55.0)
         val buf = FloatArray(2 * 48000 * 4)
         g.render(buf, 48000 * 4, 48000)
         val peak = buf.maxOf { abs(it) }
+        if (kind in silentKinds) {
+            check(buf.all { it == 0f }, "$kind: silence")
+            continue
+        }
         val channels = when (kind) {
             DevTestKind.XTC_SWEEP_L -> (0 until buf.size step 2).all { buf[it + 1] == 0f }
             DevTestKind.XTC_SWEEP_R -> (0 until buf.size step 2).all { buf[it] == 0f }
@@ -454,8 +461,30 @@ fun main(args: Array<String>) {
         val g2 = DevTestSignal(); g2.set(kind, 55.0)
         val buf2 = FloatArray(buf.size); g2.render(buf2, 48000 * 4, 48000)
         check(buf.contentEquals(buf2), "$kind: deterministic")
-        val sh = ShortArray(2 * 4800); g2.set(kind, 55.0); g2.renderShort(sh, 4800, 44100)
+        val sh = ShortArray(2 * 2 * 44100); g2.set(kind, 55.0); g2.renderShort(sh, 2 * 44100, 44100)
         check(sh.any { it.toInt() != 0 }, "$kind: 16-bit at 44.1 kHz")
+    }
+    run {
+        // two-interval trial: the burst only in its interval, silent elsewhere (the room check reads the other one)
+        fun rms(b: FloatArray, from: Double, to: Double): Double {
+            val a = (from * 48000).toInt(); val e = (to * 48000).toInt()
+            return Math.sqrt((a until e).sumOf { (b[2 * it] * b[2 * it]).toDouble() } / (e - a))
+        }
+        val i1 = DevTestSignal.IFC_LEAD_S
+        val i2 = i1 + DevTestSignal.IFC_LEN_S + DevTestSignal.IFC_GAP_S
+        val len = DevTestSignal.IFC_LEN_S
+        for ((kind, first) in listOf(DevTestKind.FIT_IFC_1 to true, DevTestKind.FIT_IFC_2 to false)) {
+            val g = DevTestSignal(); g.set(kind, 120.0)
+            val b = FloatArray(2 * 48000 * 3); g.render(b, 48000 * 3, 48000)
+            val on = rms(b, if (first) i1 else i2, (if (first) i1 else i2) + len)
+            val off = rms(b, if (first) i2 else i1, (if (first) i2 else i1) + len)
+            check(on > 0.08 && off == 0.0 && rms(b, 0.0, i1) == 0.0 && rms(b, i2 + len, 3.0) == 0.0,
+                "$kind: burst only in interval ${if (first) 1 else 2} (rms ${"%.3f".format(on)})")
+        }
+        val g = DevTestSignal(); g.set(DevTestKind.FIT_LOW, 55.0)
+        val b = FloatArray(2 * 48000 * 5); g.render(b, 48000 * 5, 48000)
+        check(rms(b, 0.1, DevTestSignal.CLIP_S - 0.1) > 0.05 && rms(b, DevTestSignal.CLIP_S, 5.0) == 0.0,
+            "bass clip: ${DevTestSignal.CLIP_S} s, then silence")
     }
     run {
         // 55 Hz tone: dominant frequency by zero crossings

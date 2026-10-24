@@ -85,6 +85,9 @@ object DevModeTexts {
         "vol_max" to Texts(R.string.dev_p_vol_max_name, R.string.dev_p_vol_max_line, R.string.dev_p_vol_max_up, null, null, evVol),
         "x_dense" to Texts(R.string.dev_p_x_dense_name, R.string.dev_p_x_dense_line, R.string.dev_p_x_dense_up, null, null,
             listOf(Item(E_, R.string.dev_ev_x_dense_0, listOf(NONE)), Item(S_, R.string.dev_ev_x_dense_1, listOf(ROOTNOTE)))),
+        "table_floor" to Texts(R.string.dev_p_table_floor_name, R.string.dev_p_table_floor_line, R.string.dev_p_table_floor_up,
+            R.string.dev_p_table_floor_down, null, listOf(Item(S_, R.string.dev_ev_table_floor_0, listOf(ROOTNOTE)),
+                Item(E_, R.string.dev_ev_table_floor_1, listOf(NONE)))),
     )
 
     fun of(spec: DevSpec): Texts = byId.getValue(spec.id)

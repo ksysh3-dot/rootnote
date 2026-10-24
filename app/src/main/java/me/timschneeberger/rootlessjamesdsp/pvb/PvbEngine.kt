@@ -71,7 +71,9 @@ object PvbParam {
     /** Speaker balance after the canceller (left louder by this, dB): 400-1500 Hz and 1.5-8 kHz. */
     const val XTC_BAL_LO_DB = 54
     const val XTC_BAL_HI_DB = 55
-    const val COUNT = 56
+    /** Developer: speaker-floor scale of the virtual-bass table (1 or 0 = model; 0.75..1.75). See pvb_engine.h. */
+    const val D_TABLE_SCALE = 56
+    const val COUNT = 57
 }
 
 /** Index of each value in the meter array (same order as pvb::Meter in pvb_engine.h). */
@@ -315,6 +317,7 @@ class PvbEngine(sampleRate: Int) : AutoCloseable {
             0f, -6f, 40f, 57f, // crosstalk cancellation off; gentle, 40 cm, standard head (hat 57 cm)
             15.5f, 400f, 8000f, // speaker spacing, feedback band
             0f, 0f,             // speaker balance (speakers taken as equal)
+            1f,                 // developer speaker-floor table scale (1 = model)
         )
     }
 }

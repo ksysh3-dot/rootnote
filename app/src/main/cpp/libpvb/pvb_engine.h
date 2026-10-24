@@ -108,6 +108,11 @@ enum Param : int {
     P_XTC_HI_HZ,        // feedback band, first-order low-pass
     P_XTC_BAL_LO_DB,    // speaker balance after the canceller: left louder by this, 400-1500 Hz (pvb_xtc.h)
     P_XTC_BAL_HI_DB,    // the same, 1.5-8 kHz
+    // Developer mode, appended after the spatial block to keep the indices above stable. Speaker-floor scale of the
+    // virtual-bass weight/gain table: notes are looked up at f / scale, so a phone whose speaker stops k times higher
+    // than the S26 Ultra gives notes up to k x higher the layer the model gives the S26 Ultra's. 1 (and 0, so a
+    // zero-filled array stays the model) = the model, bit-identical; 0.75..1.75. Needs P_DEV_ON like every P_D_*.
+    P_D_TABLE_SCALE,
     P_COUNT
 };
 
@@ -341,8 +346,11 @@ private:
     // Developer mode: voicing last pushed to the modules, and the display meters (audio thread writes, any reads).
     DevVoicing devApplied_;
     bool devMeterOn_ = false;
-    RampedSvf devLp_, devBp_;
-    SvfState sDevLp_, sDevBpDry_, sDevBpLay_;
+    // devLp_: 8th-order Butterworth low-pass at the generator edge (4 sections): the display's source-bass line, steep
+    // enough that piano or vocals at 250-400 Hz do not read as bass the generator could use.
+    static constexpr int kDevLpSections = 4;
+    RampedSvf devLp_[kDevLpSections], devBp_;
+    SvfState sDevLp_[kDevLpSections], sDevBpDry_, sDevBpLay_;
     double devBinDry_ = 0, devBinLay_ = 0, devPowDry_ = 0, devPowLay_ = 0, devPowCoef_ = 0;
     int devBinLen_ = 240, devBinN_ = 0;
     uint32_t devRingCount_ = 0;

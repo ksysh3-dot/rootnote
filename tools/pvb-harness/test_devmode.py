@@ -31,12 +31,12 @@ from test_experimental import build_baseline, music  # noqa: E402
 
 D = dict(X_SMOOTH=29, X_RISE=30, X_S1M=31, X_DENSE=32, DEV_ON=33, DEV_METER=34, D_BOUNDARY_HZ=35, D_OUT_LO_HZ=36,
          D_OUT_HI_HZ=37, D_H2_DB=38, D_H3_DB=39, D_H4_DB=40, D_H5_DB=41, D_ROLLOFF_DB_OCT=42, D_SUST_DB=43,
-         D_PERC_DB=44, D_ATTACK_MS=45, D_RELEASE_MS=46)
+         D_PERC_DB=44, D_ATTACK_MS=45, D_RELEASE_MS=46, D_TABLE_SCALE=56)
 P.update(D)
 DEFAULTS = dict(d_boundary_hz=190, d_out_lo_hz=150, d_out_hi_hz=600, d_h2_db=0, d_h3_db=0, d_h4_db=0, d_h5_db=0,
-                d_rolloff_db_oct=0, d_sust_db=0, d_perc_db=0, d_attack_ms=32 / 3, d_release_ms=32)
+                d_rolloff_db_oct=0, d_sust_db=0, d_perc_db=0, d_attack_ms=32 / 3, d_release_ms=32, d_table_scale=1)
 MOVED = dict(d_boundary_hz=150, d_out_lo_hz=120, d_out_hi_hz=800, d_h2_db=-6, d_h3_db=3, d_h4_db=-3, d_h5_db=-6,
-             d_rolloff_db_oct=-6, d_sust_db=-3, d_perc_db=2, d_attack_ms=5, d_release_ms=120)
+             d_rolloff_db_oct=-6, d_sust_db=-3, d_perc_db=2, d_attack_ms=5, d_release_ms=120, d_table_scale=1.33)
 P1, D2, GENTLE12 = 6, 7, 3
 RESULTS = []
 QUIET = dict(out_db=-24, ramp_ms=0)
@@ -343,6 +343,16 @@ def t_meters(lib):
     check('meters on 55 + 82 Hz together: both fundamentals held at most reads after 1 s', seen >= 30,
           reads_with_both=seen)
     e.close()
+    # the source-bass line is steep: a 262 Hz piano/vocal note reads at least 20 dB below a 55 Hz bass of equal level
+    lv = {}
+    for f in (55.0, 262.0):
+        e = Engine(lib, sr, vb_on=1, vb_algo=P1, vb_level_db=6, dev_on=1, dev_meter=1)
+        e.process(tone(sr, 2.0, f), block=960)
+        lib.pvb_copy_dev_meters(e.h, out.ctypes.data_as(FP), n)
+        lv[f] = float(np.median(out[fields:].reshape(-1, 2)[-200:, 0]))
+        e.close()
+    check('meters: source-bass line rejects low-mid notes (262 Hz >= 20 dB below 55 Hz)', lv[262.0] < lv[55.0] - 20,
+          bass_db=lv[55.0], lowmid_db=lv[262.0])
     bad = Engine(lib, sr)
     check('copy_dev_meters rejects a short buffer', lib.pvb_copy_dev_meters(bad.h, out.ctypes.data_as(FP), n - 1) == 0)
     bad.close()
@@ -356,7 +366,7 @@ def main():
     ap.add_argument('--report')
     a = ap.parse_args()
     lib = setup(load_lib(a.lib))
-    assert lib.pvb_param_count() == 56, lib.pvb_param_count()  # + 9 crosstalk-cancellation values
+    assert lib.pvb_param_count() == 57, lib.pvb_param_count()  # + 9 crosstalk-cancellation values + table scale
     d = np.zeros(56, np.float32)
     lib.pvb_default_params(d.ctypes.data_as(FP))
     exp = [0, 0, 190, 150, 600, 0, 0, 0, 0, 0, 0, 0, 32 / 3, 32]
