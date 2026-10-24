@@ -7,7 +7,7 @@
     <string name="fit_intro_title">Find the bass for this phone</string>
     <string name="fit_intro_body">By ear, find how low the speaker goes, how much virtual bass to add, and where it starts to buzz. The order of the questions and the A/B sides change every time.</string>
     <string name="fit_intro_1">Set your usual listening volume. If the volume changes during the test, it pauses.</string>
-    <string name="fit_intro_2">Listen in a quiet place, on the phone\'s speaker, holding the phone as usual.</string>
+    <string name="fit_intro_2">Somewhere quiet, holding the phone as usual, listening to its speaker. Answer by what you hear, not by the vibration you feel in your hand.</string>
     <string name="fit_intro_3">Nothing changes until you save, and you can undo it afterwards.</string>
     <string name="fit_start">Start</string>
     <string name="fit_shape_only">Harmonic shape only</string>
@@ -36,7 +36,7 @@
     <string name="fit_question">Question %1$d</string>
     <string name="fit_question_of">Question %1$d · %2$d at most</string>
     <string name="fit_floor_title">Where was the sound?</string>
-    <string name="fit_floor_body">The sound plays in one of two turns, and sometimes in neither. If you heard no note, only a rattle or noise, choose \"Only buzz\".</string>
+    <string name="fit_floor_body">The tone plays in one of the two turns, and sometimes in neither. Choose a turn only when you hear a note. If you only feel a \"hum\" in your hand, or hear only rattle or noise, choose \"Only a feel or noise\".</string>
     <string name="fit_floor_part_ref">First part: one middle note that gets quieter, to find how faintly you hear at this volume.</string>
     <string name="fit_floor_part_low">Second part: lower and lower notes, each a little louder than you just barely heard.</string>
     <string name="fit_interval">Turn %1$d</string>
@@ -44,7 +44,7 @@
     <string name="fit_floor_first">First</string>
     <string name="fit_floor_second">Second</string>
     <string name="fit_floor_neither">Heard nothing</string>
-    <string name="fit_floor_buzz">Only buzz</string>
+    <string name="fit_floor_buzz">Only a feel or noise</string>
     <string name="fit_replay">Play again</string>
     <string name="fit_disturbed">A sound in the room got in, so the same question plays again</string>
     <string name="fit_abx_title">Is X the same as A or as B?</string>

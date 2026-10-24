@@ -7,7 +7,7 @@
     <string name="fit_intro_title">이 폰에 맞는 저음 찾기</string>
     <string name="fit_intro_body">스피커가 어디까지 낮은 소리를 내는지, 가상 저음을 얼마나 넣을지, 어디서부터 지직거리는지 귀로 찾아요. 문제 순서와 A·B는 매번 달라져요.</string>
     <string name="fit_intro_1">평소 듣는 볼륨으로 맞춰 주세요. 시험 중에 볼륨이 바뀌면 잠시 멈춰요.</string>
-    <string name="fit_intro_2">조용한 곳에서, 폰을 평소처럼 들고 스피커로 들어 주세요.</string>
+    <string name="fit_intro_2">조용한 곳에서, 폰을 평소처럼 들고 스피커로 들어 주세요. 손에 느껴지는 진동이 아니라 귀에 들리는 소리로 답해 주세요.</string>
     <string name="fit_intro_3">저장하기 전에는 아무것도 바뀌지 않아요. 저장한 뒤에도 되돌릴 수 있어요.</string>
     <string name="fit_start">시작</string>
     <string name="fit_shape_only">배음 모양만 맞추기</string>
@@ -36,7 +36,7 @@
     <string name="fit_question">문제 %1$d</string>
     <string name="fit_question_of">문제 %1$d · 최대 %2$d</string>
     <string name="fit_floor_title">어느 쪽에서 소리가 났나요?</string>
-    <string name="fit_floor_body">소리가 두 번 중 한 번 나요. 아무 소리도 안 날 때도 있어요. 음은 안 들리고 떨림이나 잡음만 났다면 \"윙·지직만\"을 골라 주세요.</string>
+    <string name="fit_floor_body">소리가 두 번 중 한 번 나요. 아무 소리도 안 날 때도 있어요. 귀로 음이 들릴 때만 골라 주세요. 손에 \"웅\" 하는 느낌만 있거나 떨림·잡음만 났다면 \"느낌·잡음만\"을 골라 주세요.</string>
     <string name="fit_floor_part_ref">앞부분: 가운데 음 하나가 점점 작아져요. 이 볼륨에서 얼마나 작은 소리까지 들리는지 재요.</string>
     <string name="fit_floor_part_low">뒷부분: 음이 점점 낮아져요. 방금 겨우 들린 크기보다 조금 크게 들려줘요.</string>
     <string name="fit_interval">%1$d번째</string>
@@ -44,7 +44,7 @@
     <string name="fit_floor_first">첫 번째</string>
     <string name="fit_floor_second">두 번째</string>
     <string name="fit_floor_neither">안 들렸어요</string>
-    <string name="fit_floor_buzz">윙·지직만 났어요</string>
+    <string name="fit_floor_buzz">느낌·잡음만 났어요</string>
     <string name="fit_replay">다시 듣기</string>
     <string name="fit_disturbed">주변 소리가 끼어들어서 같은 문제를 다시 들려 드려요</string>
     <string name="fit_abx_title">X는 A와 B 중 어느 쪽과 같나요?</string>
