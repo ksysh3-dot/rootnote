@@ -242,7 +242,15 @@ jobs:
 
       # Rootnote for rooted phones: the JamesDSP audio effect with the PVB engine as a Magisk module (docs/ROOT_BUILD_PLAN.md)
       - name: Build the root effect module (Magisk)
-        run: tools/rootfx/build_android.sh
+        run: |
+          set -o pipefail
+          tools/rootfx/build_android.sh 2>&1 | tee ci-build.log
+
+      - name: Save the module log to the ci-log branch
+        if: failure()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./.github/save-ci-log.sh rootfx
 
       - name: Collect the general root APK (rooted phones, with the module)
         run: |
