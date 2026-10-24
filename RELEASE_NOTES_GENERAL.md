@@ -10,7 +10,10 @@ The corresponding source is the tagged commit; `source-*.tar.gz` below contains 
 - Measured settings exist only for the Galaxy S26 Ultra; other phones start with conservative settings based on published measurements of 92 Android phones.
 - Privacy: only settings are stored; no song titles, no recordings, nothing sent (see PRIVACY.md).
 
-## 0.9.0-beta.7
+## 0.9.0-beta.8
+
+(0.9.0-beta.7 was tagged but never built: the build ran out of memory. This is the same release.)
+
 
 저음 맞추기 3단계(찌그러짐 한계)의 답을 셋으로 나눴어요.
 
