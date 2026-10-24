@@ -102,16 +102,19 @@ internal object PhoneResponse {
         9.2f, 12.6f, 11.2f, 14.1f, 12.4f, 6.2f, -5.0f, -8.9f)
     val P90 = floatArrayOf(-16.5f, -9.4f, -5.3f, -1.1f, 0.3f, -0.6f, -1.9f, -1.5f, 1.2f, 3.7f, 4.6f, 2.9f, 5.7f, 12.7f,
         16.3f, 15.2f, 19.0f, 17.8f, 11.2f, 0.9f, -1.8f)
+    /** iPhones in the same reviewer's data (7 phones), median per band, same frame. Aggregate only. */
+    val IPHONE_P50 = floatArrayOf(-14.4f, -5.1f, -3.6f, -2.5f, -2.3f, -0.9f, -3.0f, -4.1f, -2.8f, -0.6f, 1.4f, 0.6f, 4.9f,
+        10.6f, 12.4f, 10.5f, 17.0f, 17.8f, 14.0f, 0.5f, -3.9f)
     /** The median phone is 10 dB under its mids here. */
     const val MEDIAN_MINUS10_HZ = 206f
 }
 
 private val Ease = CubicBezierEasing(0.32f, 0.72f, 0f, 1f)
-private const val SCENES = 10
+private const val SCENES = 11
 /** The page with "직접 들어 보기" (63 Hz +10 dB at a moment the listener is not told). */
-private const val TRY_PAGE = 5
-private val PERIODS = intArrayOf(4200, 4000, 3200, 4000, 3600, 2000, 3600, 3600, 5200, 4200)
-private val KEY_FRAMES = floatArrayOf(0.9f, 0.55f, 0.3f, 0.45f, 0.6f, 0f, 0.5f, 0.5f, 0.95f, 0.9f)
+private const val TRY_PAGE = 6
+private val PERIODS = intArrayOf(4200, 3600, 4000, 3200, 4000, 3600, 2000, 3600, 3600, 5200, 4200)
+private val KEY_FRAMES = floatArrayOf(0.9f, 0.7f, 0.55f, 0.3f, 0.45f, 0.6f, 0f, 0.5f, 0.5f, 0.95f, 0.9f)
 
 /**
  * The listening trial of [TRY_PAGE], driven by BassStoryActivity: [phase] IDLE, PREP (the trial's base settings
@@ -248,14 +251,15 @@ private fun Scene(page: Int, reduceMotion: Boolean, active: Boolean, trial: TryU
         val t = clock.value % 1f
         when (page) {
             0 -> sceneResponse(t, ink, tm, labels)
-            1 -> sceneCrank(t, ink, tm, labels)
-            2 -> sceneCone(t, ink, tm, labels)
-            3 -> sceneProtect(t, ink, tm, labels)
-            4 -> sceneSkirt(t, ink, tm, labels)
-            5 -> sceneTry(t, ink, trial)
-            6 -> sceneLowMid(t, ink, tm, labels)
-            7 -> sceneTreble(t, ink, tm, labels)
-            8 -> sceneResults(t, ink, tm, labels)
+            1 -> sceneIphone(t, ink, tm, labels)
+            2 -> sceneCrank(t, ink, tm, labels)
+            3 -> sceneCone(t, ink, tm, labels)
+            4 -> sceneProtect(t, ink, tm, labels)
+            5 -> sceneSkirt(t, ink, tm, labels)
+            6 -> sceneTry(t, ink, trial)
+            7 -> sceneLowMid(t, ink, tm, labels)
+            8 -> sceneTreble(t, ink, tm, labels)
+            9 -> sceneResults(t, ink, tm, labels)
             else -> sceneRecipe(t, ink, tm, labels)
         }
     }
@@ -348,7 +352,29 @@ private fun DrawScope.sceneResponse(t: Float, ink: Ink, tm: TextMeasurer, labels
     }
 }
 
-/** 2: the lowest EQ bands go up 10 dB; the median phone's curve barely leaves the grey part. */
+/** 2: the median Android phone, then the iPhones' median drawn over it; the bass gap shaded. */
+private fun DrawScope.sceneIphone(t: Float, ink: Ink, tm: TextMeasurer, labels: Array<String>) {
+    val ch = Chart(size.width, size.height)
+    zonesAndGrid(ch, ink, tm, labels)
+    curve(ch, { PhoneResponse.P50[it] }, ink.accent, 2.5f.dp.toPx())
+    val a = phase(t, 0.1f, 0.6f)
+    // the gap at 125-400 Hz fills as the iPhone line rises from the Android one
+    val gap = Path()
+    val idx = PhoneResponse.HZ.indices.filter { PhoneResponse.HZ[it] <= 400f }
+    fun mix(i: Int) = PhoneResponse.P50[i] + (PhoneResponse.IPHONE_P50[i] - PhoneResponse.P50[i]) * a
+    idx.forEachIndexed { k, i -> val x = ch.x(PhoneResponse.HZ[i]); if (k == 0) gap.moveTo(x, ch.y(mix(i))) else gap.lineTo(x, ch.y(mix(i))) }
+    for (i in idx.reversed()) gap.lineTo(ch.x(PhoneResponse.HZ[i]), ch.y(PhoneResponse.P50[i]))
+    gap.close()
+    drawPath(gap, ink.accent.copy(alpha = 0.25f))
+    curve(ch, { mix(it) }, ink.text, 2.5f.dp.toPx())
+    val b = phase(t, 0.6f, 0.72f)
+    if (b > 0f) {
+        text(tm, labels.getOrElse(27) { "" }, ch.x(160f), ch.y(PhoneResponse.IPHONE_P50[1]) - 20.dp.toPx(), ink.text.copy(alpha = b), 11f, bold = true)
+        text(tm, labels.getOrElse(28) { "" }, ch.x(200f), ch.y(PhoneResponse.P50[2]) + 6.dp.toPx(), ink.accent.copy(alpha = b), 11f, bold = true)
+    }
+}
+
+/** 3: the lowest EQ bands go up 10 dB; the median phone's curve barely leaves the grey part. */
 private fun DrawScope.sceneCrank(t: Float, ink: Ink, tm: TextMeasurer, labels: Array<String>) {
     val ch = Chart(size.width, size.height)
     zonesAndGrid(ch, ink, tm, labels)
@@ -371,7 +397,7 @@ private fun DrawScope.sceneCrank(t: Float, ink: Ink, tm: TextMeasurer, labels: A
     if (a > 0f) text(tm, labels.getOrElse(4) { "" }, ch.x(140f), ch.y(-24f), ink.text.copy(alpha = a), 11f, bold = true)
 }
 
-/** 3: two cones side by side: 250 Hz moves a little, 63 Hz (same loudness) 16 times as far and hits its limit. */
+/** 4: two cones side by side: 250 Hz moves a little, 63 Hz (same loudness) 16 times as far and hits its limit. */
 private fun DrawScope.sceneCone(t: Float, ink: Ink, tm: TextMeasurer, labels: Array<String>) {
     val w = size.width; val h = size.height
     val limit = h * 0.16f
@@ -409,7 +435,7 @@ private fun DrawScope.sceneCone(t: Float, ink: Ink, tm: TextMeasurer, labels: Ar
     cone(w * 0.72f, limit * 0.22f * 16f, 2, "63 Hz", labels.getOrElse(6) { "" })
 }
 
-/** 4: voice, instruments and bass; when the bass passes the protection line, every bar is pushed down. */
+/** 5: voice, instruments and bass; when the bass passes the protection line, every bar is pushed down. */
 private fun DrawScope.sceneProtect(t: Float, ink: Ink, tm: TextMeasurer, labels: Array<String>) {
     val w = size.width; val h = size.height
     val base = h * 0.8f
@@ -443,7 +469,7 @@ private fun peakDb(hz: Float, f0: Float, gainDb: Float, q: Float): Float {
     return (10 * kotlin.math.log10(num / den)).toFloat()
 }
 
-/** 5: why it seemed to work: a wide 63 Hz band's skirt still lifts 150-300 Hz, where the speaker plays. */
+/** 6: why it seemed to work: a wide 63 Hz band's skirt still lifts 150-300 Hz, where the speaker plays. */
 private fun DrawScope.sceneSkirt(t: Float, ink: Ink, tm: TextMeasurer, labels: Array<String>) {
     val ch = Chart(size.width, size.height)
     zonesAndGrid(ch, ink, tm, labels)
@@ -468,7 +494,7 @@ private fun DrawScope.sceneSkirt(t: Float, ink: Ink, tm: TextMeasurer, labels: A
 }
 
 /**
- * 6: the trial's time bar: it fills over the 30 s; a soft pulse asks to listen while it runs; at the end the real
+ * 7: the trial's time bar: it fills over the 30 s; a soft pulse asks to listen while it runs; at the end the real
  * 63 Hz +10 dB stretch (orange) and the tap (a line) are shown.
  */
 private fun DrawScope.sceneTry(t: Float, ink: Ink, trial: TryUi) {
@@ -549,7 +575,7 @@ private fun TryNote(text: String) {
     Text(text, color = c.textSecondary, fontSize = 13.sp, lineHeight = 18.sp)
 }
 
-/** 7: a small bump at 200-400 Hz, where the speaker still plays. */
+/** 8: a small bump at 200-400 Hz, where the speaker still plays. */
 private fun DrawScope.sceneLowMid(t: Float, ink: Ink, tm: TextMeasurer, labels: Array<String>) {
     val ch = Chart(size.width, size.height)
     zonesAndGrid(ch, ink, tm, labels)
@@ -561,7 +587,7 @@ private fun DrawScope.sceneLowMid(t: Float, ink: Ink, tm: TextMeasurer, labels: 
     text(tm, labels.getOrElse(12) { "" }, (x200 + x400) / 2f, ch.y(8f), ink.accent, 12f, bold = true, align = 0.5f)
 }
 
-/** 8: the treble peak (2.5-6 kHz, 10 dB and more over the mids) cut by 3 dB; the bass then stands out more. */
+/** 9: the treble peak (2.5-6 kHz, 10 dB and more over the mids) cut by 3 dB; the bass then stands out more. */
 private fun DrawScope.sceneTreble(t: Float, ink: Ink, tm: TextMeasurer, labels: Array<String>) {
     val ch = Chart(size.width, size.height)
     zonesAndGrid(ch, ink, tm, labels)
@@ -573,7 +599,7 @@ private fun DrawScope.sceneTreble(t: Float, ink: Ink, tm: TextMeasurer, labels: 
     text(tm, labels.getOrElse(13) { "" }, (x0 + x1) / 2f, ch.y(19f), ink.warn, 12f, bold = true, align = 0.5f)
 }
 
-/** 9: four results appear one after another. */
+/** 10: four results appear one after another. */
 private fun DrawScope.sceneResults(t: Float, ink: Ink, tm: TextMeasurer, labels: Array<String>) {
     val w = size.width; val h = size.height
     val cw = w * 0.45f; val chh = h * 0.4f
@@ -588,7 +614,7 @@ private fun DrawScope.sceneResults(t: Float, ink: Ink, tm: TextMeasurer, labels:
     }
 }
 
-/** 10: the recommended EQ shape: low cut, a little at 220 Hz, the treble peak cut. */
+/** 11: the recommended EQ shape: low cut, a little at 220 Hz, the treble peak cut. */
 private fun DrawScope.sceneRecipe(t: Float, ink: Ink, tm: TextMeasurer, labels: Array<String>) {
     val w = size.width; val h = size.height
     val left = w * 0.06f; val right = w * 0.97f
