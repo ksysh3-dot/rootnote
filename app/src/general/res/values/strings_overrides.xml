@@ -22,4 +22,6 @@
     <string name="onboarding_methods_rootless_adb">\u25CF Needs a PC and a USB cable\n\u25CF For advanced users\n\u25CF Android 10 and later</string>
     <!-- App theme picker: the upstream default moves to the end of the list and says what it is -->
     <string name="theme_default">Original default</string>
+    <!-- The JamesDSP EQ note opens the EQ story (home/BassStory.kt) in this build -->
+    <string name="pvb_jamesdsp_eq_info">Adds to the %1$s EQ. Raising the lowest bands a lot mostly adds rattle and makes the %1$s limiter work harder. Tap to see why.</string>
 </resources>
