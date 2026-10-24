@@ -10,6 +10,7 @@
     <string name="fit_intro_2">조용한 곳에서, 폰을 평소처럼 들고 스피커로 들어 주세요.</string>
     <string name="fit_intro_3">저장하기 전에는 아무것도 바뀌지 않아요. 저장한 뒤에도 되돌릴 수 있어요.</string>
     <string name="fit_start">시작</string>
+    <string name="fit_shape_only">배음 모양만 맞추기</string>
     <string name="fit_not_ready">Rootnote가 켜져 있고 폰 스피커로 소리가 나올 때 할 수 있어요.</string>
     <string name="fit_last_title">지난 결과</string>
     <string name="fit_restore">맞추기 전으로 되돌리기</string>
@@ -62,7 +63,7 @@
     <string name="fit_prefer_b">B가 좋아요</string>
     <string name="fit_prefer_same">차이 없어요</string>
     <string name="fit_buzz_title">저음이 떨리거나 지직거리나요?</string>
-    <string name="fit_buzz_body">\"저음\"을 듣고 답해 주세요. 깨끗해요: 저음 음만 매끈하게 들려요. 손에 웅웅 느껴지는 진동만 있으면 깨끗한 거예요. 떨려요: 저음이 칠 때마다 \"드르르\", \"덜걱\" 하고 무언가 닿아 같이 울리는 소리가 덧붙어요. 지직거려요: 소리 자체가 갈라지거나 찢어져요. \"기준\"은 같은 소리를 가상 저음 없이 들려줘요. 비교해 보세요. 가상 저음이 꺼진 문제도 섞여 있어요.</string>
+    <string name="fit_buzz_body">\"저음\"을 듣고 답해 주세요. 가상 저음이 켜지면 \"기준\"보다 저음이 더 크고 묵직해지는데, 그건 정상이에요. 깨끗해요로 골라 주세요. 떨려요: \"드르르\", \"덜걱\" 하고 무언가 닿아 같이 울리는 거친 소리가 섞여요. 지직거려요: 소리 자체가 갈라지거나 찢어져요. 가상 저음이 꺼진 문제도 섞여 있어요.</string>
     <string name="fit_buzz_clean">깨끗해요</string>
     <string name="fit_buzz_buzz">지직거려요</string>
     <string name="fit_buzz_rattle">떨려요</string>

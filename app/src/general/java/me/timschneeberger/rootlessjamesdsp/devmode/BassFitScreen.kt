@@ -145,6 +145,7 @@ data class FitUi(
 class FitActions(
     val onBack: () -> Unit,
     val onStart: () -> Unit,
+    val onShapeOnly: () -> Unit,
     val onRestore: () -> Unit,
     val onRoomRetry: () -> Unit,
     val onRoomProceed: () -> Unit,
@@ -445,6 +446,7 @@ private fun Result(ui: FitUi) {
     Title(stringResource(R.string.fit_result_title))
     val keep = stringResource(R.string.fit_r_keep)
     val unsure = stringResource(R.string.fit_r_unsure)
+    if (!r.shapeOnly) {
     RnNavRow(stringResource(R.string.fit_r_floor), onClick = null, chevron = false, value = when {
         r.floor != null -> stringResource(R.string.fit_hz, r.floor.speakerFloorHz.roundToInt())
         r.floorHz != null -> unsure
@@ -468,9 +470,10 @@ private fun Result(ui: FitUi) {
         r.breakupDb == null -> stringResource(R.string.fit_r_limit_none)
         else -> stringResource(R.string.fit_db, signed(r.limitDb))
     })
-    if (r.breakupKind != null) RnNavRow(stringResource(R.string.fit_r_kind), onClick = null, chevron = false,
+    if (r.breakupKind != null && r.breakupDb != null && r.limitReliable && r.limitDb != null && r.limitDb < 12.0) RnNavRow(stringResource(R.string.fit_r_kind), onClick = null, chevron = false,
         value = stringResource(if (r.breakupKind == BreakupStaircase.Answer.RATTLE) R.string.fit_r_kind_rattle else R.string.fit_r_kind_buzz))
     if (r.breakupCatchRattles + r.breakupCatchBuzzes > 0) RnNote(stringResource(R.string.fit_r_catch_broke), warning = true)
+    }
     RnNavRow(stringResource(R.string.fit_r_shape), onClick = null, chevron = false, value = when {
         !r.shapeTried -> stringResource(R.string.fit_r_skipped)
         r.shape == null -> unsure
@@ -635,6 +638,7 @@ private fun BottomAnswers(ui: FitUi, actions: FitActions) {
         when (ui.screen) {
             FitScreen.INTRO -> {
                 RnButtonRow { RnFilledButton(stringResource(R.string.fit_start), Modifier.weight(1f), enabled = ui.ready, onClick = actions.onStart) }
+                RnButtonRow { RnOutlineButton(stringResource(R.string.fit_shape_only), Modifier.weight(1f), enabled = ui.ready, onClick = actions.onShapeOnly) }
                 RnButtonRow {
                     if (ui.canRestore) RnOutlineButton(stringResource(R.string.fit_restore), Modifier.weight(1f), onClick = actions.onRestore)
                     RnOutlineButton(stringResource(R.string.fit_val_open), Modifier.weight(1f), onClick = actions.onValidate)

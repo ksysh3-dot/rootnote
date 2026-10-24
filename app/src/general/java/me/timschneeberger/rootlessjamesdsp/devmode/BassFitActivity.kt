@@ -243,6 +243,18 @@ class BassFitActivity : RnActivity() {
         roomCheck()
     }
 
+    /** "배음 모양만 맞추기": step 4 alone (A/B preferences on music, no microphone, no room check). */
+    private fun startShape() {
+        if (!engineReady()) { ui = ui.copy(ready = false); return }
+        stopAll()
+        keepScreenOn(true)
+        startVolume = PvbRuntime.status.volumeIndex
+        val seed = SecureRandom().nextLong()
+        session = BassFitSession(seed, stored().vbLevelDb.toDouble(), FitScope.SHAPE)
+        ui = FitUi(screen = FitScreen.TEST, seedText = seedText(seed), volumeText = volumeText())
+        beginTest()
+    }
+
     /**
      * 0.5 s settle, 3 s of the room, 3.6 s of the reference, then the probe sweep (9 s, the microphone's reference
      * floor, never applied); then judge (off the main thread).
@@ -514,6 +526,7 @@ class BassFitActivity : RnActivity() {
     private val actions = FitActions(
         onBack = { finish() },
         onStart = { start() },
+        onShapeOnly = { startShape() },
         onRestore = { restoreBefore() },
         onRoomRetry = { stopAll(); if (ui.validating) { endValidation(); ui = validateState() } else ui = introState() },
         onRoomProceed = {

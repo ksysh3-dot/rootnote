@@ -455,8 +455,9 @@ class RefLevelStaircase(
 // ------------------------------------------------------------------------------------------------ step 2b: strength
 
 /**
- * Preferred virtual-bass strength in {0, 2, 4, 6, 8} dB by blind A/B pairs ("어느 쪽이 더 좋나요 / 차이 없음"),
- * climbing from the middle: 2 vs 4; then 0 vs 2 or 4 vs 6; then 6 vs 8 if 6 won. "No difference" counts as a win for
+ * Preferred virtual-bass strength in {0, 3, 6, 9} dB by blind A/B pairs ("어느 쪽이 더 좋나요 / 차이 없음"),
+ * climbing from the middle: 3 vs 6; then 0 vs 3 or 6 vs 9. (Was 2 dB apart: a listener on the S26 Ultra could not
+ * tell the pairs apart and answered at random.) "No difference" counts as a win for
  * the lower level (virtual bass is a spice). At most three pairs, then the first pair again with the sides swapped:
  * a reversed answer marks the result inconsistent (not applied).
  */
@@ -465,7 +466,7 @@ class StrengthBracket(private val seed: Long) {
     data class Pair(val lo: Int, val hi: Int, val loIsA: Boolean)
 
     private val rng = FitRng(seed)
-    private val first = Pair(2, 4, rng.bit())
+    private val first = Pair(3, 6, rng.bit())
     var current: Pair? = first; private set
     var result: Int? = null; private set
     var consistent = true; private set
@@ -491,8 +492,7 @@ class StrengthBracket(private val seed: Long) {
         }
         if (asked == 1) firstWinner = w
         val next: Pair? = when {
-            p.lo == 2 && p.hi == 4 -> if (keep == 2) Pair(0, 2, rng.bit()) else Pair(4, 6, rng.bit())
-            p.lo == 4 && p.hi == 6 && keep == 6 -> Pair(6, 8, rng.bit())
+            p.lo == 3 && p.hi == 6 -> if (keep == 3) Pair(0, 3, rng.bit()) else Pair(6, 9, rng.bit())
             else -> null
         }
         if (next == null) { result = keep; current = Pair(first.lo, first.hi, !first.loIsA) } else current = next

@@ -98,6 +98,8 @@ data class FitResult(
     val breakupBuzzes: Int = 0,
     val breakupCatchRattles: Int = 0,
     val breakupCatchBuzzes: Int = 0,
+    /** Only the harmonic shape was asked ([FitScope.SHAPE]): the other rows of the result are not shown. */
+    val shapeOnly: Boolean = false,
 ) {
     /** [values] ([DevParams.ALL] order) with what this run applies. */
     fun applyTo(values: FloatArray): FloatArray {
@@ -120,7 +122,8 @@ data class FitResult(
 }
 
 /** What a run asks: everything, or one step alone (validation mode: repeated against the UMIK-1). */
-enum class FitScope { ALL, FLOOR, BREAKUP }
+/** What a run asks: everything, one step alone (validation mode), or only the harmonic shape (step 4 by itself). */
+enum class FitScope { ALL, FLOOR, BREAKUP, SHAPE }
 
 class BassFitSession(val seed: Long, val storedStrengthDb: Double, val scope: FitScope = FitScope.ALL) {
     private val seeds = FitRng(seed)
@@ -157,6 +160,8 @@ class BassFitSession(val seed: Long, val storedStrengthDb: Double, val scope: Fi
 
     init {
         if (scope == FitScope.BREAKUP) startBreakup()
+        // the shape alone: the stored floor, edge and strength stay; only the pairs of step 4 are asked
+        if (scope == FitScope.SHAPE) { shapeTried = true; enter(FitStage.SHAPE) }
     }
 
     /** 1..4: the step the screen shows ("1단계" ...); 0 when done. */
@@ -369,6 +374,7 @@ class BassFitSession(val seed: Long, val storedStrengthDb: Double, val scope: Fi
                 breakupBuzzes = b?.buzzAnswers ?: 0,
                 breakupCatchRattles = b?.catchRattles ?: 0,
                 breakupCatchBuzzes = b?.catchBuzzes ?: 0,
+                shapeOnly = scope == FitScope.SHAPE,
             )
         }
 }

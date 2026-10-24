@@ -10,6 +10,7 @@
     <string name="fit_intro_2">Listen in a quiet place, on the phone\'s speaker, holding the phone as usual.</string>
     <string name="fit_intro_3">Nothing changes until you save, and you can undo it afterwards.</string>
     <string name="fit_start">Start</string>
+    <string name="fit_shape_only">Harmonic shape only</string>
     <string name="fit_not_ready">Available while Rootnote is on and sound comes from the phone\'s speaker.</string>
     <string name="fit_last_title">Last result</string>
     <string name="fit_restore">Undo the last fit</string>
@@ -62,7 +63,7 @@
     <string name="fit_prefer_b">B is better</string>
     <string name="fit_prefer_same">No difference</string>
     <string name="fit_buzz_title">Does the bass rattle or buzz?</string>
-    <string name="fit_buzz_body">Answer about the \"Bass\" clip. Clean: only the bass note, smooth. A hum you feel in your hand is still clean. Rattles: a \"brrr\", clattering sound added on the beat, as if something loose touches and shakes along. Buzzes: the sound itself cracks or tears. \"Reference\" plays the same clip with the virtual bass off: compare with it. Some questions have the virtual bass off.</string>
+    <string name="fit_buzz_body">Answer about the \"Bass\" clip. With the virtual bass on, the bass is louder and fuller than the \"Reference\": that is normal, answer Clean. Rattles: a rough \"brrr\" or clatter, something loose touching and shaking along. Buzzes: the sound itself cracks or tears. Some questions have the virtual bass off.</string>
     <string name="fit_buzz_clean">Clean</string>
     <string name="fit_buzz_buzz">Buzzes</string>
     <string name="fit_buzz_rattle">Rattles</string>
