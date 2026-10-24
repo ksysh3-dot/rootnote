@@ -82,6 +82,7 @@ class DevModeActivity : BaseActivity() {
     private var probe: SpeakerProbe? = null
     private var probeStart = 0L
     private var probeRead = 0L
+    private var probeShown = 0L
 
     private val store = object : DevWarningStore {
         override fun count(w: DevWarning) = flags.getInt("dev_warn_count_${w.name}", 0)
@@ -347,6 +348,7 @@ class DevModeActivity : BaseActivity() {
         onEvidence = { spec -> update { it.copy(evidenceFor = spec?.id, sheetOpen = spec != null || it.shareOpen) } },
         onOpenUrl = { url -> PvbGeneral.openUrl(this, url) },
         onShareOpen = { open ->
+            if (!open) stopProbe()
             if (!open) PvbRuntime.setDevOverride(null)
             update { it.copy(shareOpen = open, sheetOpen = open || it.evidenceFor != null, previewing = if (open) it.previewing else false) }
         },
@@ -377,6 +379,7 @@ class DevModeActivity : BaseActivity() {
             update { it.copy(previewing = on && r != null) }
         },
         onApply = {
+            stopProbe()
             val r = ui?.pasteResult as? DevShareCode.Result.Ok
             if (r != null) {
                 PvbRuntime.setDevOverride(null)
@@ -416,6 +419,7 @@ class DevModeActivity : BaseActivity() {
 
     private fun startProbe() {
         stopProbe()
+        if (BaseAudioProcessorService.activeServices <= 0) { toast(R.string.dev_test_off_note); return }
         DevTestSound.stop()
         update { it.copy(testKind = null) }
         val granted = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
@@ -449,15 +453,18 @@ class DevModeActivity : BaseActivity() {
         val p = probe ?: return
         val fs = FitMic.FS.toDouble()
         val now = m.frames
-        if (now - probeRead > 4 * FitMic.FS) probeRead = now - SpeakerProbe.WINDOW     // fell behind: skip ahead
+        if (now - probeRead > FitMic.FS / 2) probeRead = now - SpeakerProbe.WINDOW     // fell behind: skip ahead
         var fed = false
-        while (probeRead + SpeakerProbe.WINDOW <= now) {
+        var n = 0
+        while (probeRead + SpeakerProbe.WINDOW <= now && n++ < 3) {     // at most 3 windows per poll (main thread)
             val w = m.copy(probeRead, SpeakerProbe.WINDOW) ?: break
             p.window(w, (probeRead + SpeakerProbe.WINDOW / 2 - probeStart) / fs - FitLatency.TYPICAL_S)
             probeRead += SpeakerProbe.WINDOW / 2
             fed = true
         }
-        if (fed) update { it.copy(probe = ProbeView.of(p, running = true)) }
+        // the screen about 5 times a second
+        val t = SystemClock.elapsedRealtime()
+        if (fed && t - probeShown >= 200) { probeShown = t; update { it.copy(probe = ProbeView.of(p, running = true)) } }
     }
 
     /** The slider range of [spec] for the current model (the roll-off offset depends on it). */

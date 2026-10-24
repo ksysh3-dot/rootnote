@@ -108,15 +108,22 @@ class SpeakerProbe(val fs: Double) {
         return floor
     }
 
+    private var hannTable = DoubleArray(0)
+    private fun hann(n: Int): DoubleArray {
+        if (hannTable.size != n) hannTable = DoubleArray(n) { 0.5 - 0.5 * cos(2 * PI * it / n) }
+        return hannTable
+    }
+
     // Goertzel on a Hann-windowed block: amplitude of [f] in dBFS (a full-scale sine is 0 dB).
     private fun tone(x: FloatArray, f: Double): Double {
         if (f >= fs / 2) return -200.0
         val n = x.size
         val w = 2 * PI * f / fs
         val coeff = 2 * cos(w)
+        val win = hann(n)
         var s1 = 0.0; var s2 = 0.0; var wsum = 0.0
         for (i in 0 until n) {
-            val h = 0.5 - 0.5 * cos(2 * PI * i / n)
+            val h = win[i]
             wsum += h
             val s = x[i] * h + coeff * s1 - s2
             s2 = s1; s1 = s

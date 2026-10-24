@@ -176,7 +176,11 @@ class FitActions(
 
 @Composable
 fun BassFitScreen(ui: FitUi, actions: FitActions) {
-    val back = if (ui.screen == FitScreen.VALIDATE) actions.onValBack else actions.onBack
+    val back = when {
+        ui.screen == FitScreen.VALIDATE -> actions.onValBack
+        ui.validating -> actions.onValStop          // back ends the block, not the screen
+        else -> actions.onBack
+    }
     val title = stringResource(if (ui.validating || ui.screen == FitScreen.VALIDATE) R.string.fit_val_title else R.string.fit_title)
     RnPage(title, onBack = back, bottomBar = { BottomAnswers(ui, actions) }) {
         ui.paused?.let { p ->

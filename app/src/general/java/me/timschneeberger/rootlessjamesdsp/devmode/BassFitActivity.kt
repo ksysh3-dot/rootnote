@@ -163,7 +163,7 @@ class BassFitActivity : RnActivity() {
     }
 
     /** Validation: the hidden virtual speaker (the engine's high-pass at [conditionHp]) on top of any test settings. */
-    private fun withCondition(s: PvbSettings): PvbSettings = conditionHp?.let { s.copy(hpHz = it.toFloat()) } ?: s
+    private fun withCondition(s: PvbSettings): PvbSettings = conditionHp?.let { s.copy(hpHz = maxOf(s.hpHz, it.toFloat())) } ?: s
 
     /** Silence (keeps the music out) with the settings of [v]. */
     private fun hold(v: FitVariant) {
@@ -514,7 +514,9 @@ class BassFitActivity : RnActivity() {
         onStart = { start() },
         onRestore = { restoreBefore() },
         onRoomRetry = { stopAll(); if (ui.validating) { endValidation(); ui = validateState() } else ui = introState() },
-        onRoomProceed = { ui = ui.copy(noisy = true); if (mic == null) hold(FitVariant.RAW); beginTest() },
+        onRoomProceed = {
+            if (ui.screen == FitScreen.ROOM_WARN) { ui = ui.copy(noisy = true); if (mic == null) hold(FitVariant.RAW); beginTest() }
+        },
         onFloor = { c -> answered { it.answerFloor(c) } },
         onReplay = {
             when (val p = ui.prompt) {
@@ -541,7 +543,7 @@ class BassFitActivity : RnActivity() {
         onValCondition = { i, on -> ui = ui.copy(valConds = if (on) ui.valConds + i else ui.valConds - i) },
         onValRepeats = { n -> ui = ui.copy(valRepeats = n) },
         onValStart = { startValidation() },
-        onValNext = { nextRun() },
+        onValNext = { if (ui.screen == FitScreen.VAL_NEXT) nextRun() },
         onValStop = { stopAll(); endValidation(); ui = validateState() },
         onUmik = { i -> if (ui.umikPlaying == i) stopUmik() else playUmik(i) },
         onLogCopy = { copyLog() },
@@ -602,6 +604,7 @@ class BassFitActivity : RnActivity() {
         ui = ui.copy(screen = FitScreen.TEST, valIndex = planIndex)
         keepScreenOn(true)
         present()
+        checkPause()        // a volume changed during the break
     }
 
     /** A run of the block ended: log it, then a break before the next one. */
@@ -609,6 +612,7 @@ class BassFitActivity : RnActivity() {
         val s = session ?: return
         token++
         DevTestSound.start(DevTestKind.FIT_SILENCE)
+        mic?.stop(); mic = null            // not during the break; the next step-1 run opens it again
         val r = s.result
         val floor = s.scope == FitScope.FLOOR
         appendLog(ValidationLog.Row(
@@ -617,8 +621,9 @@ class BassFitActivity : RnActivity() {
             conditionHp = conditionHp, seed = s.seed, volume = startVolume, volumeMax = PvbRuntime.status.volumeMax,
             value = if (floor) r.floorHz else r.breakupDb, reliable = if (floor) r.floorReliable else r.limitReliable,
             questions = if (floor) r.floorQuestions else r.breakupQuestions, catchTrials = if (floor) r.floorCatch else r.breakupCatch,
-            falseAlarms = if (floor) r.floorFalseAlarms else r.breakupFalseAlarms, micFloorHz = ui.micFloorHz,
-            micClipped = ui.micClipped, latencyMs = latencyS * 1000, roomPass = ui.verdict?.pass?.takeIf { !ui.noisy } ?: false,
+            // the room check's microphone floor is of the real speaker: only in rows of that condition
+            falseAlarms = if (floor) r.floorFalseAlarms else r.breakupFalseAlarms,
+            micFloorHz = ui.micFloorHz.takeIf { conditionHp == null }, micClipped = ui.micClipped.takeIf { conditionHp == null }, latencyMs = latencyS * 1000, roomPass = ui.verdict?.pass?.takeIf { !ui.noisy } ?: false,
             roomMarginDb = ui.verdict?.worstSnrDb,
         ))
         ui = ui.copy(screen = FitScreen.VAL_NEXT, prompt = null, playing = null, logLines = logLines().coerceAtLeast(0))
@@ -665,6 +670,9 @@ class BassFitActivity : RnActivity() {
     private fun playUmik(i: Int) {
         stopUmik()
         if (!engineReady()) { ui = ui.copy(ready = false); return }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            toast(R.string.dev_probe_nomic); return
+        }
         conditionHp = FitConditions.ALL[i]
         token++
         keepScreenOn(true)
@@ -674,7 +682,7 @@ class BassFitActivity : RnActivity() {
         later(UMIK_PINK_S) {
             val m = if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED)
                 FitMic.open(getSystemService(AudioManager::class.java)) else null
-            if (m == null) { stopUmik(); return@later }
+            if (m == null) { toast(R.string.dev_probe_nomic); stopUmik(); return@later }
             mic = m
             DevTestSound.start(DevTestKind.PROBE_SWEEP)
             val from = m.frames

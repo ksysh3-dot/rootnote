@@ -138,8 +138,8 @@
     <string name="fit_val_cond_hp">Virtual speaker · cut below %1$d Hz</string>
     <string name="fit_val_ear_note">The conditions that are on come in a random order, without saying which. %1$d runs in all. The room is checked once at the start.</string>
     <string name="fit_val_umik">Sounds for the UMIK-1</string>
-    <string name="fit_val_umik_note">Turn on the RTA in REW on the PC and put the UMIK-1 where your ears are. Each condition plays 20 s of pink noise, then a 10 s sweep while the phone microphone's value is logged.</string>
-    <string name="fit_val_umik_pink">Pink noise · measure with REW's RTA</string>
+    <string name="fit_val_umik_note">Turn on the RTA in REW on the PC and put the UMIK-1 where your ears are. Each condition plays 20 s of pink noise, then a 10 s sweep while the phone microphone\'s value is logged.</string>
+    <string name="fit_val_umik_pink">Pink noise · measure with REW\'s RTA</string>
     <string name="fit_val_umik_sweep">Sweep · logging the phone microphone</string>
     <string name="fit_val_umik_floor">Phone microphone floor about %1$d Hz</string>
     <string name="fit_val_umik_play">Play</string>
