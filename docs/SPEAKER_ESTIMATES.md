@@ -53,13 +53,13 @@ Caveat: the band limit was chosen after seeing the data. Good enough to use as t
 
 ## In the app: the EQ story (home/BassStory.kt)
 
-The story draws per-band aggregates only (dataset as of 2026-10-24: 97 Android phone curves, 7 iPhones, same
-reviewer): the 10th/50th/90th percentile of the Android phones and the median of the iPhones, plus our own S26 Ultra
-curve. iPhones (median): 125-250 Hz about +7 dB re the S26 Ultra; 10 dB under the mids at about 155 Hz (Android
-median about 205 Hz; about 1 Android phone in 10 reaches that low); still about -14 dB at 125 Hz. Seven phones: a
-rough comparison. Cross-check with the independent lab (5 iPhones, 54 Android phones, 100 % volume, 50 cm):
-iPhones 125-250 Hz about +5.5 dB over the Android median (about 1 in 10 Android phones as high), but only about
-+1.4 dB over the S26 Ultra there (vs +7 dB in the reviewer's data); full-volume protection likely narrows it.
+The story draws per-band aggregates only (dataset as of 2026-10-24: 97 Android phone curves and 7 phones of another
+maker known for strong bass, "brand A", same reviewer): the 10th/50th/90th percentile of the Android phones and the
+median of brand A, plus our own S26 Ultra curve. Brand A (median): 125-250 Hz about +7 dB re the S26 Ultra; 10 dB
+under the mids at about 155 Hz (Android median about 205 Hz; about 1 Android phone in 10 reaches that low); still
+about -14 dB at 125 Hz. Cross-check with the independent lab (5 brand A phones, 54 Android phones, 100 % volume,
+50 cm): brand A 125-250 Hz about +5.5 dB over the Android median, but only about +1.4 dB over the S26 Ultra there;
+full-volume protection likely narrows it. Small samples: a rough comparison. Other makers are not named in the app.
 
 ## Why the bass limit sits where it does (notes E and F)
 
