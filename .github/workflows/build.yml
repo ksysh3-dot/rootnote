@@ -81,6 +81,7 @@ jobs:
             OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/vb_quality/test_quality.py --report quality-report.json &&
             python3 tools/pvb-harness/match/test_match.py &&
             tools/pvb-harness/build_host_jdsp.sh &&
+            tools/rootfx/build_host.sh &&
             OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_jdsp_chain.py --report jdsp-chain-report.json &&
             tools/pvb-harness/jvm/run_jvm_test.sh
           } 2>&1 | tee ci-build.log
