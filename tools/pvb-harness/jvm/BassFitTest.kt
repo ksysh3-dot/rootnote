@@ -307,6 +307,14 @@ fun main() {
         check(right >= 30, "shape: preferred cell $target found in $right / 40 runs (18 pairs)")
     }
 
+    // --- ABX "not sure": counted as wrong, two of them end the run
+    val unsure = AbxRun(5)
+    unsure.answer(null); check(unsure.state == AbxRun.State.RUNNING, "ABX: one 'not sure' keeps going")
+    unsure.answer(null); check(unsure.state == AbxRun.State.NOT_DISTINGUISHED && unsure.correct == 0, "ABX: two 'not sure' end as not distinguished")
+    val oneUnsure = AbxRun(6)
+    oneUnsure.answer(null); for (t in 1 until 8) if (oneUnsure.state == AbxRun.State.RUNNING) oneUnsure.answer(oneUnsure.xIsA())
+    check(oneUnsure.state == AbxRun.State.DISTINGUISHED, "ABX: one 'not sure' then all right still passes (7 / 8)")
+
     // --- noise correction (optional "소음 보정")
     val silent = DoubleArray(NoiseGate.TEST_BANDS.size) { -200.0 }
     check(abs(NoiseMasking.correctionDb(silent, 100.0)) < 1e-6, "noise correction: a silent room changes nothing")
@@ -316,7 +324,12 @@ fun main() {
     check(c100 < -5 && c100 >= -NoiseMasking.MAX_DOWN_DB, "noise correction: room noise in the mids lowers the 100 Hz burst (${"%.1f".format(c100)} dB)")
     check(abs(NoiseMasking.correctionDb(office, RefLevelStaircase.REF_HZ)) < 1e-9, "noise correction: none at the reference")
     val lowRumble = doubleArrayOf(60.0, 55.0, 45.0, 35.0, 25.0, 15.0, 10.0, 8.0, 8.0, 8.0).map { it - NoiseMasking.SPL_OFFSET_DB }.toDoubleArray()
-    check(NoiseMasking.correctionDb(lowRumble, 70.0) > 0, "noise correction: a low rumble raises the lowest bursts")
+    check(NoiseMasking.correctionDb(lowRumble, 100.0) > 0, "noise correction: a low rumble raises the lowest bursts")
+    val rawRoom = doubleArrayOf(35.0, 33.0, 30.0, 28.0, 27.0, 27.0, 27.0, 27.0, 26.0, 25.0).map { it - NoiseMasking.SPL_OFFSET_UNPROCESSED_DB }.toDoubleArray()
+    check(abs(NoiseMasking.correctionDb(rawRoom, 100.0, NoiseMasking.splOffsetDb(true)) - c100) < 1e-9,
+        "noise correction: the same room recorded UNPROCESSED (17.6 dB lower in full scale) gives the same correction")
+    check(NoiseMasking.correctionDb(rawRoom, 100.0) > c100 + 3, "noise correction: UNPROCESSED read with the VOICE_RECOGNITION value corrects far too little (the beta.10 bug)")
+    check(NoiseMasking.correctionDb(lowRumble, 70.0) == NoiseMasking.correctionDb(lowRumble, 100.0), "noise correction: bands under 100 Hz are not trusted")
     val plain = FloorStaircase(1, refDb = -40.0)
     val corrected = FloorStaircase(1, refDb = -40.0, noiseDb = { hz -> NoiseMasking.correctionDb(office, hz) })
     check(abs(corrected.levelDb(100.0) - (plain.levelDb(100.0) + c100)) < 1e-9, "noise correction: applied to the floor bursts")

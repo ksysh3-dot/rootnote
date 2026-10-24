@@ -48,9 +48,9 @@
     <string name="fit_replay">다시 듣기</string>
     <string name="fit_disturbed">주변 소리가 끼어들어서 같은 문제를 다시 들려 드려요</string>
     <string name="fit_abx_title">X는 A와 B 중 어느 쪽과 같나요?</string>
-    <string name="fit_abx_body">A, B, X를 원하는 만큼 들어 보세요. 잘 모르겠으면 짐작으로 골라도 돼요.</string>
+    <string name="fit_abx_body">A, B, X를 원하는 만큼 들어 보세요. 구분이 안 되면 \"잘 모르겠어요\"를 골라 주세요. 구분이 안 되는 것도 결과예요. 그때는 지금 설정을 그대로 둬요.</string>
     <string name="fit_abx_layer">둘 중 하나는 가상 저음이 꺼져 있어요.</string>
-    <string name="fit_abx_edge">둘 중 하나는 배음을 만드는 경계가 더 높아요.</string>
+    <string name="fit_abx_edge">둘 중 하나는 배음을 만드는 경계가 더 높아요. 차이가 아주 작아서 구분이 안 되는 경우가 많아요.</string>
     <string name="fit_abx_is_a">X는 A</string>
     <string name="fit_abx_is_b">X는 B</string>
     <string name="fit_play_a11y">%1$s 듣기</string>
@@ -172,4 +172,5 @@
     <string name="fit_noise_corr">소음 보정</string>
     <string name="fit_noise_corr_line">방이 완전히 조용하지 않을 때 켜세요. 마이크로 잰 방의 소음에 맞춰 1단계 소리 크기를 고쳐요. 대략적인 보정이에요.</string>
     <string name="fit_r_noise_line">1단계 100Hz 소리에 더한 값</string>
+    <string name="fit_abx_unsure">잘 모르겠어요</string>
 </resources>

@@ -48,9 +48,9 @@
     <string name="fit_replay">Play again</string>
     <string name="fit_disturbed">A sound in the room got in, so the same question plays again</string>
     <string name="fit_abx_title">Is X the same as A or as B?</string>
-    <string name="fit_abx_body">Play A, B and X as often as you like. If you can\'t tell, a guess is fine.</string>
+    <string name="fit_abx_body">Listen to A, B and X as often as you like. If you cannot tell, choose \"Not sure\". Not telling them apart is a result too: the current setting then stays.</string>
     <string name="fit_abx_layer">One of the two has the virtual bass off.</string>
-    <string name="fit_abx_edge">One of the two makes harmonics up to a higher note.</string>
+    <string name="fit_abx_edge">One of the two makes harmonics up to a higher note. The difference is very small and often cannot be heard.</string>
     <string name="fit_abx_is_a">X is A</string>
     <string name="fit_abx_is_b">X is B</string>
     <string name="fit_play_a11y">Play %1$s</string>
@@ -172,4 +172,5 @@
     <string name="fit_noise_corr">Noise correction</string>
     <string name="fit_noise_corr_line">Turn on when the room is not fully quiet. Step 1 adjusts its sounds for the room noise the microphone measured. A rough correction.</string>
     <string name="fit_r_noise_line">Added to the 100 Hz sound in step 1</string>
+    <string name="fit_abx_unsure">Not sure</string>
 </resources>

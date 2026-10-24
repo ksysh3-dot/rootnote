@@ -362,7 +362,9 @@ class RnAdvancedActivity : RnActivity() {
             armPendingTimeout()
             return
         }
-        if (app.mediaProjectionStartIntent != null && !SdkCheck.isVanillaIceCream) {
+        // Android 14 does not let an app targeting it reuse a capture consent (MainActivity's Android 15 check let it
+        // try once on Android 14 and fail); EngineLauncher already stops at 14
+        if (app.mediaProjectionStartIntent != null && !SdkCheck.isUpsideDownCake) {
             RootlessAudioProcessorService.start(this, app.mediaProjectionStartIntent)
             armPendingTimeout()
             return

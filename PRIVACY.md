@@ -28,7 +28,9 @@ This document covers the general distribution build **Rootnote** (package `kr.ks
 | 프리셋·스크립트·IR 파일(원본 기능) | 앱 파일 영역 | 사용자가 직접 만들거나 가져온 파일 |
 | 진단 로그(원본 기능) | 캐시 `application.log` | 기술 메시지(최대 2 MB, 앱을 시작할 때마다 새로 씀). 처리 중인 앱 이름이 들어갈 수 있습니다. 설정 › 문제 해결에서 직접 공유하지 않는 한 폰 밖으로 나가지 않습니다. |
 
-시스템 오디오는 서비스가 켜져 있는 동안 메모리에서만 처리하고 저장하지 않습니다. 오디오 캡처에는 Android 규정상 `RECORD_AUDIO` 권한이 필요합니다. 마이크는 단 한 경우에만 씁니다. 공간감의 '좌우 맞추기'에서 사용자가 **자동 측정**을 직접 누르면, 20~45초 동안 폰의 위아래 마이크로 두 스피커 소리를 듣고 메모리에서 대역별 크기만 계산한 뒤 버립니다. 녹음은 저장하지도, 어디로 보내지도 않습니다.
+시스템 오디오는 서비스가 켜져 있는 동안 메모리에서만 처리하고 저장하지 않습니다. 오디오 캡처에는 Android 규정상 `RECORD_AUDIO` 권한이 필요합니다. 마이크는 두 경우에만 씁니다. 공간감의 '좌우 맞추기'에서 사용자가 **자동 측정**을 직접 누르면, 20~45초 동안 폰의 위아래 마이크로 두 스피커 소리를 듣고 메모리에서 대역별 크기만 계산한 뒤 버립니다. 녹음은 저장하지도, 어디로 보내지도 않습니다.
+
+마이크를 쓰는 곳이 하나 더 있습니다. 개발자 모드의 **저음 맞추기**는 시작할 때와 1단계 동안 폰 마이크로 방 소음과 스피커 소리를 듣고, 메모리에서 대역별 크기만 계산한 뒤 버립니다. 녹음은 저장하지 않습니다. 저음 맞추기의 **검증 모드**는 회차별 결과 숫자(시각, 기기 모델, 앱 버전, 볼륨, 찾은 주파수나 세기, 답의 개수, 방 소음 여유, 마이크 종류)를 앱 내부 파일 `files/bass_fit_validation.csv`에 남깁니다. 소리나 곡 정보는 들어 있지 않고, 화면의 공유 버튼으로만 밖에 나가며, 지우기 버튼으로 지울 수 있습니다. 클라우드 백업에도 포함되지 않습니다.
 
 ### 백업
 
@@ -38,7 +40,7 @@ This document covers the general distribution build **Rootnote** (package `kr.ks
 
 | 권한 | 용도 |
 |---|---|
-| 오디오 녹음(RECORD_AUDIO) | 다른 앱의 소리를 캡처하는 데 필요. '좌우 맞추기' 자동 측정 때만 마이크를 20~45초 씀(저장 안 함) |
+| 오디오 녹음(RECORD_AUDIO) | 다른 앱의 소리를 캡처하는 데 필요. 마이크는 '좌우 맞추기' 자동 측정(20~45초)과 개발자 모드 '저음 맞추기'(시작과 1단계) 때만 씀(녹음 저장 안 함) |
 | 화면/오디오 캡처(PROJECT_MEDIA, 셸에서 한 번 부여) | 캡처 시작 시 동의 창 생략 |
 | DUMP(셸에서 한 번 부여) | 재생 중인 오디오 세션 감지 |
 | 알림 | 처리 상태 표시 |
@@ -74,7 +76,9 @@ This document covers the general distribution build **Rootnote** (package `kr.ks
 | Presets, scripts, impulse responses (upstream) | app files | files you created or imported |
 | Diagnostic log (upstream) | cache `application.log` | technical messages (at most 2 MB, rewritten at every start); may contain names of processed apps. It leaves the phone only if you share it yourself under Settings, Troubleshooting. |
 
-System audio is processed in memory while the service runs and is never saved. Android requires the `RECORD_AUDIO` permission for audio capture itself. The microphone is used in one case only: when you tap **Measure automatically** in spatial "Even out the speakers", the phone listens to its two speakers with its top and bottom microphones for about 20-45 s, computes the level per band in memory and discards the audio. Nothing is saved or sent.
+System audio is processed in memory while the service runs and is never saved. Android requires the `RECORD_AUDIO` permission for audio capture itself. The microphone is used in two cases only. First: when you tap **Measure automatically** in spatial "Even out the speakers", the phone listens to its two speakers with its top and bottom microphones for about 20-45 s, computes the level per band in memory and discards the audio. Nothing is saved or sent.
+
+The microphone is used in one more place. **Bass fit** in developer mode listens to the room and the speaker with the phone microphone at its start and during step 1, computes the level per band in memory and discards the audio; no recording is saved. Its **validation mode** keeps the numbers of each run (time, phone model, app version, volume, the frequency or strength found, answer counts, room margin, microphone source) in the app's own file `files/bass_fit_validation.csv`. It holds no audio and no song information, leaves the phone only through the share button on that screen, can be deleted with the clear button, and is not part of cloud backup.
 
 ### Backup
 
@@ -84,7 +88,7 @@ The `pvb_*` files (first four rows above) are **excluded** from Android cloud ba
 
 | Permission | Purpose |
 |---|---|
-| Record audio (RECORD_AUDIO) | required to capture the audio of other apps; the microphone only during "Even out the speakers" automatic measuring (about 20-45 s, not saved) |
+| Record audio (RECORD_AUDIO) | required to capture the audio of other apps; the microphone only during "Even out the speakers" automatic measuring (about 20-45 s) and developer-mode "Bass fit" (its start and step 1); no recording is saved |
 | Screen/audio capture (PROJECT_MEDIA, granted once from a shell) | starting capture without the consent dialog |
 | DUMP (granted once from a shell) | detecting active audio sessions |
 | Notifications | processing status |

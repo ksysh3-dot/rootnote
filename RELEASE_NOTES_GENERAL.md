@@ -10,6 +10,14 @@ The corresponding source is the tagged commit; `source-*.tar.gz` below contains 
 - Measured settings exist only for the Galaxy S26 Ultra; other phones start with conservative settings based on published measurements of 92 Android phones.
 - Privacy: only settings are stored; no song titles, no recordings, nothing sent (see PRIVACY.md).
 
+## 0.9.0-beta.11
+
+- "X는 A와 B 중 어느 쪽과 같나요?" 질문에 "잘 모르겠어요"를 넣었어요. 틀린 답으로 세어서, 두 번 고르면 그 검사는 끝나고 지금 설정이 그대로 남아요. 배음 경계 검사는 차이가 아주 작아 구분이 안 되는 게 보통이라고 안내해요.
+- "소음 보정"을 고쳤어요. 마이크 종류(가공 없는 녹음 / 음성 인식용)마다 감도가 17.6 dB 다른데, beta.10은 한 값만 써서 대부분의 폰에서 방 소음을 작게 보고 보정이 거의 걸리지 않았어요. 100 Hz 아래 대역은 마이크 오차가 커서 쓰지 않아요. 검증 기록에 마이크 종류를 남겨요.
+- 시작이 실패했는데 "켜짐"으로 표시되던 경우를 막았어요. 녹음과 재생 준비가 실제로 끝났을 때만 시작을 알려요.
+- 안드로이드 14에서 첫 번째 켜기가 실패하고 두 번째에 켜지던 문제를 고쳤어요(이전 화면 공유 동의를 다시 쓰려 했어요).
+- 개인정보 안내에 저음 맞추기의 마이크 사용과 검증 기록 파일을 적었어요.
+
 ## 0.9.0-beta.10
 
 - 저음 맞추기 2단계 "좋아하는 세기"의 간격을 2 dB에서 3 dB로 넓혔어요(0 / 3 / 6 / 9). 2 dB 차이는 구분하기 어려웠어요.

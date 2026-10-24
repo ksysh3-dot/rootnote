@@ -155,7 +155,8 @@ class FitActions(
     val onFloor: (FloorStaircase.Choice) -> Unit,
     val onReplay: () -> Unit,
     val onPlay: (String) -> Unit,
-    val onAbx: (Boolean) -> Unit,
+    /** null: "잘 모르겠어요" (counted as wrong). */
+    val onAbx: (Boolean?) -> Unit,
     val onPrefer: (BassFitSession.Pick) -> Unit,
     val onBreakup: (BreakupStaircase.Answer) -> Unit,
     val onShape: (Boolean) -> Unit,
@@ -677,9 +678,14 @@ private fun BottomAnswers(ui: FitUi, actions: FitActions) {
                         RnOutlineButton(stringResource(R.string.fit_floor_buzz), Modifier.weight(1f), enabled = on) { actions.onFloor(FloorStaircase.Choice.BUZZ_ONLY) }
                     }
                 }
-                is FitPrompt.Abx -> RnButtonRow {
-                    RnOutlineButton(stringResource(R.string.fit_abx_is_a), Modifier.weight(1f), enabled = on) { actions.onAbx(true) }
-                    RnOutlineButton(stringResource(R.string.fit_abx_is_b), Modifier.weight(1f), enabled = on) { actions.onAbx(false) }
+                is FitPrompt.Abx -> {
+                    RnButtonRow {
+                        RnOutlineButton(stringResource(R.string.fit_abx_is_a), Modifier.weight(1f), enabled = on) { actions.onAbx(true) }
+                        RnOutlineButton(stringResource(R.string.fit_abx_is_b), Modifier.weight(1f), enabled = on) { actions.onAbx(false) }
+                    }
+                    RnButtonRow {
+                        RnOutlineButton(stringResource(R.string.fit_abx_unsure), Modifier.weight(1f), enabled = on) { actions.onAbx(null) }
+                    }
                 }
                 is FitPrompt.Prefer -> {
                     RnButtonRow {
