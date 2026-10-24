@@ -7,9 +7,10 @@
     <string name="fit_intro_title">Find the bass for this phone</string>
     <string name="fit_intro_body">By ear, find how low the speaker goes, how much virtual bass to add, and where it starts to buzz. The order of the questions and the A/B sides change every time.</string>
     <string name="fit_intro_1">Set your usual listening volume. If the volume changes during the test, it pauses.</string>
-    <string name="fit_intro_2">Listen in a quiet place, on the phone\'s speaker, holding the phone as usual.</string>
+    <string name="fit_intro_2">Somewhere quiet, holding the phone as usual, listening to its speaker. Answer by what you hear, not by the vibration you feel in your hand.</string>
     <string name="fit_intro_3">Nothing changes until you save, and you can undo it afterwards.</string>
     <string name="fit_start">Start</string>
+    <string name="fit_shape_only">Harmonic shape only</string>
     <string name="fit_not_ready">Available while Rootnote is on and sound comes from the phone\'s speaker.</string>
     <string name="fit_last_title">Last result</string>
     <string name="fit_restore">Undo the last fit</string>
@@ -35,7 +36,7 @@
     <string name="fit_question">Question %1$d</string>
     <string name="fit_question_of">Question %1$d · %2$d at most</string>
     <string name="fit_floor_title">Where was the sound?</string>
-    <string name="fit_floor_body">The sound plays in one of two turns, and sometimes in neither. If you heard no note, only a rattle or noise, choose \"Only buzz\".</string>
+    <string name="fit_floor_body">The tone plays in one of the two turns, and sometimes in neither. Choose a turn only when you hear a note. If you only feel a \"hum\" in your hand, or hear only rattle or noise, choose \"Only a feel or noise\".</string>
     <string name="fit_floor_part_ref">First part: one middle note that gets quieter, to find how faintly you hear at this volume.</string>
     <string name="fit_floor_part_low">Second part: lower and lower notes, each a little louder than you just barely heard.</string>
     <string name="fit_interval">Turn %1$d</string>
@@ -43,7 +44,7 @@
     <string name="fit_floor_first">First</string>
     <string name="fit_floor_second">Second</string>
     <string name="fit_floor_neither">Heard nothing</string>
-    <string name="fit_floor_buzz">Only buzz</string>
+    <string name="fit_floor_buzz">Only a feel or noise</string>
     <string name="fit_replay">Play again</string>
     <string name="fit_disturbed">A sound in the room got in, so the same question plays again</string>
     <string name="fit_abx_title">Is X the same as A or as B?</string>
@@ -62,7 +63,7 @@
     <string name="fit_prefer_b">B is better</string>
     <string name="fit_prefer_same">No difference</string>
     <string name="fit_buzz_title">Does the bass rattle or buzz?</string>
-    <string name="fit_buzz_body">Answer about the \"Bass\" clip. Clean: only the bass note, smooth. A hum you feel in your hand is still clean. Rattles: a \"brrr\", clattering sound added on the beat, as if something loose touches and shakes along. Buzzes: the sound itself cracks or tears. \"Reference\" plays the same clip with the virtual bass off: compare with it. Some questions have the virtual bass off.</string>
+    <string name="fit_buzz_body">Answer about the \"Bass\" clip. With the virtual bass on, the bass is louder and fuller than the \"Reference\": that is normal, answer Clean. Rattles: a rough \"brrr\" or clatter, something loose touching and shaking along. Buzzes: the sound itself cracks or tears. Some questions have the virtual bass off.</string>
     <string name="fit_buzz_clean">Clean</string>
     <string name="fit_buzz_buzz">Buzzes</string>
     <string name="fit_buzz_rattle">Rattles</string>
@@ -168,4 +169,7 @@
     <string name="fit_val_logged">Validation done and logged</string>
     <string name="fit_val_log_failed">The log couldn\'t be saved</string>
     <string name="fit_val_copied">Log copied</string>
+    <string name="fit_noise_corr">Noise correction</string>
+    <string name="fit_noise_corr_line">Turn on when the room is not fully quiet. Step 1 adjusts its sounds for the room noise the microphone measured. A rough correction.</string>
+    <string name="fit_r_noise_line">Added to the 100 Hz sound in step 1</string>
 </resources>

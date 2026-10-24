@@ -93,6 +93,8 @@ data class FitUi(
     val ready: Boolean = true,
     val lastRecord: String? = null,
     val canRestore: Boolean = false,
+    /** "소음 보정": step 1's bursts corrected for the room's noise ([NoiseMasking]). */
+    val noiseCorr: Boolean = false,
     // room check
     val roomPhase: Int = 0,
     val progress: Float = 0f,
@@ -145,6 +147,8 @@ data class FitUi(
 class FitActions(
     val onBack: () -> Unit,
     val onStart: () -> Unit,
+    val onShapeOnly: () -> Unit,
+    val onNoiseCorr: (Boolean) -> Unit,
     val onRestore: () -> Unit,
     val onRoomRetry: () -> Unit,
     val onRoomProceed: () -> Unit,
@@ -192,7 +196,7 @@ fun BassFitScreen(ui: FitUi, actions: FitActions) {
             }, warning = true, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
         }
         when (ui.screen) {
-            FitScreen.INTRO -> Intro(ui)
+            FitScreen.INTRO -> Intro(ui, actions)
             FitScreen.ROOM -> Room(ui)
             FitScreen.ROOM_WARN -> RoomWarn(ui)
             FitScreen.TEST -> Question(ui, actions)
@@ -240,13 +244,15 @@ private fun Bullet(text: String) {
 // ------------------------------------------------------------------------------------------------ intro, room
 
 @Composable
-private fun Intro(ui: FitUi) {
+private fun Intro(ui: FitUi, actions: FitActions) {
     Title(stringResource(R.string.fit_intro_title))
     Body(stringResource(R.string.fit_intro_body))
     Bullet(stringResource(R.string.fit_intro_1))
     Bullet(stringResource(R.string.fit_intro_2))
     Bullet(stringResource(R.string.fit_intro_3))
     if (!ui.ready) RnNote(stringResource(R.string.fit_not_ready), warning = true)
+    RnSwitchRow(stringResource(R.string.fit_noise_corr), checked = ui.noiseCorr, onCheckedChange = actions.onNoiseCorr,
+        line = stringResource(R.string.fit_noise_corr_line))
     ui.lastRecord?.let {
         RnSectionTitle(stringResource(R.string.fit_last_title))
         RnParagraph(it)
@@ -445,11 +451,14 @@ private fun Result(ui: FitUi) {
     Title(stringResource(R.string.fit_result_title))
     val keep = stringResource(R.string.fit_r_keep)
     val unsure = stringResource(R.string.fit_r_unsure)
+    if (!r.shapeOnly) {
     RnNavRow(stringResource(R.string.fit_r_floor), onClick = null, chevron = false, value = when {
         r.floor != null -> stringResource(R.string.fit_hz, r.floor.speakerFloorHz.roundToInt())
         r.floorHz != null -> unsure
         else -> stringResource(R.string.fit_r_not_found)
     })
+    r.noiseCorrectionDb?.let { RnNavRow(stringResource(R.string.fit_noise_corr), onClick = null, chevron = false,
+        line = stringResource(R.string.fit_r_noise_line), value = stringResource(R.string.fit_db, BassFitActivity.signed(it))) }
     MicFloor(ui, r)
     if (r.floor != null && r.edgeHz != null) RnNavRow(stringResource(R.string.fit_r_edge), onClick = null, chevron = false,
         line = if (r.edgeHz > r.floor.boundaryHz + 1) stringResource(R.string.fit_r_edge_raised) else null,
@@ -468,9 +477,10 @@ private fun Result(ui: FitUi) {
         r.breakupDb == null -> stringResource(R.string.fit_r_limit_none)
         else -> stringResource(R.string.fit_db, signed(r.limitDb))
     })
-    if (r.breakupKind != null) RnNavRow(stringResource(R.string.fit_r_kind), onClick = null, chevron = false,
+    if (r.breakupKind != null && r.breakupDb != null && r.limitReliable && r.limitDb != null && r.limitDb < 12.0) RnNavRow(stringResource(R.string.fit_r_kind), onClick = null, chevron = false,
         value = stringResource(if (r.breakupKind == BreakupStaircase.Answer.RATTLE) R.string.fit_r_kind_rattle else R.string.fit_r_kind_buzz))
     if (r.breakupCatchRattles + r.breakupCatchBuzzes > 0) RnNote(stringResource(R.string.fit_r_catch_broke), warning = true)
+    }
     RnNavRow(stringResource(R.string.fit_r_shape), onClick = null, chevron = false, value = when {
         !r.shapeTried -> stringResource(R.string.fit_r_skipped)
         r.shape == null -> unsure
@@ -581,6 +591,8 @@ private fun Validate(ui: FitUi, actions: FitActions) {
     RnChoiceRow(stringResource(R.string.fit_val_repeats), listOf(1, 2, 3, 5).map {
         RnChoice(it, stringResource(R.string.fit_val_repeats_n, it))
     }, ui.valRepeats, actions.onValRepeats)
+    RnSwitchRow(stringResource(R.string.fit_noise_corr), checked = ui.noiseCorr, onCheckedChange = actions.onNoiseCorr,
+        line = stringResource(R.string.fit_noise_corr_line))
     for (i in FitConditions.ALL.indices) {
         RnSwitchRow(conditionLabel(i), checked = i in ui.valConds, onCheckedChange = { on -> actions.onValCondition(i, on) })
     }
@@ -635,6 +647,7 @@ private fun BottomAnswers(ui: FitUi, actions: FitActions) {
         when (ui.screen) {
             FitScreen.INTRO -> {
                 RnButtonRow { RnFilledButton(stringResource(R.string.fit_start), Modifier.weight(1f), enabled = ui.ready, onClick = actions.onStart) }
+                RnButtonRow { RnOutlineButton(stringResource(R.string.fit_shape_only), Modifier.weight(1f), enabled = ui.ready, onClick = actions.onShapeOnly) }
                 RnButtonRow {
                     if (ui.canRestore) RnOutlineButton(stringResource(R.string.fit_restore), Modifier.weight(1f), onClick = actions.onRestore)
                     RnOutlineButton(stringResource(R.string.fit_val_open), Modifier.weight(1f), onClick = actions.onValidate)

@@ -264,6 +264,8 @@ class FloorStaircase(
     val minHz: Double = 70.0,
     val maxTrials: Int = 30,
     val stopReversals: Int = 6,
+    /** Optional room-noise correction of the burst level at a frequency, dB ([NoiseMasking.correctionDb]). */
+    val noiseDb: ((Double) -> Double)? = null,
 ) {
     companion object {
         /** How far over the threshold the bursts play (the -10 dB point the published measurements use). */
@@ -283,8 +285,11 @@ class FloorStaircase(
      * burst stops being heard where the speaker plays [SL_DB] less than at the reference: the floor is the speaker's
      * -10 dB point, not the lowest note that is audible at all. Capped at 0 (the tone's full level).
      */
-    fun levelDb(hz: Double): Double =
-        (refDb + SL_DB + HearingThreshold.db(hz) - HearingThreshold.db(RefLevelStaircase.REF_HZ)).coerceAtMost(0.0)
+    fun levelDb(hz: Double): Double = wantedDb(hz).coerceAtMost(0.0)
+
+    /** [levelDb] before the cap (plus the optional noise correction, [noiseDb]). */
+    private fun wantedDb(hz: Double): Double =
+        refDb + SL_DB + HearingThreshold.db(hz) - HearingThreshold.db(RefLevelStaircase.REF_HZ) + (noiseDb?.invoke(hz) ?: 0.0)
 
     /** Missed trials whose wanted level was above the cap (the volume was too low for them). */
     var cappedTrials = 0; private set
@@ -328,7 +333,7 @@ class FloorStaircase(
             is Trial.Tone -> {
                 toneTrials++
                 val heard = (c == Choice.FIRST && t.inFirst) || (c == Choice.SECOND && !t.inFirst)
-                if (!heard && refDb + SL_DB + HearingThreshold.db(t.hz) - HearingThreshold.db(RefLevelStaircase.REF_HZ) > 0.0) {
+                if (!heard && wantedDb(t.hz) > 0.0) {
                     cappedTrials++; cappedMissHz += t.hz
                 }
                 val dir: Int
@@ -359,6 +364,53 @@ class FloorStaircase(
     /** Too many "heard" answers on silent catch trials (over a third) or too few reversals: don't apply. */
     val reliable: Boolean
         get() = reversals.size >= 4 && (catchTrials == 0 || falseAlarms * 3 <= catchTrials)
+}
+
+/**
+ * Optional room-noise correction of the floor bursts ("소음 보정", off unless the listener turns it on). The bursts are
+ * set from the listener's threshold at 300 Hz plus how much less sensitive hearing is at the burst's frequency in quiet
+ * ([HearingThreshold]). In a room with noise, the noise raises each threshold by its own amount: room noise is mostly
+ * in the mids, so the 300 Hz threshold rises more than a low note's, the bursts play too loud and the floor comes out
+ * too low. This adds back the difference of the two rises.
+ *
+ * The rise at a frequency: the room's third-octave level there ([roomBandsDb], from [NoiseGate.bandLevels] of the room
+ * check), in dB SPL by Android's nominal input sensitivity ([SPL_OFFSET_DB]), as a masked tone level ([MASK_K_DB]),
+ * power-added to the threshold in quiet. Nothing is calibrated, so the result is limited to [MAX_DOWN_DB] /
+ * [MAX_UP_DB]; the validation log keeps the value at 100 Hz to check it against the UMIK-1.
+ */
+object NoiseMasking {
+    /**
+     * Android's audio input guideline for VOICE_RECOGNITION: a 90 dB SPL tone reads RMS 2500 of 32768 (-22.4 dB re
+     * full scale), flat within 3 dB from 100 Hz to 4 kHz. The fit records UNPROCESSED where offered, assumed alike.
+     */
+    const val SPL_OFFSET_DB = 112.4
+    /** A tone is just masked about this far from the noise power in its third-octave band (critical ratio ~17 dB
+     *  at 300 Hz over a band ~70 Hz wide). */
+    const val MASK_K_DB = -2.0
+    const val MAX_DOWN_DB = 12.0
+    const val MAX_UP_DB = 6.0
+
+    /** Room level (dB re full scale) at [hz], log-frequency interpolation between [NoiseGate.TEST_BANDS]. */
+    fun roomDb(roomBandsDb: DoubleArray, hz: Double): Double {
+        val c = NoiseGate.TEST_BANDS
+        if (hz <= c.first()) return roomBandsDb.first()
+        if (hz >= c.last()) return roomBandsDb.last()
+        var i = 0
+        while (c[i + 1] < hz) i++
+        val u = ln(hz / c[i]) / ln(c[i + 1] / c[i])
+        return roomBandsDb[i] + (roomBandsDb[i + 1] - roomBandsDb[i]) * u
+    }
+
+    /** How far the room raises the threshold at [hz], dB (0 in a silent room). */
+    fun riseDb(roomBandsDb: DoubleArray, hz: Double): Double {
+        val q = HearingThreshold.db(hz)
+        val masked = roomDb(roomBandsDb, hz) + SPL_OFFSET_DB + MASK_K_DB
+        return 10 * log10(10.0.pow(q / 10) + 10.0.pow(masked / 10)) - q
+    }
+
+    /** Correction of the burst at [hz]: its rise minus the reference's, limited. Negative = quieter bursts. */
+    fun correctionDb(roomBandsDb: DoubleArray, hz: Double): Double =
+        (riseDb(roomBandsDb, hz) - riseDb(roomBandsDb, RefLevelStaircase.REF_HZ)).coerceIn(-MAX_DOWN_DB, MAX_UP_DB)
 }
 
 /**
@@ -455,8 +507,9 @@ class RefLevelStaircase(
 // ------------------------------------------------------------------------------------------------ step 2b: strength
 
 /**
- * Preferred virtual-bass strength in {0, 2, 4, 6, 8} dB by blind A/B pairs ("어느 쪽이 더 좋나요 / 차이 없음"),
- * climbing from the middle: 2 vs 4; then 0 vs 2 or 4 vs 6; then 6 vs 8 if 6 won. "No difference" counts as a win for
+ * Preferred virtual-bass strength in {0, 3, 6, 9} dB by blind A/B pairs ("어느 쪽이 더 좋나요 / 차이 없음"),
+ * climbing from the middle: 3 vs 6; then 0 vs 3 or 6 vs 9. (Was 2 dB apart: a listener on the S26 Ultra could not
+ * tell the pairs apart and answered at random.) "No difference" counts as a win for
  * the lower level (virtual bass is a spice). At most three pairs, then the first pair again with the sides swapped:
  * a reversed answer marks the result inconsistent (not applied).
  */
@@ -465,7 +518,7 @@ class StrengthBracket(private val seed: Long) {
     data class Pair(val lo: Int, val hi: Int, val loIsA: Boolean)
 
     private val rng = FitRng(seed)
-    private val first = Pair(2, 4, rng.bit())
+    private val first = Pair(3, 6, rng.bit())
     var current: Pair? = first; private set
     var result: Int? = null; private set
     var consistent = true; private set
@@ -491,8 +544,7 @@ class StrengthBracket(private val seed: Long) {
         }
         if (asked == 1) firstWinner = w
         val next: Pair? = when {
-            p.lo == 2 && p.hi == 4 -> if (keep == 2) Pair(0, 2, rng.bit()) else Pair(4, 6, rng.bit())
-            p.lo == 4 && p.hi == 6 && keep == 6 -> Pair(6, 8, rng.bit())
+            p.lo == 3 && p.hi == 6 -> if (keep == 3) Pair(0, 3, rng.bit()) else Pair(6, 9, rng.bit())
             else -> null
         }
         if (next == null) { result = keep; current = Pair(first.lo, first.hi, !first.loIsA) } else current = next

@@ -119,10 +119,10 @@ fun main() {
             "untested values untouched")
     }
     run {
-        // preferred +8, but the speaker breaks up at 7: capped
+        // preferred +9, but the speaker breaks up at 7: capped
         val r = Listener(floorHz = 150.0, idealDb = 9.0, breakDb = 7.0, seed = 2).run(BassFitSession(22L, 4.0)).result
-        check(r.preferredDb == 8 && r.limitDb != null && r.limitDb!! <= 5.0 && r.strengthDb == r.limitDb,
-            "preferred +8, break-up at 7 -> strength capped at the limit (${r.limitDb})")
+        check(r.preferredDb == 9 && r.limitDb != null && r.limitDb!! <= 5.0 && r.strengthDb == r.limitDb,
+            "preferred +9, break-up at 7 -> strength capped at the limit (${r.limitDb})")
     }
     run {
         // the higher edge is heard and preferred twice
@@ -177,6 +177,18 @@ fun main() {
         }.filterNotNull()
         check(firstX.size >= 30 && firstX.count { it } in (firstX.size / 4)..(firstX.size * 3 / 4),
             "first X of the ABX is A in ${firstX.count { it }} of ${firstX.size} runs (about half)")
+    }
+
+    run {
+        // the harmonic shape alone: no floor, layer, strength or break-up questions; the shape is found and applied
+        val l = Listener(floorHz = 150.0, idealDb = 4.0, breakDb = 12.0, seed = 21, shapeTarget = 2)
+        val s = BassFitSession(2121L, 4.0, me.timschneeberger.rootlessjamesdsp.pvb.FitScope.SHAPE)
+        check((s.prompt as? FitPrompt.Prefer)?.purpose == FitPrompt.Purpose.SHAPE && s.step == 4, "shape only: starts at step 4 with a shape pair")
+        l.run(s)
+        val r = s.result
+        check(s.stage == FitStage.DONE && r.shapeOnly && r.shapeTried && r.shape != null && r.floor == null && r.strengthDb == null &&
+            r.limitDb == null && r.floorQuestions == 0 && l.log.all { it.startsWith("p") },
+            "shape only: ${l.log.size} pairs, shape ${r.shape?.rolloffDbOct}/${r.shape?.lowOrderDb}, nothing else asked or applied")
     }
 
     // ---------------------------------------------------------------------------------------- one step alone

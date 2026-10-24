@@ -8,6 +8,7 @@ import me.timschneeberger.rootlessjamesdsp.pvb.FloorStaircase
 import me.timschneeberger.rootlessjamesdsp.pvb.HearingThreshold
 import me.timschneeberger.rootlessjamesdsp.pvb.RefLevelStaircase
 import me.timschneeberger.rootlessjamesdsp.pvb.NoiseGate
+import me.timschneeberger.rootlessjamesdsp.pvb.NoiseMasking
 import me.timschneeberger.rootlessjamesdsp.pvb.ShapeGrid
 import me.timschneeberger.rootlessjamesdsp.pvb.StrengthBracket
 import kotlin.math.PI
@@ -216,10 +217,10 @@ fun main() {
         }
         return b
     }
-    val want = mapOf(0.0 to 0, 1.6 to 2, 4.2 to 4, 5.8 to 6, 9.0 to 8)
+    val want = mapOf(0.0 to 0, 2.2 to 3, 5.8 to 6, 9.0 to 9)
     check(want.all { (ideal, lvl) -> (0 until 20).all { s -> bracket(ideal, s.toLong()).let { it.result == lvl && it.consistent } } },
-        "strength: lands on the level nearest the listener's ideal (0, 2, 4, 6, 8), consistent, 4 pairs at most")
-    check((0 until 20).all { s -> bracket(3.0, s.toLong()).result == 2 }, "strength: ideal halfway between 2 and 4 -> ties keep the lower")
+        "strength: lands on the level nearest the listener's ideal (0, 3, 6, 9), consistent, 3 pairs at most")
+    check((0 until 20).all { s -> bracket(4.5, s.toLong()).result == 3 }, "strength: ideal halfway between 3 and 6 -> ties keep the lower")
     check(bracket(6.0, 3, flip = true).let { !it.consistent }, "strength: a reversed answer on the repeated first pair -> inconsistent")
 
     // --- break-up staircase: yes/no listener, logistic around the true break-up level, honest on catch trials
@@ -305,6 +306,20 @@ fun main() {
         val right = (0 until 40).count { s -> grid(target, s.toLong()).best() == ShapeGrid(0).cells[target] }
         check(right >= 30, "shape: preferred cell $target found in $right / 40 runs (18 pairs)")
     }
+
+    // --- noise correction (optional "소음 보정")
+    val silent = DoubleArray(NoiseGate.TEST_BANDS.size) { -200.0 }
+    check(abs(NoiseMasking.correctionDb(silent, 100.0)) < 1e-6, "noise correction: a silent room changes nothing")
+    // an ordinary room, dB SPL per third octave (63 .. 500 Hz), mostly in the mids
+    val office = doubleArrayOf(35.0, 33.0, 30.0, 28.0, 27.0, 27.0, 27.0, 27.0, 26.0, 25.0).map { it - NoiseMasking.SPL_OFFSET_DB }.toDoubleArray()
+    val c100 = NoiseMasking.correctionDb(office, 100.0)
+    check(c100 < -5 && c100 >= -NoiseMasking.MAX_DOWN_DB, "noise correction: room noise in the mids lowers the 100 Hz burst (${"%.1f".format(c100)} dB)")
+    check(abs(NoiseMasking.correctionDb(office, RefLevelStaircase.REF_HZ)) < 1e-9, "noise correction: none at the reference")
+    val lowRumble = doubleArrayOf(60.0, 55.0, 45.0, 35.0, 25.0, 15.0, 10.0, 8.0, 8.0, 8.0).map { it - NoiseMasking.SPL_OFFSET_DB }.toDoubleArray()
+    check(NoiseMasking.correctionDb(lowRumble, 70.0) > 0, "noise correction: a low rumble raises the lowest bursts")
+    val plain = FloorStaircase(1, refDb = -40.0)
+    val corrected = FloorStaircase(1, refDb = -40.0, noiseDb = { hz -> NoiseMasking.correctionDb(office, hz) })
+    check(abs(corrected.levelDb(100.0) - (plain.levelDb(100.0) + c100)) < 1e-9, "noise correction: applied to the floor bursts")
 
     // --- mapping
     val m150 = BassFitMapping.fromFloor(150.0)
