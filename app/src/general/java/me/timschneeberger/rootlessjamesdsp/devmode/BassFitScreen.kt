@@ -49,6 +49,7 @@ import me.timschneeberger.rootlessjamesdsp.pvb.FitPrompt
 import me.timschneeberger.rootlessjamesdsp.pvb.FitResult
 import me.timschneeberger.rootlessjamesdsp.pvb.FloorStaircase
 import me.timschneeberger.rootlessjamesdsp.pvb.NoiseGate
+import me.timschneeberger.rootlessjamesdsp.pvb.SpeakerProbe
 import me.timschneeberger.rootlessjamesdsp.ui.LocalRn
 import me.timschneeberger.rootlessjamesdsp.ui.RnBand
 import me.timschneeberger.rootlessjamesdsp.ui.RnButtonRow
@@ -87,6 +88,9 @@ data class FitUi(
     val progress: Float = 0f,
     val verdict: NoiseGate.Verdict? = null,
     val noisy: Boolean = false,
+    /** The microphone's reference floor from the probe sweep (reference only, never applied). */
+    val micFloorHz: Double? = null,
+    val micClipped: Boolean = false,
     // questions
     val step: Int = 0,
     val prompt: FitPrompt? = null,
@@ -209,6 +213,7 @@ private fun Room(ui: FitUi) {
     Body(stringResource(when (ui.roomPhase) {
         0 -> R.string.fit_room_quiet
         1 -> R.string.fit_room_ref
+        2 -> R.string.fit_room_probe
         else -> R.string.fit_room_judge
     }))
     ProgressLine(ui.progress)
@@ -394,6 +399,7 @@ private fun Result(ui: FitUi) {
         r.floorHz != null -> unsure
         else -> stringResource(R.string.fit_r_not_found)
     })
+    MicFloor(ui, r)
     if (r.floor != null && r.edgeHz != null) RnNavRow(stringResource(R.string.fit_r_edge), onClick = null, chevron = false,
         line = if (r.edgeHz > r.floor.boundaryHz + 1) stringResource(R.string.fit_r_edge_raised) else null,
         value = stringResource(R.string.fit_hz, r.edgeHz.roundToInt()))
@@ -433,6 +439,19 @@ private fun Result(ui: FitUi) {
                 valueColor = LocalRn.current.accentText)
         }
     }
+}
+
+/** The microphone's reference floor next to the ear's, and a note when they are more than 1/3 octave apart. */
+@Composable
+private fun MicFloor(ui: FitUi, r: FitResult) {
+    val mic = ui.micFloorHz
+    RnNavRow(stringResource(R.string.fit_r_mic_floor), line = stringResource(R.string.fit_r_mic_line), onClick = null, chevron = false,
+        value = mic?.let { stringResource(R.string.fit_hz, SpeakerProbe.roundHz(it)) } ?: stringResource(R.string.fit_r_mic_none))
+    val ear = r.floor?.speakerFloorHz ?: return
+    if (mic == null) return
+    val apart = kotlin.math.log2(ear / mic)
+    if (apart < -1.0 / 3) RnNote(stringResource(R.string.fit_r_mic_lower))
+    else if (apart > 1.0 / 3) RnNote(stringResource(R.string.fit_r_mic_higher))
 }
 
 @Composable

@@ -268,4 +268,16 @@
     <string name="dev_p_table_floor_down">반대로 낮은 음의 배음이 커지고, 높은 음 쪽은 비어요.</string>
     <string name="dev_ev_table_floor_0">가상 저음 세기 표는 S26 Ultra 스피커(바닥 150 Hz)에 맞춰 만들었어요. 다른 폰에서는 그 폰의 바닥만큼 표를 옮겨요.</string>
     <string name="dev_ev_table_floor_1">표를 옮겨도 S26 Ultra와 같은 크기로 들리는지는 아직 확인 중이에요. \"저음 맞추기\"의 세기 비교가 그 차이를 귀로 메워요.</string>
+    <string name="dev_test_probe">스피커 확인 (마이크)</string>
+    <string name="dev_probe_title">마이크가 듣는 값 · 참고용</string>
+    <string name="dev_probe_wait">스윕을 듣고 있어요</string>
+    <string name="dev_probe_now">지금 %1$d Hz · 음 %2$s dB · 떨림보다 %3$s dB · %4$s</string>
+    <string name="dev_probe_plays">냄</string>
+    <string name="dev_probe_weak">겨우 냄</string>
+    <string name="dev_probe_buzz">떨림만</string>
+    <string name="dev_probe_floor">마이크 참고 바닥 약 %1$d Hz</string>
+    <string name="dev_probe_floor_none">아직 바닥을 판단할 수 없어요</string>
+    <string name="dev_probe_clipped">마이크 소리가 잘렸어요. 볼륨을 조금 낮춰 주세요.</string>
+    <string name="dev_probe_nomic">마이크를 쓸 수 없어요.</string>
+    <string name="dev_probe_note">폰 마이크로 바로 옆 스피커를 재요. 막대는 가장 큰 구간 대비 크기예요. 100 Hz 아래는 실제보다 작게 잡히고, 몸체 진동이 섞일 수 있어요. 재는 동안 가상 저음과 EQ는 꺼져요. 설정에는 적용하지 않아요.</string>
 </resources>

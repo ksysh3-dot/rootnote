@@ -119,4 +119,10 @@
     <string name="fit_close">닫기</string>
     <string name="fit_record">%1$s · 바닥 %2$s · 세기 %3$s · 볼륨 %4$s · 시험 코드 %5$s</string>
     <string name="fit_record_noisy">시끄러운 곳</string>
+    <string name="fit_room_probe">스피커 저음을 마이크로 재고 있어요 (참고용)</string>
+    <string name="fit_r_mic_floor">마이크 참고 바닥</string>
+    <string name="fit_r_mic_line">폰 마이크로 잰 값 · 참고용, 적용하지 않아요</string>
+    <string name="fit_r_mic_none">판단 못 함</string>
+    <string name="fit_r_mic_lower">귀로 찾은 바닥이 마이크보다 1/3옥타브 넘게 낮아요. 떨림이나 몸체 진동을 음으로 들었을 수 있어요.</string>
+    <string name="fit_r_mic_higher">귀로 찾은 바닥이 마이크보다 1/3옥타브 넘게 높아요. 볼륨이 낮거나 주변 소리에 묻혔을 수 있어요.</string>
 </resources>

@@ -97,6 +97,35 @@ change) -> the listener's own music, three blind pairs of the current and the ne
 - The screen stays on during a run. A step-1 trial disturbed three times in a row is answered anyway (a steady noise
   must not stall the test). The microphone runs only during the room check and step 1.
 
+## Microphone reference ("마이크가 듣는 값", reference only)
+
+The phone microphone sits centimetres from the speaker: its dB means nothing, but ratios inside one recording do.
+A probe sweep (40-500 Hz log, 9 s, -15 dBFS, the speaker alone: no layer, flat EQ) is analysed per 1/6 octave
+(`pvb/SpeakerProbe.kt`): the fundamental against the loudest bin (more than 10 dB down = weak) and against its 2nd/3rd
+harmonics (harmonics louder = buzz only). Reference floor = the lowest bin of the unbroken "plays" run up to 400 Hz
+(none if the top is not a clear tone or the recording clipped). The sweep frequency is refined to the strongest tone
+within 0.2 octave, so the latency only has to be roughly known.
+
+- Developer mode: chip "스피커 확인 (마이크)" under the test sounds, live: the frequency now, the note re the loudest
+  part and re its harmonics, bars per 1/6 octave, the reference floor. Stops with any other test sound or A/B hold.
+- Bass fit: the room check plays the sweep once (about 10 s more); the result shows the microphone's floor next to the
+  ear's and a note when they are more than 1/3 octave apart. Never shown during the questions (it would give away
+  the answer of a blind trial) and never applied.
+- Known limits: the microphone's own high-pass (it hears less than is there below about 100 Hz), vibration through the
+  body, clipping at high volume (flagged). Host test (SpeakerProbeTest): a simulated speaker's -10 dB point found
+  within 1/6 octave at 113-197 Hz with a microphone high-pass at 80 Hz; level and a 0.3 s latency error do not move it.
+
+## Validation against the UMIK-1 (planned)
+
+On the S26 Ultra, speakers of known floor made with the engine's high-pass (e.g. 120/150/180/220 Hz, hidden from the
+listener, random order), several volumes, 3-5 repeats with fresh seeds:
+- criterion: the UMIK-1 -10 dB point at the listening position for the ear floor and the microphone floor
+  (correlation, slope, mean difference, Bland-Altman); UMIK-1 distortion knee for the break-up limit; UMIK-1 band
+  levels for the room check (pass/fail agreement in quiet, fan, TV rooms);
+- reliability: ICC and standard error of measurement for floor and limit, kappa for the categorical results;
+- preferences (strength, shape) have no physical criterion: test-retest and the blind music check.
+Needs a validation mode (one step, a hidden condition, results to CSV) and REW recording alongside.
+
 ## Open decisions
 
 - First release place: developer mode (now) or advanced settings.

@@ -1,12 +1,15 @@
 package me.timschneeberger.rootlessjamesdsp.devmode
 
+import android.Manifest
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.res.Configuration
+import android.content.pm.PackageManager
 import android.graphics.drawable.ColorDrawable
+import android.media.AudioManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -22,6 +25,7 @@ import androidx.core.view.WindowCompat
 import me.timschneeberger.rootlessjamesdsp.BuildConfig
 import me.timschneeberger.rootlessjamesdsp.R
 import me.timschneeberger.rootlessjamesdsp.activity.BaseActivity
+import me.timschneeberger.rootlessjamesdsp.pvb.BassFitSettings
 import me.timschneeberger.rootlessjamesdsp.pvb.DevEvidenceText
 import me.timschneeberger.rootlessjamesdsp.pvb.DevMath
 import me.timschneeberger.rootlessjamesdsp.pvb.DevParams
@@ -35,12 +39,15 @@ import me.timschneeberger.rootlessjamesdsp.pvb.DevWarningStore
 import me.timschneeberger.rootlessjamesdsp.pvb.DevWarningTracker
 import me.timschneeberger.rootlessjamesdsp.pvb.DeviceProfile
 import me.timschneeberger.rootlessjamesdsp.pvb.DeviceProfiles
+import me.timschneeberger.rootlessjamesdsp.pvb.FitLatency
+import me.timschneeberger.rootlessjamesdsp.pvb.FitVariant
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbBuild
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbDevMeter
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbGeneral
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbMeter
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbRuntime
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbSettings
+import me.timschneeberger.rootlessjamesdsp.pvb.SpeakerProbe
 import me.timschneeberger.rootlessjamesdsp.pvb.VolumeLevelLink
 import me.timschneeberger.rootlessjamesdsp.service.BaseAudioProcessorService
 
@@ -70,6 +77,11 @@ class DevModeActivity : BaseActivity() {
     private val engineMeters = FloatArray(PvbMeter.COUNT)
     private var polling = false
     private var touchedClear: Runnable? = null
+    // "스피커 확인 (마이크)": the probe sweep with the speaker alone, the phone microphone listening (reference only)
+    private var probeMic: FitMic? = null
+    private var probe: SpeakerProbe? = null
+    private var probeStart = 0L
+    private var probeRead = 0L
 
     private val store = object : DevWarningStore {
         override fun count(w: DevWarning) = flags.getInt("dev_warn_count_${w.name}", 0)
@@ -120,6 +132,7 @@ class DevModeActivity : BaseActivity() {
             polling = false
             main.removeCallbacks(poll)
             // Nothing of the screen outlives it: test sound, meters, A/B hold, preview.
+            stopProbe()
             DevTestSound.stop()
             PvbRuntime.setDevMeter(false)
             PvbRuntime.setDevOverride(null)
@@ -195,6 +208,7 @@ class DevModeActivity : BaseActivity() {
     private val poll = object : Runnable {
         override fun run() {
             if (!polling) return
+            feedProbe()
             readMeters()
             main.postDelayed(this, POLL_MS)
         }
@@ -310,11 +324,13 @@ class DevModeActivity : BaseActivity() {
             }
         },
         onAbHold = { held ->
+            if (held) stopProbe()
             if (held) PvbRuntime.setDevOverride(DevParams.apply(settings(), profileDefaults()))
             else PvbRuntime.setDevOverride(null)
             update { it.copy(abHolding = held, previewing = false) }
         },
         onTest = { kind ->
+            stopProbe()
             val cur = ui
             when {
                 cur == null -> Unit
@@ -354,6 +370,7 @@ class DevModeActivity : BaseActivity() {
             update { it.copy(pasteText = text, pasteResult = r) }
         },
         onPreview = { on ->
+            if (on) stopProbe()
             val r = ui?.pasteResult as? DevShareCode.Result.Ok
             if (on && r != null) PvbRuntime.setDevOverride(DevParams.apply(settings(), r.values))
             else PvbRuntime.setDevOverride(null)
@@ -392,7 +409,56 @@ class DevModeActivity : BaseActivity() {
             finish()
         },
         onBassFit = { startActivity(Intent(this, BassFitActivity::class.java)) },
+        onProbe = { on -> if (on) startProbe() else stopProbe() },
     )
+
+    // ------------------------------------------------------------------------------------------------ probe
+
+    private fun startProbe() {
+        stopProbe()
+        DevTestSound.stop()
+        update { it.copy(testKind = null) }
+        val granted = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+        val m = if (granted) FitMic.open(getSystemService(AudioManager::class.java)) else null
+        if (m == null) { update { it.copy(probe = ProbeView(running = false, noMic = true)) }; return }
+        probeMic = m
+        probe = SpeakerProbe(FitMic.FS.toDouble())
+        // the speaker alone: no layer, flat EQ, high-pass out of the way, JamesDSP held out
+        PvbRuntime.calibrating = true
+        PvbRuntime.setDevOverride(BassFitSettings.of(settings(), FitVariant.RAW))
+        DevTestSound.start(DevTestKind.PROBE_SWEEP)
+        probeStart = m.frames
+        probeRead = probeStart
+        update { it.copy(probe = ProbeView(running = true)) }
+    }
+
+    /** Stops the sweep and the microphone; the last result stays on screen. */
+    private fun stopProbe() {
+        val m = probeMic ?: return
+        m.stop()
+        probeMic = null
+        if (DevTestSound.request?.kind == DevTestKind.PROBE_SWEEP) DevTestSound.stop()
+        PvbRuntime.setDevOverride(null)
+        PvbRuntime.calibrating = false
+        update { it.copy(probe = it.probe?.copy(running = false)) }
+    }
+
+    /** New microphone frames into the probe, 4096-frame windows every 2048 (main thread, every poll). */
+    private fun feedProbe() {
+        val m = probeMic ?: return
+        val p = probe ?: return
+        val fs = FitMic.FS.toDouble()
+        val now = m.frames
+        if (now - probeRead > 4 * FitMic.FS) probeRead = now - SpeakerProbe.WINDOW     // fell behind: skip ahead
+        var fed = false
+        while (probeRead + SpeakerProbe.WINDOW <= now) {
+            val w = m.copy(probeRead, SpeakerProbe.WINDOW) ?: break
+            p.window(w, (probeRead + SpeakerProbe.WINDOW / 2 - probeStart) / fs - FitLatency.TYPICAL_S)
+            probeRead += SpeakerProbe.WINDOW / 2
+            fed = true
+        }
+        if (fed) update { it.copy(probe = ProbeView.of(p, running = true)) }
+    }
 
     /** The slider range of [spec] for the current model (the roll-off offset depends on it). */
     private fun rangeOf(spec: DevSpec): ClosedFloatingPointRange<Float> =

@@ -169,6 +169,8 @@ data class DevUiState(
     val pasteText: String = "",
     val pasteResult: DevShareCode.Result? = null,
     val previewing: Boolean = false,
+    /** "스피커 확인 (마이크)": null until first used; the last result stays after it stops. */
+    val probe: ProbeView? = null,
 )
 
 class DevActions(
@@ -198,6 +200,8 @@ class DevActions(
     val onTurnOff: () -> Unit,
     /** Opens "저음 맞추기" (BassFitActivity). */
     val onBassFit: () -> Unit,
+    /** Starts or stops "스피커 확인 (마이크)". */
+    val onProbe: (Boolean) -> Unit,
 )
 
 /** Rootnote palette plus the semantic tokens of docs/DESIGN.md 2.2 (res/values{,-night}/colors_rootnote.xml). */
@@ -388,10 +392,12 @@ private fun TestSounds(state: DevUiState, actions: DevActions) {
             Chip(stringResource(R.string.dev_test_sweep), state.testKind == DevTestKind.SWEEP) { actions.onTest(DevTestKind.SWEEP) }
             Chip(stringResource(R.string.dev_test_kick), state.testKind == DevTestKind.KICK) { actions.onTest(DevTestKind.KICK) }
             Chip(stringResource(R.string.dev_test_bass_chord), state.testKind == DevTestKind.BASS_CHORD) { actions.onTest(DevTestKind.BASS_CHORD) }
-            Chip(stringResource(R.string.dev_test_music), state.testKind == null) { actions.onTest(null) }
+            Chip(stringResource(R.string.dev_test_music), state.testKind == null && state.probe?.running != true) { actions.onTest(null) }
+            Chip(stringResource(R.string.dev_test_probe), state.probe?.running == true) { actions.onProbe(state.probe?.running != true) }
         }
         if (!state.serviceRunning) Text(stringResource(R.string.dev_test_off_note), color = c.warnText, fontSize = 13.sp,
             lineHeight = 18.sp, modifier = Modifier.padding(top = 4.dp))
+        state.probe?.let { ProbePanel(it) }
     }
 }
 

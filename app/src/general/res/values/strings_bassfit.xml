@@ -119,4 +119,10 @@
     <string name="fit_close">Close</string>
     <string name="fit_record">%1$s · floor %2$s · strength %3$s · volume %4$s · test code %5$s</string>
     <string name="fit_record_noisy">noisy room</string>
+    <string name="fit_room_probe">Measuring the speaker\'s bass with the microphone (reference)</string>
+    <string name="fit_r_mic_floor">Microphone reference floor</string>
+    <string name="fit_r_mic_line">Measured with the phone\'s microphone · reference, not applied</string>
+    <string name="fit_r_mic_none">Can\'t tell</string>
+    <string name="fit_r_mic_lower">The floor you found by ear is more than 1/3 octave below the microphone\'s. You may have heard a rattle or body vibration as the note.</string>
+    <string name="fit_r_mic_higher">The floor you found by ear is more than 1/3 octave above the microphone\'s. The volume may be low, or room sound may have covered it.</string>
 </resources>

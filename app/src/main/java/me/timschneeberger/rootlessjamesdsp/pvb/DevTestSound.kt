@@ -27,6 +27,8 @@ enum class DevTestKind {
      * requested frequency (the generator edge), both then silence.
      */
     FIT_SILENCE, FIT_REF, FIT_IFC_1, FIT_IFC_2, FIT_IFC_0, FIT_LOW, FIT_MID,
+    /** "마이크가 듣는 값" ([SpeakerProbe]): a log sweep 40-500 Hz in 9 s, then 1 s silence, repeating, -15 dBFS. */
+    PROBE_SWEEP,
 }
 
 class DevTestSignal {
@@ -148,7 +150,17 @@ class DevTestSignal {
             DevTestKind.FIT_IFC_2 -> ifcTone(time, IFC_LEAD_S + IFC_LEN_S + IFC_GAP_S)
             DevTestKind.FIT_LOW -> fitLow(time)
             DevTestKind.FIT_MID -> fitMid(time)
+            DevTestKind.PROBE_SWEEP -> probeSweep(time)
         }
+    }
+
+    private fun probeSweep(time: Double): Double {
+        val x = time % PROBE_PERIOD_S
+        val env = noteEnv(x, PROBE_SWEEP_S, 0.02)
+        if (env == 0.0) return 0.0
+        val k = ln(PROBE_HI_HZ / PROBE_LO_HZ)
+        val ph = 2 * PI * PROBE_LO_HZ * PROBE_SWEEP_S / k * (exp(k * x / PROBE_SWEEP_S) - 1)
+        return FIT_TONE_AMP * env * sin(ph)
     }
 
     /** Raised-cosine edges of [fade] s on a note of [len] s at x s into it (0 outside). */
@@ -273,6 +285,11 @@ class DevTestSignal {
             doubleArrayOf(146.83, 174.61, 220.0), doubleArrayOf(196.0, 246.94, 293.66),
         )
         private val FIT_MID_RATIOS = doubleArrayOf(1.04, 1.11, 1.19, 1.27)
+        /** Probe sweep ([SpeakerProbe]): 40-500 Hz, 9 s, then 1 s silence. */
+        const val PROBE_LO_HZ = 40.0
+        const val PROBE_HI_HZ = 500.0
+        const val PROBE_SWEEP_S = 9.0
+        const val PROBE_PERIOD_S = 10.0
         private val BASS = doubleArrayOf(55.0, 43.65, 65.41, 49.0)
         private val CHORDS = arrayOf(
             doubleArrayOf(220.0, 261.63, 329.63), doubleArrayOf(174.61, 220.0, 261.63),

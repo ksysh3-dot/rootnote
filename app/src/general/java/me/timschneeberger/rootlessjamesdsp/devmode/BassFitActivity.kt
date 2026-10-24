@@ -37,6 +37,7 @@ import me.timschneeberger.rootlessjamesdsp.pvb.PvbBuild
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbGeneral
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbRuntime
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbSettings
+import me.timschneeberger.rootlessjamesdsp.pvb.SpeakerProbe
 import me.timschneeberger.rootlessjamesdsp.service.BaseAudioProcessorService
 import me.timschneeberger.rootlessjamesdsp.ui.RnActivity
 import java.security.SecureRandom
@@ -48,7 +49,8 @@ import java.util.Locale
  * "저음 맞추기" (bass fit, docs/BASS_FIT_PLAN.md), developer mode. The questions come from [BassFitSession]; this
  * screen plays them, listens to the room and keeps the conditions fixed:
  *
- * - Room check (strict): 3 s of the room, then the reference ([DevTestKind.FIT_REF]) through the phone microphone;
+ * - Room check (strict): 3 s of the room, then the reference ([DevTestKind.FIT_REF]) through the phone microphone,
+ *   then the probe sweep for the microphone's reference floor ([SpeakerProbe]; shown with the result, never applied);
  *   [NoiseGate.judge]. Failing (or no microphone): "주변이 시끄러워서 …" with [조용한 곳에서 다시] [그래도 진행];
  *   proceeding marks the result noisy. The same recording gives the latency ([FitLatency]).
  * - Step 1 trials: the microphone keeps recording; the silent interval of each trial is checked against the room
@@ -221,7 +223,10 @@ class BassFitActivity : RnActivity() {
         roomCheck()
     }
 
-    /** 0.5 s settle, 3 s of the room, 2.7 s of the reference; then judge (off the main thread). */
+    /**
+     * 0.5 s settle, 3 s of the room, 3.6 s of the reference, then the probe sweep (9 s, the microphone's reference
+     * floor, never applied); then judge (off the main thread).
+     */
     private fun roomCheck() {
         val m = mic ?: return
         token++
@@ -229,18 +234,25 @@ class BassFitActivity : RnActivity() {
         ui = ui.copy(screen = FitScreen.ROOM, roomPhase = 0, progress = 0f)
         var roomFrom = 0L
         var refFrom = 0L
-        later(0.5) { roomFrom = m.frames; ui = ui.copy(progress = 0.05f) }
-        for (k in 1..5) later(0.5 + 0.6 * k) { ui = ui.copy(progress = 0.05f + 0.09f * k) }
+        var probeFrom = 0L
+        later(0.5) { roomFrom = m.frames; ui = ui.copy(progress = 0.03f) }
+        for (k in 1..5) later(0.5 + 0.6 * k) { ui = ui.copy(progress = 0.03f + 0.04f * k) }
         later(3.6) {
             DevTestSound.start(DevTestKind.FIT_REF)
             refFrom = m.frames
-            ui = ui.copy(roomPhase = 1, progress = 0.5f)
+            ui = ui.copy(roomPhase = 1, progress = 0.25f)
         }
-        for (k in 1..5) later(3.6 + 0.6 * k) { ui = ui.copy(progress = 0.5f + 0.09f * k) }
+        for (k in 1..5) later(3.6 + 0.6 * k) { ui = ui.copy(progress = 0.25f + 0.03f * k) }
         // 3.6 s of reference: the 1.8 s window after a latency of up to 1 s is recorded in full
         later(7.2) {
+            DevTestSound.start(DevTestKind.PROBE_SWEEP)
+            probeFrom = m.frames
+            ui = ui.copy(roomPhase = 2, progress = 0.42f)
+        }
+        for (k in 1..9) later(7.2 + k.toDouble()) { ui = ui.copy(progress = 0.42f + 0.058f * k) }
+        later(7.2 + PROBE_RECORD_S) {
             DevTestSound.start(DevTestKind.FIT_SILENCE)
-            ui = ui.copy(roomPhase = 2, progress = 1f)
+            ui = ui.copy(roomPhase = 3, progress = 1f)
             val t = token
             Thread({
                 val fs = FS.toDouble()
@@ -251,10 +263,12 @@ class BassFitActivity : RnActivity() {
                 val sig = m.copy(refFrom + ((lat + 0.3) * fs).toLong(), (1.8 * fs).toInt())
                 val verdict = NoiseGate.judge(room, sig, fs)
                 val bands = room?.let { NoiseGate.bandLevels(it, fs, NoiseGate.TEST_BANDS) }
+                val probe = m.copy(probeFrom, ((PROBE_RECORD_S - 0.2) * fs).toInt())?.let { SpeakerProbe(fs).analyze(it, lat) }
                 main.post {
                     if (t != token || isFinishing) return@post
                     latencyS = lat
                     roomBands = bands
+                    ui = ui.copy(micFloorHz = probe?.floorHz(), micClipped = probe?.clipped == true)
                     if (verdict.pass) {
                         ui = ui.copy(verdict = verdict)
                         beginTest()
@@ -513,6 +527,8 @@ class BassFitActivity : RnActivity() {
         /** Speaker floor found by the last saved fit (Hz): the developer-mode graphs draw it instead of the profile's. */
         const val KEY_FIT_FLOOR_HZ = "bass_fit_floor_hz"
         private const val CHECK_SALT = 0x5EEDC0DEL
+        /** The probe sweep (9 s) plus up to about 0.8 s of latency. */
+        private const val PROBE_RECORD_S = 9.8
         /** A trial disturbed this many times in a row is answered anyway (a steady noise must not stall the test). */
         private const val MAX_DISTURBED = 3
 
@@ -528,19 +544,19 @@ class BassFitActivity : RnActivity() {
 }
 
 /**
- * The phone microphone, recorded continuously into a 12 s ring (mono, 48 kHz float) on its own thread. [frames] counts
+ * The phone microphone, recorded continuously into a 20 s ring (mono, 48 kHz float) on its own thread. [frames] counts
  * the frames recorded so far; [copy] gives a stretch back while it is still in the ring. UNPROCESSED where the phone
  * offers it (no noise suppression or gain control), else VOICE_RECOGNITION (both keep the ratios the room check uses).
  */
 internal class FitMic private constructor(private val rec: AudioRecord) {
-    private val ring = FloatArray(BassFitActivity.FS * RING_S)
+    private val ring = FloatArray(FS * RING_S)
     @Volatile var frames = 0L; private set
     @Volatile private var running = true
 
     init { Thread({ loop() }, "bass-fit-mic").start() }
 
     private fun loop() {
-        val buf = FloatArray(BassFitActivity.FS / 100)
+        val buf = FloatArray(FS / 100)
         try {
             rec.startRecording()
             while (running) {
@@ -570,10 +586,12 @@ internal class FitMic private constructor(private val rec: AudioRecord) {
     }
 
     companion object {
-        private const val RING_S = 12
+        const val FS = 48000
+        /** Long enough for the room check: the room (from 0.5 s) is analysed with the probe sweep, at about 17 s. */
+        private const val RING_S = 20
 
         fun open(am: AudioManager?): FitMic? {
-            val fs = BassFitActivity.FS
+            val fs = FS
             val source = if (am?.getProperty(AudioManager.PROPERTY_SUPPORT_AUDIO_SOURCE_UNPROCESSED) == "true")
                 MediaRecorder.AudioSource.UNPROCESSED else MediaRecorder.AudioSource.VOICE_RECOGNITION
             val minBuf = AudioRecord.getMinBufferSize(fs, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_FLOAT)
