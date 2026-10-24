@@ -269,12 +269,22 @@ android {
     namespace = "me.timschneeberger.rootlessjamesdsp"
 }
 
-// The general flavor is only built as rootless + F-Droid (no Firebase, no root/plugin packages).
+// The general flavor is built as rootless + F-Droid, and as root + F-Droid for rooted phones (the Rootnote Magisk
+// module, docs/ROOT_BUILD_PLAN.md); no Firebase, no plugin package.
 androidComponents {
     beforeVariants { variant ->
         val flavors = variant.productFlavors.toMap()
-        if (flavors["device"] == "general" && (flavors["version"] != "rootless" || flavors["dependencies"] != "fdroid"))
+        if (flavors["device"] == "general" && (flavors["version"] == "plugin" || flavors["dependencies"] != "fdroid"))
             variant.enable = false
+    }
+    onVariants { variant ->
+        val flavors = variant.productFlavors.toMap()
+        if (flavors["device"] == "general" && flavors["version"] == "root") {
+            // the "version" dimension would make it upstream's james.dsp / "JamesDSP": keep Rootnote's own package
+            // (next to the rootless one) and name
+            variant.applicationId.set(AndroidConfig.GENERAL_APPLICATION_ID + ".root")
+            variant.manifestPlaceholders.put("label", "@string/app_brand_name")
+        }
     }
 }
 

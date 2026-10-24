@@ -177,7 +177,7 @@ jobs:
         run: |
           set -o pipefail
           chmod +x gradlew
-          ./gradlew --no-daemon assembleRootlessFdroidS26uRelease assembleRootlessFdroidGeneralRelease 2>&1 | tee ci-build.log
+          ./gradlew --no-daemon assembleRootlessFdroidS26uRelease assembleRootlessFdroidGeneralRelease assembleRootFdroidGeneralRelease 2>&1 | tee ci-build.log
 
       - name: Save log to the ci-log branch (so it can be read without the web UI)
         if: failure()
@@ -244,6 +244,22 @@ jobs:
       - name: Build the root effect module (Magisk)
         run: tools/rootfx/build_android.sh
 
+      - name: Collect the general root APK (rooted phones, with the module)
+        run: |
+          set -euo pipefail
+          out=app/build/outputs/apk/rootFdroidGeneral/release
+          ls -l "$out/"
+          apk=$(ls $out/*universal*.apk 2>/dev/null | head -1)
+          [ -n "$apk" ] || apk=$(ls $out/*.apk | head -1)
+          ver=$(sed -n 's/.*generalVersionName = "\(.*\)".*/\1/p' buildSrc/src/main/kotlin/AndroidConfig.kt)
+          if [ "${{ steps.key.outputs.signed }}" = "true" ]; then suffix=""; else suffix="-UNSIGNED-TEST"; fi
+          name="Rootnote-root-$ver$suffix.apk"
+          mkdir -p dist-root
+          cp "$apk" "dist-root/$name"
+          (cd dist-root && sha256sum "$name" > "$name.sha256" && cat "$name.sha256")
+          tools=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          "$tools/aapt" dump badging "dist-root/$name" | head -1
+
       - name: Upload root module artifact
         uses: actions/upload-artifact@v4
         with:
@@ -277,4 +293,5 @@ jobs:
             dist-general/*.sha256
             dist-general/source-*.tar.gz
             dist-root/*.zip
+            dist-root/*.apk
             dist-root/*.sha256

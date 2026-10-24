@@ -28,6 +28,9 @@ import me.timschneeberger.rootlessjamesdsp.model.root.RemoteEffectSession
 import me.timschneeberger.rootlessjamesdsp.model.room.AppBlocklistDatabase
 import me.timschneeberger.rootlessjamesdsp.model.room.AppBlocklistRepository
 import me.timschneeberger.rootlessjamesdsp.model.room.BlockedApp
+import me.timschneeberger.rootlessjamesdsp.pvb.PvbBuild
+import me.timschneeberger.rootlessjamesdsp.pvb.PvbController
+import me.timschneeberger.rootlessjamesdsp.pvb.PvbEngine
 import me.timschneeberger.rootlessjamesdsp.session.root.OnRootSessionChangeListener
 import me.timschneeberger.rootlessjamesdsp.session.root.RootSessionDumpManager
 import me.timschneeberger.rootlessjamesdsp.utils.Constants
@@ -86,6 +89,24 @@ class RootAudioProcessorService : BaseAudioProcessorService(), KoinComponent,
     private val app
         get() = application as MainApplication
 
+    // Rootnote root build (general): the PVB controller; its parameters go to the Rootnote audio effect of every
+    // session (librootnotefx, command 41000). The in-process engine processes nothing; it keeps the controller's
+    // bookkeeping (docs/ROOT_BUILD_PLAN.md stage 3).
+    private var pvbEngine: PvbEngine? = null
+    private var pvbController: PvbController? = null
+
+    private fun forEachEffect(f: (JamesDspRemoteEngine) -> Unit) =
+        app.rootSessionDatabase.sessionList.values.forEach { (it as? RemoteEffectSession)?.effect?.let(f) }
+
+    private fun startPvb() {
+        val e = PvbEngine(48000)
+        val c = PvbController(this, e)
+        c.paramSink = { p -> forEachEffect { it.setPvbParams(p) } }
+        c.start()
+        pvbEngine = e
+        pvbController = c
+    }
+
     override fun onCreate() {
         super.onCreate()
 
@@ -127,6 +148,8 @@ class RootAudioProcessorService : BaseAudioProcessorService(), KoinComponent,
         arrayOf(R.string.key_powered_on, R.string.key_audioformat_enhanced_processing).forEach {
             onSharedPreferenceChanged(preferences.preferences, getString(it))
         }
+
+        if (PvbBuild.general) startPvb()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -195,6 +218,10 @@ class RootAudioProcessorService : BaseAudioProcessorService(), KoinComponent,
         sendLocalBroadcast(Intent(Constants.ACTION_SERVICE_STOPPED))
 
         app.rootSessionDatabase.clearSessions()
+        pvbController?.stop()
+        pvbController = null
+        pvbEngine?.close()
+        pvbEngine = null
 
         preferences.unregisterOnSharedPreferenceChangeListener(this)
         app.rootSessionDatabase.unregisterOnSessionChangeListener(this)
@@ -235,6 +262,8 @@ class RootAudioProcessorService : BaseAudioProcessorService(), KoinComponent,
 
     override fun onSessionChanged(sessionList: HashMap<Int, IEffectSession>) {
         updateServiceNotification()
+        // a session that opened since: the current parameters at once
+        pvbController?.lastParams?.let { p -> forEachEffect { it.setPvbParams(p) } }
     }
 
     private fun updateServiceNotification() {
