@@ -3,6 +3,27 @@
 <resources>
     <string name="eq_info_title">저음, 왕창 올려도 될까요?</string>
     <string name="eq_info_open">EQ 설명</string>
+    <string name="eq_try_title">직접 들어 보기</string>
+    <string name="eq_try_unavailable">Rootnote가 켜져 있고 스피커로 음악이 나올 때 해 볼 수 있어요.</string>
+    <string name="eq_try_volume">볼륨이 커요. 절반 아래로 낮춘 뒤 해 주세요. 큰 볼륨에서는 저음보다 떨림이 먼저 와요.</string>
+    <string name="eq_try_hint">저음이 있는 음악을 틀어 놓고 시작해 주세요. 시험하는 동안 가상 저음과 저중역 보정은 잠시 꺼요.</string>
+    <string name="eq_try_start">시작하기</string>
+    <string name="eq_try_prep">준비 중이에요…</string>
+    <string name="eq_try_focus">이제 스피커 소리에 집중해 주세요. 바뀐 것 같으면 누르세요.</string>
+    <string name="eq_try_tap">바뀐 것 같아요</string>
+    <string name="eq_try_tapped">%1$d초에 누르셨어요. 끝날 때까지 들어 주세요.</string>
+    <string name="eq_try_left">%1$d초 남았어요</string>
+    <string name="eq_try_none">못 느끼셨죠? 실제로는 %1$d초부터 %2$d초까지 63 Hz를 10 dB 올렸어요.</string>
+    <string name="eq_try_hit">맞혔어요. %1$d초에 누르셨고, 실제로는 %2$d~%3$d초였어요. 무엇이 들렸나요?</string>
+    <string name="eq_try_miss">%1$d초에 누르셨는데, 실제로는 %2$d~%3$d초에 올렸어요. 바뀔 거라고 기대하면 바뀌지 않아도 그렇게 들리기 쉬워요.</string>
+    <string name="eq_try_kind_bass">저음이 커졌어요</string>
+    <string name="eq_try_kind_rattle">떨림·지직거림</string>
+    <string name="eq_try_kind_unsure">잘 모르겠어요</string>
+    <string name="eq_try_ans_bass">이 폰은 63 Hz도 조금은 내는 편이에요. 그래도 같은 크기를 내려면 진동판이 250 Hz보다 16배 움직여요. 볼륨을 올리면 떨림이 먼저 오기 쉬워요.</string>
+    <string name="eq_try_ans_rattle">저음 대신 떨림이 들린 거예요. 3장면의 \"진동판이 먼저 한계에 닿아요\"가 바로 이거예요.</string>
+    <string name="eq_try_ans_unsure">한 번 더 해 보면 확실해져요. 매번 바뀌는 때가 달라요.</string>
+    <string name="eq_try_again">다시 해 보기</string>
+    <string name="eq_try_restored">원래 설정으로 돌아왔어요.</string>
     <string-array name="eq_story">
         <item>폰 스피커가 내는 소리</item>
         <item>그림은 안드로이드 폰 90여 대의 스피커가 낮은 소리부터 높은 소리까지 얼마나 크게 내는지예요. 사람 목소리쯤인 중역을 0으로 맞췄어요.\n\n200 Hz 아래로 내려가면 소리가 급하게 작아져요. 중간쯤 되는 폰은 125 Hz에서 중역보다 약 23 dB 작고, 그 아래는 이 측정에 값이 없을 만큼 작아요.\n\n한 리뷰어가 같은 방법으로 잰 값을 Rootnote 측정에 맞춰 옮긴 추정치예요. 개별 기종 값은 싣지 않아요. 점선은 Rootnote가 직접 잰 Galaxy S26 Ultra예요.</item>
@@ -14,6 +35,8 @@
         <item>요즘 폰의 스피커 앰프는 진동판이 너무 움직이거나 뜨거워지지 않게 실시간으로 출력을 줄여요. 저음이 그 문턱을 넘으면 저음만이 아니라 목소리와 악기까지 함께 눌려 소리가 \"꿀렁\"거려요.\n\nGalaxy S26 Ultra에서 잰 문턱은 볼륨 50%에서 약 −15 dBFS, 80%에서 약 −27 dBFS였어요. 볼륨이 클수록 여유가 줄어요.</item>
         <item>그런데 왜 효과가 있어 보였을까요?</item>
         <item>저음이 늘었다고 느끼는 데는 이유가 있어요. 다만 32·63 Hz 자체가 들려서는 아니에요.\n\n• EQ 칸은 생각보다 넓어요. 넓은 칸으로 63 Hz를 10 dB 올리면 200 Hz가 2 dB쯤, 250 Hz가 1.5 dB쯤 같이 올라가요. 귀에 들리는 건 이 옆자락이에요. 낮은 칸 여러 개를 함께 올리는 설정도 많고요.\n• 진동판이 무리하면 소리가 찌그러지는데, 이 찌그러짐이 바로 배음이에요. 스피커가 낼 수 있는 높이에 생긴 배음을 귀가 저음으로 채워 들어요. 거친 가상 저음인 셈이라 \"부르르\" 하는 소리가 같이 섞여요.\n• 폰을 손에 들고 있으면 몸체 떨림이 손으로 전해져요. 진동이 있으면 저음이 더 세게 느껴진다는 연구가 있어요.\n• 소리가 커지면 좋게 들려요. 크기를 맞추지 않고 비교하면 더 큰 쪽이 나아 보이기 쉬워요. 삼성 측 답변에도 다른 EQ 앱은 보통 전체 음량을 조절해 효과를 두드러지게 한다는 설명이 있어요.\n\n저음이 커질 때 앰프가 중고음을 일부러 줄여 저음을 돋보이게 한다는 근거는 찾지 못했어요. 오히려 스피커 보호는 저음 대역부터 따로 줄이도록 만든 경우가 있어요.</item>
+        <item>못 믿겠다면, 직접 들어 보세요</item>
+        <item>말보다 직접 듣는 게 확실해요. 시작하면 30초 동안 음악이 그대로 나오다가, 언제인지는 알려 드리지 않고 한 번 63 Hz를 10 dB 올렸다가 내려요.\n\n바뀐 것 같으면 바로 눌러 주세요. 끝나면 실제로 언제 바뀌었는지 알려 드려요. 화면을 나가면 원래 설정으로 돌아가고, 아무것도 저장하지 않아요.</item>
         <item>들리는 곳을 조금만</item>
         <item>스피커가 아직 소리를 내는 200~400 Hz는 달라요. 여기를 2~3 dB만 올려도 저음이 꽉 차게 들려요.\n\n더 묵직하게 듣고 싶으면 EQ를 더 올리기보다 가상 저음을 조금씩 더해 보세요. 스피커가 못 내는 낮은 음 대신, 그 배음을 들리는 곳에 만들어 줘요.</item>
         <item>고음을 깎는 것도 필요해요</item>
@@ -29,6 +52,7 @@
         <item>그림: 같은 크기 소리를 낼 때 250 Hz는 진동판이 조금, 63 Hz는 16배 움직여 한계에 닿고 떨려요.</item>
         <item>그림: 저음 막대가 보호 문턱을 넘으면 목소리와 악기 막대까지 함께 낮아져요.</item>
         <item>그림: 63 Hz를 넓은 칸으로 10 dB 올린 EQ 모양. 옆자락이 200~300 Hz까지 2 dB쯤 걸쳐요.</item>
+        <item>그림: 30초 시간 막대. 끝나면 실제로 올린 구간과 누른 시점이 표시돼요.</item>
         <item>그림: 200~400 Hz를 2~3 dB 올린 곡선.</item>
         <item>그림: 2.5~6 kHz 고음 봉우리를 3 dB 깎은 곡선.</item>
         <item>결과 네 가지: EQ 있음이 8 대 0으로 이김, 160 Hz 아래를 잘라도 차이 없음, 가상 저음 +3~4가 +6보다 깨끗, 볼륨이 크면 여유가 12 dB 줄어듦.</item>

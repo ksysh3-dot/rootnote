@@ -33,6 +33,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -106,12 +107,38 @@ internal object PhoneResponse {
 }
 
 private val Ease = CubicBezierEasing(0.32f, 0.72f, 0f, 1f)
-private const val SCENES = 9
-private val PERIODS = intArrayOf(4200, 4000, 3200, 4000, 3600, 3600, 3600, 5200, 4200)
-private val KEY_FRAMES = floatArrayOf(0.9f, 0.55f, 0.3f, 0.45f, 0.6f, 0.5f, 0.5f, 0.95f, 0.9f)
+private const val SCENES = 10
+/** The page with "직접 들어 보기" (63 Hz +10 dB at a moment the listener is not told). */
+private const val TRY_PAGE = 5
+private val PERIODS = intArrayOf(4200, 4000, 3200, 4000, 3600, 2000, 3600, 3600, 5200, 4200)
+private val KEY_FRAMES = floatArrayOf(0.9f, 0.55f, 0.3f, 0.45f, 0.6f, 0f, 0.5f, 0.5f, 0.95f, 0.9f)
+
+/**
+ * The listening trial of [TRY_PAGE], driven by BassStoryActivity: [phase] IDLE, PREP (the trial's base settings
+ * settle), RUN (30 s; 63 Hz goes up 10 dB from [changeFrom] to [changeTo] s, not shown until DONE), DONE.
+ */
+@Immutable
+data class TryUi(
+    val canTry: Boolean = false,
+    val volumeTooHigh: Boolean = false,
+    val phase: Int = IDLE,
+    val elapsed: Float = 0f,
+    val lengthS: Float = 30f,
+    val changeFrom: Float = 0f,
+    val changeTo: Float = 0f,
+    val tapAt: Float? = null,
+    /** After a hit: 0 bass, 1 rattle, 2 not sure. */
+    val kind: Int? = null,
+    val restored: Boolean = false,
+) {
+    val hit: Boolean get() = tapAt != null && tapAt >= changeFrom && tapAt <= changeTo + 3f
+    companion object { const val IDLE = 0; const val PREP = 1; const val RUN = 2; const val DONE = 3 }
+}
+
+class TryActions(val onStart: () -> Unit, val onTap: () -> Unit, val onKind: (Int) -> Unit, val onAgain: () -> Unit)
 
 @Composable
-fun BassStory(reduceMotion: Boolean, onClose: () -> Unit) {
+fun BassStory(reduceMotion: Boolean, trial: TryUi, actions: TryActions, onClose: () -> Unit) {
     val c = rootnotePalette()
     val items = stringArrayResource(R.array.eq_story)
     val pager = rememberPagerState { SCENES }
@@ -151,7 +178,7 @@ fun BassStory(reduceMotion: Boolean, onClose: () -> Unit) {
                     Modifier.weight(0.6f).fillMaxHeight().padding(vertical = 8.dp).background(c.band, RoundedCornerShape(20.dp)),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Scene(page, reduceMotion, active = page == pager.currentPage)
+                    Scene(page, reduceMotion, active = page == pager.currentPage, trial = trial)
                 }
                 Column(
                     Modifier.weight(0.4f).fillMaxHeight().padding(start = 20.dp, top = 8.dp, bottom = 8.dp)
@@ -162,6 +189,7 @@ fun BassStory(reduceMotion: Boolean, onClose: () -> Unit) {
                     Text(items.getOrElse(2 * page) { "" }, modifier = Modifier.semantics { heading() },
                         color = c.textPrimary, fontSize = 20.sp, lineHeight = 26.sp, fontWeight = FontWeight.Bold)
                     Text(items.getOrElse(2 * page + 1) { "" }, color = c.textPrimary, fontSize = 15.sp, lineHeight = 22.sp)
+                    if (page == TRY_PAGE) TryControl(trial, actions)
                 }
             }
         }
@@ -203,7 +231,7 @@ private class Ink(val accent: Color, val text: Color, val soft: Color, val grey:
 private val Orange = Color(0xFFE8892F)
 
 @Composable
-private fun Scene(page: Int, reduceMotion: Boolean, active: Boolean) {
+private fun Scene(page: Int, reduceMotion: Boolean, active: Boolean, trial: TryUi) {
     val c = rootnotePalette()
     val ink = remember(c) { Ink(c.fill, c.textPrimary, c.textSecondary, c.chevron, Orange, c.bg) }
     val clock: State<Float> = if (reduceMotion || !active) {
@@ -224,9 +252,10 @@ private fun Scene(page: Int, reduceMotion: Boolean, active: Boolean) {
             2 -> sceneCone(t, ink, tm, labels)
             3 -> sceneProtect(t, ink, tm, labels)
             4 -> sceneSkirt(t, ink, tm, labels)
-            5 -> sceneLowMid(t, ink, tm, labels)
-            6 -> sceneTreble(t, ink, tm, labels)
-            7 -> sceneResults(t, ink, tm, labels)
+            5 -> sceneTry(t, ink, trial)
+            6 -> sceneLowMid(t, ink, tm, labels)
+            7 -> sceneTreble(t, ink, tm, labels)
+            8 -> sceneResults(t, ink, tm, labels)
             else -> sceneRecipe(t, ink, tm, labels)
         }
     }
@@ -438,7 +467,89 @@ private fun DrawScope.sceneSkirt(t: Float, ink: Ink, tm: TextMeasurer, labels: A
     curve(ch, { PhoneResponse.P50[it] }, ink.accent.copy(alpha = 0.5f), 2f.dp.toPx())
 }
 
-/** 6: a small bump at 200-400 Hz, where the speaker still plays. */
+/**
+ * 6: the trial's time bar: it fills over the 30 s; a soft pulse asks to listen while it runs; at the end the real
+ * 63 Hz +10 dB stretch (orange) and the tap (a line) are shown.
+ */
+private fun DrawScope.sceneTry(t: Float, ink: Ink, trial: TryUi) {
+    val w = size.width; val h = size.height
+    val left = w * 0.08f; val right = w * 0.92f
+    val y = h * 0.62f; val bh = h * 0.07f
+    fun x(s: Float) = left + (right - left) * (s / trial.lengthS).coerceIn(0f, 1f)
+    // a speaker, pulsing gently while the trial runs
+    val cx = w / 2f; val cy = h * 0.3f
+    val pulse = if (trial.phase == TryUi.RUN) 0.5f + 0.5f * sin(2f * PI.toFloat() * t) else 0f
+    drawCircle(ink.accent.copy(alpha = 0.12f + 0.12f * pulse), h * (0.14f + 0.03f * pulse), Offset(cx, cy))
+    drawCircle(ink.accent, h * 0.07f, Offset(cx, cy))
+    drawCircle(ink.bg, h * 0.03f, Offset(cx, cy))
+    drawRoundRect(ink.grey.copy(alpha = 0.35f), Offset(left, y), Size(right - left, bh), CornerRadius(bh / 2))
+    val fill = when (trial.phase) { TryUi.RUN -> trial.elapsed; TryUi.DONE -> trial.lengthS; else -> 0f }
+    if (fill > 0f) drawRoundRect(ink.accent.copy(alpha = 0.55f), Offset(left, y), Size(x(fill) - left, bh), CornerRadius(bh / 2))
+    if (trial.phase == TryUi.DONE) {
+        drawRoundRect(ink.warn, Offset(x(trial.changeFrom), y - bh * 0.35f), Size(x(trial.changeTo) - x(trial.changeFrom), bh * 1.7f),
+            CornerRadius(bh / 2))
+    }
+    trial.tapAt?.let { tap ->
+        val xt = x(tap)
+        drawLine(ink.text, Offset(xt, y - bh * 1.2f), Offset(xt, y + bh * 2.2f), 2.5f.dp.toPx(), StrokeCap.Round)
+    }
+}
+
+/** "직접 들어 보기": start, tap when it changed, the answer, what was heard. */
+@Composable
+private fun TryControl(trial: TryUi, actions: TryActions) {
+    val c = rootnotePalette()
+    Column(Modifier.padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(stringResource(R.string.eq_try_title), color = c.textPrimary, fontSize = 16.sp, lineHeight = 22.sp, fontWeight = FontWeight.Bold)
+        when (trial.phase) {
+            TryUi.IDLE -> when {
+                !trial.canTry -> TryNote(stringResource(R.string.eq_try_unavailable))
+                trial.volumeTooHigh -> TryNote(stringResource(R.string.eq_try_volume))
+                else -> {
+                    TryNote(stringResource(R.string.eq_try_hint))
+                    StoryButton(stringResource(R.string.eq_try_start), filled = true, enabled = true, onClick = actions.onStart)
+                }
+            }
+            TryUi.PREP -> TryNote(stringResource(R.string.eq_try_prep))
+            TryUi.RUN -> {
+                Text(stringResource(R.string.eq_try_focus), color = c.textPrimary, fontSize = 15.sp, lineHeight = 22.sp)
+                val tap = trial.tapAt
+                if (tap == null) StoryButton(stringResource(R.string.eq_try_tap), filled = true, enabled = true, onClick = actions.onTap)
+                else TryNote(stringResource(R.string.eq_try_tapped, tap.toInt()))
+                TryNote(stringResource(R.string.eq_try_left, (trial.lengthS - trial.elapsed).toInt().coerceAtLeast(0)))
+            }
+            else -> {
+                val from = trial.changeFrom.toInt(); val to = trial.changeTo.toInt()
+                val tap = trial.tapAt
+                val result = when {
+                    tap == null -> stringResource(R.string.eq_try_none, from, to)
+                    trial.hit -> stringResource(R.string.eq_try_hit, tap.toInt(), from, to)
+                    else -> stringResource(R.string.eq_try_miss, tap.toInt(), from, to)
+                }
+                Text(result, color = c.textPrimary, fontSize = 15.sp, lineHeight = 22.sp)
+                if (trial.hit) {
+                    val kinds = listOf(R.string.eq_try_kind_bass, R.string.eq_try_kind_rattle, R.string.eq_try_kind_unsure)
+                    if (trial.kind == null) {
+                        for ((i, k) in kinds.withIndex()) StoryButton(stringResource(k), filled = false, enabled = true) { actions.onKind(i) }
+                    } else {
+                        val ans = listOf(R.string.eq_try_ans_bass, R.string.eq_try_ans_rattle, R.string.eq_try_ans_unsure)[trial.kind]
+                        Text(stringResource(ans), color = c.textPrimary, fontSize = 15.sp, lineHeight = 22.sp)
+                    }
+                }
+                if (trial.restored) TryNote(stringResource(R.string.eq_try_restored))
+                StoryButton(stringResource(R.string.eq_try_again), filled = false, enabled = true, onClick = actions.onAgain)
+            }
+        }
+    }
+}
+
+@Composable
+private fun TryNote(text: String) {
+    val c = rootnotePalette()
+    Text(text, color = c.textSecondary, fontSize = 13.sp, lineHeight = 18.sp)
+}
+
+/** 7: a small bump at 200-400 Hz, where the speaker still plays. */
 private fun DrawScope.sceneLowMid(t: Float, ink: Ink, tm: TextMeasurer, labels: Array<String>) {
     val ch = Chart(size.width, size.height)
     zonesAndGrid(ch, ink, tm, labels)
@@ -450,7 +561,7 @@ private fun DrawScope.sceneLowMid(t: Float, ink: Ink, tm: TextMeasurer, labels: 
     text(tm, labels.getOrElse(12) { "" }, (x200 + x400) / 2f, ch.y(8f), ink.accent, 12f, bold = true, align = 0.5f)
 }
 
-/** 7: the treble peak (2.5-6 kHz, 10 dB and more over the mids) cut by 3 dB; the bass then stands out more. */
+/** 8: the treble peak (2.5-6 kHz, 10 dB and more over the mids) cut by 3 dB; the bass then stands out more. */
 private fun DrawScope.sceneTreble(t: Float, ink: Ink, tm: TextMeasurer, labels: Array<String>) {
     val ch = Chart(size.width, size.height)
     zonesAndGrid(ch, ink, tm, labels)
@@ -462,7 +573,7 @@ private fun DrawScope.sceneTreble(t: Float, ink: Ink, tm: TextMeasurer, labels: 
     text(tm, labels.getOrElse(13) { "" }, (x0 + x1) / 2f, ch.y(19f), ink.warn, 12f, bold = true, align = 0.5f)
 }
 
-/** 8: four results appear one after another. */
+/** 9: four results appear one after another. */
 private fun DrawScope.sceneResults(t: Float, ink: Ink, tm: TextMeasurer, labels: Array<String>) {
     val w = size.width; val h = size.height
     val cw = w * 0.45f; val chh = h * 0.4f
@@ -477,7 +588,7 @@ private fun DrawScope.sceneResults(t: Float, ink: Ink, tm: TextMeasurer, labels:
     }
 }
 
-/** 9: the recommended EQ shape: low cut, a little at 220 Hz, the treble peak cut. */
+/** 10: the recommended EQ shape: low cut, a little at 220 Hz, the treble peak cut. */
 private fun DrawScope.sceneRecipe(t: Float, ink: Ink, tm: TextMeasurer, labels: Array<String>) {
     val w = size.width; val h = size.height
     val left = w * 0.06f; val right = w * 0.97f

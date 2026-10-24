@@ -3,6 +3,27 @@
 <resources>
     <string name="eq_info_title">Can I just crank up the bass?</string>
     <string name="eq_info_open">About EQ</string>
+    <string name="eq_try_title">Listen for yourself</string>
+    <string name="eq_try_unavailable">You can try this while Rootnote is on and music plays on the speaker.</string>
+    <string name="eq_try_volume">The volume is high. Turn it below half first: at loud volume rattle comes before bass.</string>
+    <string name="eq_try_hint">Start music with some bass first. During the test, virtual bass and the low-mid lift are off for a moment.</string>
+    <string name="eq_try_start">Start</string>
+    <string name="eq_try_prep">Getting ready…</string>
+    <string name="eq_try_focus">Now listen closely to the speaker. Tap when you think it changed.</string>
+    <string name="eq_try_tap">I think it changed</string>
+    <string name="eq_try_tapped">You tapped at %1$d s. Keep listening to the end.</string>
+    <string name="eq_try_left">%1$d s left</string>
+    <string name="eq_try_none">Did not notice? 63 Hz was up 10 dB from %1$d s to %2$d s.</string>
+    <string name="eq_try_hit">Right. You tapped at %1$d s; it changed at %2$d-%3$d s. What did you hear?</string>
+    <string name="eq_try_miss">You tapped at %1$d s, but 63 Hz went up at %2$d-%3$d s. Expecting a change easily makes one heard.</string>
+    <string name="eq_try_kind_bass">More bass</string>
+    <string name="eq_try_kind_rattle">Rattle or buzz</string>
+    <string name="eq_try_kind_unsure">Not sure</string>
+    <string name="eq_try_ans_bass">This phone plays a little 63 Hz. Still, for the same loudness its cone moves 16 times as far as at 250 Hz; turn it up and rattle tends to come first.</string>
+    <string name="eq_try_ans_rattle">That was rattle instead of bass: scene 3, \"The cone reaches its limit first\".</string>
+    <string name="eq_try_ans_unsure">Try again and it gets clearer. The moment changes every time.</string>
+    <string name="eq_try_again">Try again</string>
+    <string name="eq_try_restored">Your own settings are back.</string>
     <string-array name="eq_story">
         <item>What a phone speaker plays</item>
         <item>The picture shows how loud the speakers of about 90 Android phones play, from low to high notes, with the mids (about where voices are) at 0.\n\nBelow 200 Hz the sound drops fast. The median phone is about 23 dB under its mids at 125 Hz, and below that it is too quiet for this data to show.\n\nEstimates: one reviewer\'s measurements, all taken the same way, moved into Rootnote\'s frame. No per-model values are shown. The dashed line is the Galaxy S26 Ultra as Rootnote measured it.</item>
@@ -14,6 +35,8 @@
         <item>A phone\'s speaker amplifier reduces its output in real time so the cone does not move too far or get too hot. When the bass crosses that line, voices and instruments are pushed down with it and the sound pumps.\n\nOn the Galaxy S26 Ultra the threshold measured about -15 dBFS at 50% volume and about -27 dBFS at 80%. The louder you listen, the less room there is.</item>
         <item>Then why did it seem to work?</item>
         <item>There are reasons the bass seems bigger, just not that 32 or 63 Hz itself is heard.\n\n• EQ bands are wider than they look. With a wide band, 63 Hz +10 dB also raises 200 Hz by about 2 dB and 250 Hz by about 1.5 dB. That skirt is what you hear. Many settings also raise several low bands together.\n• A cone pushed too far distorts, and that distortion is harmonics. The ear fills in the low note from harmonics the speaker can play: a crude virtual bass, with a \"brrr\" rattle mixed in.\n• Holding the phone, you feel the body shake in your hand. Studies found bass feels stronger with vibration.\n• Louder sounds better. Compared without matching the loudness, the louder side easily seems better. Samsung\'s answer also notes that other EQ apps usually adjust the overall volume to make their effect stand out.\n\nWe found no evidence that the amplifier deliberately turns the mids and treble down when the bass rises. Rather, some speaker protection turns the bass band down on its own.</item>
+        <item>Not convinced? Listen for yourself</item>
+        <item>Hearing it beats reading it. Once you start, the music plays for 30 seconds, and at a moment we do not tell you, 63 Hz goes up 10 dB for a while and back down.\n\nTap as soon as you think it changed. At the end you see when it really changed. Leaving this screen gives your own settings back; nothing is stored.</item>
         <item>A little where it plays</item>
         <item>200-400 Hz, where the speaker still plays, is different. Raising it just 2-3 dB makes the bass sound full.\n\nFor a heavier sound, add a little virtual bass rather than more EQ. Instead of the low note the speaker cannot play, it makes that note\'s harmonics where you can hear them.</item>
         <item>Cutting the treble helps too</item>
@@ -29,6 +52,7 @@
         <item>Picture: for the same loudness the cone moves a little at 250 Hz and 16 times as far at 63 Hz, where it hits its limit and rattles.</item>
         <item>Picture: when the bass bar crosses the protection line, the voice and instrument bars go down too.</item>
         <item>Picture: the EQ shape of 63 Hz +10 dB with a wide band. Its skirt still lifts 200-300 Hz by about 2 dB.</item>
+        <item>Picture: a 30-second time bar. At the end it shows when 63 Hz really went up and when you tapped.</item>
         <item>Picture: the curve with 200-400 Hz raised 2-3 dB.</item>
         <item>Picture: the curve with the 2.5-6 kHz treble peak cut 3 dB.</item>
         <item>Four results: EQ won 8 to 0, cutting under 160 Hz made no difference, virtual bass at +3 to +4 cleaner than +6, loud volume takes 12 dB of headroom.</item>
