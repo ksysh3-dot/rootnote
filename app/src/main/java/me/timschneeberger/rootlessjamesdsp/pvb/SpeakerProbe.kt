@@ -24,7 +24,13 @@ import kotlin.math.sqrt
  * The phone microphone hears less than is there below about 100 Hz (its own high-pass), and the body can carry
  * vibration to it; both are why this stays a reference.
  */
-class SpeakerProbe(val fs: Double) {
+class SpeakerProbe(
+    val fs: Double,
+    /** The microphone's typical response ([MicResponse]); null = take it as flat. */
+    private val mic: DoubleArray? = null,
+) {
+    private fun micDb(hz: Double): Double = mic?.let { MicResponse.db(it, hz) } ?: 0.0
+
     enum class Verdict { PLAYS, WEAK, BUZZ }
 
     data class Bin(val hz: Double, val relDb: Double, val ratioDb: Double, val verdict: Verdict)
@@ -60,7 +66,9 @@ class SpeakerProbe(val fs: Double) {
             val l = tone(x, c)
             if (l > f1) { f1 = l; f = c }
         }
-        val h = maxOf(tone(x, 2 * f), tone(x, 3 * f))
+        // the microphone's typical response off the note and its harmonics (they lie up to 2 octaves apart)
+        f1 -= micDb(f)
+        val h = maxOf(tone(x, 2 * f) - micDb(2 * f), tone(x, 3 * f) - micDb(3 * f))
         val r = f1 - h
         val b = centers.indices.minByOrNull { abs(log2(centers[it] / f)) }!!
         val d = abs(log2(centers[b] / f))

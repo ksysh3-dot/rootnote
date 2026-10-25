@@ -369,6 +369,37 @@ class FloorStaircase(
 }
 
 /**
+ * Typical frequency response of a phone's own microphone, dB re its level at 1 kHz, in third octaves from 100 Hz to
+ * 2 kHz: the median of published microphone measurements of 53 Android phones ([ANDROID]) and of the 11 Galaxy
+ * phones among them ([GALAXY]), smoothed over three bands and rounded to 0.5 dB. Deliberately coarse: one phone can
+ * be 5 dB off this at 100-300 Hz (and 20 dB below 100 Hz, which is why nothing below 100 Hz is corrected). It takes
+ * off the typical tilt, not the phone's own. Only aggregates are kept here (no per-phone values).
+ */
+object MicResponse {
+    val BANDS = doubleArrayOf(100.0, 125.0, 160.0, 200.0, 250.0, 315.0, 400.0, 500.0, 630.0, 800.0, 1000.0, 1250.0, 1600.0, 2000.0)
+    val GALAXY = doubleArrayOf(-0.5, -0.5, 0.0, 1.5, 1.5, 0.5, 0.5, 1.5, 1.5, 1.0, 0.0, 0.0, 0.5, 1.0)
+    val ANDROID = doubleArrayOf(-1.0, -1.0, -1.0, 0.5, 0.5, 0.0, 0.0, 1.0, 1.5, 1.0, 0.0, 0.0, 1.0, 1.0)
+
+    /** The table for a phone maker (Build.MANUFACTURER): Galaxy for Samsung, the Android median otherwise. */
+    fun forMaker(maker: String?): DoubleArray = if (maker.equals("samsung", ignoreCase = true)) GALAXY else ANDROID
+
+    /** Response at [hz], dB re 1 kHz (log-frequency interpolation; the end values outside 100 Hz-2 kHz). */
+    fun db(table: DoubleArray, hz: Double): Double {
+        val c = BANDS
+        if (hz <= c.first()) return table.first()
+        if (hz >= c.last()) return table.last()
+        var i = 0
+        while (c[i + 1] < hz) i++
+        val u = ln(hz / c[i]) / ln(c[i + 1] / c[i])
+        return table[i] + (table[i + 1] - table[i]) * u
+    }
+
+    /** Band levels measured at [centers] with the microphone's typical response taken off. */
+    fun correct(table: DoubleArray, bandsDb: DoubleArray, centers: DoubleArray): DoubleArray =
+        DoubleArray(bandsDb.size) { bandsDb[it] - db(table, centers[it]) }
+}
+
+/**
  * Optional room-noise correction of the floor bursts ("소음 보정", off unless the listener turns it on). The bursts are
  * set from the listener's threshold at 300 Hz plus how much less sensitive hearing is at the burst's frequency in quiet
  * ([HearingThreshold]). In a room with noise, the noise raises each threshold by its own amount: room noise is mostly

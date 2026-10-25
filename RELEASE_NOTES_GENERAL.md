@@ -10,6 +10,10 @@ The corresponding source is the tagged commit; `source-*.tar.gz` below contains 
 - Measured settings exist only for the Galaxy S26 Ultra; other phones start with conservative settings based on published measurements of 92 Android phones.
 - Privacy: only settings are stored; no song titles, no recordings, nothing sent (see PRIVACY.md).
 
+## 다음 버전 (작업 중)
+
+- 저음 맞추기가 폰 마이크로 재는 값(소음 보정의 방 소음, "마이크가 듣는 값")에서 폰 마이크의 대표적인 주파수 특성을 빼요. 갤럭시는 갤럭시 11대, 다른 폰은 안드로이드 53대의 공개 측정 중간값을 0.5 dB 단위로 거칠게 쓴 표예요(차이는 3 dB 안쪽). 폰 하나하나의 차이는 남고, 100 Hz 아래는 고치지 않아요.
+
 ## 0.9.0-beta.11
 
 - "X는 A와 B 중 어느 쪽과 같나요?" 질문에 "잘 모르겠어요"를 넣었어요. 틀린 답으로 세어서, 두 번 고르면 그 검사는 끝나고 지금 설정이 그대로 남아요. 배음 경계 검사는 차이가 아주 작아 구분이 안 되는 게 보통이라고 안내해요.

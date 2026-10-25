@@ -426,7 +426,7 @@ class DevModeActivity : BaseActivity() {
         val m = if (granted) FitMic.open(getSystemService(AudioManager::class.java)) else null
         if (m == null) { update { it.copy(probe = ProbeView(running = false, noMic = true)) }; return }
         probeMic = m
-        probe = SpeakerProbe(FitMic.FS.toDouble())
+        probe = SpeakerProbe(FitMic.FS.toDouble(), me.timschneeberger.rootlessjamesdsp.pvb.MicResponse.forMaker(android.os.Build.MANUFACTURER))
         // the speaker alone: no layer, flat EQ, high-pass out of the way, JamesDSP held out
         PvbRuntime.calibrating = true
         PvbRuntime.setDevOverride(BassFitSettings.of(settings(), FitVariant.RAW))

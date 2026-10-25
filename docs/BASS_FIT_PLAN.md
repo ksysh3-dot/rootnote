@@ -186,3 +186,11 @@ apart from VOICE_RECOGNITION's. beta.10 used the VOICE_RECOGNITION value for bot
 17.6 dB too quiet and the correction hardly acted. NoiseMasking now takes the offset of the source actually opened,
 ignores the bands under 100 Hz, and the log records the source (`mic_source`). Still nominal values: one recording of
 the room beside the UMIK-1 gives the real offset of a phone.
+
+Microphone response (next version): what bass fit measures with the phone microphone (the room bands of the noise
+correction, the probe sweep's fundamental and harmonics) now has the typical microphone response taken off
+(MicResponse): the median of published measurements of 53 Android phones, and of the 11 Galaxy phones among them for
+Samsung, re 1 kHz, 100 Hz-2 kHz, smoothed and rounded to 0.5 dB (all within 3 dB). Across phones the response varies
+by about 6 dB (10-90 %) at 160-315 Hz, 10-12 dB at 100-125 Hz and about 20 dB at 63 Hz and below, so the median takes
+off the typical tilt only; nothing below 100 Hz is corrected. The noise gate and the disturbance check compare levels
+of one microphone in one band and stay uncorrected.
