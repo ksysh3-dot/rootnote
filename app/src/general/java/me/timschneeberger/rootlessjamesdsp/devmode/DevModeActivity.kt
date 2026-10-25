@@ -552,8 +552,7 @@ class DevModeActivity : BaseActivity() {
     }
 
     companion object {
-        /** "폰 마이크 보정" on the microphone spectrum (default on). */
-        const val KEY_DEV_MIC_CORR = "dev_mic_spectrum_corr"
+        const val KEY_DEV_MIC_CORR = PvbGeneral.KEY_DEV_MIC_CORR
         private const val POLL_MS = 40L
         private const val MAX_UNDO = 50
         private const val TOUCH_HOLD_MS = 1500L

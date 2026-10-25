@@ -28,9 +28,11 @@ This document covers the general distribution build **Rootnote** (package `kr.ks
 | 프리셋·스크립트·IR 파일(원본 기능) | 앱 파일 영역 | 사용자가 직접 만들거나 가져온 파일 |
 | 진단 로그(원본 기능) | 캐시 `application.log` | 기술 메시지(최대 2 MB, 앱을 시작할 때마다 새로 씀). 처리 중인 앱 이름이 들어갈 수 있습니다. 설정 › 문제 해결에서 직접 공유하지 않는 한 폰 밖으로 나가지 않습니다. |
 
-시스템 오디오는 서비스가 켜져 있는 동안 메모리에서만 처리하고 저장하지 않습니다. 오디오 캡처에는 Android 규정상 `RECORD_AUDIO` 권한이 필요합니다. 마이크는 두 경우에만 씁니다. 공간감의 '좌우 맞추기'에서 사용자가 **자동 측정**을 직접 누르면, 20~45초 동안 폰의 위아래 마이크로 두 스피커 소리를 듣고 메모리에서 대역별 크기만 계산한 뒤 버립니다. 녹음은 저장하지도, 어디로 보내지도 않습니다.
+시스템 오디오는 서비스가 켜져 있는 동안 메모리에서만 처리하고 저장하지 않습니다. 오디오 캡처에는 Android 규정상 `RECORD_AUDIO` 권한이 필요합니다. 마이크는 아래의 경우에만, 사용자가 켤 때만 씁니다. 공간감의 '좌우 맞추기'에서 사용자가 **자동 측정**을 직접 누르면, 20~45초 동안 폰의 위아래 마이크로 두 스피커 소리를 듣고 메모리에서 대역별 크기만 계산한 뒤 버립니다. 녹음은 저장하지도, 어디로 보내지도 않습니다.
 
 마이크를 쓰는 곳이 하나 더 있습니다. 개발자 모드의 **저음 맞추기**는 시작할 때와 1단계 동안 폰 마이크로 방 소음과 스피커 소리를 듣고, 메모리에서 대역별 크기만 계산한 뒤 버립니다. 녹음은 저장하지 않습니다. 저음 맞추기의 **검증 모드**는 회차별 결과 숫자(시각, 기기 모델, 앱 버전, 볼륨, 찾은 주파수나 세기, 답의 개수, 방 소음 여유, 마이크 종류, 폰이 알려 준 마이크 감도)를 앱 내부 파일 `files/bass_fit_validation.csv`에 남깁니다. 검증 모드의 **마이크 맞추기**는 녹음 방식별 대역 크기(숫자)와 기기 모델을 `files/bass_fit_mic_cal.csv`에 남깁니다. 두 파일 모두 소리나 곡 정보는 들어 있지 않고, 화면의 공유 버튼으로만 밖에 나가며, 지우기 버튼으로 지울 수 있습니다. 클라우드 백업에도 포함되지 않습니다.
+
+고급 설정의 **실시간 분석**에서 "실제 소리"를 켜면, 그 화면이 보이는 동안 폰 마이크로 들리는 소리의 대역별 크기를 계산해 그래프로만 보여 줍니다. 저장하지 않고, 화면을 벗어나거나 끄면 마이크도 꺼집니다. 개발자 모드의 **마이크 스펙트럼**도 같아요.
 
 ### 백업
 
@@ -76,9 +78,11 @@ This document covers the general distribution build **Rootnote** (package `kr.ks
 | Presets, scripts, impulse responses (upstream) | app files | files you created or imported |
 | Diagnostic log (upstream) | cache `application.log` | technical messages (at most 2 MB, rewritten at every start); may contain names of processed apps. It leaves the phone only if you share it yourself under Settings, Troubleshooting. |
 
-System audio is processed in memory while the service runs and is never saved. Android requires the `RECORD_AUDIO` permission for audio capture itself. The microphone is used in two cases only. First: when you tap **Measure automatically** in spatial "Even out the speakers", the phone listens to its two speakers with its top and bottom microphones for about 20-45 s, computes the level per band in memory and discards the audio. Nothing is saved or sent.
+System audio is processed in memory while the service runs and is never saved. Android requires the `RECORD_AUDIO` permission for audio capture itself. The microphone is used only in the cases below, and only when you turn them on. First: when you tap **Measure automatically** in spatial "Even out the speakers", the phone listens to its two speakers with its top and bottom microphones for about 20-45 s, computes the level per band in memory and discards the audio. Nothing is saved or sent.
 
 The microphone is used in one more place. **Bass fit** in developer mode listens to the room and the speaker with the phone microphone at its start and during step 1, computes the level per band in memory and discards the audio; no recording is saved. Its **validation mode** keeps the numbers of each run (time, phone model, app version, volume, the frequency or strength found, answer counts, room margin, microphone source, the microphone sensitivity the phone declares) in the app's own file `files/bass_fit_validation.csv`; its **microphone match** keeps the level per band of each recording source (numbers) and the phone model in `files/bass_fit_mic_cal.csv`. Neither holds audio or song information, leaves the phone only through the share button on that screen, can be deleted with the clear button, and is not part of cloud backup.
+
+In advanced settings, **live analysis** with "Actual sound" turned on listens with the phone microphone while that screen is visible and only draws the level per band. Nothing is saved; leaving the screen or turning it off stops the microphone. The **microphone spectrum** in developer mode works the same way.
 
 ### Backup
 

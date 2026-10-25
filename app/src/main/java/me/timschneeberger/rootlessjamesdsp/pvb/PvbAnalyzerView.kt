@@ -21,6 +21,18 @@ import kotlin.math.ln
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
+import android.content.pm.PackageManager
+import android.media.AudioDeviceInfo
+import android.media.AudioFormat
+import android.media.AudioManager
+import android.media.AudioRecord
+import android.media.MediaRecorder
+import kotlin.math.PI
+import kotlin.math.ceil
+import kotlin.math.cos
+import kotlin.math.floor
+import kotlin.math.log10
+import kotlin.math.pow
 
 /**
  * Live analysis display (design: "실시간 분석"): input and output spectra, the EQ curve the engine is using
@@ -48,6 +60,12 @@ class PvbAnalyzerView @JvmOverloads constructor(
     private val fDiff = FloatArray(POINTS)
     private val fEq = FloatArray(POINTS)
     private val fInfo = FloatArray(PvbAnaInfo.COUNT)
+    /** "실제 소리": what the phone microphone hears, dB per point (NaN = none yet); written by [MicFeed]. */
+    private val fMic = FloatArray(POINTS) { Float.NaN }
+    private var micFreshMs = 0L
+    private var micCorrected = false
+    @Volatile private var micFailed = false
+    private var micFeed: MicFeed? = null
     private val grApp = FloatArray(HISTORY)
     private val grPhone = FloatArray(HISTORY)
     private var histPos = 0
@@ -96,6 +114,10 @@ class PvbAnalyzerView @JvmOverloads constructor(
                 w.busy = true
                 w.handler.post(w.compute)
             }
+            // the microphone only while its line is shown and the view is on screen
+            val wantMic = visible && show[L_MIC] && !PvbRuntime.abHidden
+            if (wantMic && micFeed == null && !micFailed) micFeed = MicFeed().also { it.start() }
+            if (!wantMic) stopMic()
             postDelayed(this, if (visible) FRAME_MS else OFFSCREEN_MS)
         }
     }
@@ -206,6 +228,7 @@ class PvbAnalyzerView @JvmOverloads constructor(
 
     override fun onDetachedFromWindow() {
         attached = false
+        stopMic()
         removeCallbacks(uiTick)
         val w = work
         work = null
@@ -264,6 +287,7 @@ class PvbAnalyzerView @JvmOverloads constructor(
                 if (pressed >= 0 && hit == pressed) {
                     show[hit] = !show[hit]
                     prefs.edit().putBoolean("ana_show_${LEGEND[hit].key}", show[hit]).apply()
+                    if (hit == L_MIC && show[hit]) micFailed = false     // try again
                     performClick()
                 }
                 pressed = -1
@@ -317,6 +341,7 @@ class PvbAnalyzerView @JvmOverloads constructor(
                 if (show[L_SPK] && PvbGeneral.phoneModelCurves(context)) drawSpeaker(canvas)
                 if (show[L_DIFF]) drawEqLine(canvas, fDiff, C_DIFF, 2.2f, dotDiff, 255)
             }
+            if (show[L_MIC] && now - micFreshMs < IDLE_AFTER_MS) drawMic(canvas)
             if (hasData && show[L_EQ]) {
                 val alpha = (90 + 165 * mix).roundToInt().coerceIn(0, 255)
                 drawEqLine(canvas, fEq, C_EQ, 2.4f, if (mix < 0.5f) dashEqOff else null, alpha)
@@ -335,8 +360,143 @@ class PvbAnalyzerView @JvmOverloads constructor(
                 }
             }
 
+            if (show[L_MIC]) {
+                notePaint.textAlign = Paint.Align.LEFT
+                val note = when {
+                    micFailed -> "실제 소리: 마이크를 열 수 없어요"
+                    micCorrected -> "실제 소리 = 폰 마이크(보정) · 500~2k Hz 높이를 출력에 맞춤"
+                    else -> "실제 소리 = 폰 마이크(보정 없음) · 500~2k Hz 높이를 출력에 맞춤"
+                }
+                canvas.drawText(note, plot.left + dp(6f), plot.top + dp(14f), notePaint)
+            }
             drawLegend(canvas)
             drawStrip(canvas)
+        }
+    }
+
+    /**
+     * The microphone's line: its shape only. It is moved up or down so its 500-2000 Hz average sits on the output's
+     * (the two are in different units: digital level and sound at the microphone). Under [lock].
+     */
+    private fun drawMic(canvas: Canvas) {
+        var sMic = 0f; var sOut = 0f; var n = 0
+        for (i in 0 until POINTS) {
+            val f = freqs[i]
+            if (f < 500f || f > 2000f || fMic[i].isNaN() || fOut[i].isNaN()) continue
+            sMic += fMic[i]; sOut += fOut[i]; n++
+        }
+        val shift = if (n > 0 && hasData && everFresh) (sOut - sMic) / n else -60f - (if (n > 0) sMic / n else 0f)
+        path.reset()
+        var pen = false
+        for (i in 0 until POINTS) {
+            val d = fMic[i]
+            if (d.isNaN()) { pen = false; continue }
+            val x = xOf(freqs[i])
+            val y = clampY(ySpec(d + shift + tilt[i]))
+            if (!pen) path.moveTo(x, y) else path.lineTo(x, y)
+            pen = true
+        }
+        linePaint.color = C_MIC
+        linePaint.alpha = 255
+        linePaint.strokeWidth = dp(1.8f)
+        linePaint.pathEffect = null
+        canvas.drawPath(path, linePaint)
+    }
+
+    private fun stopMic() {
+        val m = micFeed ?: return
+        micFeed = null
+        m.running = false
+    }
+
+    /**
+     * The phone microphone (UNPROCESSED where offered), 8192-point spectra five times a second, power-averaged over
+     * 1/6 octave around each point and smoothed; with "폰 마이크 보정" on (developer mode, default on) the response
+     * the phone declares for its microphone (MicrophoneInfo) is taken off. Stops by itself when [running] goes false.
+     */
+    private inner class MicFeed : Thread("pvb-analysis-mic") {
+        @Volatile var running = true
+
+        override fun run() {
+            val fs = 48000
+            val n = 8192
+            val am = context.getSystemService(AudioManager::class.java)
+            val src = if (am?.getProperty(AudioManager.PROPERTY_SUPPORT_AUDIO_SOURCE_UNPROCESSED) == "true")
+                MediaRecorder.AudioSource.UNPROCESSED else MediaRecorder.AudioSource.VOICE_RECOGNITION
+            val rec = try {
+                if (context.checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) null
+                else {
+                    val minBuf = AudioRecord.getMinBufferSize(fs, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_FLOAT)
+                    @Suppress("MissingPermission")
+                    AudioRecord(src, fs, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_FLOAT, max(minBuf, fs / 2))
+                }
+            } catch (_: Exception) { null }
+            if (rec == null || rec.state != AudioRecord.STATE_INITIALIZED) {
+                rec?.release(); micFailed = true; postInvalidate(); return
+            }
+            // the declared response, once per start (the switch is in developer mode)
+            val corrOn = PvbGeneral.flags(context).getBoolean(PvbGeneral.KEY_DEV_MIC_CORR, true)
+            val corr = FloatArray(POINTS)
+            var corrected = false
+            if (corrOn) try {
+                val mics = am?.microphones.orEmpty().filter { it.type == AudioDeviceInfo.TYPE_BUILTIN_MIC }
+                val mic = mics.firstOrNull { it.address.contains("bottom", ignoreCase = true) } ?: mics.minByOrNull { it.indexInTheGroup }
+                val fr = mic?.frequencyResponse.orEmpty()
+                if (fr.isNotEmpty()) {
+                    val hz = DoubleArray(fr.size) { fr[it].first.toDouble() }
+                    val db = DoubleArray(fr.size) { fr[it].second.toDouble() }
+                    for (i in 0 until POINTS) corr[i] = MicSpectrum.responseAt(hz, db, freqs[i].toDouble()).toFloat()
+                    corrected = true
+                }
+            } catch (_: Exception) {}
+            val ring = FloatArray(n)
+            var pos = 0
+            var filled = 0
+            val buf = FloatArray(fs / 50)
+            val win = DoubleArray(n) { 0.5 - 0.5 * cos(2 * PI * it / n) }
+            val wss = win.sumOf { it * it }
+            val re = DoubleArray(n); val im = DoubleArray(n)
+            val pw = DoubleArray(n / 2 + 1)
+            val avg = DoubleArray(POINTS) { -1.0 }
+            val out = FloatArray(POINTS)
+            val half = 2.0.pow(1.0 / 12)
+            var last = 0L
+            try {
+                rec.startRecording()
+                while (running) {
+                    val r = rec.read(buf, 0, buf.size, AudioRecord.READ_BLOCKING)
+                    if (r <= 0) break
+                    for (i in 0 until r) { ring[pos] = buf[i]; pos = (pos + 1) % n }
+                    filled = min(n, filled + r)
+                    val now = SystemClock.uptimeMillis()
+                    if (filled < n || now - last < 200) continue
+                    last = now
+                    for (i in 0 until n) { re[i] = ring[(pos + i) % n] * win[i]; im[i] = 0.0 }
+                    PvbMeasureMath.fft(re, im)
+                    for (k in 0..n / 2) pw[k] = 2 * (re[k] * re[k] + im[k] * im[k]) / wss / n
+                    for (p in 0 until POINTS) {
+                        val f = freqs[p].toDouble()
+                        var k0 = ceil(f / half * n / fs).toInt().coerceIn(1, n / 2)
+                        var k1 = floor(f * half * n / fs).toInt().coerceIn(1, n / 2)
+                        if (k1 < k0) { k0 = (f * n / fs).roundToInt().coerceIn(1, n / 2); k1 = k0 }
+                        var s = 0.0
+                        for (k in k0..k1) s += pw[k]
+                        val v = s / (k1 - k0 + 1)
+                        avg[p] = if (avg[p] < 0) v else 0.6 * avg[p] + 0.4 * v
+                        out[p] = (10 * log10(max(avg[p], 1e-20))).toFloat() - corr[p]
+                    }
+                    synchronized(lock) {
+                        System.arraycopy(out, 0, fMic, 0, POINTS)
+                        micFreshMs = now
+                        micCorrected = corrected
+                    }
+                    postInvalidateOnAnimation()
+                }
+            } catch (_: Exception) {
+            } finally {
+                try { rec.stop() } catch (_: Exception) {}
+                rec.release()
+            }
         }
     }
 
@@ -624,6 +784,7 @@ class PvbAnalyzerView @JvmOverloads constructor(
         private const val C_DIFF = 0xFF7EE2B0.toInt()
         private const val C_SPK = 0xFF7CC8F5.toInt()
         private const val C_LIM = 0xFFFF8A6B.toInt()
+        private const val C_MIC = 0xFFF2EEF8.toInt()
 
         private const val STYLE_LINE = 0
         private const val STYLE_FILL = 1
@@ -634,12 +795,14 @@ class PvbAnalyzerView @JvmOverloads constructor(
         private const val L_EQ = 2
         private const val L_DIFF = 3
         private const val L_SPK = 4
+        private const val L_MIC = 5
         private val LEGEND = arrayOf(
             LegendItem("in", "입력", C_IN, STYLE_FILL, true),
             LegendItem("out", "출력", C_OUT, STYLE_LINE, true),
             LegendItem("eq", "EQ 곡선", C_EQ, STYLE_LINE, true),
             LegendItem("diff", "실측 변화", C_DIFF, STYLE_DOT, true),
             LegendItem("spk", "스피커 반영", C_SPK, STYLE_DASH, false),
+            LegendItem("mic", "실제 소리", C_MIC, STYLE_LINE, false),
         )
 
         private val MAJOR_HZ = floatArrayOf(20f, 50f, 100f, 200f, 500f, 1000f, 2000f, 5000f, 10000f, 20000f)
