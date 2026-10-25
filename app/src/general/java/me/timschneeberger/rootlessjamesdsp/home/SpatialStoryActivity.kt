@@ -30,7 +30,6 @@ import me.timschneeberger.rootlessjamesdsp.service.BaseAudioProcessorService
  */
 class SpatialStoryActivity : BaseActivity() {
     private lateinit var prefs: SharedPreferences
-    private var reduceMotion by mutableStateOf(false)
     private var running by mutableStateOf(false)
     /** null = the user's own setting plays; true / false = spatial forced on / off for listening. */
     private var listen by mutableStateOf<Boolean?>(null)
@@ -54,7 +53,6 @@ class SpatialStoryActivity : BaseActivity() {
         setContent {
             SpatialStory(
                 state = StoryState(
-                    reduceMotion = reduceMotion,
                     canListen = running,
                     listening = listen ?: userXtcOn,
                     distanceCm = distanceCm,
@@ -68,9 +66,6 @@ class SpatialStoryActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
-        reduceMotion = try {
-            Settings.Global.getFloat(contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
-        } catch (_: Exception) { false }
         // Listening only makes sense while our engine plays on the speaker (not bypassed, not in a comparison).
         running = BaseAudioProcessorService.activeServices > 0 && PvbRuntime.status.processing && !PvbRuntime.abActive
     }

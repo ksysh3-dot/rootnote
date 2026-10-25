@@ -38,8 +38,6 @@ import me.timschneeberger.rootlessjamesdsp.ui.RnBand
 import me.timschneeberger.rootlessjamesdsp.ui.RnButtonRow
 import me.timschneeberger.rootlessjamesdsp.ui.RnCheckMark
 import me.timschneeberger.rootlessjamesdsp.ui.RnDialog
-import me.timschneeberger.rootlessjamesdsp.ui.RN_MS_MOVE
-import me.timschneeberger.rootlessjamesdsp.ui.RnEase
 import me.timschneeberger.rootlessjamesdsp.ui.RnEndSpace
 import me.timschneeberger.rootlessjamesdsp.ui.RnFilledButton
 import me.timschneeberger.rootlessjamesdsp.ui.RnNavRow
@@ -49,6 +47,9 @@ import me.timschneeberger.rootlessjamesdsp.ui.RnParagraph
 import me.timschneeberger.rootlessjamesdsp.ui.RnSwitchRow
 import me.timschneeberger.rootlessjamesdsp.ui.rememberAppPrefs
 import me.timschneeberger.rootlessjamesdsp.utils.SdkCheck
+import me.timschneeberger.rootlessjamesdsp.ui.RnMotion
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 
 /**
  * The setup steps (see [RnSetupActivity]): one page at a time, sliding left or right; the top bar's back goes to the
@@ -80,9 +81,9 @@ fun SetupScreen(host: RnSetupActivity) {
             targetState = page,
             transitionSpec = {
                 val dir = if (host.forward) 1 else -1
-                if (reduce) fadeIn(tween(0)) togetherWith fadeOut(tween(0))
-                else (slideInHorizontally(tween(RN_MS_MOVE, easing = RnEase)) { it / 4 * dir } + fadeIn(tween(250))) togetherWith
-                    (slideOutHorizontally(tween(RN_MS_MOVE, easing = RnEase)) { -it / 4 * dir } + fadeOut(tween(200)))
+                if (reduce) EnterTransition.None togetherWith ExitTransition.None
+                else (slideInHorizontally(RnMotion.Seed.enter()) { it / 4 * dir } + fadeIn(RnMotion.Seed.enter(250))) togetherWith
+                    (slideOutHorizontally(RnMotion.Seed.exit()) { -it / 4 * dir } + fadeOut(RnMotion.Seed.exit()))
             },
             label = "setupPage",
         ) { shown ->

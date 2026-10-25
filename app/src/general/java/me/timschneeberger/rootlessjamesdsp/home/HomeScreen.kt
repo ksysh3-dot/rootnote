@@ -81,11 +81,6 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
-import me.timschneeberger.rootlessjamesdsp.ui.RN_MS_COLOR
-import me.timschneeberger.rootlessjamesdsp.ui.RN_MS_MOVE
-import me.timschneeberger.rootlessjamesdsp.ui.RnEase
-import me.timschneeberger.rootlessjamesdsp.ui.rnRelease
-import me.timschneeberger.rootlessjamesdsp.ui.rnSettle
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
@@ -118,6 +113,15 @@ import androidx.compose.ui.unit.sp
 import me.timschneeberger.rootlessjamesdsp.R
 import me.timschneeberger.rootlessjamesdsp.pvb.HomeLogic
 import kotlin.math.roundToInt
+import me.timschneeberger.rootlessjamesdsp.ui.RnMotion
+import me.timschneeberger.rootlessjamesdsp.ui.rn
+import me.timschneeberger.rootlessjamesdsp.ui.RnSwap
+import me.timschneeberger.rootlessjamesdsp.ui.ProvideRnMotion
+import me.timschneeberger.rootlessjamesdsp.ui.RnSliderTrack
+import me.timschneeberger.rootlessjamesdsp.ui.RnSliderColors
+import me.timschneeberger.rootlessjamesdsp.ui.RnSwitchVisual
+import me.timschneeberger.rootlessjamesdsp.ui.pressScale
+import me.timschneeberger.rootlessjamesdsp.ui.rnPressTint
 
 /*
  * Home screen of the general build (Rootnote, approved design "E안", palette "심해 틸").
@@ -130,7 +134,7 @@ import kotlin.math.roundToInt
  * Motion follows the design: iOS-like easing for the switches (350 ms thumb, 300 ms track), chips scale to 0.94 on
  * press and spring back with a small overshoot, the slider thumb grows 1.18x while held, dimming takes 300 ms, the
  * headline fades out completely before the new one fades in. With the system animator scale at 0 every animation
- * snaps (the activity passes reduceMotion; Compose also scales its own clocks by that setting).
+ * snaps (ProvideRnMotion reads the setting once for the whole screen).
  */
 
 /** Screen state, built by HomeActivity from the PVB settings, the service state and the published volume. */
@@ -191,32 +195,9 @@ class HomeActions(
 )
 
 private val LocalPalette = staticCompositionLocalOf<RootnotePalette> { error("RootnotePalette not provided") }
-private val LocalReduceMotion = staticCompositionLocalOf { false }
-
-/** The one curve of docs/DESIGN.md 6 (defined in ui/RnTheme.kt): switches, dimming, colour changes. */
-private val IosEase = RnEase
-
-/** Readability rule for changing text: the old text fades out completely (150 ms), then the new one fades in. */
-private fun sequentialFade(): ContentTransform = ContentTransform(
-    targetContentEnter = fadeIn(tween(150, delayMillis = 150, easing = LinearEasing)),
-    initialContentExit = fadeOut(tween(150, easing = LinearEasing)),
-    sizeTransform = SizeTransform(clip = false) { _, _ -> tween(RN_MS_MOVE, easing = IosEase) },
-)
-
-/** A tab swap: the two sections cross-fade (150 ms) and the height follows with the same curve and time. */
-private fun crossFade(): ContentTransform = ContentTransform(
-    targetContentEnter = fadeIn(tween(RN_MS_COLOR, easing = IosEase)),
-    initialContentExit = fadeOut(tween(RN_MS_COLOR, easing = IosEase)),
-    sizeTransform = SizeTransform(clip = false) { _, _ -> tween(RN_MS_COLOR, easing = IosEase) },
-)
-
-/** [spec], or an instant change when the system animations are off. */
-@Composable
-private fun <T> motion(spec: FiniteAnimationSpec<T>): FiniteAnimationSpec<T> =
-    if (LocalReduceMotion.current) snap() else spec
 
 @Composable
-fun HomeScreen(state: HomeUiState, actions: HomeActions, reduceMotion: Boolean = false, initialTab: Int = 0) {
+fun HomeScreen(state: HomeUiState, actions: HomeActions, initialTab: Int = 0) {
     val palette = rootnotePalette()
     val dark = (androidx.compose.ui.platform.LocalConfiguration.current.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
         Configuration.UI_MODE_NIGHT_YES
@@ -224,9 +205,11 @@ fun HomeScreen(state: HomeUiState, actions: HomeActions, reduceMotion: Boolean =
         onBackground = palette.textPrimary, onSurface = palette.textPrimary)
     else lightColorScheme(primary = palette.fill, background = palette.bg, surface = palette.bg,
         onBackground = palette.textPrimary, onSurface = palette.textPrimary)
-    CompositionLocalProvider(LocalPalette provides palette, LocalReduceMotion provides reduceMotion) {
-        MaterialTheme(colorScheme = scheme) {
-            HomeContent(state, actions, initialTab)
+    CompositionLocalProvider(LocalPalette provides palette) {
+        ProvideRnMotion {
+            MaterialTheme(colorScheme = scheme) {
+                HomeContent(state, actions, initialTab)
+            }
         }
     }
 }
@@ -248,7 +231,7 @@ private fun HomeContent(state: HomeUiState, actions: HomeActions, initialTab: In
         // Everything that only matters while processing is on: dimmed to 40 % and disabled when off.
         val dim by animateFloatAsState(
             targetValue = if (state.masterOn) 1f else 0.4f,
-            animationSpec = motion(tween(RN_MS_COLOR, easing = IosEase)),
+            animationSpec = rn(RnMotion.Seed.color()),
             label = "dim",
         )
         var tab by rememberSaveable { mutableIntStateOf(initialTab) }
@@ -256,20 +239,15 @@ private fun HomeContent(state: HomeUiState, actions: HomeActions, initialTab: In
             tab, onSelect = { tab = it }, bassOn = state.masterOn, spatialOn = state.processingOn && state.xtcOn,
             onInfo = actions.onSpatialInfo,
         )
-        val reduce = LocalReduceMotion.current
-        AnimatedContent(
+        RnSwap(
             targetState = tab,
-            transitionSpec = {
-                if (reduce) ContentTransform(EnterTransition.None, ExitTransition.None, sizeTransform = null)
-                else crossFade()
-            },
-            contentAlignment = Alignment.TopStart,
+            ms = RnMotion.D4,
             label = "tab",
         ) { selected ->
             if (selected == TAB_SPATIAL) {
                 val spatialDim by animateFloatAsState(
                     targetValue = if (state.processingOn) 1f else 0.4f,
-                    animationSpec = motion(tween(RN_MS_COLOR, easing = IosEase)),
+                    animationSpec = rn(RnMotion.Seed.color()),
                     label = "spatialDim",
                 )
                 CompositionLocalProvider(LocalPalette provides c.spatial()) {
@@ -343,11 +321,11 @@ private fun InfoButton(description: String, tint: Color, onClick: () -> Unit) {
 @Composable
 private fun RowScope.FeatureTab(label: String, selected: Boolean, on: Boolean, accent: Color, dot: Color, onClick: () -> Unit) {
     val c = LocalPalette.current
-    val colorSpec = motion(tween<Color>(RN_MS_COLOR, easing = IosEase))
+    val colorSpec = rn(RnMotion.Seed.color<Color>())
     val bg by animateColorAsState(if (selected) c.bg else c.band, colorSpec, label = "tabBg")
     val fg by animateColorAsState(if (selected) accent else c.textSecondary, colorSpec, label = "tabText")
     val dotColor by animateColorAsState(if (on) dot else c.chevron, colorSpec, label = "tabDot")
-    val elevation by animateDpAsState(if (selected) 1.dp else 0.dp, motion(tween(RN_MS_COLOR, easing = IosEase)), label = "tabLift")
+    val elevation by animateDpAsState(if (selected) 1.dp else 0.dp, rn(RnMotion.Seed.color()), label = "tabLift")
     val edge by animateColorAsState(if (selected) c.chipBorder else c.band, colorSpec, label = "tabEdge")
     val state = stringResource(if (on) R.string.home_tab_on else R.string.home_tab_off)
     Row(
@@ -546,12 +524,11 @@ private fun xtcChipHint(p: HomeLogic.XtcPreset): String = stringResource(
 @Composable
 private fun SpatialSection(state: HomeUiState, actions: HomeActions, modifier: Modifier) {
     val c = LocalPalette.current
-    val reduce = LocalReduceMotion.current
     val active = state.processingOn && state.xtcOn
     // Only one dimming at a time: the whole tab is already at 40 % while processing is off.
     val innerDim by animateFloatAsState(
         targetValue = if (state.xtcOn || !state.processingOn) 1f else 0.4f,
-        animationSpec = motion(tween(RN_MS_COLOR, easing = IosEase)),
+        animationSpec = rn(RnMotion.Seed.color()),
         label = "xtcDim",
     )
     Column(modifier) {
@@ -589,12 +566,8 @@ private fun SpatialSection(state: HomeUiState, actions: HomeActions, modifier: M
                     )
                 }
             }
-            AnimatedContent(
+            RnSwap(
                 targetState = if (state.xtcOn) state.xtcPreset else null,
-                transitionSpec = {
-                    if (reduce) EnterTransition.None togetherWith ExitTransition.None
-                    else sequentialFade()
-                },
                 contentAlignment = Alignment.TopStart,
                 label = "xtcHint",
             ) { p ->
@@ -612,7 +585,7 @@ private fun SpatialSection(state: HomeUiState, actions: HomeActions, modifier: M
                     distTitle, modifier = Modifier.weight(1f),
                     color = c.textPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold, lineHeight = 22.sp,
                 )
-                Crossfade(targetState = distText, animationSpec = motion(tween(120)), label = "xtcDist") { t ->
+                Crossfade(targetState = distText, animationSpec = rn(RnMotion.Seed.color()), label = "xtcDist") { t ->
                     Text(t, color = c.accentText, fontSize = 16.sp, fontWeight = FontWeight.Bold, lineHeight = 22.sp)
                 }
             }
@@ -688,7 +661,6 @@ private fun TopBar() {
 @Composable
 private fun MasterRow(state: HomeUiState, actions: HomeActions) {
     val c = LocalPalette.current
-    val reduce = LocalReduceMotion.current
     SwitchRow(
         checked = state.masterOn,
         enabled = true,
@@ -698,12 +670,8 @@ private fun MasterRow(state: HomeUiState, actions: HomeActions) {
     ) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             // Readability: the old sentence fades out completely, then the new one fades in.
-            AnimatedContent(
+            RnSwap(
                 targetState = state.headline,
-                transitionSpec = {
-                    if (reduce) EnterTransition.None togetherWith ExitTransition.None
-                    else sequentialFade()
-                },
                 contentAlignment = Alignment.CenterStart,
                 label = "headline",
             ) { headline ->
@@ -763,7 +731,6 @@ private fun chipHint(chip: HomeLogic.Chip): String = stringResource(
 @Composable
 private fun StrengthSection(state: HomeUiState, actions: HomeActions) {
     val c = LocalPalette.current
-    val reduce = LocalReduceMotion.current
     val title = stringResource(R.string.home_strength_title)
     val valueText = stringResource(R.string.home_db_value, HomeLogic.levelLabel(state.level))
     Column(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 8.dp)) {
@@ -773,7 +740,7 @@ private fun StrengthSection(state: HomeUiState, actions: HomeActions) {
                 color = c.textPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold, lineHeight = 22.sp,
             )
             // The number changes at once, with a short crossfade.
-            Crossfade(targetState = state.level, animationSpec = motion(tween(120)), label = "level") { level ->
+            Crossfade(targetState = state.level, animationSpec = rn(RnMotion.Seed.color()), label = "level") { level ->
                 Text(
                     stringResource(R.string.home_db_value, HomeLogic.levelLabel(level)),
                     color = c.accentText, fontSize = 16.sp, fontWeight = FontWeight.Bold, lineHeight = 22.sp,
@@ -801,12 +768,8 @@ private fun StrengthSection(state: HomeUiState, actions: HomeActions) {
                 )
             }
         }
-        AnimatedContent(
+        RnSwap(
             targetState = state.chip,
-            transitionSpec = {
-                if (reduce) EnterTransition.None togetherWith ExitTransition.None
-                else sequentialFade()
-            },
             contentAlignment = Alignment.TopStart,
             label = "hint",
         ) { chip ->
@@ -831,12 +794,7 @@ private fun SwitchRow(
 ) {
     val c = LocalPalette.current
     val interaction = remember { MutableInteractionSource() }
-    val pressed by interaction.collectIsPressedAsState()
-    val bg by animateColorAsState(
-        targetValue = if (pressed && enabled) c.press else c.bg,
-        animationSpec = motion(if (pressed) tween(0) else tween(RN_MS_COLOR, easing = IosEase)),
-        label = "rowPress",
-    )
+    val bg = rnPressTint(interaction, enabled, c.bg, c.press)
     Row(
         Modifier
             .fillMaxWidth()
@@ -859,49 +817,20 @@ private fun SwitchRow(
     }
 }
 
-/** 51 x 31 dp track, 27 dp thumb. Visual only: the row carries the switch semantics. */
+/** The shared switch (ui/RnControls.kt) in the home screen's colours. Visual only: the row carries the switch semantics. */
 @Composable
 private fun IosSwitch(checked: Boolean) {
     val c = LocalPalette.current
-    val thumbX by animateDpAsState(
-        targetValue = if (checked) 22.dp else 2.dp,
-        animationSpec = motion(tween(RN_MS_MOVE, easing = IosEase)),
-        label = "switchThumb",
-    )
-    val track by animateColorAsState(
-        targetValue = if (checked) c.fill else c.switchOff,
-        animationSpec = motion(tween(RN_MS_MOVE, easing = IosEase)),
-        label = "switchTrack",
-    )
-    Box(Modifier.size(width = 51.dp, height = 31.dp).background(track, CircleShape)) {
-        Box(
-            Modifier
-                .offset(y = 2.dp)
-                .size(27.dp)
-                .graphicsLayer { translationX = thumbX.toPx() }
-                .shadow(3.dp, CircleShape)
-                .background(c.thumb, CircleShape)
-        )
-    }
+    RnSwitchVisual(checked, on = c.fill, off = c.switchOff, thumb = c.thumb)
 }
 
 /** Pill chip (36 dp, fully rounded) inside a 48 dp touch target; a toggle button with its selected state. */
 @Composable
 private fun PresetChip(label: String, selected: Boolean, enabled: Boolean, onClick: () -> Unit) {
     val c = LocalPalette.current
-    val reduce = LocalReduceMotion.current
     val interaction = remember { MutableInteractionSource() }
-    val pressed by interaction.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (pressed && enabled) 0.94f else 1f,
-        animationSpec = when {
-            reduce -> snap()
-            pressed -> tween(120, easing = IosEase)
-            else -> rnRelease()
-        },
-        label = "chipScale",
-    )
-    val colorSpec = motion(tween<Color>(RN_MS_COLOR, easing = IosEase))
+    val scale = pressScale(interaction, enabled, 0.94f)
+    val colorSpec = rn(RnMotion.Seed.color<Color>())
     val bg by animateColorAsState(if (selected) c.chipSelectedBg else c.chipBg, colorSpec, label = "chipBg")
     val border by animateColorAsState(if (selected) c.chipSelectedBorder else c.chipBorder, colorSpec, label = "chipBorder")
     val fg by animateColorAsState(if (selected) c.chipSelectedText else c.chipText, colorSpec, label = "chipText")
@@ -920,7 +849,7 @@ private fun PresetChip(label: String, selected: Boolean, enabled: Boolean, onCli
     ) {
         Box(
             Modifier
-                .graphicsLayer { scaleX = scale; scaleY = scale }
+                .graphicsLayer { scaleX = scale.value; scaleY = scale.value }
                 .heightIn(min = 36.dp)
                 .background(bg, CircleShape)
                 .border(1.dp, border, CircleShape)
@@ -938,8 +867,9 @@ private fun PresetChip(label: String, selected: Boolean, enabled: Boolean, onCli
 }
 
 /**
- * Whole-step slider 0..[max]: 4 dp track, 28 dp white thumb that grows 1.18x (spring) while held. Tap or drag;
- * a light tick on every step. Accessibility: range info, value text, set-progress (TalkBack volume keys/swipes).
+ * Whole-step slider 0..[max]: the shared slider track (ui/RnSlider.kt) with a 28 dp thumb. The thumb follows the finger
+ * exactly and the value snaps to its step; a light tick on every step. Accessibility: range info, value text,
+ * set-progress (TalkBack volume keys/swipes).
  */
 @Composable
 private fun StepSlider(
@@ -951,125 +881,14 @@ private fun StepSlider(
     onChange: (Int) -> Unit,
 ) {
     val c = LocalPalette.current
-    val haptic = LocalHapticFeedback.current
-    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
-    val thumbSize = 28.dp
-    val thumbPx = with(LocalDensity.current) { thumbSize.toPx() }
-    var widthPx by remember { mutableFloatStateOf(0f) }
-    var dragX by remember { mutableFloatStateOf(0f) }
-    var held by remember { mutableStateOf(false) }
-    var lastEmitted by remember { mutableIntStateOf(value) }
-    var lastTick by remember { mutableIntStateOf(-1) }
-    LaunchedEffect(value) { lastEmitted = value }
-    val maxNow by rememberUpdatedState(max)
-    val rtlNow by rememberUpdatedState(rtl)
-    val onChangeNow by rememberUpdatedState(onChange)
-
-    fun valueAt(x: Float): Int {
-        val usable = (widthPx - thumbPx).coerceAtLeast(1f)
-        var f = ((x - thumbPx / 2f) / usable).coerceIn(0f, 1f)
-        if (rtlNow) f = 1f - f
-        return (f * maxNow).roundToInt().coerceIn(0, maxNow)
-    }
-
-    fun emit(v: Int) {
-        if (v == lastEmitted) return
-        lastEmitted = v
-        // one tick per step, but at most about 24 per sweep (a fine slider would buzz otherwise)
-        val tick = if (maxNow > 24) v * 24 / maxNow else v
-        if (tick != lastTick) {
-            lastTick = tick
-            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-        }
-        onChangeNow(v)
-    }
-
-    val fraction by animateFloatAsState(
-        targetValue = if (max > 0) value.toFloat() / max else 0f,
-        // under the finger the thumb is the finger (no smoothing); a spring only after it is let go or a tap
-        animationSpec = motion(if (held) tween(0) else rnSettle()),
-        label = "sliderPosition",
+    RnSliderTrack(
+        value = value.toFloat(), range = 0f..max.toFloat(), step = 1f, enabled = enabled, name = label, valueText = valueText,
+        snap = { it.roundToInt().toFloat() },
+        colors = RnSliderColors(c.fill, c.sliderInactive, c.thumb, c.textSecondary),
+        thumbSize = 28.dp, thumbShadow = 4.dp,
+        onChange = { onChange(it.roundToInt()) },
+        modifier = Modifier.fillMaxWidth(),
     )
-    val thumbScale by animateFloatAsState(
-        targetValue = if (held && enabled) 1.18f else 1f,
-        animationSpec = motion(if (held) tween(120, easing = IosEase) else rnRelease()),
-        label = "sliderThumb",
-    )
-    val dragState = rememberDraggableState { delta ->
-        dragX += delta
-        emit(valueAt(dragX))
-    }
-
-    Box(
-        Modifier
-            .fillMaxWidth()
-            .height(48.dp)
-            .onSizeChanged { widthPx = it.width.toFloat() }
-            .semantics(mergeDescendants = true) {
-                contentDescription = label
-                stateDescription = valueText
-                progressBarRangeInfo = ProgressBarRangeInfo(
-                    current = value.toFloat(),
-                    range = 0f..max.toFloat(),
-                    steps = (max - 1).coerceAtLeast(0),
-                )
-                if (enabled) {
-                    setProgress { target ->
-                        val v = target.roundToInt().coerceIn(0, max)
-                        if (v != value) onChange(v)
-                        true
-                    }
-                } else {
-                    disabled()
-                }
-            }
-            .draggable(
-                state = dragState,
-                orientation = Orientation.Horizontal,
-                enabled = enabled,
-                onDragStarted = { start ->
-                    held = true
-                    dragX = start.x
-                    emit(valueAt(start.x))
-                },
-                onDragStopped = { held = false },
-            )
-            .pointerInput(enabled) {
-                if (!enabled) return@pointerInput
-                detectTapGestures(
-                    onPress = {
-                        held = true
-                        tryAwaitRelease()
-                        held = false
-                    },
-                    onTap = { pos -> emit(valueAt(pos.x)) },
-                )
-            },
-    ) {
-        Canvas(Modifier.fillMaxSize()) {
-            val r = thumbPx / 2f
-            val y = size.height / 2f
-            val stroke = 4.dp.toPx()
-            val start = r
-            val end = size.width - r
-            drawLine(c.sliderInactive, Offset(start, y), Offset(end, y), strokeWidth = stroke, cap = StrokeCap.Round)
-            if (fraction > 0f) {
-                val span = (end - start) * fraction
-                if (rtl) drawLine(c.fill, Offset(end, y), Offset(end - span, y), strokeWidth = stroke, cap = StrokeCap.Round)
-                else drawLine(c.fill, Offset(start, y), Offset(start + span, y), strokeWidth = stroke, cap = StrokeCap.Round)
-            }
-        }
-        // offset {} follows the layout direction, so the thumb mirrors itself in RTL.
-        Box(
-            Modifier
-                .align(Alignment.CenterStart)
-                .offset { IntOffset(((widthPx - thumbPx).coerceAtLeast(0f) * fraction).roundToInt(), 0) }
-                .size(thumbSize)
-                .graphicsLayer { scaleX = thumbScale; scaleY = thumbScale }
-                .shadow(4.dp, CircleShape)
-                .background(c.thumb, CircleShape)
-        )
-    }
 }
 
 /**
@@ -1136,12 +955,7 @@ private fun NavRow(title: String, summary: String, onClick: () -> Unit, descript
     val c = LocalPalette.current
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val interaction = remember { MutableInteractionSource() }
-    val pressed by interaction.collectIsPressedAsState()
-    val bg by animateColorAsState(
-        targetValue = if (pressed) c.press else c.bg,
-        animationSpec = motion(if (pressed) tween(0) else tween(RN_MS_COLOR, easing = IosEase)),
-        label = "navPress",
-    )
+    val bg = rnPressTint(interaction, true, c.bg, c.press)
     Row(
         Modifier
             .fillMaxWidth()

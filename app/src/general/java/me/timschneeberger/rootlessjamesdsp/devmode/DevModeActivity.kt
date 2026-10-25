@@ -75,7 +75,6 @@ class DevModeActivity : BaseActivity() {
     private val main = Handler(Looper.getMainLooper())
 
     private var ui by mutableStateOf<DevUiState?>(null)
-    private var reduceMotion by mutableStateOf(false)
     private val undo = ArrayDeque<FloatArray>()
     private val meterBuf = FloatArray(PvbDevMeter.SIZE)
     private val engineMeters = FloatArray(PvbMeter.COUNT)
@@ -120,14 +119,13 @@ class DevModeActivity : BaseActivity() {
         if (consent && !prefs.getBoolean(DevParams.KEY_DEV_ON, false)) prefs.edit().putBoolean(DevParams.KEY_DEV_ON, true).apply()
         ui = buildState(consentNeeded = !consent)
         if (consent) maybeUnmeasured()
-        setContent { ui?.let { DevModeScreen(it, actions, reduceMotion) } }
+        setContent { ui?.let { DevModeScreen(it, actions) } }
     }
 
     override fun onStart() {
         super.onStart()
         if (!::prefs.isInitialized) return
         prefs.registerOnSharedPreferenceChangeListener(prefListener)
-        reduceMotion = animationsOff()
         reloadValues()
         PvbRuntime.setDevMeter(true)
         polling = true
@@ -200,12 +198,6 @@ class DevModeActivity : BaseActivity() {
 
     private fun shareCode(values: FloatArray): String =
         DevShareCode.encode(android.os.Build.MODEL ?: "", BuildConfig.VERSION_NAME, values, profileDefaults())
-
-    private fun animationsOff(): Boolean = try {
-        Settings.Global.getFloat(contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
-    } catch (e: Exception) {
-        false
-    }
 
     private fun maybeUnmeasured() {
         if (tracker.unmeasuredOnEntry(profile.measured))

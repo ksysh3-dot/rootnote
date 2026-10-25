@@ -215,7 +215,7 @@ private fun ThemePicker(host: RnSettingsActivity) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Box(
-                        Modifier.graphicsLayer { scaleX = scale; scaleY = scale }.size(width = 84.dp, height = 132.dp)
+                        Modifier.graphicsLayer { scaleX = scale.value; scaleY = scale.value }.size(width = 84.dp, height = 132.dp)
                             .border(if (on) 3.dp else 1.dp, if (on) s.primary else c.chipBorder, RoundedCornerShape(14.dp))
                             .padding(if (on) 3.dp else 1.dp)
                             .background(s.surface, RoundedCornerShape(12.dp))

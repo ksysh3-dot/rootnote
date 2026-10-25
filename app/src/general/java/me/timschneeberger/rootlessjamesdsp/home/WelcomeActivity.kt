@@ -37,7 +37,6 @@ import me.timschneeberger.rootlessjamesdsp.utils.extensions.PermissionExtensions
  *   processing is switched on) it opens on the last page.
  */
 class WelcomeActivity : BaseActivity() {
-    private var reduceMotion by mutableStateOf(false)
     private var thenSetup = false
     private var answered = false
 
@@ -67,15 +66,8 @@ class WelcomeActivity : BaseActivity() {
             onLicense = { PvbGeneral.showAssetText(this, getString(R.string.about_license_title), "GPL-3.0.txt") },
         )
         setContent {
-            WelcomeScreen(base.copy(reduceMotion = reduceMotion), actions)
+            WelcomeScreen(base, actions)
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        reduceMotion = try {
-            Settings.Global.getFloat(contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
-        } catch (_: Exception) { false }
     }
 
     override fun onDestroy() {

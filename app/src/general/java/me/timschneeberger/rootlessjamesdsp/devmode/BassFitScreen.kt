@@ -64,8 +64,6 @@ import me.timschneeberger.rootlessjamesdsp.ui.RnChoiceRow
 import me.timschneeberger.rootlessjamesdsp.ui.RnDialog
 import me.timschneeberger.rootlessjamesdsp.ui.RnSwitchRow
 import me.timschneeberger.rootlessjamesdsp.ui.RnDivider
-import me.timschneeberger.rootlessjamesdsp.ui.RN_MS_COLOR
-import me.timschneeberger.rootlessjamesdsp.ui.RnEase
 import me.timschneeberger.rootlessjamesdsp.ui.RnFilledButton
 import me.timschneeberger.rootlessjamesdsp.ui.RnNavRow
 import me.timschneeberger.rootlessjamesdsp.ui.RnNote
@@ -74,9 +72,10 @@ import me.timschneeberger.rootlessjamesdsp.ui.RnPage
 import me.timschneeberger.rootlessjamesdsp.ui.RnParagraph
 import me.timschneeberger.rootlessjamesdsp.ui.RnSectionTitle
 import me.timschneeberger.rootlessjamesdsp.ui.RnTextAction
-import me.timschneeberger.rootlessjamesdsp.ui.rnMotion
 import java.util.Locale
 import kotlin.math.roundToInt
+import me.timschneeberger.rootlessjamesdsp.ui.RnMotion
+import me.timschneeberger.rootlessjamesdsp.ui.rn
 
 /*
  * "저음 맞추기" (BassFitActivity), built from the shared page kit (ui/RnRows.kt): RnPage with the answers in a fixed
@@ -307,11 +306,11 @@ private fun RoomWarn(ui: FitUi) {
 @Composable
 private fun ProgressLine(progress: Float) {
     val c = LocalRn.current
-    val p by animateFloatAsState(progress, rnMotion(tween(300, easing = RnEase)), label = "progress")
+    val p = animateFloatAsState(progress, rn(RnMotion.Seed.move()), label = "progress")
     Canvas(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp).height(8.dp)) {
         val y = size.height / 2f
         drawLine(c.sliderInactive, Offset(0f, y), Offset(size.width, y), 6.dp.toPx(), StrokeCap.Round)
-        drawLine(c.fill, Offset(0f, y), Offset(size.width * p.coerceIn(0f, 1f), y), 6.dp.toPx(), StrokeCap.Round)
+        drawLine(c.fill, Offset(0f, y), Offset(size.width * p.value.coerceIn(0f, 1f), y), 6.dp.toPx(), StrokeCap.Round)
     }
 }
 
@@ -413,7 +412,7 @@ private fun Stage(content: @Composable ColumnScope.() -> Unit) {
 @Composable
 private fun Turn(n: Int, lit: Boolean) {
     val c = LocalRn.current
-    val bg by animateColorAsState(if (lit) c.fill else c.bg, rnMotion(tween(120, easing = RnEase)), label = "turn")
+    val bg by animateColorAsState(if (lit) c.fill else c.bg, rn(RnMotion.Seed.color()), label = "turn")
     val label = stringResource(R.string.fit_interval_a11y, n)
     val playing = stringResource(R.string.fit_playing)
     Column(horizontalAlignment = Alignment.CenterHorizontally,
@@ -432,7 +431,7 @@ private fun Turn(n: Int, lit: Boolean) {
 private fun RowScope.PlayPad(id: String, label: String, ui: FitUi, actions: FitActions) {
     val c = LocalRn.current
     val playing = ui.playing == id
-    val bg by animateColorAsState(if (playing) c.chipSelectedBg else c.bg, rnMotion(tween(RN_MS_COLOR, easing = RnEase)), label = "pad")
+    val bg by animateColorAsState(if (playing) c.chipSelectedBg else c.bg, rn(RnMotion.Seed.color()), label = "pad")
     val a11y = stringResource(R.string.fit_play_a11y, label)
     val stateText = stringResource(when {
         playing -> R.string.fit_playing
@@ -545,7 +544,7 @@ private fun Check(ui: FitUi, actions: FitActions) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             for (side in 1..2) {
                 val on = ui.checkSide == side
-                val bg by animateColorAsState(if (on) c.chipSelectedBg else c.bg, rnMotion(tween(RN_MS_COLOR, easing = RnEase)), label = "side")
+                val bg by animateColorAsState(if (on) c.chipSelectedBg else c.bg, rn(RnMotion.Seed.color()), label = "side")
                 val label = stringResource(if (side == 1) R.string.fit_check_one else R.string.fit_check_two)
                 val now = stringResource(R.string.fit_check_now, label)
                 Box(

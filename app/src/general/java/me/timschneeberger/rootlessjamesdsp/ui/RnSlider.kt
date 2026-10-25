@@ -1,7 +1,7 @@
 package me.timschneeberger.rootlessjamesdsp.ui
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -39,6 +39,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -116,14 +122,12 @@ fun RnSliderRow(
             RnStepButton(false, stringResource(R.string.rn_minus, title), enabled && value > range.start + step / 2f) {
                 onChange(snap(value - step))
             }
-            RnTrack(
-                value = shown, range = range, default = default, enabled = enabled, name = title, valueText = valueText(shown),
-                snap = ::snap, tick = maxOf(step, (range.endInclusive - range.start) / HAPTIC_TICKS),
-                onDrag = { v, done ->
-                    dragging = !done
-                    local = v
-                    if (continuous || done) onChange(v)
-                },
+            RnSliderTrack(
+                value = shown, range = range, step = step, enabled = enabled, name = title, valueText = valueText(shown),
+                snap = ::snap, default = default,
+                colors = RnSliderColors(c.fill, c.sliderInactive, c.thumb, c.textSecondary),
+                onChange = { v -> dragging = true; local = v; if (continuous) onChange(v) },
+                onFinish = { v -> local = v; dragging = false; onChange(v) },
                 modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
             )
             RnStepButton(true, stringResource(R.string.rn_plus, title), enabled && value < range.endInclusive - step / 2f) {
@@ -133,13 +137,23 @@ fun RnSliderRow(
     }
 }
 
-/** 44 dp round button with a minus or plus inside a 48 dp target (DevMode StepButton). */
+/** 44 dp round button with a minus or plus inside a 48 dp target, in the page's colours. */
 @Composable
 fun RnStepButton(plus: Boolean, label: String, enabled: Boolean, onClick: () -> Unit) {
     val c = LocalRn.current
+    RnStepButton(plus, label, enabled, c.bg, c.press, c.chipBorder, c.textPrimary, c.chevron, onClick)
+}
+
+/** The step button for any palette: the one implementation (settings, developer mode). */
+@Composable
+fun RnStepButton(
+    plus: Boolean, label: String, enabled: Boolean,
+    bg: Color, press: Color, border: Color, ink: Color, inkOff: Color, onClick: () -> Unit,
+) {
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val scale = pressScale(interaction, enabled, 0.94f)
+    val face = rnPressTint(pressed && enabled, bg, press)
     Box(
         Modifier.size(48.dp)
             .clickable(interactionSource = interaction, indication = null, enabled = enabled, role = Role.Button, onClick = onClick)
@@ -147,12 +161,12 @@ fun RnStepButton(plus: Boolean, label: String, enabled: Boolean, onClick: () -> 
         contentAlignment = Alignment.Center,
     ) {
         Box(
-            Modifier.size(44.dp).graphicsLayer { scaleX = scale; scaleY = scale }
-                .background(if (pressed) c.press else c.bg, CircleShape).border(1.dp, c.chipBorder, CircleShape),
+            Modifier.size(44.dp).graphicsLayer { scaleX = scale.value; scaleY = scale.value }
+                .background(face, CircleShape).border(1.dp, border, CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             Canvas(Modifier.size(18.dp)) {
-                val col = if (enabled) c.textPrimary else c.chevron
+                val col = if (enabled) ink else inkOff
                 val y = size.height / 2f
                 drawLine(col, Offset(2f, y), Offset(size.width - 2f, y), strokeWidth = 2.dp.toPx(), cap = StrokeCap.Round)
                 if (plus) drawLine(col, Offset(size.width / 2f, 2f), Offset(size.width / 2f, size.height - 2f),
@@ -162,97 +176,175 @@ fun RnStepButton(plus: Boolean, label: String, enabled: Boolean, onClick: () -> 
     }
 }
 
-/** The track: [onDrag] (value, finished) while dragging, tapping, or set by TalkBack. */
+/** The colours of a slider track: the filled part, the rest, the thumb and the dot under the default value. */
+class RnSliderColors(val fill: Color, val inactive: Color, val thumb: Color, val dot: Color)
+
+/**
+ * The one slider track of the general build (the settings rows, the home screen and the developer mode all use it).
+ * What the finger holds is the finger: while it drags, the thumb sits exactly under it (the value only snaps to its
+ * step), and once it lets go the thumb settles on the value with a spring that carries the speed over
+ * ([RnMotion.Apple.settle]). The thumb grows to 1.15x on a press (Seed d3) and returns with [RnMotion.Apple.thumb].
+ * The thumb's position, the track and the scale are read while drawing only, so a drag recomposes nothing but the
+ * value text. One haptic tick per step, at most [HAPTIC_TICKS] across the whole range.
+ *
+ * [onChange] is called whenever the snapped value under the finger changes (drag, tap or TalkBack), [onFinish] once
+ * when the finger lifts, a tap lands or TalkBack sets a value. [onStart] runs before a drag or tap starts changing it.
+ * [paintTrack] replaces the two default lines (developer mode paints its recommended and experimental ranges).
+ */
 @Composable
-private fun RnTrack(
+fun RnSliderTrack(
     value: Float,
     range: ClosedFloatingPointRange<Float>,
-    default: Float?,
+    step: Float,
     enabled: Boolean,
     name: String,
     valueText: String,
     snap: (Float) -> Float,
-    tick: Float,
-    onDrag: (Float, Boolean) -> Unit,
-    modifier: Modifier,
+    colors: RnSliderColors,
+    onChange: (Float) -> Unit,
+    modifier: Modifier = Modifier,
+    onFinish: (Float) -> Unit = {},
+    onStart: () -> Unit = {},
+    default: Float? = null,
+    thumbSize: Dp = 26.dp,
+    thumbShadow: Dp = 3.dp,
+    stroke: Dp = 4.dp,
+    ring: Color? = null,
+    paintTrack: (DrawScope.(start: Float, end: Float, px: (Float) -> Float, thumbX: Float) -> Unit)? = null,
 ) {
-    val c = LocalRn.current
     val haptic = LocalHapticFeedback.current
-    val thumbPx = with(LocalDensity.current) { 26.dp.toPx() }
+    val reduce = LocalRnReduceMotion.current
+    val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    val thumbPx = with(LocalDensity.current) { thumbSize.toPx() }
     var widthPx by remember { mutableFloatStateOf(0f) }
     var dragX by remember { mutableFloatStateOf(0f) }
-    var held by remember { mutableStateOf(false) }
-    var lastIndex by remember { mutableIntStateOf(0) }
+    var pressing by remember { mutableStateOf(false) }
+    var dragging by remember { mutableStateOf(false) }
+    val held = pressing || dragging
+    var lastValue by remember { mutableFloatStateOf(value) }
+    var lastIndex by remember { mutableIntStateOf(Int.MIN_VALUE) }
+    LaunchedEffect(value) { lastValue = value }
     val rangeNow by rememberUpdatedState(range)
-    val onDragNow by rememberUpdatedState(onDrag)
+    val stepNow by rememberUpdatedState(step)
+    val snapNow by rememberUpdatedState(snap)
+    val rtlNow by rememberUpdatedState(rtl)
+    val onChangeNow by rememberUpdatedState(onChange)
+    val onFinishNow by rememberUpdatedState(onFinish)
+    val onStartNow by rememberUpdatedState(onStart)
     val span = (range.endInclusive - range.start).takeIf { it > 0f } ?: 1f
     fun frac(v: Float) = ((v - range.start) / span).coerceIn(0f, 1f)
-    fun valueAt(x: Float): Float {
+    fun fracAt(x: Float): Float {
         val usable = (widthPx - thumbPx).coerceAtLeast(1f)
         val f = ((x - thumbPx / 2f) / usable).coerceIn(0f, 1f)
-        val r = rangeNow
-        return snap(r.start + f * (r.endInclusive - r.start))
+        return if (rtlNow) 1f - f else f
     }
-    fun emit(v: Float, done: Boolean) {
+    fun valueAt(x: Float): Float {
+        val r = rangeNow
+        return snapNow(r.start + fracAt(x) * (r.endInclusive - r.start)).coerceIn(r.start, r.endInclusive)
+    }
+
+    // the thumb: the finger while held, otherwise a spring that follows the committed value
+    val settled = remember { Animatable(frac(value)) }
+    var finger by remember { mutableFloatStateOf(frac(value)) }
+    LaunchedEffect(value, held, reduce, range.start, range.endInclusive) {
+        if (!held) {
+            if (reduce) settled.snapTo(frac(value)) else settled.animateTo(frac(value), RnMotion.Apple.settle())
+        }
+    }
+    val thumbScale = animateFloatAsState(
+        if (held && enabled) 1.15f else 1f,
+        rn(if (held) RnMotion.Seed.pressIn() else RnMotion.Apple.thumb()), label = "thumbScale",
+    )
+    fun shownFrac() = if (held) finger else settled.value
+    fun grid() = if (stepNow > 0f) stepNow * 0.01f else span * 1e-6f
+
+    fun emit(v: Float) {
+        if (abs(v - lastValue) <= grid()) return
+        lastValue = v
         // one tick per step, but at most about HAPTIC_TICKS per sweep (a fine slider would buzz otherwise)
-        val idx = if (tick > 0f) floor((v - rangeNow.start) / tick + 1e-4f).toInt() else ((v - rangeNow.start) * 1000f).roundToInt()
+        val tick = maxOf(stepNow, span / HAPTIC_TICKS)
+        val idx = floor((v - rangeNow.start) / tick + 1e-4f).toInt()
         if (idx != lastIndex) {
             lastIndex = idx
             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
         }
-        onDragNow(v, done)
+        onChangeNow(v)
     }
-    val fraction by animateFloatAsState(frac(value), rnMotion(if (held) tween(0) else rnSettle()), label = "thumbX")
-    val thumbScale by animateFloatAsState(if (held) 1.15f else 1f,
-        rnMotion(if (held) tween(120, easing = RnEase) else rnRelease()), label = "thumbS")
-    val dragState = rememberDraggableState { d -> dragX += d; emit(valueAt(dragX), false) }
+    val dragState = rememberDraggableState { d -> dragX += d; finger = fracAt(dragX); emit(valueAt(dragX)) }
+    val steps = if (step > 0f) ((span / step).roundToInt() - 1).coerceAtLeast(0) else 0
     Box(
         modifier.height(48.dp)
             .onSizeChanged { widthPx = it.width.toFloat() }
             .semantics(mergeDescendants = true) {
                 contentDescription = name
                 stateDescription = valueText
-                progressBarRangeInfo = ProgressBarRangeInfo(value, range)
-                if (enabled) setProgress { target -> onDragNow(snap(target), true); true }
+                progressBarRangeInfo = ProgressBarRangeInfo(value, range, steps)
+                if (enabled) setProgress { target ->
+                    val v = snapNow(target).coerceIn(rangeNow.start, rangeNow.endInclusive)
+                    onStartNow(); emit(v); onFinishNow(v); true
+                } else disabled()
             }
             .then(if (!enabled) Modifier else Modifier
                 .draggable(
                     state = dragState, orientation = Orientation.Horizontal,
-                    onDragStarted = { start -> held = true; dragX = start.x; emit(valueAt(start.x), false) },
-                    onDragStopped = { held = false; onDragNow(valueAt(dragX), true) },
+                    onDragStarted = { start ->
+                        dragX = start.x
+                        finger = fracAt(start.x)
+                        dragging = true
+                        onStartNow()
+                        emit(valueAt(start.x))
+                    },
+                    onDragStopped = {
+                        // hand the thumb to the spring from where the finger left it
+                        settled.snapTo(finger)
+                        onFinishNow(valueAt(dragX))
+                        dragging = false
+                    },
                 )
                 .pointerInput(Unit) {
                     detectTapGestures(
-                        onPress = { held = true; tryAwaitRelease(); held = false },
-                        onTap = { pos -> emit(valueAt(pos.x), true) },
+                        onPress = { finger = settled.value; pressing = true; tryAwaitRelease(); pressing = false },
+                        onTap = { pos -> onStartNow(); val v = valueAt(pos.x); emit(v); onFinishNow(v) },
                     )
                 }),
     ) {
         Canvas(Modifier.fillMaxSize()) {
             val r = thumbPx / 2f
             val y = size.height / 2f
-            val stroke = 4.dp.toPx()
             val start = r
             val end = size.width - r
-            val x = start + (end - start) * fraction
-            drawLine(c.sliderInactive, Offset(start, y), Offset(end, y), strokeWidth = stroke, cap = StrokeCap.Round)
-            drawLine(c.fill, Offset(start, y), Offset(x, y), strokeWidth = stroke, cap = StrokeCap.Round)
-            if (default != null) drawCircle(c.textSecondary, radius = 2.5.dp.toPx(),
-                center = Offset(start + (end - start) * frac(default.coerceIn(range.start, range.endInclusive)), y + 12.dp.toPx()))
+            val sw = stroke.toPx()
+            fun px(v: Float): Float {
+                val f = ((v - range.start) / span).coerceIn(0f, 1f)
+                return if (rtl) end - (end - start) * f else start + (end - start) * f
+            }
+            val f = shownFrac()
+            val thumbX = if (rtl) end - (end - start) * f else start + (end - start) * f
+            if (paintTrack != null) paintTrack(start, end, ::px, thumbX)
+            else {
+                drawLine(colors.inactive, Offset(start, y), Offset(end, y), strokeWidth = sw, cap = StrokeCap.Round)
+                drawLine(colors.fill, Offset(if (rtl) end else start, y), Offset(thumbX, y), strokeWidth = sw, cap = StrokeCap.Round)
+            }
+            if (default != null) drawCircle(colors.dot, radius = 2.5.dp.toPx(),
+                center = Offset(px(default.coerceIn(range.start, range.endInclusive)), y + 12.dp.toPx()))
         }
         Box(
             Modifier.align(Alignment.CenterStart)
-                .offset { IntOffset(((widthPx - thumbPx).coerceAtLeast(0f) * fraction).roundToInt(), 0) }
-                .size(26.dp)
-                .graphicsLayer { scaleX = thumbScale; scaleY = thumbScale }
-                .shadow(3.dp, CircleShape)
-                .background(c.thumb, CircleShape)
+                .size(thumbSize)
+                .graphicsLayer {
+                    val s = thumbScale.value
+                    scaleX = s; scaleY = s
+                    translationX = (widthPx - thumbPx).coerceAtLeast(0f) * shownFrac() * (if (rtl) -1f else 1f)
+                }
+                .shadow(thumbShadow, CircleShape)
+                .background(colors.thumb, CircleShape)
+                .then(if (ring != null) Modifier.border(if (held) 3.dp else 2.dp, ring, CircleShape) else Modifier)
         )
     }
 }
 
 /** At most this many haptic ticks across a slider's whole range. */
-private const val HAPTIC_TICKS = 24f
+internal const val HAPTIC_TICKS = 24f
 
 /**
  * The legacy slider's "값 편집" input: a number in [range]. With [strictStep] it must also be a multiple of [step]
