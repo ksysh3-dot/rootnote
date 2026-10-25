@@ -1,0 +1,658 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.10.2/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :buildSrc:checkKotlinGradlePluginConfigurationErrors
+> Task :buildSrc:pluginDescriptors
+> Task :buildSrc:processResources NO-SOURCE
+> Task :buildSrc:compileKotlin
+> Task :buildSrc:compileJava NO-SOURCE
+> Task :buildSrc:compileGroovy NO-SOURCE
+> Task :buildSrc:classes UP-TO-DATE
+
+> Task :buildSrc:jar
+:jar: No valid plugin descriptors were found in META-INF/gradle-plugins
+
+> Configure project :app
+WARNING: The option setting 'android.defaults.buildfeatures.buildconfig=true' is deprecated.
+The current default is 'false'.
+It will be removed in version 9.0 of the Android Gradle plugin.
+To keep using this feature, add the following to your module-level build.gradle files:
+    android.buildFeatures.buildConfig = true
+or from Android Studio, click: `Refactor` > `Migrate BuildConfig to Gradle Build Files`.
+::notice title=General signing::GENERAL_KEY_PASSWORD opens the release key as given
+Checking the license for package NDK (Side by side) 27.0.12077973 in /usr/local/lib/android/sdk/licenses
+License for package NDK (Side by side) 27.0.12077973 accepted.
+Preparing "Install NDK (Side by side) 27.0.12077973 v.27.0.12077973".
+"Install NDK (Side by side) 27.0.12077973 v.27.0.12077973" ready.
+Installing NDK (Side by side) 27.0.12077973 in /usr/local/lib/android/sdk/ndk/27.0.12077973
+"Install NDK (Side by side) 27.0.12077973 v.27.0.12077973" complete.
+"Install NDK (Side by side) 27.0.12077973 v.27.0.12077973" finished.
+Checking the license for package Android SDK Platform 33 in /usr/local/lib/android/sdk/licenses
+License for package Android SDK Platform 33 accepted.
+Preparing "Install Android SDK Platform 33 (revision 3)".
+"Install Android SDK Platform 33 (revision 3)" ready.
+Installing Android SDK Platform 33 in /usr/local/lib/android/sdk/platforms/android-33
+"Install Android SDK Platform 33 (revision 3)" complete.
+"Install Android SDK Platform 33 (revision 3)" finished.
+
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preRootlessFullS26uPreviewBuild UP-TO-DATE
+
+> Task :app:configureCMakeRelWithDebInfo[arm64-v8a]
+Checking the license for package CMake 3.22.1 in /usr/local/lib/android/sdk/licenses
+License for package CMake 3.22.1 accepted.
+Preparing "Install CMake 3.22.1 v.3.22.1".
+"Install CMake 3.22.1 v.3.22.1" ready.
+Installing CMake 3.22.1 in /usr/local/lib/android/sdk/cmake/3.22.1
+"Install CMake 3.22.1 v.3.22.1" complete.
+"Install CMake 3.22.1 v.3.22.1" finished.
+C/C++: CMake Warning:
+C/C++:   Manually-specified variables were not used by the project:
+C/C++:     NO_CRASHLYTICS
+
+> Task :app:buildCMakeRelWithDebInfo[arm64-v8a]
+C/C++: ninja: Entering directory `/home/runner/work/rootnote/rootnote/app/.cxx/RelWithDebInfo/2r275p33/arm64-v8a'
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/arbEqConv.c:6:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/bs2b.c:2:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/convolver1D.c:6:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/crossfeed.c:6:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/dbb.c:6:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/dynamic.c:8:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/numericSys/FilterDesign/cos_fib_paraunitary.c:522:26: warning: result of comparison of constant -2 with expression of type 'char' is always false [-Wtautological-constant-out-of-range-compare]
+C/C++:   522 |                                         if (U0l[j * Lh + i] == -2)
+C/C++:       |                                             ~~~~~~~~~~~~~~~ ^  ~~
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/numericSys/FilterDesign/cos_fib_paraunitary.c:524:31: warning: result of comparison of constant -1 with expression of type 'char' is always false [-Wtautological-constant-out-of-range-compare]
+C/C++:   524 |                                         else if (U0l[j * Lh + i] == -1)
+C/C++:       |                                                  ~~~~~~~~~~~~~~~ ^  ~~
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/numericSys/FilterDesign/cos_fib_paraunitary.c:539:25: warning: result of comparison of constant -2 with expression of type 'char' is always false [-Wtautological-constant-out-of-range-compare]
+C/C++:   539 |                                         if (QQ[j * Lh + i] == -2)
+C/C++:       |                                             ~~~~~~~~~~~~~~ ^  ~~
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/numericSys/FilterDesign/cos_fib_paraunitary.c:541:30: warning: result of comparison of constant -1 with expression of type 'char' is always false [-Wtautological-constant-out-of-range-compare]
+C/C++:   541 |                                         else if (QQ[j * Lh + i] == -1)
+C/C++:       |                                                  ~~~~~~~~~~~~~~ ^  ~~
+C/C++: 4 warnings generated.
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/numericSys/FilterDesign/polyphaseFilterbank.c:55:1: warning: non-void function does not return a value in all control paths [-Wreturn-type]
+C/C++:    55 | }
+C/C++:       | ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjdspimptoolbox/main/JdspImpResToolbox.c:7:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/numericSys/FFTConvolver.c:886:27: warning: expression result unused [-Wunused-value]
+C/C++:   886 |                 conv2->_segmentsLLIRRe[1];
+C/C++:       |                 ~~~~~~~~~~~~~~~~~~~~~~ ~^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/liveprogWrapper.c:3:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/multimodalEQ.c:6:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/stereoEnhancement.c:4:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/vacuumTube.c:6:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/vdc.c:6:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/reverb.c:10:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/generalDSP/ArbFIRGen.c:5:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/generalDSP/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/binaryBlobs.c:1:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/generalDSP/interpolation.c:4:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/generalDSP/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/jdspController.c:9:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/generalDSP/TwoStageFFTConvolver.c:7:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/generalDSP/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/nseel-compiler.c:30:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/eel_matrix.h:94:38: warning: passing 'int32_t[2]' (aka 'int[2]') to parameter of type 'unsigned int *' converts between pointers to integer types with different sign [-Wpointer-sign]
+C/C++:    94 |         geninv(matIn, rows1, cols1, matOut, size);
+C/C++:       |                                             ^~~~
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/numericSys/quadprog.h:25:82: note: passing argument to parameter 'size' here
+C/C++:    25 | void geninv(double *G, unsigned int m1, unsigned int n1, double *Y, unsigned int size[2]);
+C/C++:       |                                                                                  ^
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/nseel-compiler.c:2596:8: warning: assigning to 'const unsigned char *' from 'const char *' converts between pointers to integer types where one is of the unique plain 'char' type and the other is not [-Wpointer-sign]
+C/C++:  2596 |                         end = src + len;
+C/C++:       |                             ^ ~~~~~~~~~
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/nseel-compiler.c:2597:7: warning: assigning to 'const unsigned char *' from 'const char *' converts between pointers to integer types where one is of the unique plain 'char' type and the other is not [-Wpointer-sign]
+C/C++:  2597 |                         in = src;
+C/C++:       |                            ^ ~~~
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/nseel-compiler.c:2633:36: warning: passing 'unsigned char *' to parameter of type 'const char *' converts between pointers to integer types where one is of the unique plain 'char' type and the other is not [-Wpointer-sign]
+C/C++:  2633 |                         *dest = s_str_create_from_c_str(out);
+C/C++:       |                                                         ^~~
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/s_str.h:61:49: note: passing argument to parameter 'c_str_ptr' here
+C/C++:    61 | s_str s_str_create_from_c_str(const char *const c_str_ptr);
+C/C++:       |                                                 ^
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/nseel-compiler.c:2747:41: warning: passing 'unsigned char *' to parameter of type 'const char *' converts between pointers to integer types where one is of the unique plain 'char' type and the other is not [-Wpointer-sign]
+C/C++:  2747 |                         *dest = s_str_create_from_c_str_0Inc(out, out_len);
+C/C++:       |                                                              ^~~
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/s_str.h:62:54: note: passing argument to parameter 'c_str_ptr' here
+C/C++:    62 | s_str s_str_create_from_c_str_0Inc(const char *const c_str_ptr, const size_t length);
+C/C++:       |                                                      ^
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/nseel-compiler.c:4367:34: warning: passing 'unsigned char *' to parameter of type 'const char *' converts between pointers to integer types where one is of the unique plain 'char' type and the other is not [-Wpointer-sign]
+C/C++:  4367 |         *dest = s_str_create_from_c_str(base64String);
+C/C++:       |                                         ^~~~~~~~~~~~
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/s_str.h:61:49: note: passing argument to parameter 'c_str_ptr' here
+C/C++:    61 | s_str s_str_create_from_c_str(const char *const c_str_ptr);
+C/C++:       |                                                 ^
+C/C++: 6 warnings generated.
+
+> Task :app:preRootlessFdroidS26uReleaseBuild UP-TO-DATE
+> Task :app:mergeRootlessFdroidS26uReleaseJniLibFolders
+> Task :codeview:preBuild UP-TO-DATE
+> Task :codeview:preReleaseBuild UP-TO-DATE
+> Task :codeview:mergeReleaseJniLibFolders
+> Task :codeview:mergeReleaseNativeLibs NO-SOURCE
+> Task :hidden-api-impl:preBuild UP-TO-DATE
+> Task :hidden-api-impl:preReleaseBuild UP-TO-DATE
+> Task :codeview:copyReleaseJniLibsProjectOnly
+> Task :hidden-api-impl:mergeReleaseJniLibFolders
+> Task :hidden-api-impl:mergeReleaseNativeLibs NO-SOURCE
+> Task :codeview:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :hidden-api-impl:copyReleaseJniLibsProjectOnly
+> Task :codeview:generateReleaseBuildConfig
+> Task :codeview:generateReleaseResValues
+> Task :codeview:generateReleaseResources
+> Task :app:mergeRootlessFdroidS26uReleaseNativeLibs
+> Task :codeview:packageReleaseResources
+> Task :app:stripRootlessFdroidS26uReleaseDebugSymbols
+> Task :codeview:javaPreCompileRelease
+> Task :codeview:parseReleaseLocalResources
+> Task :app:extractRootlessFdroidS26uReleaseNativeSymbolTables
+> Task :hidden-api-stubs:compileJava
+> Task :hidden-api-stubs:processResources NO-SOURCE
+> Task :hidden-api-stubs:classes
+> Task :hidden-api-stubs:jar
+> Task :codeview:generateReleaseRFile
+> Task :app:mergeRootlessFdroidS26uReleaseNativeDebugMetadata
+> Task :hidden-api-impl:generateReleaseBuildConfig
+> Task :hidden-api-impl:generateReleaseResValues
+> Task :hidden-api-impl:generateReleaseResources
+> Task :hidden-api-impl:packageReleaseResources
+> Task :hidden-api-refined:preBuild UP-TO-DATE
+> Task :hidden-api-refined:preReleaseBuild UP-TO-DATE
+> Task :hidden-api-impl:javaPreCompileRelease
+> Task :hidden-api-impl:parseReleaseLocalResources
+> Task :hidden-api-refined:generateReleaseResValues
+> Task :hidden-api-refined:generateReleaseResources
+> Task :hidden-api-impl:generateReleaseRFile
+> Task :hidden-api-refined:packageReleaseResources
+> Task :hidden-api-refined:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :hidden-api-refined:parseReleaseLocalResources
+> Task :hidden-api-refined:generateReleaseBuildConfig
+> Task :hidden-api-refined:generateReleaseRFile
+> Task :hidden-api-refined:javaPreCompileRelease
+> Task :hidden-api-refined:compileReleaseKotlin NO-SOURCE
+
+> Task :hidden-api-refined:compileReleaseJavaWithJavac
+warning: Supported source version 'RELEASE_8' from annotation processor 'org.gradle.api.internal.tasks.compile.processing.TimeTrackingProcessor' less than -source '17'
+1 warning
+
+> Task :hidden-api-refined:transformReleaseClassesWithAsm
+> Task :app:checkRootlessFdroidS26uReleaseDuplicateClasses
+> Task :hidden-api-refined:bundleLibCompileToJarRelease
+> Task :app:buildKotlinToolingMetadata
+
+> Task :hidden-api-impl:compileReleaseJavaWithJavac
+warning: unknown enum constant Scope.LIBRARY_GROUP_PREFIX
+  reason: class file for androidx.annotation.RestrictTo$Scope not found
+warning: unknown enum constant Scope.LIBRARY_GROUP_PREFIX
+warning: unknown enum constant Scope.LIBRARY_GROUP_PREFIX
+warning: unknown enum constant Scope.LIBRARY_GROUP_PREFIX
+warning: unknown enum constant Scope.LIBRARY_GROUP_PREFIX
+warning: unknown enum constant Scope.LIBRARY_GROUP_PREFIX
+warning: unknown enum constant Scope.LIBRARY_GROUP_PREFIX
+7 warnings
+
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :hidden-api-impl:transformReleaseClassesWithAsm
+> Task :app:dataBindingMergeDependencyArtifactsRootlessFdroidS26uRelease
+> Task :hidden-api-impl:bundleLibRuntimeToJarRelease
+> Task :app:generateRootlessFdroidS26uReleaseResValues
+> Task :app:generateRootlessFdroidS26uReleaseResources
+> Task :app:packageRootlessFdroidS26uReleaseResources
+> Task :app:generateRootlessFdroidS26uReleaseBuildConfig
+> Task :codeview:writeReleaseAarMetadata
+> Task :hidden-api-impl:writeReleaseAarMetadata
+> Task :app:parseRootlessFdroidS26uReleaseLocalResources
+> Task :app:checkRootlessFdroidS26uReleaseAarMetadata
+> Task :app:mapRootlessFdroidS26uReleaseSourceSetPaths
+> Task :app:mergeRootlessFdroidS26uReleaseResources
+> Task :app:createRootlessFdroidS26uReleaseCompatibleScreenManifests
+> Task :app:dataBindingGenBaseClassesRootlessFdroidS26uRelease
+> Task :app:extractDeepLinksRootlessFdroidS26uRelease
+> Task :codeview:extractDeepLinksRelease
+> Task :hidden-api-impl:extractDeepLinksRelease
+> Task :codeview:compileReleaseLibraryResources
+> Task :hidden-api-impl:compileReleaseLibraryResources
+> Task :hidden-api-impl:bundleLibCompileToJarRelease
+> Task :hidden-api-impl:processReleaseManifest
+> Task :codeview:processReleaseManifest
+> Task :app:javaPreCompileRootlessFdroidS26uRelease
+> Task :app:processRootlessFdroidS26uReleaseMainManifest
+> Task :app:processRootlessFdroidS26uReleaseManifest
+> Task :app:desugarRootlessFdroidS26uReleaseFileDependencies
+> Task :app:processRootlessFdroidS26uReleaseManifestForPackage
+> Task :app:mergeRootlessFdroidS26uReleaseStartupProfile
+> Task :codeview:prepareReleaseArtProfile
+> Task :hidden-api-impl:prepareReleaseArtProfile
+warn: removing resource kr.ksysh3.pvb.s26u:string/onboarding_adb_dump_not_granted without required default value.
+warn: removing resource kr.ksysh3.pvb.s26u:string/onboarding_adb_dump_not_granted_title without required default value.
+warn: removing resource kr.ksysh3.pvb.s26u:string/onboarding_adb_manual_step5b without required default value.
+
+> Task :app:mergeRootlessFdroidS26uReleaseArtProfile
+> Task :app:generateRootlessFdroidS26uReleaseAssets UP-TO-DATE
+> Task :codeview:mergeReleaseShaders
+> Task :codeview:compileReleaseShaders NO-SOURCE
+> Task :codeview:generateReleaseAssets UP-TO-DATE
+> Task :codeview:packageReleaseAssets
+> Task :hidden-api-impl:mergeReleaseShaders
+> Task :hidden-api-impl:compileReleaseShaders NO-SOURCE
+> Task :hidden-api-impl:generateReleaseAssets UP-TO-DATE
+> Task :hidden-api-impl:packageReleaseAssets
+> Task :app:mergeRootlessFdroidS26uReleaseAssets
+warn: removing resource kr.ksysh3.pvb.s26u:string/onboarding_adb_dump_not_granted without required default value.
+warn: removing resource kr.ksysh3.pvb.s26u:string/onboarding_adb_dump_not_granted_title without required default value.
+warn: removing resource kr.ksysh3.pvb.s26u:string/onboarding_adb_manual_step5b without required default value.
+
+> Task :app:processRootlessFdroidS26uReleaseResources
+> Task :app:compressRootlessFdroidS26uReleaseAssets
+> Task :app:extractRootlessFdroidS26uReleaseVersionControlInfo
+> Task :hidden-api-impl:processReleaseJavaRes NO-SOURCE
+> Task :app:collectRootlessFdroidS26uReleaseDependencies
+> Task :app:sdkRootlessFdroidS26uReleaseDependencyData
+> Task :codeview:compileReleaseKotlin
+> Task :app:validateSigningRootlessFdroidS26uRelease
+> Task :codeview:compileReleaseJavaWithJavac
+> Task :app:optimizeRootlessFdroidS26uReleaseResources
+> Task :codeview:bundleLibRuntimeToJarRelease
+> Task :codeview:bundleLibCompileToJarRelease
+> Task :codeview:processReleaseJavaRes
+> Task :app:mergeExtDexRootlessFdroidS26uRelease
+> Task :app:writeRootlessFdroidS26uReleaseAppMetadata
+> Task :app:writeRootlessFdroidS26uReleaseSigningConfigVersions
+> Task :app:preRootlessFdroidGeneralReleaseBuild UP-TO-DATE
+> Task :app:mergeRootlessFdroidGeneralReleaseJniLibFolders
+> Task :app:mergeRootlessFdroidGeneralReleaseNativeLibs
+> Task :app:checkRootlessFdroidGeneralReleaseDuplicateClasses
+> Task :app:stripRootlessFdroidGeneralReleaseDebugSymbols
+> Task :app:dataBindingMergeDependencyArtifactsRootlessFdroidGeneralRelease
+> Task :app:generateRootlessFdroidGeneralReleaseResValues
+> Task :app:generateRootlessFdroidGeneralReleaseResources
+> Task :app:extractRootlessFdroidGeneralReleaseNativeSymbolTables
+> Task :app:mergeRootlessFdroidGeneralReleaseNativeDebugMetadata
+> Task :app:mergeRootlessFdroidGeneralReleaseResources
+> Task :app:packageRootlessFdroidGeneralReleaseResources
+> Task :app:generateRootlessFdroidGeneralReleaseBuildConfig
+> Task :app:checkRootlessFdroidGeneralReleaseAarMetadata
+> Task :app:mapRootlessFdroidGeneralReleaseSourceSetPaths
+> Task :app:createRootlessFdroidGeneralReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRootlessFdroidGeneralRelease
+> Task :app:parseRootlessFdroidGeneralReleaseLocalResources
+> Task :app:processRootlessFdroidGeneralReleaseMainManifest
+> Task :app:dataBindingGenBaseClassesRootlessFdroidGeneralRelease
+> Task :app:processRootlessFdroidGeneralReleaseManifest
+> Task :app:processRootlessFdroidGeneralReleaseManifestForPackage
+> Task :app:javaPreCompileRootlessFdroidGeneralRelease
+> Task :app:desugarRootlessFdroidGeneralReleaseFileDependencies
+> Task :app:mergeRootlessFdroidGeneralReleaseStartupProfile
+warn: removing resource kr.ksysh3.rootnote:string/onboarding_adb_dump_not_granted without required default value.
+warn: removing resource kr.ksysh3.rootnote:string/onboarding_adb_dump_not_granted_title without required default value.
+warn: removing resource kr.ksysh3.rootnote:string/onboarding_adb_manual_step5b without required default value.
+
+> Task :app:mergeRootlessFdroidGeneralReleaseArtProfile
+> Task :app:generateRootlessFdroidGeneralReleaseAssets UP-TO-DATE
+> Task :app:mergeRootlessFdroidGeneralReleaseAssets
+warn: removing resource kr.ksysh3.rootnote:string/onboarding_adb_dump_not_granted without required default value.
+warn: removing resource kr.ksysh3.rootnote:string/onboarding_adb_dump_not_granted_title without required default value.
+warn: removing resource kr.ksysh3.rootnote:string/onboarding_adb_manual_step5b without required default value.
+
+> Task :app:processRootlessFdroidGeneralReleaseResources
+> Task :app:compressRootlessFdroidGeneralReleaseAssets
+> Task :app:extractRootlessFdroidGeneralReleaseVersionControlInfo
+
+> Task :app:kspRootlessFdroidS26uReleaseKotlin
+w: [ksp] /home/runner/work/rootnote/rootnote/app/src/main/java/me/timschneeberger/rootlessjamesdsp/model/room/AppBlocklistDatabase.kt:10: Schema export directory was not provided to the annotation processor so Room cannot export the schema. You can either provide `room.schemaLocation` annotation processor argument by applying the Room Gradle plugin (id 'androidx.room') OR set exportSchema to false.
+
+> Task :app:optimizeRootlessFdroidGeneralReleaseResources
+> Task :app:collectRootlessFdroidGeneralReleaseDependencies
+> Task :app:sdkRootlessFdroidGeneralReleaseDependencyData
+> Task :app:validateSigningRootlessFdroidGeneralRelease
+> Task :app:writeRootlessFdroidGeneralReleaseAppMetadata
+> Task :app:writeRootlessFdroidGeneralReleaseSigningConfigVersions
+> Task :app:prePluginFullS26uPreviewBuild UP-TO-DATE
+> Task :app:mergeExtDexRootlessFdroidGeneralRelease
+
+> Task :app:configureCMakeRelWithDebInfo[arm64-v8a]-2
+C/C++: CMake Warning:
+C/C++:   Manually-specified variables were not used by the project:
+C/C++:     NO_CRASHLYTICS
+
+> Task :app:kaptGenerateStubsRootlessFdroidS26uReleaseKotlin
+w: Support for language version 2.0+ in kapt is in Alpha and must be enabled explicitly. Falling back to 1.9.
+
+> Task :app:buildCMakeRelWithDebInfo[arm64-v8a]-2
+C/C++: ninja: Entering directory `/home/runner/work/rootnote/rootnote/app/.cxx/RelWithDebInfo/106t596w/arm64-v8a'
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/arbEqConv.c:6:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/bs2b.c:2:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/convolver1D.c:6:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/crossfeed.c:6:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/dbb.c:6:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/dynamic.c:8:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+
+> Task :app:kspRootlessFdroidGeneralReleaseKotlin
+w: [ksp] /home/runner/work/rootnote/rootnote/app/src/main/java/me/timschneeberger/rootlessjamesdsp/model/room/AppBlocklistDatabase.kt:10: Schema export directory was not provided to the annotation processor so Room cannot export the schema. You can either provide `room.schemaLocation` annotation processor argument by applying the Room Gradle plugin (id 'androidx.room') OR set exportSchema to false.
+
+> Task :app:buildCMakeRelWithDebInfo[arm64-v8a]-2
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/numericSys/FilterDesign/cos_fib_paraunitary.c:522:26: warning: result of comparison of constant -2 with expression of type 'char' is always false [-Wtautological-constant-out-of-range-compare]
+C/C++:   522 |                                         if (U0l[j * Lh + i] == -2)
+C/C++:       |                                             ~~~~~~~~~~~~~~~ ^  ~~
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/numericSys/FilterDesign/cos_fib_paraunitary.c:524:31: warning: result of comparison of constant -1 with expression of type 'char' is always false [-Wtautological-constant-out-of-range-compare]
+C/C++:   524 |                                         else if (U0l[j * Lh + i] == -1)
+C/C++:       |                                                  ~~~~~~~~~~~~~~~ ^  ~~
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/numericSys/FilterDesign/cos_fib_paraunitary.c:539:25: warning: result of comparison of constant -2 with expression of type 'char' is always false [-Wtautological-constant-out-of-range-compare]
+C/C++:   539 |                                         if (QQ[j * Lh + i] == -2)
+C/C++:       |                                             ~~~~~~~~~~~~~~ ^  ~~
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/numericSys/FilterDesign/cos_fib_paraunitary.c:541:30: warning: result of comparison of constant -1 with expression of type 'char' is always false [-Wtautological-constant-out-of-range-compare]
+C/C++:   541 |                                         else if (QQ[j * Lh + i] == -1)
+C/C++:       |                                                  ~~~~~~~~~~~~~~ ^  ~~
+C/C++: 4 warnings generated.
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/numericSys/FFTConvolver.c:886:27: warning: expression result unused [-Wunused-value]
+C/C++:   886 |                 conv2->_segmentsLLIRRe[1];
+C/C++:       |                 ~~~~~~~~~~~~~~~~~~~~~~ ~^
+C/C++: 1 warning generated.
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/numericSys/FilterDesign/polyphaseFilterbank.c:55:1: warning: non-void function does not return a value in all control paths [-Wreturn-type]
+C/C++:    55 | }
+C/C++:       | ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjdspimptoolbox/main/JdspImpResToolbox.c:7:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/liveprogWrapper.c:3:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/multimodalEQ.c:6:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/stereoEnhancement.c:4:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/vacuumTube.c:6:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/vdc.c:6:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/binaryBlobs.c:1:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/generalDSP/ArbFIRGen.c:5:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/generalDSP/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/generalDSP/interpolation.c:4:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/generalDSP/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/reverb.c:10:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/jdspController.c:9:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/generalDSP/TwoStageFFTConvolver.c:7:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/generalDSP/../jdsp_header.h:450:24: warning: declaration of 'struct dspsys' will not be visible outside of this function [-Wvisibility]
+C/C++:   450 |         void(*process)(struct dspsys *, size_t);
+C/C++:       |                               ^
+C/C++: 1 warning generated.
+C/C++: In file included from /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/nseel-compiler.c:30:
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/eel_matrix.h:94:38: warning: passing 'int32_t[2]' (aka 'int[2]') to parameter of type 'unsigned int *' converts between pointers to integer types with different sign [-Wpointer-sign]
+C/C++:    94 |         geninv(matIn, rows1, cols1, matOut, size);
+C/C++:       |                                             ^~~~
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/numericSys/quadprog.h:25:82: note: passing argument to parameter 'size' here
+C/C++:    25 | void geninv(double *G, unsigned int m1, unsigned int n1, double *Y, unsigned int size[2]);
+C/C++:       |                                                                                  ^
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/nseel-compiler.c:2596:8: warning: assigning to 'const unsigned char *' from 'const char *' converts between pointers to integer types where one is of the unique plain 'char' type and the other is not [-Wpointer-sign]
+C/C++:  2596 |                         end = src + len;
+C/C++:       |                             ^ ~~~~~~~~~
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/nseel-compiler.c:2597:7: warning: assigning to 'const unsigned char *' from 'const char *' converts between pointers to integer types where one is of the unique plain 'char' type and the other is not [-Wpointer-sign]
+C/C++:  2597 |                         in = src;
+C/C++:       |                            ^ ~~~
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/nseel-compiler.c:2633:36: warning: passing 'unsigned char *' to parameter of type 'const char *' converts between pointers to integer types where one is of the unique plain 'char' type and the other is not [-Wpointer-sign]
+C/C++:  2633 |                         *dest = s_str_create_from_c_str(out);
+C/C++:       |                                                         ^~~
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/s_str.h:61:49: note: passing argument to parameter 'c_str_ptr' here
+C/C++:    61 | s_str s_str_create_from_c_str(const char *const c_str_ptr);
+C/C++:       |                                                 ^
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/nseel-compiler.c:2747:41: warning: passing 'unsigned char *' to parameter of type 'const char *' converts between pointers to integer types where one is of the unique plain 'char' type and the other is not [-Wpointer-sign]
+C/C++:  2747 |                         *dest = s_str_create_from_c_str_0Inc(out, out_len);
+C/C++:       |                                                              ^~~
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/s_str.h:62:54: note: passing argument to parameter 'c_str_ptr' here
+C/C++:    62 | s_str s_str_create_from_c_str_0Inc(const char *const c_str_ptr, const size_t length);
+C/C++:       |                                                      ^
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/nseel-compiler.c:4367:34: warning: passing 'unsigned char *' to parameter of type 'const char *' converts between pointers to integer types where one is of the unique plain 'char' type and the other is not [-Wpointer-sign]
+C/C++:  4367 |         *dest = s_str_create_from_c_str(base64String);
+C/C++:       |                                         ^~~~~~~~~~~~
+C/C++: /home/runner/work/rootnote/rootnote/app/src/main/cpp/libjamesdsp/Main/libjamesdsp/jni/jamesdsp/jdsp/Effects/eel2/s_str.h:61:49: note: passing argument to parameter 'c_str_ptr' here
+C/C++:    61 | s_str s_str_create_from_c_str(const char *const c_str_ptr);
+C/C++:       |                                                 ^
+C/C++: 6 warnings generated.
+
+> Task :app:kaptRootlessFdroidS26uReleaseKotlin SKIPPED
+> Task :app:preRootFdroidGeneralReleaseBuild UP-TO-DATE
+> Task :app:mergeRootFdroidGeneralReleaseJniLibFolders
+> Task :app:checkRootFdroidGeneralReleaseDuplicateClasses
+> Task :app:mergeRootFdroidGeneralReleaseNativeLibs
+> Task :app:dataBindingMergeDependencyArtifactsRootFdroidGeneralRelease
+> Task :app:generateRootFdroidGeneralReleaseResValues
+> Task :app:generateRootFdroidGeneralReleaseResources
+> Task :app:stripRootFdroidGeneralReleaseDebugSymbols
+
+> Task :app:kaptGenerateStubsRootlessFdroidGeneralReleaseKotlin
+w: Support for language version 2.0+ in kapt is in Alpha and must be enabled explicitly. Falling back to 1.9.
+
+> Task :app:kaptRootlessFdroidGeneralReleaseKotlin SKIPPED
+> Task :app:extractRootFdroidGeneralReleaseNativeSymbolTables
+> Task :app:mergeRootFdroidGeneralReleaseNativeDebugMetadata
+> Task :app:mergeRootFdroidGeneralReleaseResources
+> Task :app:packageRootFdroidGeneralReleaseResources
+> Task :app:generateRootFdroidGeneralReleaseBuildConfig
+> Task :app:checkRootFdroidGeneralReleaseAarMetadata
+> Task :app:mapRootFdroidGeneralReleaseSourceSetPaths
+> Task :app:createRootFdroidGeneralReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRootFdroidGeneralRelease
+> Task :app:parseRootFdroidGeneralReleaseLocalResources
+> Task :app:processRootFdroidGeneralReleaseMainManifest
+> Task :app:dataBindingGenBaseClassesRootFdroidGeneralRelease
+> Task :app:processRootFdroidGeneralReleaseManifest
+> Task :app:processRootFdroidGeneralReleaseManifestForPackage
+> Task :app:javaPreCompileRootFdroidGeneralRelease
+> Task :app:desugarRootFdroidGeneralReleaseFileDependencies
+> Task :app:mergeRootFdroidGeneralReleaseStartupProfile
+warn: removing resource kr.ksysh3.rootnote.root:string/onboarding_adb_dump_not_granted without required default value.
+warn: removing resource kr.ksysh3.rootnote.root:string/onboarding_adb_dump_not_granted_title without required default value.
+warn: removing resource kr.ksysh3.rootnote.root:string/onboarding_adb_manual_step5b without required default value.
+
+warn: removing resource kr.ksysh3.rootnote.root:string/onboarding_adb_dump_not_granted without required default value.
+warn: removing resource kr.ksysh3.rootnote.root:string/onboarding_adb_dump_not_granted_title without required default value.
+warn: removing resource kr.ksysh3.rootnote.root:string/onboarding_adb_manual_step5b without required default value.
+
+> Task :app:processRootFdroidGeneralReleaseResources
+> Task :app:mergeExtDexRootFdroidGeneralRelease
+> Task :app:mergeRootFdroidGeneralReleaseArtProfile
+> Task :app:generateRootFdroidGeneralReleaseAssets UP-TO-DATE
+> Task :app:mergeRootFdroidGeneralReleaseAssets
+> Task :app:compressRootFdroidGeneralReleaseAssets
+> Task :app:extractRootFdroidGeneralReleaseVersionControlInfo
+> Task :app:optimizeRootFdroidGeneralReleaseResources
+> Task :app:collectRootFdroidGeneralReleaseDependencies
+> Task :app:sdkRootFdroidGeneralReleaseDependencyData
+> Task :app:validateSigningRootFdroidGeneralRelease
+> Task :app:writeRootFdroidGeneralReleaseAppMetadata
+> Task :app:writeRootFdroidGeneralReleaseSigningConfigVersions
+
+> Task :app:kspRootFdroidGeneralReleaseKotlin
+w: [ksp] /home/runner/work/rootnote/rootnote/app/src/main/java/me/timschneeberger/rootlessjamesdsp/model/room/AppBlocklistDatabase.kt:10: Schema export directory was not provided to the annotation processor so Room cannot export the schema. You can either provide `room.schemaLocation` annotation processor argument by applying the Room Gradle plugin (id 'androidx.room') OR set exportSchema to false.
+
+> Task :app:kaptGenerateStubsRootFdroidGeneralReleaseKotlin
+w: Support for language version 2.0+ in kapt is in Alpha and must be enabled explicitly. Falling back to 1.9.
+
+> Task :app:kaptRootFdroidGeneralReleaseKotlin SKIPPED
+> Task :app:compileRootlessFdroidS26uReleaseKotlin
+> Task :app:compileRootlessFdroidGeneralReleaseKotlin
+e: file:///home/runner/work/rootnote/rootnote/app/src/general/java/me/timschneeberger/rootlessjamesdsp/home/BassStory.kt:41:40 Unresolved reference 'asState'.
+e: file:///home/runner/work/rootnote/rootnote/app/src/general/java/me/timschneeberger/rootlessjamesdsp/home/SpatialStory.kt:52:40 Unresolved reference 'asState'.
+
+> Task :app:compileRootlessFdroidGeneralReleaseKotlin FAILED
+
+> Task :app:compileRootFdroidGeneralReleaseKotlin
+e: file:///home/runner/work/rootnote/rootnote/app/src/general/java/me/timschneeberger/rootlessjamesdsp/home/BassStory.kt:41:40 Unresolved reference 'asState'.
+e: file:///home/runner/work/rootnote/rootnote/app/src/general/java/me/timschneeberger/rootlessjamesdsp/home/SpatialStory.kt:52:40 Unresolved reference 'asState'.
+
+> Task :app:compileRootFdroidGeneralReleaseKotlin FAILED
+
+> Task :app:compileRootlessFdroidS26uReleaseKotlin
+w: file:///home/runner/work/rootnote/rootnote/app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/BuzzDiagnostics.kt:317:38 Condition is always 'true'.
+w: file:///home/runner/work/rootnote/rootnote/app/src/main/java/me/timschneeberger/rootlessjamesdsp/service/QuickTileService.kt:92:21 'fun startActivityAndCollapse(p0: Intent!): Unit' is deprecated. Deprecated in Java.
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_3-1792910858540.json
+
+FAILURE: Build completed with 2 failures.
+
+1: Task failed with an exception.
+-----------
+* What went wrong:
+Execution failed for task ':app:compileRootlessFdroidGeneralReleaseKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+==============================================================================
+
+2: Task failed with an exception.
+-----------
+* What went wrong:
+Execution failed for task ':app:compileRootFdroidGeneralReleaseKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+==============================================================================
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.10.2/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 2m 37s
+179 actionable tasks: 179 executed
