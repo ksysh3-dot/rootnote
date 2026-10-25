@@ -33,6 +33,18 @@ object CaptureState {
     @Volatile var intercepting = false
     /** "가로채기" was chosen but could not run in this service start; why (InterceptSource.lastError). */
     @Volatile var fallbackReason: String? = null
+    /**
+     * A start without the screen-share consent failed ("가로채기" could not run after all): the next start asks for the
+     * consent. Cleared as soon as "가로채기" runs again (a consent-backed start tries it first).
+     */
+    @Volatile var interceptStartFailed = false
+}
+
+/** How a start begins: without the screen-share consent when "가로채기" is chosen and can run right now. */
+object CaptureStart {
+    fun withoutConsent(context: Context): Boolean =
+        CaptureMode.get(context) == CaptureMode.INTERCEPT && android.os.Build.VERSION.SDK_INT >= 33 &&
+            !CaptureState.interceptStartFailed && InterceptSource.shizukuReady()
 }
 
 /** [CaptureState.fallbackReason] (InterceptSource.lastError) in the user's words. */
