@@ -400,6 +400,42 @@ object MicCal {
 }
 
 /**
+ * "마이크 스펙트럼" in developer mode: third-octave levels of what the phone microphone hears, optionally with the
+ * microphone's own response taken off and turned into dB SPL with its sensitivity, both as the phone declares them
+ * (MicrophoneInfo). Without them, or with the correction off, the levels stay in dB re full scale.
+ */
+object MicSpectrum {
+    val CENTERS = doubleArrayOf(25.0, 31.5, 40.0, 50.0, 63.0, 80.0, 100.0, 125.0, 160.0, 200.0, 250.0, 315.0, 400.0,
+        500.0, 630.0, 800.0, 1000.0, 1250.0, 1600.0, 2000.0, 2500.0, 3150.0, 4000.0, 5000.0, 6300.0, 8000.0, 10000.0,
+        12500.0, 16000.0)
+    /** 16384 points (0.34 s at 48 kHz): 2.9 Hz bins, so the 25 Hz third octave (5.8 Hz wide) holds two. */
+    const val FFT = 16384
+
+    fun levels(x: FloatArray, fs: Double): DoubleArray = NoiseGate.bandLevels(x, fs, CENTERS, FFT)
+
+    /** Response at [hz] by log-frequency interpolation of ([hzs], [dbs]); the end values outside; 0 when empty. */
+    fun responseAt(hzs: DoubleArray, dbs: DoubleArray, hz: Double): Double {
+        if (hzs.isEmpty()) return 0.0
+        if (hz <= hzs.first()) return dbs.first()
+        if (hz >= hzs.last()) return dbs.last()
+        var i = 0
+        while (hzs[i + 1] < hz) i++
+        val u = ln(hz / hzs[i]) / ln(hzs[i + 1] / hzs[i])
+        return dbs[i] + (dbs[i + 1] - dbs[i]) * u
+    }
+
+    /**
+     * [levelsDb] (dB re full scale at [CENTERS]) with the declared response taken off and, when [sensDbfs] is known,
+     * in dB SPL (+ 94 - sensitivity). The sensitivity only holds for UNPROCESSED (other sources may add gain).
+     */
+    fun corrected(levelsDb: DoubleArray, respHz: DoubleArray, respDb: DoubleArray, sensDbfs: Double?): DoubleArray =
+        DoubleArray(levelsDb.size) { levelsDb[it] - responseAt(respHz, respDb, CENTERS[it]) + (sensDbfs?.let { s -> 94.0 - s } ?: 0.0) }
+
+    /** Power sum of band levels, dB. */
+    fun total(levelsDb: DoubleArray): Double = 10 * log10(levelsDb.sumOf { 10.0.pow(it / 10) }.coerceAtLeast(1e-30))
+}
+
+/**
  * Optional room-noise correction of the floor bursts ("소음 보정", off unless the listener turns it on). The bursts are
  * set from the listener's threshold at 300 Hz plus how much less sensitive hearing is at the burst's frequency in quiet
  * ([HearingThreshold]). In a room with noise, the noise raises each threshold by its own amount: room noise is mostly

@@ -10,6 +10,7 @@ import me.timschneeberger.rootlessjamesdsp.pvb.RefLevelStaircase
 import me.timschneeberger.rootlessjamesdsp.pvb.NoiseGate
 import me.timschneeberger.rootlessjamesdsp.pvb.NoiseMasking
 import me.timschneeberger.rootlessjamesdsp.pvb.MicCal
+import me.timschneeberger.rootlessjamesdsp.pvb.MicSpectrum
 import me.timschneeberger.rootlessjamesdsp.pvb.ShapeGrid
 import me.timschneeberger.rootlessjamesdsp.pvb.StrengthBracket
 import kotlin.math.PI
@@ -340,6 +341,15 @@ fun main() {
     check(NoiseMasking.offsetFor(false, -37.0) == (NoiseMasking.SPL_OFFSET_DB to false), "declared sensitivity: not used for VOICE_RECOGNITION (it may add gain)")
     check(NoiseMasking.offsetFor(true, null) == (NoiseMasking.SPL_OFFSET_UNPROCESSED_DB to false) && NoiseMasking.offsetFor(true, 0.0).second == false,
         "declared sensitivity: none or a placeholder falls back to the guideline")
+
+    // --- microphone spectrum (developer mode)
+    val specLv = DoubleArray(MicSpectrum.CENTERS.size) { -60.0 }
+    val rHz = doubleArrayOf(100.0, 1000.0, 10000.0); val rDb = doubleArrayOf(-1.0, 0.0, 20.0)
+    val specC = MicSpectrum.corrected(specLv, rHz, rDb, -37.0)
+    val i1k = MicSpectrum.CENTERS.toList().indexOf(1000.0); val i10k = MicSpectrum.CENTERS.toList().indexOf(10000.0)
+    check(abs(specC[i1k] - 71.0) < 1e-9 && abs(specC[i10k] - 51.0) < 1e-9, "mic spectrum: -60 dBFS at 1 kHz with -37 dBFS sensitivity reads 71 dB SPL; +20 dB declared at 10 kHz comes off")
+    check(abs(MicSpectrum.corrected(specLv, DoubleArray(0), DoubleArray(0), null)[i1k] - (-60.0)) < 1e-9, "mic spectrum: nothing declared, nothing changed")
+    check(abs(MicSpectrum.total(doubleArrayOf(-10.0, -10.0)) - (-10.0 + 10 * kotlin.math.log10(2.0))) < 1e-9, "mic spectrum: total is the power sum")
 
     // --- microphone match (UMIK-1)
     val calRoom = DoubleArray(MicCal.BANDS.size) { -80.0 }

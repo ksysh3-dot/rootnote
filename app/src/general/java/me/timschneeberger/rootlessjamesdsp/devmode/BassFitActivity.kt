@@ -701,26 +701,7 @@ class BassFitActivity : RnActivity() {
 
     // ------------------------------------------------------------------------------------------------ declared microphone
 
-    /** What the phone declares about its built-in microphone (AudioManager.getMicrophones; no permission needed). */
-    private data class DeclaredMic(val address: String, val sensDbfs: Double?, val responseAt100Db: Double?)
-
-    private val declaredMic: DeclaredMic? by lazy { readDeclaredMic() }
-
-    /**
-     * The built-in microphone the phone lists first by its group index ("bottom" first when it names one): the one
-     * a recording uses by default. Its sensitivity is null when the phone does not declare one.
-     */
-    private fun readDeclaredMic(): DeclaredMic? = try {
-        val mics = getSystemService(AudioManager::class.java)?.microphones.orEmpty()
-            .filter { it.type == android.media.AudioDeviceInfo.TYPE_BUILTIN_MIC }
-        val m = mics.firstOrNull { it.address.contains("bottom", ignoreCase = true) } ?: mics.minByOrNull { it.indexInTheGroup }
-        m?.let { mic ->
-            val sens = mic.sensitivity.takeIf { it != android.media.MicrophoneInfo.SENSITIVITY_UNKNOWN }?.toDouble()
-            val fr = mic.frequencyResponse
-            val at100 = fr.takeIf { it.isNotEmpty() }?.minByOrNull { kotlin.math.abs(it.first - 100f) }?.second?.toDouble()
-            DeclaredMic(mic.address ?: "", sens, at100)
-        }
-    } catch (_: Exception) { null }
+    private val declaredMic: DeclaredMic? by lazy { DeclaredMic.read(this) }
 
     /** Noise correction for [s]: the room's band levels and the source's offset (the phone's value where usable). */
     private fun applyNoise(s: BassFitSession, bands: DoubleArray?, unprocessed: Boolean) {
@@ -735,7 +716,7 @@ class BassFitActivity : RnActivity() {
         val d = declaredMic
         fun f(v: Double) = String.format(Locale.ROOT, "%.1f", v)
         return if (d?.sensDbfs == null) getString(R.string.fit_mic_declared_none)
-        else getString(R.string.fit_mic_declared, f(d.sensDbfs), d.responseAt100Db?.let(::f) ?: "—")
+        else getString(R.string.fit_mic_declared, f(d.sensDbfs), d.responseAt(100.0)?.let(::f) ?: "—")
     }
 
     // ------------------------------------------------------------------------------------------------ microphone calibration

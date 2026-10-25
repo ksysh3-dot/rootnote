@@ -48,6 +48,9 @@ import me.timschneeberger.rootlessjamesdsp.pvb.PvbMeter
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbRuntime
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbSettings
 import me.timschneeberger.rootlessjamesdsp.pvb.SpeakerProbe
+import kotlin.math.pow
+import kotlin.math.log10
+import me.timschneeberger.rootlessjamesdsp.pvb.MicSpectrum
 import me.timschneeberger.rootlessjamesdsp.pvb.VolumeLevelLink
 import me.timschneeberger.rootlessjamesdsp.service.BaseAudioProcessorService
 
@@ -134,6 +137,7 @@ class DevModeActivity : BaseActivity() {
             main.removeCallbacks(poll)
             // Nothing of the screen outlives it: test sound, meters, A/B hold, preview.
             stopProbe()
+            stopMicSpec()
             DevTestSound.stop()
             PvbRuntime.setDevMeter(false)
             PvbRuntime.setDevOverride(null)
@@ -210,6 +214,7 @@ class DevModeActivity : BaseActivity() {
         override fun run() {
             if (!polling) return
             feedProbe()
+            feedMicSpec()
             readMeters()
             main.postDelayed(this, POLL_MS)
         }
@@ -413,12 +418,71 @@ class DevModeActivity : BaseActivity() {
         },
         onBassFit = { startActivity(Intent(this, BassFitActivity::class.java)) },
         onProbe = { on -> if (on) startProbe() else stopProbe() },
+        onMicSpec = { on -> if (on) startMicSpec() else stopMicSpec() },
+        onMicCorr = { on ->
+            flags.edit().putBoolean(KEY_DEV_MIC_CORR, on).apply()
+            micCorr = on
+            update { it.copy(micSpec = it.micSpec?.copy(corrected = on)) }
+        },
     )
+
+    // ------------------------------------------------------------------------------------------------ microphone spectrum
+
+    private var specMic: FitMic? = null
+    private var specPower: DoubleArray? = null
+    private var specShown = 0L
+    private var micCorr = true
+    private val declaredMic: DeclaredMic? by lazy { DeclaredMic.read(this) }
+
+    /** "마이크 스펙트럼": the phone microphone alone (whatever plays keeps playing; nothing is changed). */
+    private fun startMicSpec() {
+        stopMicSpec()
+        stopProbe()
+        val granted = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+        val m = if (granted) FitMic.open(getSystemService(AudioManager::class.java)) else null
+        if (m == null) { update { it.copy(micSpec = MicSpecView(running = false, noMic = true)) }; return }
+        specMic = m
+        specPower = null
+        micCorr = flags.getBoolean(KEY_DEV_MIC_CORR, true)
+        val d = declaredMic
+        update { it.copy(micSpec = MicSpecView(running = true, corrected = micCorr, raw = m.unprocessed,
+            declaredSens = d?.sensDbfs, declaredResponse = d?.responseHz?.isNotEmpty() == true)) }
+    }
+
+    private fun stopMicSpec() {
+        val m = specMic ?: return
+        m.stop()
+        specMic = null
+        update { it.copy(micSpec = it.micSpec?.copy(running = false)) }
+    }
+
+    /** About 5 times a second: the last 0.34 s, third octaves, smoothed (power), corrected for the screen. */
+    private fun feedMicSpec() {
+        val m = specMic ?: return
+        val t = SystemClock.elapsedRealtime()
+        if (t - specShown < 200) return
+        val x = m.copy(m.frames - MicSpectrum.FFT, MicSpectrum.FFT) ?: return
+        specShown = t
+        val lv = MicSpectrum.levels(x, FitMic.FS.toDouble())
+        val p = DoubleArray(lv.size) { 10.0.pow(lv[it] / 10) }
+        val old = specPower
+        val sm = if (old == null) p else DoubleArray(p.size) { 0.6 * old[it] + 0.4 * p[it] }
+        specPower = sm
+        val raw = DoubleArray(sm.size) { 10 * log10(sm[it].coerceAtLeast(1e-30)) }
+        val d = declaredMic
+        val shown = if (micCorr && d != null)
+            MicSpectrum.corrected(raw, d.responseHz, d.responseDb, d.sensDbfs.takeIf { m.unprocessed })
+        else raw
+        val spl = micCorr && m.unprocessed && d?.sensDbfs != null
+        update { it.copy(micSpec = it.micSpec?.copy(levels = shown.toList(), spl = spl, total = MicSpectrum.total(shown),
+            clipped = x.any { v -> kotlin.math.abs(v) >= 0.98f })) }
+    }
 
     // ------------------------------------------------------------------------------------------------ probe
 
     private fun startProbe() {
         stopProbe()
+        stopMicSpec()
         if (BaseAudioProcessorService.activeServices <= 0) { toast(R.string.dev_test_off_note); return }
         DevTestSound.stop()
         update { it.copy(testKind = null) }
@@ -488,6 +552,8 @@ class DevModeActivity : BaseActivity() {
     }
 
     companion object {
+        /** "폰 마이크 보정" on the microphone spectrum (default on). */
+        const val KEY_DEV_MIC_CORR = "dev_mic_spectrum_corr"
         private const val POLL_MS = 40L
         private const val MAX_UNDO = 50
         private const val TOUCH_HOLD_MS = 1500L

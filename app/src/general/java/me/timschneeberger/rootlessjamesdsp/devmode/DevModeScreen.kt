@@ -171,6 +171,8 @@ data class DevUiState(
     val previewing: Boolean = false,
     /** "스피커 확인 (마이크)": null until first used; the last result stays after it stops. */
     val probe: ProbeView? = null,
+    /** "마이크 스펙트럼": null until first used. */
+    val micSpec: MicSpecView? = null,
 )
 
 class DevActions(
@@ -202,6 +204,10 @@ class DevActions(
     val onBassFit: () -> Unit,
     /** Starts or stops "스피커 확인 (마이크)". */
     val onProbe: (Boolean) -> Unit,
+    /** Starts or stops "마이크 스펙트럼". */
+    val onMicSpec: (Boolean) -> Unit,
+    /** "폰 마이크 보정" on the microphone spectrum. */
+    val onMicCorr: (Boolean) -> Unit,
 )
 
 /** Rootnote palette plus the semantic tokens of docs/DESIGN.md 2.2 (res/values{,-night}/colors_rootnote.xml). */
@@ -394,10 +400,12 @@ private fun TestSounds(state: DevUiState, actions: DevActions) {
             Chip(stringResource(R.string.dev_test_bass_chord), state.testKind == DevTestKind.BASS_CHORD) { actions.onTest(DevTestKind.BASS_CHORD) }
             Chip(stringResource(R.string.dev_test_music), state.testKind == null && state.probe?.running != true) { actions.onTest(null) }
             Chip(stringResource(R.string.dev_test_probe), state.probe?.running == true) { actions.onProbe(state.probe?.running != true) }
+            Chip(stringResource(R.string.dev_micspec_chip), state.micSpec?.running == true) { actions.onMicSpec(state.micSpec?.running != true) }
         }
         if (!state.serviceRunning) Text(stringResource(R.string.dev_test_off_note), color = c.warnText, fontSize = 13.sp,
             lineHeight = 18.sp, modifier = Modifier.padding(top = 4.dp))
         state.probe?.let { ProbePanel(it) }
+        state.micSpec?.let { MicSpecPanel(it, actions.onMicCorr) }
     }
 }
 
