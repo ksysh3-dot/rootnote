@@ -2,6 +2,7 @@ package me.timschneeberger.rootlessjamesdsp.session.rootless
 
 import android.content.Context
 import android.content.Intent
+import me.timschneeberger.rootlessjamesdsp.capture.CaptureState
 import me.timschneeberger.rootlessjamesdsp.model.AudioSessionDumpEntry
 import me.timschneeberger.rootlessjamesdsp.model.IEffectSession
 import me.timschneeberger.rootlessjamesdsp.model.rootless.MutedEffectSession
@@ -38,6 +39,9 @@ class RootlessSessionDatabase(context: Context) : BaseSessionDatabase(context) {
     override fun shouldAddSession(id: Int, uid: Int, packageName: String) = true
 
     override fun createSession(id: Int, uid: Int, packageName: String): MutedEffectSession? {
+        // "가로채기": the player is already off the speaker; a mute effect would follow it into the intercepted mix and
+        // silence what is processed. The session is still tracked (idle state, the notification's app list).
+        if (CaptureState.intercepting) return MutedEffectSession(uid, packageName, null)
         val muteEffect = factory.make(id, packageName)
         if(muteEffect == null)
         {

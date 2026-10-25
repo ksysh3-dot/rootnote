@@ -36,6 +36,11 @@ One of the engine's virtual bass algorithms (`VbBankstown` in `app/src/main/cpp/
 **Bankstown** by James Calligeros (https://github.com/chadmed/bankstown), MIT License; the notice is in the third-party
 list.
 
+The intercept capture (`app/src/main/java/me/timschneeberger/rootlessjamesdsp/capture/InterceptServer.kt`) adapts parts
+of **scrcpy** by Genymobile and Romain Vimont (https://github.com/Genymobile/scrcpy), Apache License 2.0: the audio
+policy loopback and the shell-process context. The changes: one process that only captures audio, the players' usages
+and this app's excluded UIDs, PCM over stdout to the app.
+
 Third-party components and their licences (Apache-2.0, BSD-2-Clause, SIL OFL 1.1, MIT, public domain/MIT-0, fdlibm) are
 listed in the app (About, Third-party licenses) and in `app/src/general/assets/licenses/THIRD_PARTY.txt`.
 

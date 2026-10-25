@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="capture_mode_header">캡처 방식</string>
+    <string name="capture_mode_title">다른 앱 소리를 가져오는 방법</string>
+    <string name="capture_mode_intercept">가로채기 (Shizuku)</string>
+    <string name="capture_mode_intercept_line">앱 소리가 스피커로 나가기 전에 가져와요. 화면 공유 동의가 필요 없고, 앱을 음소거하지 않으며, 원래 소리가 새어 나오지 않아요. Shizuku가 켜져 있어야 해요.</string>
+    <string name="capture_mode_projection">화면 공유</string>
+    <string name="capture_mode_projection_line">화면 공유 권한으로 소리를 가져오고, 처리하는 동안 각 앱을 음소거해요. 설정 뒤에는 Shizuku가 없어도 돼요.</string>
+    <string name="capture_mode_warning">일부 게임이나 은행 앱은 Shizuku나 USB 디버깅이 켜져 있으면 실행을 막아요. 그런 앱을 쓴다면 화면 공유를 고르고 Shizuku를 꺼 두세요. 가로채기를 쓸 수 없을 때(Shizuku 꺼짐)는 화면 공유로 바꾸고 알려 드려요. 가로채기는 서비스가 켜져 있는 동안 캡처를 멈추지 않아서(대기 중 정지 없음) 배터리를 조금 더 써요.</string>
+    <string name="capture_mode_now_intercept">지금: 가로채기</string>
+    <string name="capture_mode_now_projection">지금: 화면 공유</string>
+    <string name="capture_mode_now_fallback">지금: 화면 공유 (가로채기 못 씀: %1$s)</string>
+    <string name="capture_fallback_title">가로채기 캡처를 못 썼어요</string>
+    <string name="capture_fallback_text">대신 화면 공유로 가져오고 있어요. Shizuku를 켜고 다시 시작하거나, 설정 → 오디오 처리에서 방식을 고를 수 있어요.</string>
+    <string name="capture_reason_shizuku_off">Shizuku가 꺼져 있어요</string>
+    <string name="capture_reason_android_13">Android 13 이상이 필요해요</string>
+    <string name="capture_reason_other">시작하지 못했어요</string>
+</resources>

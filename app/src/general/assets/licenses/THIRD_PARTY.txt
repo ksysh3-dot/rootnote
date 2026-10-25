@@ -9,6 +9,8 @@ Apache License 2.0 (Apache-2.0.txt):
   AndroidX (including Jetpack Compose), Material Components for Android, Kotlin standard library, kotlinx.coroutines,
   kotlinx.serialization, Koin, Retrofit, OkHttp, Okio, Gson, Timber, Treessence, Shizuku API, Refine,
   HiddenApiBypass, UniFile, jtar, Room, WorkManager, Navigation, Pluto (no-op in release builds).
+  scrcpy (parts of the intercept capture, capture/InterceptServer.kt, adapted), Copyright (C) 2018 Genymobile,
+  Copyright (C) 2018-2026 Romain Vimont (https://github.com/Genymobile/scrcpy).
 
 BSD 2-Clause (libsamplerate-BSD-2-Clause.txt):
   libsamplerate, Copyright (c) 2012-2016, Erik de Castro Lopo.

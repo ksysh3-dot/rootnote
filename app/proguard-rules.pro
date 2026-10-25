@@ -40,3 +40,8 @@
 -keepclasseswithmembernames class * {
     public <init>(android.content.Context, android.util.AttributeSet, int);
 }
+
+# "가로채기 캡처": started by name with app_process as the shell user (capture/InterceptSource.kt)
+-keep class me.timschneeberger.rootlessjamesdsp.capture.InterceptServer { public static void main(java.lang.String[]); }
+-keep class me.timschneeberger.rootlessjamesdsp.capture.ShellRuntime { *; }
+-keep class me.timschneeberger.rootlessjamesdsp.capture.ShellContext { *; }

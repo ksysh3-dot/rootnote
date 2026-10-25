@@ -15,6 +15,11 @@ import android.media.AudioManager
 import android.media.AudioPlaybackCaptureConfiguration
 import android.media.AudioPlaybackConfiguration
 import android.media.AudioRecord
+import me.timschneeberger.rootlessjamesdsp.capture.CaptureMode
+import me.timschneeberger.rootlessjamesdsp.capture.CaptureSource
+import me.timschneeberger.rootlessjamesdsp.capture.CaptureState
+import me.timschneeberger.rootlessjamesdsp.capture.InterceptSource
+import me.timschneeberger.rootlessjamesdsp.capture.RecordSource
 import android.media.AudioTrack
 import android.media.AudioTimestamp
 import android.media.projection.MediaProjection
@@ -367,6 +372,8 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
 
     override fun onDestroy() {
         isServiceDisposing = true
+        CaptureState.intercepting = false
+        CaptureState.fallbackReason = null
         me.timschneeberger.rootlessjamesdsp.pvb.FirstWeekStore.onServiceDestroyed(this)
         startWhenStopped = false
         buzzDiagnostics.close()
@@ -621,11 +628,12 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
                 "Buffer size: $bufferSize; Buffer size (bytes): $bufferSizeBytes ; " +
                 "HAL buffer size (bytes): ${determineBufferSize()}")
 
-        // Create recorder and track
-        val recorder: AudioRecord
+        // Create recorder and track ("가로채기" is tried again on every fresh start, e.g. after Shizuku came back)
+        interceptFailed = false
+        val recorder: CaptureSource
         val track: AudioTrack
         try {
-            recorder = buildAudioRecord(encodingFormat, sampleRate, bufferSizeBytes)
+            recorder = buildCapture(encodingFormat, sampleRate, bufferSizeBytes)
         }
         catch(ex: Exception) {
             Timber.e("Failed to create initial audio record")
@@ -744,7 +752,7 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
         private val sampleRate: Int,
         private val bufferSize: Int,
         private val bufferSizeBytes: Int,
-        initialRecorder: AudioRecord,
+        initialRecorder: CaptureSource,
         initialTrack: AudioTrack,
     ) : Runnable {
         @Volatile
@@ -752,7 +760,7 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
             private set
         private val ioLock = Any()
         @Volatile
-        private var recorder: AudioRecord = initialRecorder
+        private var recorder: CaptureSource = initialRecorder
         @Volatile
         private var track: AudioTrack = initialTrack
         private var writeFailures = 0
@@ -864,6 +872,9 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
             buzzDiagnostics.audioDiscontinuity("recorder_recreated")
             synchronized(ioLock) {
                 if (stopRequested) return false
+                // a "가로채기" capture that ended by itself (Shizuku stopped, the process was killed): the screen-share
+                // capture takes over for the rest of this start
+                if (recorder.intercepting && recorder.state != AudioRecord.STATE_INITIALIZED) interceptFailed = true
                 try { recorder.stop() } catch (ignored: Exception) {}
                 try { recorder.release() } catch (ignored: Exception) {}
                 if (mediaProjection == null) {
@@ -872,7 +883,7 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
                     return false
                 }
                 recorder = try {
-                    buildAudioRecord(encodingFormat, sampleRate, bufferSizeBytes)
+                    buildCapture(encodingFormat, sampleRate, bufferSizeBytes)
                 } catch (e: Exception) {
                     Timber.e("Failed to recreate the audio record")
                     Timber.e(e)
@@ -1001,6 +1012,7 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
             val shortOutBuffer = ShortArray(if (isShort) bufferSize else 0)
             var carry = 0            // 0 or 1: a sample of an incomplete stereo frame kept from the last read
             var readFailures = 0
+            var rebuildOnResume = false  // the "가로채기" capture was closed for a pause: start it again
             var pvbWasActive = false
             var lastRoute: JdspChain.Route? = null
             var historySuspended = false
@@ -1047,12 +1059,18 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
 
                 // Suspend core while idle (not while a developer-mode test sound plays: it needs the loop running),
                 // or fully paused while an excluded app is the main window (ForegroundPause; its sessions are released)
-                if((isProcessorIdle && suspendOnIdle || pausedForApp) &&
+                // "가로채기": the players are off the speaker, so the capture must keep reading while anything may play
+                // (no idle stop); paused for an excluded app it is closed instead, so that app plays by itself
+                if((isProcessorIdle && suspendOnIdle && !recorder.intercepting || pausedForApp) &&
                     !me.timschneeberger.rootlessjamesdsp.pvb.DevTestSound.playing) {
                     if (!historySuspended) buzzDiagnostics.audioDiscontinuity("capture_suspended_idle")
                     historySuspended = true
                     synchronized(ioLock) {
                         if (stopRequested) return
+                        if (recorder.intercepting && recorder.state == AudioRecord.STATE_INITIALIZED) {
+                            try { recorder.release() } catch (ignored: Exception) {}
+                            rebuildOnResume = true
+                        }
                         if(recorder.state == AudioRecord.STATE_INITIALIZED &&
                             recorder.recordingState == AudioRecord.RECORDSTATE_RECORDING)
                             recorder.stop()
@@ -1079,6 +1097,11 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
                     continue
                 }
                 historySuspended = false
+                if (rebuildOnResume) {
+                    rebuildOnResume = false
+                    if (!replaceRecorder()) return
+                    carry = 0
+                }
 
                 // Deep sleep: the capture stays stopped while nothing plays music (a playback change wakes this
                 // thread at once; the timeout notices a research mode or a test sound). It ends when music plays,
@@ -1151,9 +1174,9 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
 
                 // Read; only the samples actually read are processed and played (never the rest of an old block)
                 val got = if (isShort)
-                    recorder.read(shortBuffer, carry, bufferSize - carry, AudioRecord.READ_BLOCKING)
+                    recorder.read(shortBuffer, carry, bufferSize - carry)
                 else
-                    recorder.read(floatBuffer, carry, bufferSize - carry, AudioRecord.READ_BLOCKING)
+                    recorder.read(floatBuffer, carry, bufferSize - carry)
                 if (stopRequested) return
                 if (got <= 0) {
                     // 0: stopped or interrupted; < 0: an error code
@@ -1234,7 +1257,8 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
                             val now = android.os.SystemClock.elapsedRealtimeNanos()
                             if (now - lastMusicCheckNs >= MUSIC_CHECK_NS) {
                                 lastMusicCheckNs = now
-                                goDeep = !audioManager.isMusicActive
+                                // never with "가로채기": while it holds the players, stopping it would silence them
+                                goDeep = !recorder.intercepting && !audioManager.isMusicActive
                             }
                         }
                         if (goDeep) {
@@ -1308,6 +1332,63 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
             .build()
     }
 
+    /** "가로채기" could not run (or ended by itself) in this start: the screen-share capture is used until the next. */
+    @Volatile private var interceptFailed = false
+    /** The fallback was told once in this service run. */
+    private var interceptFallbackNotified = false
+
+    /**
+     * The capture of this start: "가로채기" when chosen and possible (16-bit, read into either buffer type), otherwise
+     * the screen-share AudioRecord. Changing between them re-adds every session: muted for the screen share, left
+     * alone while intercepting (a mute effect would follow the player into the intercepted mix).
+     */
+    private fun buildCapture(encoding: Int, sampleRate: Int, bufferSizeBytes: Int): CaptureSource {
+        val want = CaptureMode.get(this) == CaptureMode.INTERCEPT && !interceptFailed
+        if (want) {
+            val excluded = excludedUids()
+            val src = InterceptSource.start(this, sampleRate, excluded)
+            if (src != null) {
+                setIntercepting(true, null)
+                return src
+            }
+            interceptFailed = true
+            setIntercepting(false, InterceptSource.lastError ?: "unknown")
+        } else setIntercepting(false, null)
+        return RecordSource(buildAudioRecord(encoding, sampleRate, bufferSizeBytes))
+    }
+
+    private fun setIntercepting(on: Boolean, fallbackReason: String?) {
+        CaptureState.fallbackReason = fallbackReason
+        if (CaptureState.intercepting != on) {
+            CaptureState.intercepting = on
+            Timber.i("Capture: ${if (on) "intercept" else "screen share"}")
+            // sessions made for the other capture: drop them, the next poll adds them back the right way
+            sessionManager.sessionDatabase.clearSessions()
+            sessionManager.pollOnce(false)
+        }
+        if (fallbackReason != null && !interceptFallbackNotified) {
+            interceptFallbackNotified = true
+            Timber.w("Intercept capture unavailable ($fallbackReason): screen-share capture")
+            mainHandler.post { ServiceNotificationHelper.pushInterceptFallbackNotification(this, fallbackReason) }
+        }
+    }
+
+    /** Apps whose sound is never captured: restricted ones (when set), the excluded apps, and this app. */
+    private fun excludedUids(): List<Int> {
+        val excluded = (if(excludeRestrictedSessions)
+            sessionManager.sessionPolicyDatabase.getRestrictedUids().toList()
+        else {
+            sessionManager.pollOnce(false)
+            emptyList()
+        }).toMutableList()
+        blockedApps.value?.map { it.uid }?.let { excluded += it }
+        excluded += Process.myUid()
+        sessionManager.sessionDatabase.setExcludedUids(excluded.toTypedArray())
+        sessionManager.pollOnce(false)
+        Timber.d("Excluded UIDs: ${excluded.joinToString("; ")}")
+        return excluded
+    }
+
     @SuppressLint("MissingPermission")
     private fun buildAudioRecord(encoding: Int, sampleRate: Int, bufferSizeBytes: Int): AudioRecord {
         if (!hasRecordPermission()) {
@@ -1326,23 +1407,7 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
             .addMatchingUsage(AudioAttributes.USAGE_GAME)
             .addMatchingUsage(AudioAttributes.USAGE_UNKNOWN)
 
-        val excluded = (if(excludeRestrictedSessions)
-            sessionManager.sessionPolicyDatabase.getRestrictedUids().toList()
-        else {
-            sessionManager.pollOnce(false)
-            emptyList()
-        }).toMutableList()
-
-        blockedApps.value?.map { it.uid }?.let {
-            excluded += it
-        }
-        excluded += Process.myUid()
-
-        excluded.forEach { configBuilder.excludeUid(it) }
-        sessionManager.sessionDatabase.setExcludedUids(excluded.toTypedArray())
-        sessionManager.pollOnce(false)
-
-        Timber.d("buildAudioRecord: Excluded UIDs: ${excluded.joinToString("; ")}")
+        excludedUids().forEach { configBuilder.excludeUid(it) }
 
         return AudioRecord.Builder()
             .setAudioFormat(format)

@@ -228,6 +228,27 @@ object ServiceNotificationHelper: KoinComponent {
                     ?.notify(Notifications.ID_SERVICE_SESSION_LOSS, it)
             }
 
+    /** "가로채기" could not run: the screen-share capture is used (once per service run). */
+    fun pushInterceptFallbackNotification(context: Context, reason: String) {
+        val text = context.getString(R.string.capture_fallback_text)
+        val why = me.timschneeberger.rootlessjamesdsp.capture.captureReasonText(context, reason)
+        NotificationCompat.Builder(context, Notifications.CHANNEL_SERVICE_SESSION_LOSS)
+            .setContentTitle(context.getString(R.string.capture_fallback_title))
+            .setContentText("$why. $text")
+            .setStyle(NotificationCompat.BigTextStyle().bigText("$why. $text"))
+            .setSmallIcon(R.drawable.ic_baseline_warning_24dp)
+            .setAutoCancel(true)
+            .setContentIntent(
+                PendingIntent.getActivity(context, 107,
+                    me.timschneeberger.rootlessjamesdsp.pvb.PvbGeneral.homeIntent(context).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    },
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+            )
+            .build()
+            .let { context.getSystemService<NotificationManager>()?.notify(Notifications.ID_CAPTURE_FALLBACK, it) }
+    }
+
     @RequiresApi(Build.VERSION_CODES.Q)
     fun pushAppIssueNotification(context: Context, projectionIntent: Intent?, appUid: Int) {
         NotificationCompat.Builder(context, Notifications.CHANNEL_SERVICE_APP_COMPAT)
