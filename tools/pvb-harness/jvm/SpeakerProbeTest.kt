@@ -2,6 +2,7 @@ import me.timschneeberger.rootlessjamesdsp.pvb.DevTestKind
 import me.timschneeberger.rootlessjamesdsp.pvb.DevTestSignal
 import me.timschneeberger.rootlessjamesdsp.pvb.FitRng
 import me.timschneeberger.rootlessjamesdsp.pvb.SpeakerProbe
+import me.timschneeberger.rootlessjamesdsp.pvb.SweepDistortion
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.exp
@@ -99,5 +100,32 @@ fun main() {
         check(p.bins().size == p.centers.size && p.bins().all { abs(it.relDb) < 1.0 && it.verdict == SpeakerProbe.Verdict.PLAYS } &&
             p.floorHz() == p.centers.first(), "the app's own sweep, unfiltered: every bin plays, floor ${p.floorHz()?.toInt()} Hz")
     }
+    // --- harmonic distortion by sweep deconvolution: y = x + a2 x^2 + a3 x^3 through a known polynomial
+    run {
+        val amp = 0.18
+        val a2 = 0.5; val a3 = 2.0
+        val lat = 0.3
+        val sw = SweepDistortion.sweep(FS)
+        val x = FloatArray(((lat + DevTestSignal.PROBE_SWEEP_S + 0.6) * FS).toInt()) { i ->
+            val j = i - (lat * FS).toInt()
+            val v = if (j in sw.indices) amp * sw[j] else 0.0
+            (v + a2 * v * v + a3 * v * v * v).toFloat()
+        }
+        val pts = SweepDistortion.analyze(x, FS, lat)!!
+        // analytic: 2nd = a2 A^2/2, 3rd = a3 A^3/4, fundamental = A + 3/4 a3 A^3
+        val fund = amp + 0.75 * a3 * amp * amp * amp
+        val want2 = 20 * kotlin.math.log10(a2 * amp * amp / 2 / fund)
+        val want3 = 20 * kotlin.math.log10(a3 * amp * amp * amp / 4 / fund)
+        val mid = pts.filter { it.hz in 60.0..400.0 }
+        val e2 = mid.filter { it.hz <= 230.0 }.maxOf { abs(it.h2Db - want2) }
+        val e3 = mid.filter { it.hz <= 155.0 }.maxOf { abs(it.h3Db - want3) }
+        check(pts.filter { it.hz > 260.0 }.all { it.h2Db.isNaN() }, "sweep deconvolution: no 2nd harmonic claimed above 250 Hz (outside the sweep)")
+        check(e2 < 1.0 && e3 < 1.0, "sweep deconvolution: 2nd ${"%.1f".format(want2)} dB (60-230 Hz), 3rd ${"%.1f".format(want3)} dB (60-155 Hz) recovered within 1 dB (max error ${"%.2f".format(e2)} / ${"%.2f".format(e3)} dB)")
+        val clean = SweepDistortion.analyze(FloatArray(x.size) { i -> val j = i - (lat * FS).toInt(); if (j in sw.indices) (amp * sw[j]).toFloat() else 0f }, FS, lat)!!
+        check(clean.filter { it.hz in 60.0..230.0 }.all { it.thdDb < -50 }, "sweep deconvolution: a clean sweep shows no harmonics (< -50 dB)")
+        val lin = mid.map { it.linDb }
+        check(lin.max() - lin.min() < 1.0, "sweep deconvolution: the linear response of a flat path is flat (within 1 dB)")
+    }
+
     println("SpeakerProbeTest: $passed checks passed")
 }

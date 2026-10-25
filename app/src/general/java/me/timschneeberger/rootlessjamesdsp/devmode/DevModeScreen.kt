@@ -40,7 +40,9 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
+import me.timschneeberger.rootlessjamesdsp.ui.PagerDot
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -49,7 +51,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -125,6 +126,17 @@ import me.timschneeberger.rootlessjamesdsp.ui.RnNavRow
 import me.timschneeberger.rootlessjamesdsp.ui.RnTheme
 import java.util.Locale
 import kotlin.math.roundToInt
+import me.timschneeberger.rootlessjamesdsp.ui.RnMotion
+import me.timschneeberger.rootlessjamesdsp.ui.rn
+import me.timschneeberger.rootlessjamesdsp.ui.RnPagerDots
+import me.timschneeberger.rootlessjamesdsp.ui.ProvideRnMotion
+import me.timschneeberger.rootlessjamesdsp.ui.RnSliderTrack
+import me.timschneeberger.rootlessjamesdsp.ui.RnSliderColors
+import me.timschneeberger.rootlessjamesdsp.ui.RnStepButton
+import me.timschneeberger.rootlessjamesdsp.ui.RnSwitchVisual
+import me.timschneeberger.rootlessjamesdsp.ui.pressScale
+import me.timschneeberger.rootlessjamesdsp.ui.RnDialogHost
+import me.timschneeberger.rootlessjamesdsp.ui.RnDialogBody
 
 /*
  * Developer-mode screen (Figma "개발자 모드 시안" 1-7, docs/DESIGN.md). Top bar, test sounds, a swipeable graph card
@@ -171,6 +183,8 @@ data class DevUiState(
     val previewing: Boolean = false,
     /** "스피커 확인 (마이크)": null until first used; the last result stays after it stops. */
     val probe: ProbeView? = null,
+    /** "마이크 스펙트럼": null until first used. */
+    val micSpec: MicSpecView? = null,
 )
 
 class DevActions(
@@ -202,6 +216,10 @@ class DevActions(
     val onBassFit: () -> Unit,
     /** Starts or stops "스피커 확인 (마이크)". */
     val onProbe: (Boolean) -> Unit,
+    /** Starts or stops "마이크 스펙트럼". */
+    val onMicSpec: (Boolean) -> Unit,
+    /** "폰 마이크 보정" on the microphone spectrum. */
+    val onMicCorr: (Boolean) -> Unit,
 )
 
 /** Rootnote palette plus the semantic tokens of docs/DESIGN.md 2.2 (res/values{,-night}/colors_rootnote.xml). */
@@ -244,28 +262,19 @@ fun devPalette(dark: Boolean): DevPalette = rootnotePalette().let { rn -> DevPal
 ) }
 
 internal val LocalDevPalette = staticCompositionLocalOf<DevPalette> { error("DevPalette not provided") }
-internal val LocalDevReduceMotion = staticCompositionLocalOf { false }
-
-/** docs/DESIGN.md 6: IosEase for positions/colours, OvershootEase when a thumb is released. */
-internal val IosEase = CubicBezierEasing(0.32f, 0.72f, 0f, 1f)
-internal val OvershootEase = CubicBezierEasing(0.34f, 1.56f, 0.64f, 1f)
-
-@Composable
-internal fun <T> motion(spec: FiniteAnimationSpec<T>): FiniteAnimationSpec<T> =
-    if (LocalDevReduceMotion.current) snap() else spec
-
 /** Orange of the experimental range (gradient "주황" of docs/DESIGN.md 2.3). */
 internal val ExperimentalOrange = Color(0xFFE8892F)
 
 @Composable
-fun DevModeScreen(state: DevUiState, actions: DevActions, reduceMotion: Boolean) {
+fun DevModeScreen(state: DevUiState, actions: DevActions) {
     val dark = (LocalConfiguration.current.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
     val c = devPalette(dark)
     val scheme = if (dark) darkColorScheme(primary = c.fill, background = c.bg, surface = c.bg, onBackground = c.textPrimary,
         onSurface = c.textPrimary, surfaceContainerHigh = c.bg, surfaceContainerLow = c.bg)
     else lightColorScheme(primary = c.fill, background = c.bg, surface = c.bg, onBackground = c.textPrimary,
         onSurface = c.textPrimary, surfaceContainerHigh = c.bg, surfaceContainerLow = c.bg)
-    CompositionLocalProvider(LocalDevPalette provides c, LocalDevReduceMotion provides reduceMotion) {
+    CompositionLocalProvider(LocalDevPalette provides c) {
+      ProvideRnMotion {
         MaterialTheme(colorScheme = scheme) {
             DevContent(state, actions)
             if (state.consentNeeded) ConsentDialog(actions)
@@ -273,6 +282,7 @@ fun DevModeScreen(state: DevUiState, actions: DevActions, reduceMotion: Boolean)
             state.evidenceFor?.let { id -> DevParams.byId(id)?.let { EvidenceSheet(it, state, actions) } }
             if (state.shareOpen) ShareSheet(state, actions)
         }
+      }
     }
 }
 
@@ -309,7 +319,7 @@ private fun DevContent(state: DevUiState, actions: DevActions) {
                     }
                 }
             }
-            PageDots(state.tab)
+            PageDots(pager)
             GroupTabs(state.tab, actions)
             val group = DevGroup.values()[state.tab]
             Row(
@@ -373,7 +383,7 @@ private fun TopBar(actions: DevActions) {
 /** The row that opens "저음 맞추기": the shared kit's navigation row (ui/RnRows.kt), then a divider. */
 @Composable
 private fun BassFitEntry(actions: DevActions) {
-    RnTheme(LocalDevReduceMotion.current) {
+    RnTheme {
         RnNavRow(stringResource(R.string.fit_title), line = stringResource(R.string.fit_entry_line), onClick = actions.onBassFit)
         RnDivider()
     }
@@ -394,10 +404,12 @@ private fun TestSounds(state: DevUiState, actions: DevActions) {
             Chip(stringResource(R.string.dev_test_bass_chord), state.testKind == DevTestKind.BASS_CHORD) { actions.onTest(DevTestKind.BASS_CHORD) }
             Chip(stringResource(R.string.dev_test_music), state.testKind == null && state.probe?.running != true) { actions.onTest(null) }
             Chip(stringResource(R.string.dev_test_probe), state.probe?.running == true) { actions.onProbe(state.probe?.running != true) }
+            Chip(stringResource(R.string.dev_micspec_chip), state.micSpec?.running == true) { actions.onMicSpec(state.micSpec?.running != true) }
         }
         if (!state.serviceRunning) Text(stringResource(R.string.dev_test_off_note), color = c.warnText, fontSize = 13.sp,
             lineHeight = 18.sp, modifier = Modifier.padding(top = 4.dp))
         state.probe?.let { ProbePanel(it) }
+        state.micSpec?.let { MicSpecPanel(it, actions.onMicCorr) }
     }
 }
 
@@ -406,9 +418,8 @@ private fun TestSounds(state: DevUiState, actions: DevActions) {
 private fun Chip(label: String, selected: Boolean, hint: String? = null, onClick: () -> Unit) {
     val c = LocalDevPalette.current
     val interaction = remember { MutableInteractionSource() }
-    val pressed by interaction.collectIsPressedAsState()
-    val scale by animateFloatAsState(if (pressed) 0.94f else 1f, motion(tween(120, easing = IosEase)), label = "chip")
-    val bg by animateColorAsState(if (selected) c.chipSelectedBg else c.bg, motion(tween(300, easing = IosEase)), label = "chipBg")
+    val scale = pressScale(interaction, true, 0.94f)
+    val bg by animateColorAsState(if (selected) c.chipSelectedBg else c.bg, rn(RnMotion.Seed.color()), label = "chipBg")
     Box(
         Modifier.heightIn(min = 48.dp)
             .selectable(selected = selected, interactionSource = interaction, indication = null, role = Role.Button, onClick = onClick)
@@ -416,7 +427,7 @@ private fun Chip(label: String, selected: Boolean, hint: String? = null, onClick
         contentAlignment = Alignment.Center,
     ) {
         Row(
-            Modifier.graphicsLayer { scaleX = scale; scaleY = scale }.heightIn(min = 36.dp)
+            Modifier.graphicsLayer { scaleX = scale.value; scaleY = scale.value }.heightIn(min = 36.dp)
                 .background(bg, CircleShape)
                 .border(1.dp, if (selected) c.chipSelectedBorder else c.chipBorder, CircleShape)
                 .padding(horizontal = 14.dp, vertical = 6.dp),
@@ -436,18 +447,14 @@ private fun Chip(label: String, selected: Boolean, hint: String? = null, onClick
 }
 
 @Composable
-private fun PageDots(page: Int) {
+private fun PageDots(pager: PagerState) {
     val c = LocalDevPalette.current
-    val label = stringResource(R.string.dev_a11y_page, page + 1)
+    val label = stringResource(R.string.dev_a11y_page, pager.currentPage + 1)
     Row(
         Modifier.fillMaxWidth().padding(vertical = 8.dp).semantics(mergeDescendants = true) { contentDescription = label },
         horizontalArrangement = Arrangement.Center,
     ) {
-        for (i in 0 until 3) {
-            val w by animateDpAsState(if (i == page) 18.dp else 6.dp, motion(tween(350, easing = IosEase)), label = "dot")
-            Box(Modifier.padding(horizontal = 3.dp).size(width = w, height = 6.dp)
-                .background(if (i == page) c.fill else c.sliderInactive, CircleShape))
-        }
+        RnPagerDots(pager, 3, c.fill, c.sliderInactive)
     }
 }
 
@@ -533,7 +540,7 @@ internal fun sliderRange(spec: DevSpec, vbAlgo: Int): ClosedFloatingPointRange<F
 @Composable
 private fun cardBg(touched: Boolean): Color {
     val c = LocalDevPalette.current
-    val bg by animateColorAsState(if (touched) c.chipSelectedBg else c.bg, motion(tween(300, easing = IosEase)), label = "card")
+    val bg by animateColorAsState(if (touched) c.chipSelectedBg else c.bg, rn(RnMotion.Seed.color()), label = "card")
     return bg
 }
 
@@ -637,36 +644,16 @@ private fun SliderCard(spec: DevSpec, value: Float, default: Float, state: DevUi
     }
 }
 
-/** 44 dp round button with a minus or plus, inside a 48 dp touch target. */
+/** The shared step button (ui/RnSlider.kt) in the developer mode's colours. */
 @Composable
 private fun StepButton(plus: Boolean, label: String, enabled: Boolean, onClick: () -> Unit) {
     val c = LocalDevPalette.current
-    val interaction = remember { MutableInteractionSource() }
-    val pressed by interaction.collectIsPressedAsState()
-    val scale by animateFloatAsState(if (pressed) 0.94f else 1f, motion(tween(120, easing = IosEase)), label = "step")
-    Box(
-        Modifier.size(48.dp)
-            .clickable(interactionSource = interaction, indication = null, enabled = enabled, role = Role.Button, onClick = onClick)
-            .semantics { contentDescription = label },
-        contentAlignment = Alignment.Center,
-    ) {
-        Box(Modifier.size(44.dp).graphicsLayer { scaleX = scale; scaleY = scale }
-            .background(if (pressed) c.press else c.bg, CircleShape).border(1.dp, c.chipBorder, CircleShape),
-            contentAlignment = Alignment.Center) {
-            Canvas(Modifier.size(18.dp)) {
-                val col = if (enabled) c.textPrimary else c.chevron
-                val y = size.height / 2f
-                drawLine(col, Offset(2f, y), Offset(size.width - 2f, y), strokeWidth = 2.dp.toPx(), cap = StrokeCap.Round)
-                if (plus) drawLine(col, Offset(size.width / 2f, 2f), Offset(size.width / 2f, size.height - 2f),
-                    strokeWidth = 2.dp.toPx(), cap = StrokeCap.Round)
-            }
-        }
-    }
+    RnStepButton(plus, label, enabled, c.bg, c.press, c.chipBorder, c.textPrimary, c.chevron, onClick)
 }
 
 /**
  * Track: recommended range teal, experimental range orange, a dot at the default value, a white thumb (ring orange in
- * the experimental range). Drag or tap; one haptic tick per grid step; TalkBack: range info and set-progress.
+ * the experimental range). It is the shared slider track (ui/RnSlider.kt) with this screen's own painting of the ranges.
  */
 @Composable
 private fun ValueTrack(
@@ -675,86 +662,29 @@ private fun ValueTrack(
     modifier: Modifier, actions: DevActions,
 ) {
     val c = LocalDevPalette.current
-    val haptic = LocalHapticFeedback.current
-    val thumbPx = with(LocalDensity.current) { 26.dp.toPx() }
-    var widthPx by remember { mutableFloatStateOf(0f) }
-    var dragX by remember { mutableFloatStateOf(0f) }
-    var held by remember { mutableStateOf(false) }
-    var lastIndex by remember { mutableIntStateOf(spec.indexOf(value)) }
-    LaunchedEffect(value) { lastIndex = spec.indexOf(value) }
-    val rangeNow by rememberUpdatedState(range)
-    fun frac(v: Float) = ((v - range.start) / (range.endInclusive - range.start)).coerceIn(0f, 1f)
-    fun valueAt(x: Float): Float {
-        val usable = (widthPx - thumbPx).coerceAtLeast(1f)
-        val f = ((x - thumbPx / 2f) / usable).coerceIn(0f, 1f)
-        val r = rangeNow
-        return spec.snap(r.start + f * (r.endInclusive - r.start)).coerceIn(r.start, r.endInclusive)
-    }
-    fun emit(v: Float) {
-        val idx = spec.indexOf(v)
-        if (idx == lastIndex) return
-        lastIndex = idx
-        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-        actions.onValue(spec, v)
-    }
-    val fraction by animateFloatAsState(frac(value), motion(spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMedium)), label = "pos")
-    val thumbScale by animateFloatAsState(if (held) 1.15f else 1f,
-        motion(if (held) tween(120, easing = IosEase) else tween(350, easing = OvershootEase)), label = "thumb")
-    val dragState = rememberDraggableState { d -> dragX += d; emit(valueAt(dragX)) }
     val rangeLabel = stringResource(if (experimental) R.string.dev_range_experimental else R.string.dev_range_recommended)
     val stateText = stringResource(R.string.dev_slider_state, valueText, rangeLabel)
-    val steps = ((range.endInclusive - range.start) / spec.step).roundToInt()
-    Box(
-        modifier.height(48.dp)
-            .onSizeChanged { widthPx = it.width.toFloat() }
-            .semantics(mergeDescendants = true) {
-                contentDescription = name
-                stateDescription = stateText
-                progressBarRangeInfo = ProgressBarRangeInfo(value, range, (steps - 1).coerceAtLeast(0))
-                setProgress { target ->
-                    val v = spec.snap(target).coerceIn(range.start, range.endInclusive)
-                    actions.onValueStart(spec); actions.onValue(spec, v); true
-                }
-            }
-            .draggable(
-                state = dragState, orientation = Orientation.Horizontal,
-                onDragStarted = { start -> held = true; dragX = start.x; actions.onValueStart(spec); emit(valueAt(start.x)) },
-                onDragStopped = { held = false },
-            )
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onPress = { held = true; tryAwaitRelease(); held = false },
-                    onTap = { pos -> actions.onValueStart(spec); emit(valueAt(pos.x)) },
-                )
-            },
-    ) {
-        Canvas(Modifier.fillMaxSize()) {
-            val r = thumbPx / 2f
+    RnSliderTrack(
+        value = value, range = range, step = spec.step, enabled = true, name = name, valueText = stateText,
+        snap = { spec.snap(it) }, default = default, stroke = 6.dp,
+        colors = RnSliderColors(c.fill, c.sliderInactive, c.thumb, c.textSecondary),
+        ring = if (experimental) ExperimentalOrange else c.accentText,
+        onStart = { actions.onValueStart(spec) },
+        onChange = { v -> actions.onValue(spec, v) },
+        modifier = modifier,
+        paintTrack = { start, end, px, _ ->
             val y = size.height / 2f
-            val stroke = 6.dp.toPx()
-            val start = r
-            val end = size.width - r
-            fun x(v: Float) = start + (end - start) * frac(v)
-            val rs = x(rec.start.coerceIn(range.start, range.endInclusive))
-            val re = x(rec.endInclusive.coerceIn(range.start, range.endInclusive))
+            val sw = 6.dp.toPx()
+            val rs = px(rec.start.coerceIn(range.start, range.endInclusive))
+            val re = px(rec.endInclusive.coerceIn(range.start, range.endInclusive))
+            val lo = minOf(rs, re); val hi = maxOf(rs, re)
             val orange = ExperimentalOrange.copy(alpha = 0.45f)
             val teal = c.fill.copy(alpha = 0.32f)
-            if (rs > start + 0.5f) drawLine(orange, Offset(start, y), Offset(rs, y), strokeWidth = stroke, cap = StrokeCap.Round)
-            if (re < end - 0.5f) drawLine(orange, Offset(re, y), Offset(end, y), strokeWidth = stroke, cap = StrokeCap.Round)
-            drawLine(teal, Offset(rs, y), Offset(re, y), strokeWidth = stroke, cap = StrokeCap.Round)
-            // default value: a small dot under the track
-            drawCircle(c.textSecondary, radius = 2.5.dp.toPx(), center = Offset(x(default.coerceIn(range.start, range.endInclusive)), y + 12.dp.toPx()))
-        }
-        Box(
-            Modifier.align(Alignment.CenterStart)
-                .offset { IntOffset(((widthPx - thumbPx).coerceAtLeast(0f) * fraction).roundToInt(), 0) }
-                .size(26.dp)
-                .graphicsLayer { scaleX = thumbScale; scaleY = thumbScale }
-                .shadow(3.dp, CircleShape)
-                .background(c.thumb, CircleShape)
-                .border(if (held) 3.dp else 2.dp, if (experimental) ExperimentalOrange else c.accentText, CircleShape)
-        )
-    }
+            if (lo > start + 0.5f) drawLine(orange, Offset(start, y), Offset(lo, y), strokeWidth = sw, cap = StrokeCap.Round)
+            if (hi < end - 0.5f) drawLine(orange, Offset(hi, y), Offset(end, y), strokeWidth = sw, cap = StrokeCap.Round)
+            drawLine(teal, Offset(lo, y), Offset(hi, y), strokeWidth = sw, cap = StrokeCap.Round)
+        },
+    )
 }
 
 @Composable
@@ -781,15 +711,11 @@ private fun SwitchCard(spec: DevSpec, on: Boolean, state: DevUiState, actions: D
     }
 }
 
-/** 51 x 31 dp, thumb 27 dp at 2 / 22 dp (docs/DESIGN.md 5). Visual only: the row carries the semantics. */
+/** The shared switch (ui/RnControls.kt) in the developer mode's colours. Visual only: the row carries the semantics. */
 @Composable
 private fun DevSwitch(on: Boolean) {
     val c = LocalDevPalette.current
-    val x by animateDpAsState(if (on) 22.dp else 2.dp, motion(tween(350, easing = IosEase)), label = "sw")
-    val track by animateColorAsState(if (on) c.fill else c.switchOff, motion(tween(300, easing = IosEase)), label = "swTrack")
-    Box(Modifier.size(width = 51.dp, height = 31.dp).background(track, CircleShape)) {
-        Box(Modifier.offset(x = x, y = 2.dp).size(27.dp).shadow(3.dp, CircleShape).background(c.thumb, CircleShape))
-    }
+    RnSwitchVisual(on, on = c.fill, off = c.switchOff, thumb = c.thumb)
 }
 
 // ------------------------------------------------------------------------------------------------ settings, bottom bar
@@ -839,7 +765,7 @@ private fun BottomBar(state: DevUiState, actions: DevActions) {
     ) {
         val holdLabel = stringResource(if (state.abHolding) R.string.dev_ab_holding else R.string.dev_ab_hold)
         val holdA11y = stringResource(R.string.dev_ab_hold_a11y)
-        val bg by animateColorAsState(if (state.abHolding) c.accentText else c.fill, motion(tween(120, easing = IosEase)), label = "ab")
+        val bg by animateColorAsState(if (state.abHolding) c.accentText else c.fill, rn(RnMotion.Seed.color()), label = "ab")
         val holding by rememberUpdatedState(state.abHolding)
         Box(
             Modifier.weight(1f).heightIn(min = 52.dp).background(bg, CircleShape)
@@ -907,24 +833,23 @@ private fun IconAction(label: String, enabled: Boolean, onClick: () -> Unit, ico
 @Composable
 private fun ConsentDialog(actions: DevActions) {
     val c = LocalDevPalette.current
-    AlertDialog(
-        onDismissRequest = { actions.onConsent(false) },
-        containerColor = c.bg,
-        shape = RoundedCornerShape(28.dp),
-        title = { Text(stringResource(R.string.dev_consent_title), color = c.textPrimary, fontSize = 22.sp, lineHeight = 30.sp, fontWeight = FontWeight.Bold) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                for (res in listOf(R.string.dev_consent_1, R.string.dev_consent_2, R.string.dev_consent_3, R.string.dev_consent_4)) {
-                    Row {
-                        Box(Modifier.padding(top = 8.dp, end = 10.dp).size(5.dp).background(c.fill, CircleShape))
-                        Text(stringResource(res), color = c.textPrimary, fontSize = 15.sp, lineHeight = 21.sp)
+    RnDialogHost(onDismissRequest = { actions.onConsent(false) }, containerColor = c.bg) { close ->
+        RnDialogBody(
+            title = { Text(stringResource(R.string.dev_consent_title), color = c.textPrimary, fontSize = 22.sp, lineHeight = 30.sp, fontWeight = FontWeight.Bold) },
+            text = {
+                Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    for (res in listOf(R.string.dev_consent_1, R.string.dev_consent_2, R.string.dev_consent_3, R.string.dev_consent_4)) {
+                        Row {
+                            Box(Modifier.padding(top = 8.dp, end = 10.dp).size(5.dp).background(c.fill, CircleShape))
+                            Text(stringResource(res), color = c.textPrimary, fontSize = 15.sp, lineHeight = 21.sp)
+                        }
                     }
                 }
-            }
-        },
-        dismissButton = { OutlineButton(stringResource(R.string.dev_consent_cancel)) { actions.onConsent(false) } },
-        confirmButton = { FilledButton(stringResource(R.string.dev_consent_ok)) { actions.onConsent(true) } },
-    )
+            },
+            dismissButton = { OutlineButton(stringResource(R.string.dev_consent_cancel)) { close { actions.onConsent(false) } } },
+            confirmButton = { FilledButton(stringResource(R.string.dev_consent_ok)) { close { actions.onConsent(true) } } },
+        )
+    }
 }
 
 @Composable
@@ -958,42 +883,41 @@ private fun WarningDialog(d: DevDialog, actions: DevActions) {
         DevWarning.NEAR_CEILING -> Triple(R.string.dev_warn_ceiling_title, stringResource(R.string.dev_warn_ceiling_body), R.string.dev_warn_action_ceiling)
         DevWarning.UNMEASURED -> Triple(R.string.dev_warn_unmeasured_title, stringResource(R.string.dev_warn_unmeasured_body), null)
     }
-    AlertDialog(
-        onDismissRequest = { actions.onDialogClose(false, false) },
-        containerColor = c.bg,
-        shape = RoundedCornerShape(28.dp),
-        title = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(10.dp).background(c.warnDot, CircleShape))
-                Spacer(Modifier.width(10.dp))
-                Text(stringResource(title), color = c.textPrimary, fontSize = 20.sp, lineHeight = 26.sp, fontWeight = FontWeight.Bold)
-            }
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(body, color = c.textPrimary, fontSize = 15.sp, lineHeight = 21.sp)
-                if (d.offerHide) {
-                    Row(
-                        Modifier.fillMaxWidth().heightIn(min = 48.dp)
-                            .toggleable(value = hide, role = Role.Checkbox, onValueChange = { hide = it }),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Checkbox(checked = hide, onCheckedChange = null,
-                            colors = CheckboxDefaults.colors(checkedColor = c.fill, uncheckedColor = c.chevron, checkmarkColor = c.onFill))
-                        Spacer(Modifier.width(8.dp))
-                        Column {
-                            Text(stringResource(R.string.dev_warn_hide), color = c.textPrimary, fontSize = 15.sp, lineHeight = 21.sp, fontWeight = FontWeight.Bold)
-                            Text(stringResource(R.string.dev_warn_hide_note), color = c.textSecondary, fontSize = 12.sp, lineHeight = 16.sp)
+    RnDialogHost(onDismissRequest = { actions.onDialogClose(false, false) }, containerColor = c.bg) { close ->
+        RnDialogBody(
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(10.dp).background(c.warnDot, CircleShape))
+                    Spacer(Modifier.width(10.dp))
+                    Text(stringResource(title), color = c.textPrimary, fontSize = 20.sp, lineHeight = 26.sp, fontWeight = FontWeight.Bold)
+                }
+            },
+            text = {
+                Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(body, color = c.textPrimary, fontSize = 15.sp, lineHeight = 21.sp)
+                    if (d.offerHide) {
+                        Row(
+                            Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                                .toggleable(value = hide, role = Role.Checkbox, onValueChange = { hide = it }),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Checkbox(checked = hide, onCheckedChange = null,
+                                colors = CheckboxDefaults.colors(checkedColor = c.fill, uncheckedColor = c.chevron, checkmarkColor = c.onFill))
+                            Spacer(Modifier.width(8.dp))
+                            Column {
+                                Text(stringResource(R.string.dev_warn_hide), color = c.textPrimary, fontSize = 15.sp, lineHeight = 21.sp, fontWeight = FontWeight.Bold)
+                                Text(stringResource(R.string.dev_warn_hide_note), color = c.textSecondary, fontSize = 12.sp, lineHeight = 16.sp)
+                            }
                         }
                     }
                 }
-            }
-        },
-        dismissButton = if (action != null) {
-            { TextAction(stringResource(action), bold = true) { actions.onDialogClose(hide, true) } }
-        } else null,
-        confirmButton = { FilledButton(stringResource(R.string.dev_warn_ok)) { actions.onDialogClose(hide, false) } },
-    )
+            },
+            dismissButton = if (action != null) {
+                { TextAction(stringResource(action), bold = true) { close { actions.onDialogClose(hide, true) } } }
+            } else null,
+            confirmButton = { FilledButton(stringResource(R.string.dev_warn_ok)) { close { actions.onDialogClose(hide, false) } } },
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

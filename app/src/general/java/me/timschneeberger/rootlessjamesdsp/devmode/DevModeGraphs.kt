@@ -3,6 +3,7 @@ package me.timschneeberger.rootlessjamesdsp.devmode
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -55,6 +56,8 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlin.math.sin
+import me.timschneeberger.rootlessjamesdsp.ui.RnMotion
+import me.timschneeberger.rootlessjamesdsp.ui.rn
 
 /*
  * The three graph pages of the developer-mode screen (Figma "개발자 모드 시안" 1-3, docs/DESIGN.md 5): harmonic bars,
@@ -326,7 +329,7 @@ private fun GaugeA(rel: Float?, status: DevMath.GaugeStatus?, emphasiseThreshold
     val c = LocalDevPalette.current
     val tm = rememberTextMeasurer()
     val target = rel?.let { DevMath.gaugeFraction(it) } ?: 0f
-    val f by animateFloatAsState(target, motion(tween(120, easing = LinearEasing)), label = "gauge")
+    val f by animateFloatAsState(target, rn(RnMotion.clock(120)), label = "gauge")
     val thresholdText = stringResource(R.string.dev_gauge_threshold)
     Column(Modifier.fillMaxWidth()) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -394,14 +397,14 @@ private val VuRed = Color(0xFFB3261E)
 
 /**
  * Optional style: an analog VU-style needle meter. Ivory face in a dark bezel, black scale -12 .. +2 dB re the
- * protection threshold (0 = threshold), red arc 0..+2, thin needle over +-56 degrees with about 300 ms smoothing, a
+ * protection threshold (0 = threshold), red arc 0..+2, thin needle over +-56 degrees with a damped spring (RnMotion.Apple.needle), a
  * small status lamp with its word. Same colours in both themes (it is a physical object).
  */
 @Composable
 private fun VuMeter(rel: Float?, status: DevMath.GaugeStatus?) {
     val tm = rememberTextMeasurer()
     val target = DevMath.vuFraction(rel ?: (DevMath.VU_MIN_DB - 6f))
-    val f by animateFloatAsState(target, motion(tween(300, easing = LinearOutSlowInEasing)), label = "needle")
+    val f by animateFloatAsState(target, rn(RnMotion.Apple.needle()), label = "needle")
     val caption = stringResource(R.string.dev_vu_caption)
     val word = status?.let { statusText(it) } ?: ""
     Box(Modifier.fillMaxWidth().background(VuBezel, RoundedCornerShape(20.dp)).padding(12.dp)) {

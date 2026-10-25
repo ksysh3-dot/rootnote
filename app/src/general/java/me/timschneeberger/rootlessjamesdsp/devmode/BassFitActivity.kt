@@ -41,6 +41,8 @@ import me.timschneeberger.rootlessjamesdsp.pvb.FitVariant
 import me.timschneeberger.rootlessjamesdsp.pvb.FloorStaircase
 import me.timschneeberger.rootlessjamesdsp.pvb.NoiseGate
 import me.timschneeberger.rootlessjamesdsp.pvb.NoiseMasking
+import me.timschneeberger.rootlessjamesdsp.pvb.MicCal
+import me.timschneeberger.rootlessjamesdsp.pvb.SweepDistortion
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbBuild
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbGeneral
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbRuntime
@@ -299,14 +301,18 @@ class BassFitActivity : RnActivity() {
                 val sig = m.copy(refFrom + ((lat + 0.3) * fs).toLong(), (1.8 * fs).toInt())
                 val verdict = NoiseGate.judge(room, sig, fs)
                 val bands = room?.let { NoiseGate.bandLevels(it, fs, NoiseGate.TEST_BANDS) }
-                val probe = m.copy(probeFrom, ((PROBE_RECORD_S - 0.2) * fs).toInt())?.let { SpeakerProbe(fs).analyze(it, lat) }
+                val probeRec = m.copy(probeFrom, ((PROBE_RECORD_S - 0.2) * fs).toInt())
+                val probe = probeRec?.let { SpeakerProbe(fs).analyze(it, lat) }
+                val thd = probeRec?.let { try { SweepDistortion.analyze(it, fs, lat) } catch (_: Exception) { null } }
                 main.post {
                     if (t != token || isFinishing) return@post
                     latencyS = lat
                     roomBands = bands
                     roomRaw = m.unprocessed
-                    if (ui.noiseCorr) session?.let { it.noiseBandsDb = bands; it.noiseSplOffsetDb = NoiseMasking.splOffsetDb(m.unprocessed) }
-                    ui = ui.copy(micFloorHz = probe?.floorHz(), micClipped = probe?.clipped == true)
+                    if (ui.noiseCorr) session?.let { applyNoise(it, bands, m.unprocessed) }
+                    ui = ui.copy(micFloorHz = probe?.floorHz(), micClipped = probe?.clipped == true,
+                        micThd = thd?.takeIf { probe?.clipped != true }?.let { SweepDistortion.line(it) }?.takeIf { it.isNotEmpty() },
+                        micThd100 = thd?.takeIf { probe?.clipped != true }?.let { SweepDistortion.thdAt(it, 100.0) })
                     if (verdict.pass) {
                         ui = ui.copy(verdict = verdict)
                         beginTest()
@@ -571,6 +577,10 @@ class BassFitActivity : RnActivity() {
         onLogCopy = { copyLog() },
         onLogSend = { sendLog() },
         onLogClear = { logFile.delete(); ui = ui.copy(logLines = 0) },
+        onMicCalRoom = { micCal(noise = false) },
+        onMicCalNoise = { micCal(noise = true) },
+        onMicCalSend = { sendMicCal() },
+        onMicCalClear = { micCalFile.delete(); ui = ui.copy(micCalRows = 0) },
         onValBack = { stopUmik(); stopAll(); ui = introState() },
     )
 
@@ -580,7 +590,8 @@ class BassFitActivity : RnActivity() {
 
     private fun validateState(): FitUi = ui.copy(
         screen = FitScreen.VALIDATE, validating = false, prompt = null, playing = null, paused = null,
-        ready = engineReady(), logLines = logLines().coerceAtLeast(0), umikPlaying = null,
+        ready = engineReady(), logLines = logLines().coerceAtLeast(0), umikPlaying = null, micCalRows = micCalRows(),
+        micDeclared = declaredMicLine(),
     )
 
     private fun endValidation() {
@@ -619,7 +630,7 @@ class BassFitActivity : RnActivity() {
         conditionHp = p.runs[planIndex]
         planIndex++
         session = BassFitSession(SecureRandom().nextLong(), stored().vbLevelDb.toDouble(), ui.valScope)
-            .also { if (ui.noiseCorr) { it.noiseBandsDb = roomBands; it.noiseSplOffsetDb = NoiseMasking.splOffsetDb(roomRaw == true) } }
+            .also { if (ui.noiseCorr) applyNoise(it, roomBands, roomRaw == true) }
         // the microphone (silent-interval checks) only for the step-1 runs
         if (ui.valScope == FitScope.FLOOR && mic == null &&
             ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED)
@@ -654,6 +665,8 @@ class BassFitActivity : RnActivity() {
             refDb = r.refThresholdDb.takeIf { floor },
             noiseCorrDb = r.noiseCorrectionDb.takeIf { floor },
             micSource = roomRaw?.let { if (it) "unprocessed" else "voice_recognition" },
+            micDeclaredDbfs = declaredMic?.sensDbfs,
+            micThd100Db = ui.micThd100.takeIf { floor && conditionHp == null },
         ))
         ui = ui.copy(screen = FitScreen.VAL_NEXT, prompt = null, playing = null, logLines = logLines().coerceAtLeast(0))
     }
@@ -691,6 +704,134 @@ class BassFitActivity : RnActivity() {
     }
 
     private fun toast(res: Int) = Toast.makeText(this, res, Toast.LENGTH_SHORT).show()
+
+    // ------------------------------------------------------------------------------------------------ declared microphone
+
+    private val declaredMic: DeclaredMic? by lazy { DeclaredMic.read(this) }
+
+    /** Noise correction for [s]: the room's band levels and the source's offset (the phone's value where usable). */
+    private fun applyNoise(s: BassFitSession, bands: DoubleArray?, unprocessed: Boolean) {
+        val (offset, fromPhone) = NoiseMasking.offsetFor(unprocessed, declaredMic?.sensDbfs)
+        s.noiseBandsDb = bands
+        s.noiseSplOffsetDb = offset
+        s.noiseSensFromPhone = fromPhone
+    }
+
+    /** One line for the screens: what the phone declares (or that it declares nothing). */
+    private fun declaredMicLine(): String {
+        val d = declaredMic
+        fun f(v: Double) = String.format(Locale.ROOT, "%.1f", v)
+        return if (d?.sensDbfs == null) getString(R.string.fit_mic_declared_none)
+        else getString(R.string.fit_mic_declared, f(d.sensDbfs), d.responseAt(100.0)?.let(::f) ?: "—")
+    }
+
+    // ------------------------------------------------------------------------------------------------ microphone calibration
+
+    private val micCalFile by lazy { File(filesDir, MIC_CAL_FILE) }
+    /** Room levels per recording source from the last "방 소음 재기". */
+    private var micCalRoom: Map<String, DoubleArray> = emptyMap()
+
+    private fun micCalRows(): Int = try {
+        if (micCalFile.exists()) (micCalFile.readLines().size - 1).coerceAtLeast(0) else 0
+    } catch (_: Exception) { 0 }
+
+    /** The recording sources to calibrate: UNPROCESSED where the phone offers it, and VOICE_RECOGNITION. */
+    private fun micCalSources(): List<Pair<String, Int>> {
+        val raw = getSystemService(AudioManager::class.java)
+            ?.getProperty(AudioManager.PROPERTY_SUPPORT_AUDIO_SOURCE_UNPROCESSED) == "true"
+        return (if (raw) listOf(SRC_RAW to MediaRecorder.AudioSource.UNPROCESSED) else emptyList()) +
+            listOf(SRC_VOICE to MediaRecorder.AudioSource.VOICE_RECOGNITION)
+    }
+
+    private fun sourceLabel(name: String) = getString(if (name == SRC_RAW) R.string.fit_mcal_src_raw else R.string.fit_mcal_src_voice)
+
+    /**
+     * Records [MIC_CAL_S] s from each source in turn (one after the other: two sources can't record at once) and
+     * keeps the third-octave levels: the room ([noise] false), or the PC's pink noise (true, logged with the room).
+     */
+    private fun micCal(noise: Boolean) {
+        if (ui.micCalPhase != null) return
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            toast(R.string.dev_probe_nomic); return
+        }
+        stopUmik()
+        keepScreenOn(true)
+        ui = ui.copy(micCalPhase = if (noise) 1 else 0, micCalLines = emptyList())
+        val sources = micCalSources()
+        Thread({
+            val fs = FitMic.FS.toDouble()
+            val got = LinkedHashMap<String, DoubleArray>()
+            for ((name, src) in sources) recordSource(src, MIC_CAL_S)?.let { got[name] = MicCal.levels(it, fs) }
+            main.post {
+                keepScreenOn(false)
+                if (isFinishing) return@post
+                val k = MicCal.BANDS.indexOfFirst { it == 1000.0 }
+                fun db(v: Double) = if (v.isFinite()) String.format(Locale.ROOT, "%.1f", v) else "—"
+                if (got.isEmpty()) { toast(R.string.dev_probe_nomic); ui = ui.copy(micCalPhase = null); return@post }
+                if (!noise) {
+                    micCalRoom = got
+                    ui = ui.copy(micCalPhase = null, micCalRoomDone = true,
+                        micCalLines = got.map { (n, l) -> getString(R.string.fit_mcal_line_room, sourceLabel(n), db(l[k])) })
+                } else {
+                    val lines = ArrayList<String>()
+                    val rows = ArrayList<String>()
+                    for ((n, l) in got) {
+                        val room = micCalRoom[n] ?: DoubleArray(MicCal.BANDS.size) { Double.NaN }
+                        val sig = MicCal.signal(room, l)
+                        lines += getString(R.string.fit_mcal_line_noise, sourceLabel(n), db(l[k]), sig.count { it.isFinite() }, sig.size)
+                        rows += MicCal.line(now(), Build.MODEL ?: "", n, room, l)
+                    }
+                    try {
+                        if (!micCalFile.exists() || micCalFile.length() == 0L) micCalFile.writeText(MicCal.HEADER + "\n")
+                        micCalFile.appendText(rows.joinToString("\n") + "\n")
+                    } catch (_: Exception) {}
+                    ui = ui.copy(micCalPhase = null, micCalLines = lines, micCalRows = micCalRows())
+                }
+            }
+        }, "bass-fit-mic-cal").start()
+    }
+
+    /** [seconds] of one recording source (after 0.5 s to settle), or null when it can't record. Blocking. */
+    private fun recordSource(source: Int, seconds: Double): FloatArray? {
+        val fs = FitMic.FS
+        val minBuf = AudioRecord.getMinBufferSize(fs, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_FLOAT)
+        val rec = try {
+            @Suppress("MissingPermission")
+            AudioRecord(source, fs, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_FLOAT, maxOf(minBuf, fs / 2))
+        } catch (_: Exception) { return null }
+        if (rec.state != AudioRecord.STATE_INITIALIZED) { rec.release(); return null }
+        try {
+            rec.startRecording()
+            val skip = fs / 2
+            val n = (seconds * fs).toInt()
+            val out = FloatArray(n)
+            val buf = FloatArray(fs / 50)
+            var at = -skip
+            while (at < n) {
+                val r = rec.read(buf, 0, buf.size, AudioRecord.READ_BLOCKING)
+                if (r <= 0) return null
+                for (i in 0 until r) { val j = at + i; if (j in 0 until n) out[j] = buf[i] }
+                at += r
+            }
+            return out
+        } catch (_: Exception) {
+            return null
+        } finally {
+            try { rec.stop() } catch (_: Exception) {}
+            rec.release()
+        }
+    }
+
+    private fun sendMicCal() {
+        val text = try { if (micCalFile.exists()) micCalFile.readText() else "" } catch (_: Exception) { "" }
+        if (text.isEmpty()) return
+        try {
+            startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("text/plain")
+                .putExtra(Intent.EXTRA_SUBJECT, MIC_CAL_FILE).putExtra(Intent.EXTRA_TEXT, text), getString(R.string.fit_mcal_title)))
+        } catch (_: Exception) {
+            toast(R.string.no_activity_found)
+        }
+    }
 
     /**
      * UMIK-1 sound for virtual speaker [i] (shown, not hidden: this is for the measuring microphone): pink noise for
@@ -768,6 +909,11 @@ class BassFitActivity : RnActivity() {
         private const val CHECK_SALT = 0x5EEDC0DEL
         /** The validation log in the app's own files (copied or sent from the screen). */
         const val LOG_FILE = "bass_fit_validation.csv"
+        /** "마이크 맞추기": band levels of the phone microphone per source (no audio). */
+        const val MIC_CAL_FILE = "bass_fit_mic_cal.csv"
+        const val MIC_CAL_S = 12.0
+        const val SRC_RAW = "unprocessed"
+        const val SRC_VOICE = "voice_recognition"
         /** UMIK-1 sound: pink noise long enough for REW's RTA to settle, before the probe sweep. */
         private const val UMIK_PINK_S = 20.0
         /** The probe sweep (9 s) plus up to about 0.8 s of latency. */

@@ -76,7 +76,6 @@ class HomeActivity : BaseActivity() {
     private lateinit var captureLauncher: ActivityResultLauncher<Intent>
 
     private var uiState by mutableStateOf<HomeUiState?>(null)
-    private var reduceMotion by mutableStateOf(false)
 
     /** "Custom" tapped on this screen: stays selected until a preset chip is tapped. */
     private var customPinned = false
@@ -198,10 +197,9 @@ class HomeActivity : BaseActivity() {
             return
         }
 
-        reduceMotion = animationsOff()
         refresh()
         setContent {
-            uiState?.let { HomeScreen(it, actions, reduceMotion) }
+            uiState?.let { HomeScreen(it, actions) }
         }
 
         // Not confirmed yet: the welcome over the home screen ("확인하고 시작하기" starts processing right away), unless
@@ -242,7 +240,6 @@ class HomeActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
-        reduceMotion = animationsOff()
         refresh()
         mainHandler.removeCallbacks(pressurePoll)
         mainHandler.postDelayed(pressurePoll, 1000L)
@@ -327,12 +324,6 @@ class HomeActivity : BaseActivity() {
             if (next != limiterPressure) { limiterPressure = next; refresh() }
             mainHandler.postDelayed(this, 1000L)
         }
-    }
-
-    private fun animationsOff(): Boolean = try {
-        Settings.Global.getFloat(contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
-    } catch (e: Exception) {
-        false
     }
 
     // ------------------------------------------------------------------------------------------------ actions

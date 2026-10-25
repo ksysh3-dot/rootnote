@@ -22,7 +22,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -55,6 +54,25 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.animation.core.Animatable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.DialogWindowProvider
+import kotlinx.coroutines.launch
 
 /*
  * Dialogs and sheets (docs/DESIGN.md 4/5: 대화상자 radius 28, 시트 top radius 28 with a 36×4 handle), written as the
@@ -64,6 +82,94 @@ import androidx.compose.ui.unit.sp
 
 /** One option of a choice sheet: [label] with an optional [line] under it. */
 data class RnChoice<T>(val value: T, val label: String, val line: String? = null)
+
+/**
+ * The dialog window of the general build (docs/DESIGN.md 6 대화상자). The window's own animation and dim are off; the
+ * scrim fades in and the card rises from 0.96 (Seed enter, 300 ms), and a dismissal runs Seed exit (200 ms) *before*
+ * the action it was asked for: [content] gets `close`, and `close { action }` plays the exit and then calls `action`.
+ * Back and a tap on the scrim dismiss through [onDismissRequest]; `null` means the dialog cannot be dismissed that
+ * way (a progress dialog). Input is never blocked while it comes in.
+ */
+@Composable
+fun RnDialogHost(
+    onDismissRequest: (() -> Unit)?,
+    containerColor: Color,
+    content: @Composable ColumnScope.(close: (() -> Unit) -> Unit) -> Unit,
+) {
+    val enter = rn(RnMotion.Seed.enter<Float>())
+    val exit = rn(RnMotion.Seed.exit<Float>())
+    val shown = remember { Animatable(0f) }
+    val scope = rememberCoroutineScope()
+    var closing by remember { mutableStateOf(false) }
+    val dismissNow by rememberUpdatedState(onDismissRequest)
+    LaunchedEffect(Unit) { shown.animateTo(1f, enter) }
+    fun close(then: () -> Unit) {
+        if (closing) return
+        closing = true
+        scope.launch {
+            shown.animateTo(0f, exit)
+            then()
+            // the action did not remove this dialog (it stays open in the caller's state): show it again, never leave
+            // an invisible scrim over the page
+            closing = false
+            shown.animateTo(1f, enter)
+        }
+    }
+    fun dismiss() { dismissNow?.let { d -> close(d) } }
+    Dialog(
+        onDismissRequest = { dismiss() },
+        properties = DialogProperties(
+            dismissOnBackPress = onDismissRequest != null, dismissOnClickOutside = false,
+            usePlatformDefaultWidth = false, decorFitsSystemWindows = false,
+        ),
+    ) {
+        val window = (LocalView.current.parent as? DialogWindowProvider)?.window
+        SideEffect { window?.setWindowAnimations(-1); window?.setDimAmount(0f) }
+        Box(
+            Modifier.fillMaxSize()
+                .pointerInput(Unit) { detectTapGestures { dismiss() } }
+                .drawBehind { drawRect(Color.Black.copy(alpha = 0.32f * shown.value)) }
+                .safeDrawingPadding()
+                .padding(24.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Column(
+                Modifier.widthIn(min = 280.dp, max = 560.dp)
+                    .graphicsLayer { val k = 0.96f + 0.04f * shown.value; scaleX = k; scaleY = k; alpha = shown.value }
+                    .background(containerColor, RoundedCornerShape(28.dp))
+                    .pointerInput(Unit) { detectTapGestures { } }
+                    .padding(24.dp),
+            ) { content(::close) }
+        }
+    }
+}
+
+/** Title, body and the button row of a dialog card (the AlertDialog layout: 16 dp under the title, 24 dp over the buttons). */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun ColumnScope.RnDialogBody(
+    title: @Composable () -> Unit,
+    text: (@Composable () -> Unit)? = null,
+    dismissButton: (@Composable () -> Unit)? = null,
+    confirmButton: (@Composable () -> Unit)? = null,
+) {
+    title()
+    if (text != null) {
+        Spacer(Modifier.height(16.dp))
+        Box(Modifier.weight(1f, fill = false)) { text() }
+    }
+    if (dismissButton != null || confirmButton != null) {
+        Spacer(Modifier.height(24.dp))
+        FlowRow(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            dismissButton?.invoke()
+            confirmButton?.invoke()
+        }
+    }
+}
 
 /** A simple message dialog. [dismissLabel] null: one button only. */
 @Composable
@@ -80,27 +186,26 @@ fun RnDialog(
     content: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
     val c = LocalRn.current
-    AlertDialog(
-        onDismissRequest = { if (dismissible) onDismiss() },
-        containerColor = c.bg,
-        shape = RoundedCornerShape(28.dp),
-        title = { RnDialogTitle(title) },
-        text = {
-            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                if (text.isNotEmpty()) Text(text, color = c.textPrimary, fontSize = 15.sp, lineHeight = 21.sp)
-                content?.invoke(this)
-            }
-        },
-        dismissButton = if (dismissLabel != null || neutralLabel != null) {
-            {
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    if (neutralLabel != null) RnTextAction(neutralLabel, onClick = onNeutral)
-                    if (dismissLabel != null) RnTextAction(dismissLabel, onClick = onDismiss)
+    RnDialogHost(onDismissRequest = if (dismissible) onDismiss else null, containerColor = c.bg) { close ->
+        RnDialogBody(
+            title = { RnDialogTitle(title) },
+            text = {
+                Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    if (text.isNotEmpty()) Text(text, color = c.textPrimary, fontSize = 15.sp, lineHeight = 21.sp)
+                    content?.invoke(this)
                 }
-            }
-        } else null,
-        confirmButton = { RnFilledButton(confirmLabel, onClick = onConfirm) },
-    )
+            },
+            dismissButton = if (dismissLabel != null || neutralLabel != null) {
+                {
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        if (neutralLabel != null) RnTextAction(neutralLabel, onClick = { close(onNeutral) })
+                        if (dismissLabel != null) RnTextAction(dismissLabel, onClick = { close(onDismiss) })
+                    }
+                }
+            } else null,
+            confirmButton = { RnFilledButton(confirmLabel, onClick = { close(onConfirm) }) },
+        )
+    }
 }
 
 @Composable
@@ -216,38 +321,37 @@ fun RnInputDialog(
     var error by remember { mutableStateOf<String?>(null) }
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
-    fun submit() {
-        val e = validate(text.trim())
-        if (e == null) onDone(text.trim()) else error = e
+    RnDialogHost(onDismissRequest = onDismiss, containerColor = c.bg) { close ->
+        fun submit() {
+            val e = validate(text.trim())
+            if (e == null) close { onDone(text.trim()) } else error = e
+        }
+        RnDialogBody(
+            title = { RnDialogTitle(title) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (!message.isNullOrEmpty()) Text(message, color = c.textPrimary, fontSize = 15.sp, lineHeight = 21.sp)
+                    OutlinedTextField(
+                        value = text, onValueChange = { text = it; error = null },
+                        modifier = Modifier.fillMaxWidth().focusRequester(focus),
+                        label = hint?.let { { Text(it) } },
+                        suffix = suffix?.let { { Text(it, color = c.textSecondary) } },
+                        singleLine = !(!number && initial.contains('\n')),
+                        isError = error != null,
+                        supportingText = error?.let { { Text(it) } },
+                        keyboardOptions = if (number) KeyboardOptions(keyboardType = KeyboardType.Decimal) else KeyboardOptions.Default,
+                        shape = RoundedCornerShape(14.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = c.fill, unfocusedBorderColor = c.chipBorder, cursorColor = c.fill,
+                            focusedLabelColor = c.accentText, focusedTextColor = c.textPrimary, unfocusedTextColor = c.textPrimary,
+                        ),
+                    )
+                }
+            },
+            dismissButton = { RnTextAction(stringResource(android.R.string.cancel), onClick = { close(onDismiss) }) },
+            confirmButton = { RnFilledButton(stringResource(android.R.string.ok), onClick = ::submit) },
+        )
     }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor = c.bg,
-        shape = RoundedCornerShape(28.dp),
-        title = { RnDialogTitle(title) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (!message.isNullOrEmpty()) Text(message, color = c.textPrimary, fontSize = 15.sp, lineHeight = 21.sp)
-                OutlinedTextField(
-                    value = text, onValueChange = { text = it; error = null },
-                    modifier = Modifier.fillMaxWidth().focusRequester(focus),
-                    label = hint?.let { { Text(it) } },
-                    suffix = suffix?.let { { Text(it, color = c.textSecondary) } },
-                    singleLine = !(!number && initial.contains('\n')),
-                    isError = error != null,
-                    supportingText = error?.let { { Text(it) } },
-                    keyboardOptions = if (number) KeyboardOptions(keyboardType = KeyboardType.Decimal) else KeyboardOptions.Default,
-                    shape = RoundedCornerShape(14.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = c.fill, unfocusedBorderColor = c.chipBorder, cursorColor = c.fill,
-                        focusedLabelColor = c.accentText, focusedTextColor = c.textPrimary, unfocusedTextColor = c.textPrimary,
-                    ),
-                )
-            }
-        },
-        dismissButton = { RnTextAction(stringResource(android.R.string.cancel), onClick = onDismiss) },
-        confirmButton = { RnFilledButton(stringResource(android.R.string.ok), onClick = ::submit) },
-    )
 }
 
 /** Multiple choice (checkbox rows) in a dialog; confirm is enabled when something is picked (unless [allowNone]). */
@@ -263,55 +367,55 @@ fun <T> RnMultiChoiceDialog(
 ) {
     val c = LocalRn.current
     val picked = remember { mutableStateListOf<T>().apply { addAll(initial) } }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor = c.bg,
-        shape = RoundedCornerShape(28.dp),
-        title = { RnDialogTitle(title) },
-        text = {
-            Column(Modifier.verticalScroll(rememberScrollState())) {
-                for (ch in choices) {
-                    val on = ch.value in picked
-                    Row(
-                        Modifier.fillMaxWidth().heightIn(min = 48.dp)
-                            .toggleable(value = on, role = Role.Checkbox) { if (it) picked.add(ch.value) else picked.remove(ch.value) },
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Checkbox(checked = on, onCheckedChange = null,
-                            colors = CheckboxDefaults.colors(checkedColor = c.fill, uncheckedColor = c.chevron, checkmarkColor = c.onFill))
-                        Spacer(Modifier.width(8.dp))
-                        Column {
-                            Text(ch.label, color = c.textPrimary, fontSize = 15.sp, lineHeight = 21.sp)
-                            if (!ch.line.isNullOrEmpty()) Text(ch.line, color = c.textSecondary, fontSize = 13.sp, lineHeight = 18.sp)
+    RnDialogHost(onDismissRequest = onDismiss, containerColor = c.bg) { close ->
+        RnDialogBody(
+            title = { RnDialogTitle(title) },
+            text = {
+                Column(Modifier.verticalScroll(rememberScrollState())) {
+                    for (ch in choices) {
+                        val on = ch.value in picked
+                        Row(
+                            Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                                .toggleable(value = on, role = Role.Checkbox) { if (it) picked.add(ch.value) else picked.remove(ch.value) },
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Checkbox(checked = on, onCheckedChange = null,
+                                colors = CheckboxDefaults.colors(checkedColor = c.fill, uncheckedColor = c.chevron, checkmarkColor = c.onFill))
+                            Spacer(Modifier.width(8.dp))
+                            Column {
+                                Text(ch.label, color = c.textPrimary, fontSize = 15.sp, lineHeight = 21.sp)
+                                if (!ch.line.isNullOrEmpty()) Text(ch.line, color = c.textSecondary, fontSize = 13.sp, lineHeight = 18.sp)
+                            }
                         }
                     }
                 }
-            }
-        },
-        dismissButton = { RnTextAction(stringResource(android.R.string.cancel), onClick = onDismiss) },
-        confirmButton = {
-            RnFilledButton(confirmLabel, enabled = allowNone || picked.isNotEmpty()) { onConfirm(picked.toList()) }
-        },
-    )
+            },
+            dismissButton = { RnTextAction(stringResource(android.R.string.cancel), onClick = { close(onDismiss) }) },
+            confirmButton = {
+                RnFilledButton(confirmLabel, enabled = allowNone || picked.isNotEmpty()) { close { onConfirm(picked.toList()) } }
+            },
+        )
+    }
 }
 
 /** A progress dialog: title, an indeterminate (or [progress] 0..1) bar, an optional cancel. */
 @Composable
 fun RnProgressDialog(title: String, progress: Float? = null, line: String? = null, onCancel: (() -> Unit)? = null) {
     val c = LocalRn.current
-    AlertDialog(
-        onDismissRequest = {},
-        containerColor = c.bg,
-        shape = RoundedCornerShape(28.dp),
-        title = { RnDialogTitle(title) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                if (progress == null) LinearProgressIndicator(Modifier.fillMaxWidth(), color = c.fill, trackColor = c.sliderInactive)
-                else LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth(), color = c.fill, trackColor = c.sliderInactive)
-                if (!line.isNullOrEmpty()) Text(line, color = c.textSecondary, fontSize = 13.sp, lineHeight = 18.sp)
-            }
-        },
-        confirmButton = { if (onCancel != null) RnTextAction(stringResource(android.R.string.cancel), onClick = onCancel) },
-    )
+    RnDialogHost(onDismissRequest = null, containerColor = c.bg) { close ->
+        RnDialogBody(
+            title = { RnDialogTitle(title) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    if (progress == null) LinearProgressIndicator(Modifier.fillMaxWidth(), color = c.fill, trackColor = c.sliderInactive)
+                    else LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth(), color = c.fill, trackColor = c.sliderInactive)
+                    if (!line.isNullOrEmpty()) Text(line, color = c.textSecondary, fontSize = 13.sp, lineHeight = 18.sp)
+                }
+            },
+            confirmButton = if (onCancel != null) {
+                { RnTextAction(stringResource(android.R.string.cancel), onClick = { close(onCancel) }) }
+            } else null,
+        )
+    }
 }
 

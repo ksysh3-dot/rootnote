@@ -66,7 +66,7 @@ import me.timschneeberger.rootlessjamesdsp.R
 
 /*
  * Page frame and rows (docs/DESIGN.md 1, 4, 5): SEED structure — section title, rows, an 8 dp band between groups,
- * no cards around row groups; rows tint on press (120 ms), switches move with IosEase. Written as the home screen's
+ * no cards around row groups; rows tint on press, switches move with a spring (RnMotion). Written as the home screen's
  * NavRow/SwitchRow/IosSwitch and the developer mode's top bar, buttons and notes.
  */
 
@@ -181,13 +181,11 @@ fun RnSectionTitle(text: String, onInfo: (() -> Unit)? = null, infoLabel: String
 
 // ------------------------------------------------------------------------------------------------ rows
 
-/** The row background: page colour, tinted rn_press while pressed (120 ms). */
+/** The row background: page colour, tinted rn_press at once while pressed and back in 150 ms (docs/DESIGN.md 6). */
 @Composable
 private fun pressTint(interaction: MutableInteractionSource, enabled: Boolean): Color {
     val c = LocalRn.current
-    val pressed by interaction.collectIsPressedAsState()
-    val bg by animateColorAsState(if (pressed && enabled) c.press else c.bg, rnMotion(tween(120)), label = "press")
-    return bg
+    return rnPressTint(interaction, enabled, c.bg, c.press)
 }
 
 /** Title 16/22 and an optional line 13/18 (the home screen's row text). */
@@ -298,15 +296,11 @@ fun RnGroupTitle(title: String, icon: Painter? = null, enabled: Boolean = true) 
     }
 }
 
-/** 51×31, thumb 27 at 2/22, on = fill, off = rn_switch_off (docs/DESIGN.md 5). Visual only. */
+/** The settings switch: [RnSwitchVisual] in the page's colours. Visual only. */
 @Composable
 fun RnSwitch(checked: Boolean) {
     val c = LocalRn.current
-    val x by animateDpAsState(if (checked) 22.dp else 2.dp, rnMotion(tween(350, easing = RnEase)), label = "swX")
-    val track by animateColorAsState(if (checked) c.fill else c.switchOff, rnMotion(tween(300, easing = RnEase)), label = "swT")
-    Box(Modifier.size(width = 51.dp, height = 31.dp).background(track, CircleShape)) {
-        Box(Modifier.offset(x = x, y = 2.dp).size(27.dp).shadow(3.dp, CircleShape).background(c.thumb, CircleShape))
-    }
+    RnSwitchVisual(checked, on = c.fill, off = c.switchOff, thumb = c.thumb)
 }
 
 // ------------------------------------------------------------------------------------------------ text, notes, buttons
@@ -361,23 +355,6 @@ fun RnTextAction(label: String, bold: Boolean = false, color: Color? = null, ena
     }
 }
 
-/** Pressed controls shrink to [to] over 120 ms and settle back with the overshoot (docs/DESIGN.md 6 누름). */
-@Composable
-fun pressScale(interaction: MutableInteractionSource, enabled: Boolean, to: Float = 0.96f): Float {
-    val pressed by interaction.collectIsPressedAsState()
-    val reduce = LocalRnReduceMotion.current
-    val s by animateFloatAsState(
-        if (pressed && enabled) to else 1f,
-        when {
-            reduce -> androidx.compose.animation.core.snap()
-            pressed -> tween(120, easing = RnEase)
-            else -> tween(350, easing = RnOvershoot)
-        },
-        label = "pressScale",
-    )
-    return s
-}
-
 /** Main button: pill, fill colour, 15/21 Bold onFill text, min 48 (docs/DESIGN.md 5 주 버튼). */
 @Composable
 fun RnFilledButton(label: String, modifier: Modifier = Modifier, enabled: Boolean = true, onClick: () -> Unit) {
@@ -385,7 +362,7 @@ fun RnFilledButton(label: String, modifier: Modifier = Modifier, enabled: Boolea
     val interaction = remember { MutableInteractionSource() }
     val scale = pressScale(interaction, enabled)
     Box(
-        modifier.graphicsLayer { scaleX = scale; scaleY = scale }.heightIn(min = 48.dp)
+        modifier.graphicsLayer { scaleX = scale.value; scaleY = scale.value }.heightIn(min = 48.dp)
             .background(if (enabled) c.fill else c.switchOff, CircleShape)
             .clickable(interaction, null, enabled = enabled, role = Role.Button, onClick = onClick)
             .padding(horizontal = 20.dp, vertical = 12.dp),
@@ -403,7 +380,7 @@ fun RnOutlineButton(label: String, modifier: Modifier = Modifier, enabled: Boole
     val interaction = remember { MutableInteractionSource() }
     val scale = pressScale(interaction, enabled)
     Box(
-        modifier.graphicsLayer { scaleX = scale; scaleY = scale }.heightIn(min = 48.dp)
+        modifier.graphicsLayer { scaleX = scale.value; scaleY = scale.value }.heightIn(min = 48.dp)
             .border(1.dp, c.chipBorder, CircleShape)
             .clickable(interaction, null, enabled = enabled, role = Role.Button, onClick = onClick)
             .padding(horizontal = 20.dp, vertical = 12.dp),

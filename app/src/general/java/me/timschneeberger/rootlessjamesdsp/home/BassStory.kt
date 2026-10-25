@@ -27,12 +27,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
@@ -75,6 +77,11 @@ import kotlin.math.ln
 import kotlin.math.log2
 import kotlin.math.max
 import kotlin.math.sin
+import me.timschneeberger.rootlessjamesdsp.ui.ProvideRnMotion
+import me.timschneeberger.rootlessjamesdsp.ui.RnPagerDots
+import me.timschneeberger.rootlessjamesdsp.ui.rememberRnStoryClock
+import me.timschneeberger.rootlessjamesdsp.ui.RnMotion
+import me.timschneeberger.rootlessjamesdsp.ui.LocalRnReduceMotion
 
 /*
  * The EQ explanation as a landscape motion story (BassStoryActivity), in the spatial story's format (SpatialStory.kt):
@@ -110,7 +117,6 @@ internal object PhoneResponse {
     const val MEDIAN_MINUS10_HZ = 206f
 }
 
-private val Ease = CubicBezierEasing(0.32f, 0.72f, 0f, 1f)
 private const val SCENES = 11
 /** The page with "직접 들어 보기" (63 Hz +10 dB at a moment the listener is not told). */
 private const val TRY_PAGE = 6
@@ -145,7 +151,12 @@ data class TryUi(
 class TryActions(val onStart: () -> Unit, val onTap: () -> Unit, val onKind: (Int) -> Unit, val onAgain: () -> Unit)
 
 @Composable
-fun BassStory(reduceMotion: Boolean, trial: TryUi, actions: TryActions, onClose: () -> Unit) {
+fun BassStory(trial: TryUi, actions: TryActions, onClose: () -> Unit) {
+    ProvideRnMotion { BassStoryContent(trial, actions, onClose) }
+}
+
+@Composable
+private fun BassStoryContent(trial: TryUi, actions: TryActions, onClose: () -> Unit) {
     val c = rootnotePalette()
     val items = stringArrayResource(R.array.eq_story)
     val pager = rememberPagerState { SCENES }
@@ -158,13 +169,7 @@ fun BassStory(reduceMotion: Boolean, trial: TryUi, actions: TryActions, onClose:
                 color = c.textPrimary, fontSize = 16.sp, lineHeight = 22.sp, fontWeight = FontWeight.Bold,
                 maxLines = 1, overflow = TextOverflow.Ellipsis,
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                for (i in 0 until SCENES) {
-                    val on = i == pager.currentPage
-                    val w by animateFloatAsState(if (on) 18f else 6f, tween(if (reduceMotion) 0 else 300, easing = Ease), label = "dot")
-                    Box(Modifier.size(width = w.dp, height = 6.dp).background(if (on) c.fill else c.divider, CircleShape))
-                }
-            }
+            RnPagerDots(pager, SCENES, c.fill, c.divider)
             Spacer(Modifier.width(8.dp))
             val closeLabel = stringResource(R.string.home_xtc_info_close)
             Box(
@@ -185,7 +190,7 @@ fun BassStory(reduceMotion: Boolean, trial: TryUi, actions: TryActions, onClose:
                     Modifier.weight(0.58f).fillMaxHeight().padding(vertical = 8.dp).background(c.band, RoundedCornerShape(20.dp)),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Scene(page, reduceMotion, active = page == pager.currentPage, trial = trial)
+                    Scene(page, active = page == pager.currentPage, trial = trial)
                 }
                 val scroll = rememberScrollState()
                 Box(Modifier.weight(0.42f).fillMaxHeight()) {
@@ -256,21 +261,27 @@ private class Ink(val accent: Color, val text: Color, val soft: Color, val grey:
 private val Orange = Color(0xFFE8892F)
 
 @Composable
-private fun Scene(page: Int, reduceMotion: Boolean, active: Boolean, trial: TryUi) {
+private fun Scene(page: Int, active: Boolean, trial: TryUi) {
     val c = rootnotePalette()
     val ink = remember(c) { Ink(c.fill, c.textPrimary, c.textSecondary, c.chevron, Orange, c.bg) }
-    val clock: State<Float> = if (reduceMotion || !active) {
-        remember(page) { mutableFloatStateOf(KEY_FRAMES[page]) }
-    } else {
-        val inf = rememberInfiniteTransition(label = "eq$page")
-        inf.animateFloat(KEY_FRAMES[page], KEY_FRAMES[page] + 1f,
-            infiniteRepeatable(tween(PERIODS[page], easing = LinearEasing), RepeatMode.Restart), label = "t$page")
+    // plays once to the scene's key frame when the page has settled, then stands (tap the picture to play it again)
+    val story = rememberRnStoryClock(page, active, KEY_FRAMES[page], PERIODS[page])
+    val clock: State<Float> = story.value
+    // the one scene that is not a picture to look at: its speaker pulses for as long as a listening trial runs
+    val trialRunning = page == 6 && trial.phase == TryUi.RUN && active && !LocalRnReduceMotion.current
+    val pulse = remember(page) { Animatable(0f) }
+    LaunchedEffect(trialRunning) {
+        if (trialRunning) while (true) { pulse.snapTo(0f); pulse.animateTo(1f, RnMotion.clock(PERIODS[6])) }
+        else pulse.snapTo(0f)
     }
     val description = stringArrayResource(R.array.eq_story_a11y).getOrElse(page) { "" }
     val labels = stringArrayResource(R.array.eq_story_labels)
     val tm = rememberTextMeasurer()
-    Canvas(Modifier.fillMaxSize().padding(12.dp).semantics { contentDescription = description }) {
-        val t = clock.value % 1f
+    Canvas(
+        Modifier.fillMaxSize().padding(12.dp).semantics { contentDescription = description }
+            .clickable(onClickLabel = stringResource(R.string.story_replay), role = Role.Button) { story.replay() }
+    ) {
+        val t = (if (page == 6) pulse.value else clock.value) % 1f
         when (page) {
             0 -> sceneResponse(t, ink, tm, labels)
             1 -> sceneBrand(t, ink, tm, labels)

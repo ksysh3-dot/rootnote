@@ -48,6 +48,10 @@ import me.timschneeberger.rootlessjamesdsp.pvb.PvbMeter
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbRuntime
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbSettings
 import me.timschneeberger.rootlessjamesdsp.pvb.SpeakerProbe
+import me.timschneeberger.rootlessjamesdsp.pvb.SweepDistortion
+import kotlin.math.pow
+import kotlin.math.log10
+import me.timschneeberger.rootlessjamesdsp.pvb.MicSpectrum
 import me.timschneeberger.rootlessjamesdsp.pvb.VolumeLevelLink
 import me.timschneeberger.rootlessjamesdsp.service.BaseAudioProcessorService
 
@@ -71,7 +75,6 @@ class DevModeActivity : BaseActivity() {
     private val main = Handler(Looper.getMainLooper())
 
     private var ui by mutableStateOf<DevUiState?>(null)
-    private var reduceMotion by mutableStateOf(false)
     private val undo = ArrayDeque<FloatArray>()
     private val meterBuf = FloatArray(PvbDevMeter.SIZE)
     private val engineMeters = FloatArray(PvbMeter.COUNT)
@@ -83,6 +86,9 @@ class DevModeActivity : BaseActivity() {
     private var probeStart = 0L
     private var probeRead = 0L
     private var probeShown = 0L
+    /** Sweeps of this probe run already analysed for harmonic distortion. */
+    private var probeSweepsDone = 0
+    private var probeThd: String? = null
 
     private val store = object : DevWarningStore {
         override fun count(w: DevWarning) = flags.getInt("dev_warn_count_${w.name}", 0)
@@ -113,14 +119,13 @@ class DevModeActivity : BaseActivity() {
         if (consent && !prefs.getBoolean(DevParams.KEY_DEV_ON, false)) prefs.edit().putBoolean(DevParams.KEY_DEV_ON, true).apply()
         ui = buildState(consentNeeded = !consent)
         if (consent) maybeUnmeasured()
-        setContent { ui?.let { DevModeScreen(it, actions, reduceMotion) } }
+        setContent { ui?.let { DevModeScreen(it, actions) } }
     }
 
     override fun onStart() {
         super.onStart()
         if (!::prefs.isInitialized) return
         prefs.registerOnSharedPreferenceChangeListener(prefListener)
-        reduceMotion = animationsOff()
         reloadValues()
         PvbRuntime.setDevMeter(true)
         polling = true
@@ -134,6 +139,7 @@ class DevModeActivity : BaseActivity() {
             main.removeCallbacks(poll)
             // Nothing of the screen outlives it: test sound, meters, A/B hold, preview.
             stopProbe()
+            stopMicSpec()
             DevTestSound.stop()
             PvbRuntime.setDevMeter(false)
             PvbRuntime.setDevOverride(null)
@@ -193,12 +199,6 @@ class DevModeActivity : BaseActivity() {
     private fun shareCode(values: FloatArray): String =
         DevShareCode.encode(android.os.Build.MODEL ?: "", BuildConfig.VERSION_NAME, values, profileDefaults())
 
-    private fun animationsOff(): Boolean = try {
-        Settings.Global.getFloat(contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
-    } catch (e: Exception) {
-        false
-    }
-
     private fun maybeUnmeasured() {
         if (tracker.unmeasuredOnEntry(profile.measured))
             update { it.copy(dialog = DevDialog(DevWarning.UNMEASURED, offerHide = false, tailMs = 0)) }
@@ -210,6 +210,7 @@ class DevModeActivity : BaseActivity() {
         override fun run() {
             if (!polling) return
             feedProbe()
+            feedMicSpec()
             readMeters()
             main.postDelayed(this, POLL_MS)
         }
@@ -413,12 +414,71 @@ class DevModeActivity : BaseActivity() {
         },
         onBassFit = { startActivity(Intent(this, BassFitActivity::class.java)) },
         onProbe = { on -> if (on) startProbe() else stopProbe() },
+        onMicSpec = { on -> if (on) startMicSpec() else stopMicSpec() },
+        onMicCorr = { on ->
+            flags.edit().putBoolean(KEY_DEV_MIC_CORR, on).apply()
+            micCorr = on
+            update { it.copy(micSpec = it.micSpec?.copy(corrected = on)) }
+        },
     )
+
+    // ------------------------------------------------------------------------------------------------ microphone spectrum
+
+    private var specMic: FitMic? = null
+    private var specPower: DoubleArray? = null
+    private var specShown = 0L
+    private var micCorr = true
+    private val declaredMic: DeclaredMic? by lazy { DeclaredMic.read(this) }
+
+    /** "마이크 스펙트럼": the phone microphone alone (whatever plays keeps playing; nothing is changed). */
+    private fun startMicSpec() {
+        stopMicSpec()
+        stopProbe()
+        val granted = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+        val m = if (granted) FitMic.open(getSystemService(AudioManager::class.java)) else null
+        if (m == null) { update { it.copy(micSpec = MicSpecView(running = false, noMic = true)) }; return }
+        specMic = m
+        specPower = null
+        micCorr = flags.getBoolean(KEY_DEV_MIC_CORR, true)
+        val d = declaredMic
+        update { it.copy(micSpec = MicSpecView(running = true, corrected = micCorr, raw = m.unprocessed,
+            declaredSens = d?.sensDbfs, declaredResponse = d?.responseHz?.isNotEmpty() == true)) }
+    }
+
+    private fun stopMicSpec() {
+        val m = specMic ?: return
+        m.stop()
+        specMic = null
+        update { it.copy(micSpec = it.micSpec?.copy(running = false)) }
+    }
+
+    /** About 5 times a second: the last 0.34 s, third octaves, smoothed (power), corrected for the screen. */
+    private fun feedMicSpec() {
+        val m = specMic ?: return
+        val t = SystemClock.elapsedRealtime()
+        if (t - specShown < 200) return
+        val x = m.copy(m.frames - MicSpectrum.FFT, MicSpectrum.FFT) ?: return
+        specShown = t
+        val lv = MicSpectrum.levels(x, FitMic.FS.toDouble())
+        val p = DoubleArray(lv.size) { 10.0.pow(lv[it] / 10) }
+        val old = specPower
+        val sm = if (old == null) p else DoubleArray(p.size) { 0.6 * old[it] + 0.4 * p[it] }
+        specPower = sm
+        val raw = DoubleArray(sm.size) { 10 * log10(sm[it].coerceAtLeast(1e-30)) }
+        val d = declaredMic
+        val shown = if (micCorr && d != null)
+            MicSpectrum.corrected(raw, d.responseHz, d.responseDb, d.sensDbfs.takeIf { m.unprocessed })
+        else raw
+        val spl = micCorr && m.unprocessed && d?.sensDbfs != null
+        update { it.copy(micSpec = it.micSpec?.copy(levels = shown.toList(), spl = spl, total = MicSpectrum.total(shown),
+            clipped = x.any { v -> kotlin.math.abs(v) >= 0.98f })) }
+    }
 
     // ------------------------------------------------------------------------------------------------ probe
 
     private fun startProbe() {
         stopProbe()
+        stopMicSpec()
         if (BaseAudioProcessorService.activeServices <= 0) { toast(R.string.dev_test_off_note); return }
         DevTestSound.stop()
         update { it.copy(testKind = null) }
@@ -433,6 +493,8 @@ class DevModeActivity : BaseActivity() {
         DevTestSound.start(DevTestKind.PROBE_SWEEP)
         probeStart = m.frames
         probeRead = probeStart
+        probeSweepsDone = 0
+        probeThd = null
         update { it.copy(probe = ProbeView(running = true)) }
     }
 
@@ -464,7 +526,23 @@ class DevModeActivity : BaseActivity() {
         }
         // the screen about 5 times a second
         val t = SystemClock.elapsedRealtime()
-        if (fed && t - probeShown >= 200) { probeShown = t; update { it.copy(probe = ProbeView.of(p, running = true)) } }
+        if (fed && t - probeShown >= 200) { probeShown = t; update { it.copy(probe = ProbeView.of(p, running = true).copy(thd = probeThd)) } }
+        // each whole sweep (plus the latency) once recorded: its harmonic distortion, off the main thread
+        val period = (SpeakerProbe.PERIOD_S * FitMic.FS).toLong()
+        val span = ((SpeakerProbe.SWEEP_S + 0.8) * FitMic.FS).toInt()
+        val from = probeStart + probeSweepsDone * period
+        if (now >= from + span) {
+            probeSweepsDone++
+            val x = m.copy(from, span)
+            if (x != null && !p.clipped) Thread({
+                val line = try { SweepDistortion.analyze(x, fs, FitLatency.TYPICAL_S)?.let { SweepDistortion.line(it) } } catch (_: Exception) { null }
+                main.post {
+                    if (probeMic !== m || line.isNullOrEmpty()) return@post
+                    probeThd = line
+                    update { it.copy(probe = it.probe?.copy(thd = line)) }
+                }
+            }, "dev-probe-thd").start()
+        }
     }
 
     /** The slider range of [spec] for the current model (the roll-off offset depends on it). */
@@ -488,6 +566,7 @@ class DevModeActivity : BaseActivity() {
     }
 
     companion object {
+        const val KEY_DEV_MIC_CORR = PvbGeneral.KEY_DEV_MIC_CORR
         private const val POLL_MS = 40L
         private const val MAX_UNDO = 50
         private const val TOUCH_HOLD_MS = 1500L

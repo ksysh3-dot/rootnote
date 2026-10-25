@@ -63,6 +63,9 @@ import me.timschneeberger.rootlessjamesdsp.interop.BenchmarkManager
 import me.timschneeberger.rootlessjamesdsp.model.preference.AppTheme
 import me.timschneeberger.rootlessjamesdsp.ui.LocalRn
 import me.timschneeberger.rootlessjamesdsp.ui.RnBand
+import me.timschneeberger.rootlessjamesdsp.capture.CaptureMode
+import me.timschneeberger.rootlessjamesdsp.capture.CaptureState
+import me.timschneeberger.rootlessjamesdsp.capture.captureReasonText
 import me.timschneeberger.rootlessjamesdsp.ui.RnChoice
 import me.timschneeberger.rootlessjamesdsp.ui.RnChoiceRow
 import me.timschneeberger.rootlessjamesdsp.ui.RnChoiceSheet
@@ -212,7 +215,7 @@ private fun ThemePicker(host: RnSettingsActivity) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Box(
-                        Modifier.graphicsLayer { scaleX = scale; scaleY = scale }.size(width = 84.dp, height = 132.dp)
+                        Modifier.graphicsLayer { scaleX = scale.value; scaleY = scale.value }.size(width = 84.dp, height = 132.dp)
                             .border(if (on) 3.dp else 1.dp, if (on) s.primary else c.chipBorder, RoundedCornerShape(14.dp))
                             .padding(if (on) 3.dp else 1.dp)
                             .background(s.surface, RoundedCornerShape(12.dp))
@@ -258,7 +261,24 @@ private fun AudioPage(host: RnSettingsActivity) {
     fun runBenchmark() = BenchmarkManager.runBenchmarks(host) {
         CoroutineScope(Dispatchers.Main).launch { benchmark = BenchmarkManager.hasBenchmarksCached() }
     }
+    var mode by remember { mutableStateOf(CaptureMode.get(host)) }
     RnPage(stringResource(R.string.audio_format_header), onBack = host::finish) {
+        RnSectionTitle(stringResource(R.string.capture_mode_header))
+        val fallback = CaptureState.fallbackReason
+        val now = when {
+            CaptureState.intercepting -> stringResource(R.string.capture_mode_now_intercept)
+            fallback != null -> stringResource(R.string.capture_mode_now_fallback, captureReasonText(host, fallback))
+            else -> stringResource(R.string.capture_mode_now_projection)
+        }
+        RnChoiceRow(stringResource(R.string.capture_mode_title),
+            listOf(
+                RnChoice(CaptureMode.INTERCEPT, stringResource(R.string.capture_mode_intercept), stringResource(R.string.capture_mode_intercept_line)),
+                RnChoice(CaptureMode.PROJECTION, stringResource(R.string.capture_mode_projection), stringResource(R.string.capture_mode_projection_line)),
+            ),
+            mode, onSelect = { if (it != mode) { mode = it; CaptureMode.set(host, it); hardReboot() } },
+            line = now)
+        RnNote(stringResource(R.string.capture_mode_warning), warning = true)
+        RnBand()
         RnSectionTitle(stringResource(R.string.audio_format_section_header))
         RnChoiceRow(stringResource(R.string.audio_format_encoding),
             choices(R.array.audio_format_encodings, R.array.audio_format_encodings_values),

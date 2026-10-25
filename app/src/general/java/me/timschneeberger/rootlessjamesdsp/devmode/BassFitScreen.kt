@@ -64,7 +64,6 @@ import me.timschneeberger.rootlessjamesdsp.ui.RnChoiceRow
 import me.timschneeberger.rootlessjamesdsp.ui.RnDialog
 import me.timschneeberger.rootlessjamesdsp.ui.RnSwitchRow
 import me.timschneeberger.rootlessjamesdsp.ui.RnDivider
-import me.timschneeberger.rootlessjamesdsp.ui.RnEase
 import me.timschneeberger.rootlessjamesdsp.ui.RnFilledButton
 import me.timschneeberger.rootlessjamesdsp.ui.RnNavRow
 import me.timschneeberger.rootlessjamesdsp.ui.RnNote
@@ -73,9 +72,10 @@ import me.timschneeberger.rootlessjamesdsp.ui.RnPage
 import me.timschneeberger.rootlessjamesdsp.ui.RnParagraph
 import me.timschneeberger.rootlessjamesdsp.ui.RnSectionTitle
 import me.timschneeberger.rootlessjamesdsp.ui.RnTextAction
-import me.timschneeberger.rootlessjamesdsp.ui.rnMotion
 import java.util.Locale
 import kotlin.math.roundToInt
+import me.timschneeberger.rootlessjamesdsp.ui.RnMotion
+import me.timschneeberger.rootlessjamesdsp.ui.rn
 
 /*
  * "저음 맞추기" (BassFitActivity), built from the shared page kit (ui/RnRows.kt): RnPage with the answers in a fixed
@@ -103,6 +103,9 @@ data class FitUi(
     /** The microphone's reference floor from the probe sweep (reference only, never applied). */
     val micFloorHz: Double? = null,
     val micClipped: Boolean = false,
+    /** The microphone's harmonic distortion of the probe sweep ("63 Hz −12 · ..."), reference only. */
+    val micThd: String? = null,
+    val micThd100: Double? = null,
     // questions
     val step: Int = 0,
     val prompt: FitPrompt? = null,
@@ -142,6 +145,14 @@ data class FitUi(
     val umikPhase: Int = 0,
     /** Microphone floor per condition index from the last UMIK-1 sound (-1 = none found). */
     val umikFloors: Map<Int, Double> = emptyMap(),
+    /** "마이크 맞추기": 0 the room, 1 the noise being recorded; null idle. */
+    val micCalPhase: Int? = null,
+    val micCalRoomDone: Boolean = false,
+    /** One summary line per recording source of the last step. */
+    val micCalLines: List<String> = emptyList(),
+    val micCalRows: Int = 0,
+    /** What the phone declares about its microphone (validation screen). */
+    val micDeclared: String = "",
 )
 
 class FitActions(
@@ -177,6 +188,10 @@ class FitActions(
     val onLogCopy: () -> Unit,
     val onLogSend: () -> Unit,
     val onLogClear: () -> Unit,
+    val onMicCalRoom: () -> Unit,
+    val onMicCalNoise: () -> Unit,
+    val onMicCalSend: () -> Unit,
+    val onMicCalClear: () -> Unit,
     val onValBack: () -> Unit,
 )
 
@@ -291,11 +306,11 @@ private fun RoomWarn(ui: FitUi) {
 @Composable
 private fun ProgressLine(progress: Float) {
     val c = LocalRn.current
-    val p by animateFloatAsState(progress, rnMotion(tween(300, easing = RnEase)), label = "progress")
+    val p = animateFloatAsState(progress, rn(RnMotion.Seed.move()), label = "progress")
     Canvas(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp).height(8.dp)) {
         val y = size.height / 2f
         drawLine(c.sliderInactive, Offset(0f, y), Offset(size.width, y), 6.dp.toPx(), StrokeCap.Round)
-        drawLine(c.fill, Offset(0f, y), Offset(size.width * p.coerceIn(0f, 1f), y), 6.dp.toPx(), StrokeCap.Round)
+        drawLine(c.fill, Offset(0f, y), Offset(size.width * p.value.coerceIn(0f, 1f), y), 6.dp.toPx(), StrokeCap.Round)
     }
 }
 
@@ -397,7 +412,7 @@ private fun Stage(content: @Composable ColumnScope.() -> Unit) {
 @Composable
 private fun Turn(n: Int, lit: Boolean) {
     val c = LocalRn.current
-    val bg by animateColorAsState(if (lit) c.fill else c.bg, rnMotion(tween(120, easing = RnEase)), label = "turn")
+    val bg by animateColorAsState(if (lit) c.fill else c.bg, rn(RnMotion.Seed.color()), label = "turn")
     val label = stringResource(R.string.fit_interval_a11y, n)
     val playing = stringResource(R.string.fit_playing)
     Column(horizontalAlignment = Alignment.CenterHorizontally,
@@ -416,7 +431,7 @@ private fun Turn(n: Int, lit: Boolean) {
 private fun RowScope.PlayPad(id: String, label: String, ui: FitUi, actions: FitActions) {
     val c = LocalRn.current
     val playing = ui.playing == id
-    val bg by animateColorAsState(if (playing) c.chipSelectedBg else c.bg, rnMotion(tween(300, easing = RnEase)), label = "pad")
+    val bg by animateColorAsState(if (playing) c.chipSelectedBg else c.bg, rn(RnMotion.Seed.color()), label = "pad")
     val a11y = stringResource(R.string.fit_play_a11y, label)
     val stateText = stringResource(when {
         playing -> R.string.fit_playing
@@ -459,7 +474,7 @@ private fun Result(ui: FitUi) {
         else -> stringResource(R.string.fit_r_not_found)
     })
     r.noiseCorrectionDb?.let { RnNavRow(stringResource(R.string.fit_noise_corr), onClick = null, chevron = false,
-        line = stringResource(R.string.fit_r_noise_line), value = stringResource(R.string.fit_db, BassFitActivity.signed(it))) }
+        line = stringResource(if (r.noiseSensFromPhone) R.string.fit_r_noise_line_phone else R.string.fit_r_noise_line_guess), value = stringResource(R.string.fit_db, BassFitActivity.signed(it))) }
     MicFloor(ui, r)
     if (r.floor != null && r.edgeHz != null) RnNavRow(stringResource(R.string.fit_r_edge), onClick = null, chevron = false,
         line = if (r.edgeHz > r.floor.boundaryHz + 1) stringResource(R.string.fit_r_edge_raised) else null,
@@ -512,6 +527,7 @@ private fun MicFloor(ui: FitUi, r: FitResult) {
     val mic = ui.micFloorHz
     RnNavRow(stringResource(R.string.fit_r_mic_floor), line = stringResource(R.string.fit_r_mic_line), onClick = null, chevron = false,
         value = mic?.let { stringResource(R.string.fit_hz, SpeakerProbe.roundHz(it)) } ?: stringResource(R.string.fit_r_mic_none))
+    ui.micThd?.let { RnNavRow(stringResource(R.string.fit_r_mic_thd), line = it + " dB", onClick = null, chevron = false) }
     val ear = r.floor?.speakerFloorHz ?: return
     if (mic == null) return
     val apart = kotlin.math.log2(ear / mic)
@@ -528,7 +544,7 @@ private fun Check(ui: FitUi, actions: FitActions) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             for (side in 1..2) {
                 val on = ui.checkSide == side
-                val bg by animateColorAsState(if (on) c.chipSelectedBg else c.bg, rnMotion(tween(300, easing = RnEase)), label = "side")
+                val bg by animateColorAsState(if (on) c.chipSelectedBg else c.bg, rn(RnMotion.Seed.color()), label = "side")
                 val label = stringResource(if (side == 1) R.string.fit_check_one else R.string.fit_check_two)
                 val now = stringResource(R.string.fit_check_now, label)
                 Box(
@@ -617,6 +633,28 @@ private fun Validate(ui: FitUi, actions: FitActions) {
             value = stringResource(if (playing) R.string.fit_val_umik_stop else R.string.fit_val_umik_play),
             valueColor = LocalRn.current.accentText,
             onClick = { actions.onUmik(i) })
+    }
+
+    RnBand()
+    RnSectionTitle(stringResource(R.string.fit_mcal_title))
+    RnParagraph(stringResource(R.string.fit_mcal_note))
+    if (ui.micDeclared.isNotEmpty()) RnParagraph(ui.micDeclared)
+    val busy = ui.micCalPhase != null
+    RnNavRow(stringResource(R.string.fit_mcal_room), chevron = false, enabled = !busy,
+        line = if (ui.micCalPhase == 0) stringResource(R.string.fit_mcal_recording) else null,
+        value = stringResource(if (ui.micCalRoomDone) R.string.fit_mcal_again else R.string.fit_mcal_start),
+        valueColor = LocalRn.current.accentText, onClick = actions.onMicCalRoom)
+    RnNavRow(stringResource(R.string.fit_mcal_noise), chevron = false, enabled = !busy && ui.micCalRoomDone,
+        line = if (ui.micCalPhase == 1) stringResource(R.string.fit_mcal_recording) else null,
+        value = stringResource(R.string.fit_mcal_start),
+        valueColor = LocalRn.current.accentText, onClick = actions.onMicCalNoise)
+    for (l in ui.micCalLines) RnParagraph(l)
+    if (ui.micCalRows > 0) {
+        RnParagraph(stringResource(R.string.fit_mcal_rows, ui.micCalRows))
+        RnButtonRow {
+            RnOutlineButton(stringResource(R.string.fit_val_log_clear), Modifier.weight(1f), enabled = !busy, onClick = actions.onMicCalClear)
+            RnOutlineButton(stringResource(R.string.fit_val_log_send), Modifier.weight(1f), onClick = actions.onMicCalSend)
+        }
     }
 
     RnBand()

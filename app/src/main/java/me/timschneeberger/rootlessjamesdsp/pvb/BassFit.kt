@@ -88,8 +88,7 @@ object NoiseGate {
     )
 
     /** Third-octave band power (dB, mean square) of x: Welch average of 4096-point Hann frames, 50 % overlap. */
-    fun bandLevels(x: FloatArray, fs: Double, centers: DoubleArray): DoubleArray {
-        val n = 4096
+    fun bandLevels(x: FloatArray, fs: Double, centers: DoubleArray, n: Int = 4096): DoubleArray {
         val win = DoubleArray(n) { 0.5 - 0.5 * kotlin.math.cos(2 * Math.PI * it / n) }
         val wss = win.sumOf { it * it }
         val acc = DoubleArray(n / 2 + 1)
@@ -369,6 +368,74 @@ class FloorStaircase(
 }
 
 /**
+ * "마이크 맞추기 (UMIK-1)" in validation mode: the phone microphone records the room, then pink noise from a PC
+ * speaker while REW records the same noise with the UMIK-1 beside the phone microphone. Per recording source
+ * (UNPROCESSED, VOICE_RECOGNITION) this gives third-octave levels in dB re full scale; set against the UMIK-1's dB SPL
+ * of the same bands (done off the phone) they give the source's sensitivity (dB SPL - dB re full scale at 1 kHz) and
+ * its response re 1 kHz. Only the phone's own measured values: nothing from third parties.
+ */
+object MicCal {
+    val BANDS = doubleArrayOf(100.0, 125.0, 160.0, 200.0, 250.0, 315.0, 400.0, 500.0, 630.0, 800.0, 1000.0, 1250.0, 1600.0, 2000.0)
+    /** 16384-point frames: 2.9 Hz bins, so even the 100 Hz third octave (23 Hz wide) holds several. */
+    const val FFT = 16384
+    /** The noise has to stand this far over the room in a band for the band to count. */
+    const val MIN_SNR_DB = 15.0
+
+    fun levels(x: FloatArray, fs: Double): DoubleArray = NoiseGate.bandLevels(x, fs, BANDS, FFT)
+
+    /** The noise's own level per band: the room's power taken off; NaN where it is under [MIN_SNR_DB] over it. */
+    fun signal(roomDb: DoubleArray, noiseDb: DoubleArray): DoubleArray = DoubleArray(BANDS.size) { b ->
+        if (noiseDb[b] - roomDb[b] < MIN_SNR_DB) Double.NaN
+        else 10 * log10(10.0.pow(noiseDb[b] / 10) - 10.0.pow(roomDb[b] / 10))
+    }
+
+    /** One CSV line: when, phone, source, then room and noise level per band (dB re full scale, one decimal). */
+    fun line(time: String, model: String, source: String, roomDb: DoubleArray, noiseDb: DoubleArray): String {
+        fun f(v: Double) = if (v.isFinite()) String.format(java.util.Locale.ROOT, "%.1f", v) else ""
+        return (listOf(time, model.replace(Regex("[,\\n\\r\"]"), "_"), source) + roomDb.map(::f) + noiseDb.map(::f)).joinToString(",")
+    }
+
+    val HEADER: String = (listOf("time", "model", "source") + BANDS.map { "room_${it.toInt()}" } + BANDS.map { "noise_${it.toInt()}" })
+        .joinToString(",")
+}
+
+/**
+ * "마이크 스펙트럼" in developer mode: third-octave levels of what the phone microphone hears, optionally with the
+ * microphone's own response taken off and turned into dB SPL with its sensitivity, both as the phone declares them
+ * (MicrophoneInfo). Without them, or with the correction off, the levels stay in dB re full scale.
+ */
+object MicSpectrum {
+    val CENTERS = doubleArrayOf(25.0, 31.5, 40.0, 50.0, 63.0, 80.0, 100.0, 125.0, 160.0, 200.0, 250.0, 315.0, 400.0,
+        500.0, 630.0, 800.0, 1000.0, 1250.0, 1600.0, 2000.0, 2500.0, 3150.0, 4000.0, 5000.0, 6300.0, 8000.0, 10000.0,
+        12500.0, 16000.0)
+    /** 16384 points (0.34 s at 48 kHz): 2.9 Hz bins, so the 25 Hz third octave (5.8 Hz wide) holds two. */
+    const val FFT = 16384
+
+    fun levels(x: FloatArray, fs: Double): DoubleArray = NoiseGate.bandLevels(x, fs, CENTERS, FFT)
+
+    /** Response at [hz] by log-frequency interpolation of ([hzs], [dbs]); the end values outside; 0 when empty. */
+    fun responseAt(hzs: DoubleArray, dbs: DoubleArray, hz: Double): Double {
+        if (hzs.isEmpty()) return 0.0
+        if (hz <= hzs.first()) return dbs.first()
+        if (hz >= hzs.last()) return dbs.last()
+        var i = 0
+        while (hzs[i + 1] < hz) i++
+        val u = ln(hz / hzs[i]) / ln(hzs[i + 1] / hzs[i])
+        return dbs[i] + (dbs[i + 1] - dbs[i]) * u
+    }
+
+    /**
+     * [levelsDb] (dB re full scale at [CENTERS]) with the declared response taken off and, when [sensDbfs] is known,
+     * in dB SPL (+ 94 - sensitivity). The sensitivity only holds for UNPROCESSED (other sources may add gain).
+     */
+    fun corrected(levelsDb: DoubleArray, respHz: DoubleArray, respDb: DoubleArray, sensDbfs: Double?): DoubleArray =
+        DoubleArray(levelsDb.size) { levelsDb[it] - responseAt(respHz, respDb, CENTERS[it]) + (sensDbfs?.let { s -> 94.0 - s } ?: 0.0) }
+
+    /** Power sum of band levels, dB. */
+    fun total(levelsDb: DoubleArray): Double = 10 * log10(levelsDb.sumOf { 10.0.pow(it / 10) }.coerceAtLeast(1e-30))
+}
+
+/**
  * Optional room-noise correction of the floor bursts ("소음 보정", off unless the listener turns it on). The bursts are
  * set from the listener's threshold at 300 Hz plus how much less sensitive hearing is at the burst's frequency in quiet
  * ([HearingThreshold]). In a room with noise, the noise raises each threshold by its own amount: room noise is mostly
@@ -391,6 +458,25 @@ object NoiseMasking {
     const val SPL_OFFSET_DB = 112.4
     const val SPL_OFFSET_UNPROCESSED_DB = 130.0
     fun splOffsetDb(unprocessed: Boolean): Double = if (unprocessed) SPL_OFFSET_UNPROCESSED_DB else SPL_OFFSET_DB
+
+    /**
+     * Sensitivities a phone may declare for its built-in microphone (MicrophoneInfo.getSensitivity: dB re full scale
+     * for 94 dB SPL at 1 kHz) that are taken as real; outside, the declared value is ignored as a placeholder.
+     */
+    const val DECLARED_MIN_DBFS = -55.0
+    const val DECLARED_MAX_DBFS = -15.0
+
+    /**
+     * The offset for a recording source: from the sensitivity the phone declares for its built-in microphone
+     * ([declaredDbfs], null = none) when recording UNPROCESSED, which adds no gain to the microphone (the S26 Ultra
+     * declares -37 dBFS: offset 131.0 against the guideline's 130.0); otherwise the guideline value
+     * ([splOffsetDb]: VOICE_RECOGNITION may add gain the microphone's own data does not show). Second: whether the
+     * phone's value was used.
+     */
+    fun offsetFor(unprocessed: Boolean, declaredDbfs: Double?): Pair<Double, Boolean> =
+        if (unprocessed && declaredDbfs != null && declaredDbfs in DECLARED_MIN_DBFS..DECLARED_MAX_DBFS)
+            (94.0 - declaredDbfs) to true
+        else splOffsetDb(unprocessed) to false
     /** Below this the microphone's response is allowed to be off by 20 dB: the bands under it are not used. */
     const val LOWEST_TRUSTED_HZ = 100.0
     /** A tone is just masked about this far from the noise power in its third-octave band (critical ratio ~17 dB

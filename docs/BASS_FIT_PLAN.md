@@ -186,3 +186,10 @@ apart from VOICE_RECOGNITION's. beta.10 used the VOICE_RECOGNITION value for bot
 17.6 dB too quiet and the correction hardly acted. NoiseMasking now takes the offset of the source actually opened,
 ignores the bands under 100 Hz, and the log records the source (`mic_source`). Still nominal values: one recording of
 the room beside the UMIK-1 gives the real offset of a phone.
+
+Probe distortion (next version): the probe sweep (exponential, 40-500 Hz, 9 s) is also deconvolved with its inverse
+filter (SweepDistortion), which separates the linear response from the 2nd-4th harmonic impulse responses. Their ratio
+gives the harmonic distortion the phone microphone hears at 63-200 Hz (the n-th harmonic only where n*f stays under
+500 Hz). Shown in the result and the developer probe, logged as `mic_thd_100_db`; reference only. Checked on a
+synthetic polynomial (2nd and 3rd harmonics recovered within 1 dB); to be checked against REW's distortion with the
+UMIK-1.

@@ -31,6 +31,7 @@ object Notifications {
     const val CHANNEL_BUZZ_REPORT = "buzz_report"
     const val ID_BUZZ_REPORT = 5
     const val ID_BUZZ_MIC = 6
+    const val ID_CAPTURE_FALLBACK = 7
 
     /**
      * Notification channel and ids used by the backup/restore system.

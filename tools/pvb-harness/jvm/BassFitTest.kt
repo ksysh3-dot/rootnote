@@ -9,6 +9,8 @@ import me.timschneeberger.rootlessjamesdsp.pvb.HearingThreshold
 import me.timschneeberger.rootlessjamesdsp.pvb.RefLevelStaircase
 import me.timschneeberger.rootlessjamesdsp.pvb.NoiseGate
 import me.timschneeberger.rootlessjamesdsp.pvb.NoiseMasking
+import me.timschneeberger.rootlessjamesdsp.pvb.MicCal
+import me.timschneeberger.rootlessjamesdsp.pvb.MicSpectrum
 import me.timschneeberger.rootlessjamesdsp.pvb.ShapeGrid
 import me.timschneeberger.rootlessjamesdsp.pvb.StrengthBracket
 import kotlin.math.PI
@@ -333,6 +335,31 @@ fun main() {
     val plain = FloorStaircase(1, refDb = -40.0)
     val corrected = FloorStaircase(1, refDb = -40.0, noiseDb = { hz -> NoiseMasking.correctionDb(office, hz) })
     check(abs(corrected.levelDb(100.0) - (plain.levelDb(100.0) + c100)) < 1e-9, "noise correction: applied to the floor bursts")
+
+    // --- declared microphone sensitivity
+    check(NoiseMasking.offsetFor(true, -37.0) == (131.0 to true), "declared sensitivity: S26 Ultra's -37 dBFS gives 131 dB for UNPROCESSED")
+    check(NoiseMasking.offsetFor(false, -37.0) == (NoiseMasking.SPL_OFFSET_DB to false), "declared sensitivity: not used for VOICE_RECOGNITION (it may add gain)")
+    check(NoiseMasking.offsetFor(true, null) == (NoiseMasking.SPL_OFFSET_UNPROCESSED_DB to false) && NoiseMasking.offsetFor(true, 0.0).second == false,
+        "declared sensitivity: none or a placeholder falls back to the guideline")
+
+    // --- microphone spectrum (developer mode)
+    val specLv = DoubleArray(MicSpectrum.CENTERS.size) { -60.0 }
+    val rHz = doubleArrayOf(100.0, 1000.0, 10000.0); val rDb = doubleArrayOf(-1.0, 0.0, 20.0)
+    val specC = MicSpectrum.corrected(specLv, rHz, rDb, -37.0)
+    val i1k = MicSpectrum.CENTERS.toList().indexOf(1000.0); val i10k = MicSpectrum.CENTERS.toList().indexOf(10000.0)
+    check(abs(specC[i1k] - 71.0) < 1e-9 && abs(specC[i10k] - 51.0) < 1e-9, "mic spectrum: -60 dBFS at 1 kHz with -37 dBFS sensitivity reads 71 dB SPL; +20 dB declared at 10 kHz comes off")
+    check(abs(MicSpectrum.corrected(specLv, DoubleArray(0), DoubleArray(0), null)[i1k] - (-60.0)) < 1e-9, "mic spectrum: nothing declared, nothing changed")
+    check(abs(MicSpectrum.total(doubleArrayOf(-10.0, -10.0)) - (-10.0 + 10 * kotlin.math.log10(2.0))) < 1e-9, "mic spectrum: total is the power sum")
+
+    // --- microphone match (UMIK-1)
+    val calRoom = DoubleArray(MicCal.BANDS.size) { -80.0 }
+    val calNoise = DoubleArray(MicCal.BANDS.size) { if (it == 0) -70.0 else -40.0 }
+    val calSig = MicCal.signal(calRoom, calNoise)
+    check(calSig[0].isNaN() && abs(calSig[1] - (-40.0)) < 0.01, "mic match: bands under 15 dB over the room are dropped; the room's power comes off the rest")
+    check(MicCal.line("t", "SM,X", "unprocessed", calRoom, calNoise).split(",").size == MicCal.HEADER.split(",").size, "mic match: a line has the header's columns (commas in the model name cleaned)")
+    val pinkLike = FloatArray(48000 * 4) { i -> (kotlin.math.sin(2 * PI * 1000.0 * i / 48000) * 0.1).toFloat() }
+    val lv = MicCal.levels(pinkLike, 48000.0)
+    check(abs(lv[MicCal.BANDS.toList().indexOf(1000.0)] - 10 * kotlin.math.log10(0.005)) < 0.5, "mic match: a 1 kHz tone reads its power in the 1 kHz band")
 
     // --- mapping
     val m150 = BassFitMapping.fromFloor(150.0)

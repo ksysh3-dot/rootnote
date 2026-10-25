@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Capture method (capture/CaptureMode.kt) -->
+    <string name="capture_mode_header">Capture method</string>
+    <string name="capture_mode_title">How other apps\' sound is taken</string>
+    <string name="capture_mode_intercept">Intercept (Shizuku)</string>
+    <string name="capture_mode_intercept_line">Apps\' sound is taken off the speaker before it plays. No screen-share consent, nothing is muted, nothing leaks through. Needs Shizuku running.</string>
+    <string name="capture_mode_projection">Screen share</string>
+    <string name="capture_mode_projection_line">The screen-share audio capture, with each app muted while it is processed. No Shizuku needed after setup.</string>
+    <string name="capture_mode_warning">Some games and banking apps refuse to start while Shizuku or USB debugging is on. If you use such apps, choose screen share and turn Shizuku off. When intercept can\'t run (Shizuku off), screen share is used and you get a notice. With intercept, the capture keeps running while the service is on (no idle stop), which uses a little more battery.</string>
+    <string name="capture_mode_now_intercept">Now: intercept</string>
+    <string name="capture_mode_now_projection">Now: screen share</string>
+    <string name="capture_mode_now_fallback">Now: screen share (intercept unavailable: %1$s)</string>
+    <string name="capture_fallback_title">Intercept capture unavailable</string>
+    <string name="capture_fallback_text">Using screen share instead. Turn Shizuku on and restart, or choose the method in Settings → Audio processing.</string>
+    <string name="capture_reason_shizuku_off">Shizuku is off</string>
+    <string name="capture_reason_android_13">needs Android 13 or later</string>
+    <string name="capture_reason_other">it could not start</string>
+</resources>

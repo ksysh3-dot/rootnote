@@ -59,6 +59,14 @@ import androidx.compose.ui.unit.sp
 import me.timschneeberger.rootlessjamesdsp.R
 import me.timschneeberger.rootlessjamesdsp.pvb.SpatialBalance
 import kotlin.math.roundToInt
+import me.timschneeberger.rootlessjamesdsp.ui.RnMotion
+import me.timschneeberger.rootlessjamesdsp.ui.rn
+import me.timschneeberger.rootlessjamesdsp.ui.ProvideRnMotion
+import me.timschneeberger.rootlessjamesdsp.ui.RnSliderTrack
+import me.timschneeberger.rootlessjamesdsp.ui.RnSliderColors
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 
 /*
  * "좌우 맞추기" (SpatialBalanceActivity), landscape: the stage on the left (the phone from above with the sound as a
@@ -77,7 +85,6 @@ data class BalanceUi(
     val lowBalanceDb: Float = 0f,
     val highBalanceDb: Float = 0f,
     val ready: Boolean = true,
-    val reduceMotion: Boolean = false,
     val progress: Float = 0f,
     val measuring: MeasurePhase = MeasurePhase.QUIET,
     val result: SpatialBalance.Result? = null,
@@ -101,8 +108,6 @@ class BalanceActions(
     val onClose: () -> Unit,
 )
 
-private val Ease = CubicBezierEasing(0.32f, 0.72f, 0f, 1f)
-
 /** "왼쪽 +1.5 dB" style: which speaker is louder by how much (the correction lowers that side). */
 @Composable
 private fun sideText(db: Float): String = when {
@@ -113,6 +118,11 @@ private fun sideText(db: Float): String = when {
 
 @Composable
 fun SpatialBalanceScreen(ui: BalanceUi, actions: BalanceActions) {
+    ProvideRnMotion { SpatialBalanceContent(ui, actions) }
+}
+
+@Composable
+private fun SpatialBalanceContent(ui: BalanceUi, actions: BalanceActions) {
     val c = rootnotePalette()
     Column(Modifier.fillMaxSize().background(c.bg).safeDrawingPadding()) {
         Row(Modifier.fillMaxWidth().padding(start = 24.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -161,9 +171,8 @@ fun SpatialBalanceScreen(ui: BalanceUi, actions: BalanceActions) {
 @Composable
 private fun BalanceStage(valueDb: Float, ui: BalanceUi) {
     val c = rootnotePalette()
-    val pos by animateFloatAsState(
-        (valueDb / 6f).coerceIn(-1f, 1f), tween(if (ui.reduceMotion) 0 else 300, easing = Ease), label = "dot",
-    )
+    // the dot follows a value a finger is setting: a spring that takes over the speed of every new step
+    val pos by animateFloatAsState((valueDb / 6f).coerceIn(-1f, 1f), rn(RnMotion.Apple.settle()), label = "dot")
     val playingLeft = ui.step == BalanceStep.MEASURING && ui.measuring == MeasurePhase.LEFT
     val playingRight = ui.step == BalanceStep.MEASURING && ui.measuring == MeasurePhase.RIGHT
     Canvas(Modifier.fillMaxSize().padding(16.dp)) {
@@ -224,7 +233,7 @@ private fun StepContent(ui: BalanceUi, actions: BalanceActions) {
                 MeasurePhase.LEFT -> R.string.balance_measuring_left
                 MeasurePhase.RIGHT -> R.string.balance_measuring_right
             }))
-            ProgressLine(ui.progress, ui.reduceMotion)
+            ProgressLine(ui.progress)
             note(stringResource(R.string.balance_measuring_note))
         }
         BalanceStep.RESULT -> {
@@ -271,9 +280,9 @@ private fun StepContent(ui: BalanceUi, actions: BalanceActions) {
 }
 
 @Composable
-private fun ProgressLine(progress: Float, reduce: Boolean) {
+private fun ProgressLine(progress: Float) {
     val c = rootnotePalette()
-    val p by animateFloatAsState(progress, tween(if (reduce) 0 else 300), label = "progress")
+    val p by animateFloatAsState(progress, rn(RnMotion.Seed.move()), label = "progress")
     Canvas(Modifier.fillMaxWidth().heightIn(min = 8.dp)) {
         val y = size.height / 2f
         drawLine(c.sliderInactive, Offset(0f, y), Offset(size.width, y), 6.dp.toPx(), StrokeCap.Round)
@@ -281,49 +290,27 @@ private fun ProgressLine(progress: Float, reduce: Boolean) {
     }
 }
 
-/** -6..+6 dB in half steps; right = the sound moves right. Tap, drag, or TalkBack set-progress. */
+/**
+ * -6..+6 dB in half steps; right = the sound moves right. The shared slider track (ui/RnSlider.kt), laid out left to
+ * right in every language (the sound's side is a physical side), filled from the middle.
+ */
 @Composable
 private fun BalanceSlider(value: Float, label: String, valueText: String, onChange: (Float) -> Unit) {
     val c = rootnotePalette()
-    var width by remember { mutableFloatStateOf(1f) }
-    var inset by remember { mutableFloatStateOf(0f) }
-    fun at(x: Float): Float {
-        val f = ((x - inset) / (width - 2 * inset).coerceAtLeast(1f)).coerceIn(0f, 1f)
-        return ((f * 24f).roundToInt() - 12) / 2f
-    }
-    Box(
-        Modifier
-            .fillMaxWidth()
-            .heightIn(min = 48.dp)
-            .onSizeChanged { width = it.width.toFloat().coerceAtLeast(1f) }
-            .pointerInput(Unit) {
-                inset = 14.dp.toPx()
-                detectTapGestures(onTap = { onChange(at(it.x)) })
-            }
-            .pointerInput(Unit) {
-                detectHorizontalDragGestures { change, _ ->
-                    change.consume()
-                    onChange(at(change.position.x))
-                }
-            }
-            .semantics(mergeDescendants = true) {
-                contentDescription = label
-                stateDescription = valueText
-                progressBarRangeInfo = ProgressBarRangeInfo(value, -6f..6f, steps = 23)
-                setProgress { v -> onChange((v * 2f).roundToInt() / 2f); true }
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+        RnSliderTrack(
+            value = value, range = -6f..6f, step = 0.5f, enabled = true, name = label, valueText = valueText,
+            snap = { (it * 2f).roundToInt() / 2f },
+            colors = RnSliderColors(c.xtcFill, c.sliderInactive, c.thumb, c.chevron),
+            thumbSize = 28.dp, onChange = onChange, modifier = Modifier.fillMaxWidth(),
+            paintTrack = { start, end, px, thumbX ->
+                val y = size.height / 2f
+                val mid = px(0f)
+                drawLine(c.sliderInactive, Offset(start, y), Offset(end, y), 4.dp.toPx(), StrokeCap.Round)
+                drawLine(c.chevron, Offset(mid, y - 10.dp.toPx()), Offset(mid, y + 10.dp.toPx()), 2.dp.toPx(), StrokeCap.Round)
+                drawLine(c.xtcFill, Offset(mid, y), Offset(thumbX, y), 4.dp.toPx(), StrokeCap.Round)
             },
-    ) {
-        Canvas(Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
-            val y = size.height / 2f
-            val r = 14.dp.toPx()
-            drawLine(c.sliderInactive, Offset(r, y), Offset(size.width - r, y), 4.dp.toPx(), StrokeCap.Round)
-            val mid = size.width / 2f
-            drawLine(c.chevron, Offset(mid, y - 10.dp.toPx()), Offset(mid, y + 10.dp.toPx()), 2.dp.toPx(), StrokeCap.Round)
-            val x = r + (size.width - 2 * r) * ((value + 6f) / 12f)
-            drawLine(c.xtcFill, Offset(mid, y), Offset(x, y), 4.dp.toPx(), StrokeCap.Round)
-            drawCircle(Color.Black.copy(alpha = 0.12f), r + 1.dp.toPx(), Offset(x, y + 1.dp.toPx()))
-            drawCircle(c.thumb, r, Offset(x, y))
-        }
+        )
     }
 }
 

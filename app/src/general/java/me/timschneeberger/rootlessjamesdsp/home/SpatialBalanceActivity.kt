@@ -93,10 +93,7 @@ class SpatialBalanceActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
-        val reduce = try {
-            Settings.Global.getFloat(contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
-        } catch (_: Exception) { false }
-        ui = ui.copy(reduceMotion = reduce, ready = engineReady())
+        ui = ui.copy(ready = engineReady())
     }
 
     override fun onStop() {

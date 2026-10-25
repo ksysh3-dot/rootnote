@@ -4,4 +4,5 @@
     <string name="rn_minus">Decrease %1$s</string>
     <string name="rn_plus">Increase %1$s</string>
     <string name="rn_selected">Selected</string>
+    <string name="story_replay">Play the picture again</string>
 </resources>

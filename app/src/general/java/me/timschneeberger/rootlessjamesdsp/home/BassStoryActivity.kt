@@ -35,7 +35,6 @@ import java.security.SecureRandom
  * the output limiter and the ear-protection ceiling stay on. Leaving the screen gives the user's settings back.
  */
 class BassStoryActivity : BaseActivity() {
-    private var reduceMotion by mutableStateOf(false)
     private var trial by mutableStateOf(TryUi())
     private val handler = Handler(Looper.getMainLooper())
     private val random = SecureRandom()
@@ -57,14 +56,11 @@ class BassStoryActivity : BaseActivity() {
             onKind = { k -> trial = trial.copy(kind = k) },
             onAgain = { trial = availability(TryUi()) },
         )
-        setContent { BassStory(reduceMotion = reduceMotion, trial = trial, actions = actions, onClose = { finish() }) }
+        setContent { BassStory(trial = trial, actions = actions, onClose = { finish() }) }
     }
 
     override fun onResume() {
         super.onResume()
-        reduceMotion = try {
-            Settings.Global.getFloat(contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
-        } catch (_: Exception) { false }
         if (trial.phase == TryUi.IDLE) trial = availability(trial)
         handler.removeCallbacks(watch)
         handler.post(watch)

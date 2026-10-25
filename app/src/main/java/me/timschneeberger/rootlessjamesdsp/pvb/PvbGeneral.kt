@@ -202,6 +202,8 @@ object PvbGeneral {
     /** pvb_flags: developer-mode consent given, gauge style, warning counts and hidden warnings. */
     const val KEY_DEV_CONSENT = "dev_consent"
     const val KEY_DEV_GAUGE_VU = "dev_gauge_vu"
+    /** "폰 마이크 보정" (developer mode): the declared microphone response comes off microphone views. Default on. */
+    const val KEY_DEV_MIC_CORR = "dev_mic_spectrum_corr"
 
     /** Developer mode is offered: general build, research tools unlocked. */
     val devModeAvailable: Boolean get() = PvbBuild.general && PvbBuild.researchUnlocked
