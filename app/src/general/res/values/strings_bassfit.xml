@@ -171,7 +171,6 @@
     <string name="fit_val_copied">Log copied</string>
     <string name="fit_noise_corr">Noise correction</string>
     <string name="fit_noise_corr_line">Turn on when the room is not fully quiet. Step 1 adjusts its sounds for the room noise the microphone measured. A rough correction.</string>
-    <string name="fit_r_noise_line">Added to the 100 Hz sound in step 1</string>
     <string name="fit_abx_unsure">Not sure</string>
     <string name="fit_mcal_title">Microphone match (UMIK-1)</string>
     <string name="fit_mcal_note">Measures the real sensitivity and bass response of this phone microphone against the UMIK-1. Put the phone on a soft stand and the UMIK-1 1-2 cm beside the bottom microphone hole of the phone. First measure \"Room\" with nothing playing, then play pink noise from a PC speaker and measure \"Pink noise\". While the noise is measured, save the third-octave values of the UMIK-1 in REW. Each recording source takes 12 s. No audio is saved, only the level per band.</string>
@@ -185,4 +184,8 @@
     <string name="fit_mcal_line_room">%1$s: room at 1 kHz %2$s dB</string>
     <string name="fit_mcal_line_noise">%1$s: noise at 1 kHz %2$s dB, usable bands %3$d / %4$d</string>
     <string name="fit_mcal_rows">%1$d lines recorded</string>
+    <string name="fit_mic_declared">Microphone sensitivity declared by the phone: %1$s dBFS (94 dB SPL, 1 kHz), response at 100 Hz %2$s dB</string>
+    <string name="fit_mic_declared_none">This phone does not declare its microphone sensitivity. Noise correction uses the Android guideline value.</string>
+    <string name="fit_r_noise_line_phone">Added to the 100 Hz sound in step 1. Computed with the microphone sensitivity the phone declares.</string>
+    <string name="fit_r_noise_line_guess">Added to the 100 Hz sound in step 1. The microphone sensitivity is unknown, so the Android guideline value was used. It can be far off.</string>
 </resources>

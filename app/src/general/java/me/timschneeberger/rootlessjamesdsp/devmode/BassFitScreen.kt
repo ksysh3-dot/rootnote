@@ -148,6 +148,8 @@ data class FitUi(
     /** One summary line per recording source of the last step. */
     val micCalLines: List<String> = emptyList(),
     val micCalRows: Int = 0,
+    /** What the phone declares about its microphone (validation screen). */
+    val micDeclared: String = "",
 )
 
 class FitActions(
@@ -469,7 +471,7 @@ private fun Result(ui: FitUi) {
         else -> stringResource(R.string.fit_r_not_found)
     })
     r.noiseCorrectionDb?.let { RnNavRow(stringResource(R.string.fit_noise_corr), onClick = null, chevron = false,
-        line = stringResource(R.string.fit_r_noise_line), value = stringResource(R.string.fit_db, BassFitActivity.signed(it))) }
+        line = stringResource(if (r.noiseSensFromPhone) R.string.fit_r_noise_line_phone else R.string.fit_r_noise_line_guess), value = stringResource(R.string.fit_db, BassFitActivity.signed(it))) }
     MicFloor(ui, r)
     if (r.floor != null && r.edgeHz != null) RnNavRow(stringResource(R.string.fit_r_edge), onClick = null, chevron = false,
         line = if (r.edgeHz > r.floor.boundaryHz + 1) stringResource(R.string.fit_r_edge_raised) else null,
@@ -632,6 +634,7 @@ private fun Validate(ui: FitUi, actions: FitActions) {
     RnBand()
     RnSectionTitle(stringResource(R.string.fit_mcal_title))
     RnParagraph(stringResource(R.string.fit_mcal_note))
+    if (ui.micDeclared.isNotEmpty()) RnParagraph(ui.micDeclared)
     val busy = ui.micCalPhase != null
     RnNavRow(stringResource(R.string.fit_mcal_room), chevron = false, enabled = !busy,
         line = if (ui.micCalPhase == 0) stringResource(R.string.fit_mcal_recording) else null,

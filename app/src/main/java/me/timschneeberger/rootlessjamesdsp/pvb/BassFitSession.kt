@@ -100,6 +100,8 @@ data class FitResult(
     val breakupCatchBuzzes: Int = 0,
     /** "소음 보정": the correction of the 100 Hz burst, dB (null: off). */
     val noiseCorrectionDb: Double? = null,
+    /** The noise correction used the phone's declared microphone sensitivity (else the Android guideline's). */
+    val noiseSensFromPhone: Boolean = false,
     /** Only the harmonic shape was asked ([FitScope.SHAPE]): the other rows of the result are not shown. */
     val shapeOnly: Boolean = false,
 ) {
@@ -143,6 +145,8 @@ class BassFitSession(val seed: Long, val storedStrengthDb: Double, val scope: Fi
     var noiseBandsDb: DoubleArray? = null
     /** The recording source's sensitivity ([NoiseMasking.splOffsetDb]). */
     var noiseSplOffsetDb: Double = NoiseMasking.SPL_OFFSET_DB
+    /** The offset came from the sensitivity the phone declares ([NoiseMasking.offsetFor]), not the guideline. */
+    var noiseSensFromPhone: Boolean = false
     private var refDone = false
     private var floor: BassFitMapping.FloorSettings? = null
     private val edgeSeed = sub()
@@ -384,6 +388,7 @@ class BassFitSession(val seed: Long, val storedStrengthDb: Double, val scope: Fi
                 breakupCatchBuzzes = b?.catchBuzzes ?: 0,
                 shapeOnly = scope == FitScope.SHAPE,
                 noiseCorrectionDb = noiseBandsDb?.let { NoiseMasking.correctionDb(it, 100.0, noiseSplOffsetDb) },
+                noiseSensFromPhone = noiseBandsDb != null && noiseSensFromPhone,
             )
         }
 }

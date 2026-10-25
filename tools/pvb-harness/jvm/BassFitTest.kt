@@ -335,6 +335,12 @@ fun main() {
     val corrected = FloorStaircase(1, refDb = -40.0, noiseDb = { hz -> NoiseMasking.correctionDb(office, hz) })
     check(abs(corrected.levelDb(100.0) - (plain.levelDb(100.0) + c100)) < 1e-9, "noise correction: applied to the floor bursts")
 
+    // --- declared microphone sensitivity
+    check(NoiseMasking.offsetFor(true, -37.0) == (131.0 to true), "declared sensitivity: S26 Ultra's -37 dBFS gives 131 dB for UNPROCESSED")
+    check(NoiseMasking.offsetFor(false, -37.0) == (NoiseMasking.SPL_OFFSET_DB to false), "declared sensitivity: not used for VOICE_RECOGNITION (it may add gain)")
+    check(NoiseMasking.offsetFor(true, null) == (NoiseMasking.SPL_OFFSET_UNPROCESSED_DB to false) && NoiseMasking.offsetFor(true, 0.0).second == false,
+        "declared sensitivity: none or a placeholder falls back to the guideline")
+
     // --- microphone match (UMIK-1)
     val calRoom = DoubleArray(MicCal.BANDS.size) { -80.0 }
     val calNoise = DoubleArray(MicCal.BANDS.size) { if (it == 0) -70.0 else -40.0 }

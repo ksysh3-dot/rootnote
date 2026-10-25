@@ -422,6 +422,25 @@ object NoiseMasking {
     const val SPL_OFFSET_DB = 112.4
     const val SPL_OFFSET_UNPROCESSED_DB = 130.0
     fun splOffsetDb(unprocessed: Boolean): Double = if (unprocessed) SPL_OFFSET_UNPROCESSED_DB else SPL_OFFSET_DB
+
+    /**
+     * Sensitivities a phone may declare for its built-in microphone (MicrophoneInfo.getSensitivity: dB re full scale
+     * for 94 dB SPL at 1 kHz) that are taken as real; outside, the declared value is ignored as a placeholder.
+     */
+    const val DECLARED_MIN_DBFS = -55.0
+    const val DECLARED_MAX_DBFS = -15.0
+
+    /**
+     * The offset for a recording source: from the sensitivity the phone declares for its built-in microphone
+     * ([declaredDbfs], null = none) when recording UNPROCESSED, which adds no gain to the microphone (the S26 Ultra
+     * declares -37 dBFS: offset 131.0 against the guideline's 130.0); otherwise the guideline value
+     * ([splOffsetDb]: VOICE_RECOGNITION may add gain the microphone's own data does not show). Second: whether the
+     * phone's value was used.
+     */
+    fun offsetFor(unprocessed: Boolean, declaredDbfs: Double?): Pair<Double, Boolean> =
+        if (unprocessed && declaredDbfs != null && declaredDbfs in DECLARED_MIN_DBFS..DECLARED_MAX_DBFS)
+            (94.0 - declaredDbfs) to true
+        else splOffsetDb(unprocessed) to false
     /** Below this the microphone's response is allowed to be off by 20 dB: the bands under it are not used. */
     const val LOWEST_TRUSTED_HZ = 100.0
     /** A tone is just masked about this far from the noise power in its third-octave band (critical ratio ~17 dB

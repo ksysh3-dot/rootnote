@@ -306,7 +306,7 @@ class BassFitActivity : RnActivity() {
                     latencyS = lat
                     roomBands = bands
                     roomRaw = m.unprocessed
-                    if (ui.noiseCorr) session?.let { it.noiseBandsDb = bands; it.noiseSplOffsetDb = NoiseMasking.splOffsetDb(m.unprocessed) }
+                    if (ui.noiseCorr) session?.let { applyNoise(it, bands, m.unprocessed) }
                     ui = ui.copy(micFloorHz = probe?.floorHz(), micClipped = probe?.clipped == true)
                     if (verdict.pass) {
                         ui = ui.copy(verdict = verdict)
@@ -586,6 +586,7 @@ class BassFitActivity : RnActivity() {
     private fun validateState(): FitUi = ui.copy(
         screen = FitScreen.VALIDATE, validating = false, prompt = null, playing = null, paused = null,
         ready = engineReady(), logLines = logLines().coerceAtLeast(0), umikPlaying = null, micCalRows = micCalRows(),
+        micDeclared = declaredMicLine(),
     )
 
     private fun endValidation() {
@@ -624,7 +625,7 @@ class BassFitActivity : RnActivity() {
         conditionHp = p.runs[planIndex]
         planIndex++
         session = BassFitSession(SecureRandom().nextLong(), stored().vbLevelDb.toDouble(), ui.valScope)
-            .also { if (ui.noiseCorr) { it.noiseBandsDb = roomBands; it.noiseSplOffsetDb = NoiseMasking.splOffsetDb(roomRaw == true) } }
+            .also { if (ui.noiseCorr) applyNoise(it, roomBands, roomRaw == true) }
         // the microphone (silent-interval checks) only for the step-1 runs
         if (ui.valScope == FitScope.FLOOR && mic == null &&
             ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED)
@@ -659,6 +660,7 @@ class BassFitActivity : RnActivity() {
             refDb = r.refThresholdDb.takeIf { floor },
             noiseCorrDb = r.noiseCorrectionDb.takeIf { floor },
             micSource = roomRaw?.let { if (it) "unprocessed" else "voice_recognition" },
+            micDeclaredDbfs = declaredMic?.sensDbfs,
         ))
         ui = ui.copy(screen = FitScreen.VAL_NEXT, prompt = null, playing = null, logLines = logLines().coerceAtLeast(0))
     }
@@ -696,6 +698,45 @@ class BassFitActivity : RnActivity() {
     }
 
     private fun toast(res: Int) = Toast.makeText(this, res, Toast.LENGTH_SHORT).show()
+
+    // ------------------------------------------------------------------------------------------------ declared microphone
+
+    /** What the phone declares about its built-in microphone (AudioManager.getMicrophones; no permission needed). */
+    private data class DeclaredMic(val address: String, val sensDbfs: Double?, val responseAt100Db: Double?)
+
+    private val declaredMic: DeclaredMic? by lazy { readDeclaredMic() }
+
+    /**
+     * The built-in microphone the phone lists first by its group index ("bottom" first when it names one): the one
+     * a recording uses by default. Its sensitivity is null when the phone does not declare one.
+     */
+    private fun readDeclaredMic(): DeclaredMic? = try {
+        val mics = getSystemService(AudioManager::class.java)?.microphones.orEmpty()
+            .filter { it.type == android.media.AudioDeviceInfo.TYPE_BUILTIN_MIC }
+        val m = mics.firstOrNull { it.address.contains("bottom", ignoreCase = true) } ?: mics.minByOrNull { it.indexInTheGroup }
+        m?.let { mic ->
+            val sens = mic.sensitivity.takeIf { it != android.media.MicrophoneInfo.SENSITIVITY_UNKNOWN }?.toDouble()
+            val fr = mic.frequencyResponse
+            val at100 = fr.takeIf { it.isNotEmpty() }?.minByOrNull { kotlin.math.abs(it.first - 100f) }?.second?.toDouble()
+            DeclaredMic(mic.address ?: "", sens, at100)
+        }
+    } catch (_: Exception) { null }
+
+    /** Noise correction for [s]: the room's band levels and the source's offset (the phone's value where usable). */
+    private fun applyNoise(s: BassFitSession, bands: DoubleArray?, unprocessed: Boolean) {
+        val (offset, fromPhone) = NoiseMasking.offsetFor(unprocessed, declaredMic?.sensDbfs)
+        s.noiseBandsDb = bands
+        s.noiseSplOffsetDb = offset
+        s.noiseSensFromPhone = fromPhone
+    }
+
+    /** One line for the screens: what the phone declares (or that it declares nothing). */
+    private fun declaredMicLine(): String {
+        val d = declaredMic
+        fun f(v: Double) = String.format(Locale.ROOT, "%.1f", v)
+        return if (d?.sensDbfs == null) getString(R.string.fit_mic_declared_none)
+        else getString(R.string.fit_mic_declared, f(d.sensDbfs), d.responseAt100Db?.let(::f) ?: "—")
+    }
 
     // ------------------------------------------------------------------------------------------------ microphone calibration
 
