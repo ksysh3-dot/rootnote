@@ -198,7 +198,7 @@ object SweepDistortion {
         ?.takeIf { kotlin.math.abs(log2(it.hz / hz)) <= 1.0 / 12 + 1e-9 && it.thdDb.isFinite() }?.thdDb
 
     /** "63 Hz −12 · 80 Hz −13 · ..." for the screens. */
-    fun line(pts: List<Point>): String = SHOWN_HZ.mapNotNull { f ->
+    fun line(pts: List<Point>): String = SHOWN_HZ.toList().mapNotNull { f ->
         thdAt(pts, f)?.let { String.format(java.util.Locale.ROOT, "%d Hz %s%.0f", f.toInt(), if (it < 0) "\u2212" else "+", kotlin.math.abs(it)) }
     }.joinToString(" · ")
 
