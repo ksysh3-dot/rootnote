@@ -36,6 +36,11 @@ OUTSB="$HERE/../build/jvm-spatial-balance"
 rm -rf "$OUTSB"; mkdir -p "$OUTSB"
 $KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/DevParams.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/DevTestSound.kt" "$APP/SpatialBalance.kt" "$HERE/SpatialBalanceTest.kt" -d "$OUTSB"
 java -cp "$OUTSB:$KOTLIN_STDLIB" SpatialBalanceTestKt
+# "가로채기": start decision, server arguments, failure text (pure Kotlin)
+OUTI="$HERE/../build/jvm-intercept"
+rm -rf "$OUTI"; mkdir -p "$OUTI"
+$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/../../../app/src/main/java/me/timschneeberger/rootlessjamesdsp/capture/InterceptPolicy.kt" "$HERE/InterceptPolicyTest.kt" -d "$OUTI"
+java -cp "$OUTI:$KOTLIN_STDLIB" InterceptPolicyTestKt
 # service silence pause (battery; pure Kotlin)
 OUTG="$HERE/../build/jvm-silence"
 rm -rf "$OUTG"; mkdir -p "$OUTG"

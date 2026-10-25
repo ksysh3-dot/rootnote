@@ -177,7 +177,7 @@
     <string name="welcome_know_delay_title">소리가 조금 늦게 나와요</string>
     <string name="welcome_know_delay_body">처리하느라 약 0.15초 늦어요. 영상이나 게임 소리가 어긋나면 그 앱을 홈의 \'앱별 제외\'에 넣어 주세요. 제외한 앱은 원래 소리로 바로 나와요.</string>
     <string name="welcome_know_speaker_title">내장 스피커에서만 바뀌어요</string>
-    <string name="welcome_know_speaker_body">이어폰과 블루투스는 원래 소리 그대로예요. 소리 캡처를 막는 앱(예: Spotify, Chrome, SoundCloud)도 처리되지 않아요.</string>
+    <string name="welcome_know_speaker_body">이어폰과 블루투스는 원래 소리 그대로예요. 소리 캡처를 막는 앱(예: Spotify, Chrome)은 가로채기 방식(Shizuku)에서는 처리되고, 화면 공유 방식에서는 처리되지 않아요.</string>
     <string name="welcome_know_others_title">다른 음향 효과 앱과는 따로 써 주세요</string>
     <string name="welcome_know_others_body">함께 켜 두면 처리가 멈출 수 있어요.</string>
     <string name="welcome_know_volume">최대 볼륨으로 오래 들으면 스피커가 뜨거워질 수 있어요.</string>

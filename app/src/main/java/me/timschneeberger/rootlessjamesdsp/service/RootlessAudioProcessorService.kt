@@ -18,6 +18,7 @@ import android.media.AudioRecord
 import me.timschneeberger.rootlessjamesdsp.capture.CaptureMode
 import me.timschneeberger.rootlessjamesdsp.capture.CaptureSource
 import me.timschneeberger.rootlessjamesdsp.capture.CaptureState
+import me.timschneeberger.rootlessjamesdsp.capture.InterceptPolicy
 import me.timschneeberger.rootlessjamesdsp.capture.InterceptSource
 import me.timschneeberger.rootlessjamesdsp.capture.RecordSource
 import android.media.AudioTrack
@@ -282,7 +283,9 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
         startForeground(
             Notifications.ID_SERVICE_STATUS,
             ServiceNotificationHelper.createServiceNotification(this, arrayOf()),
-            ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
+            // "가로채기" needs no screen-share consent: the service only plays the processed sound. The projection type is
+            // added in onStartCommand once a consent is there (a projection needs it before getMediaProjection).
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
         )
     }
 
@@ -340,8 +343,15 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
 
         // Setup media projection
         mediaProjectionStartIntent = intent.extras?.getParcelableAs(EXTRA_MEDIA_PROJECTION_DATA)
+        // no consent: only "가로채기" can capture in this start (the app checked it can run)
+        val interceptOnly = mediaProjectionStartIntent == null && CaptureMode.get(this) == CaptureMode.INTERCEPT
 
-        mediaProjection = try {
+        mediaProjection = if (mediaProjectionStartIntent == null) null else try {
+            startForeground(
+                Notifications.ID_SERVICE_STATUS,
+                ServiceNotificationHelper.createServiceNotification(this, arrayOf()),
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION or ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
+            )
             mediaProjectionManager.getMediaProjection(
                 Activity.RESULT_OK,
                 mediaProjectionStartIntent!!
@@ -356,7 +366,7 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
 
         mediaProjection?.registerCallback(projectionCallback, Handler(Looper.getMainLooper()))
 
-        if (mediaProjection != null) {
+        if (mediaProjection != null || interceptOnly) {
             // report "started" only when the recorder and track were really built (they can fail and stop the service)
             if (startRecording()) {
                 me.timschneeberger.rootlessjamesdsp.pvb.FirstWeekStore.onCaptureStarted(this)
@@ -877,8 +887,12 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
                 if (recorder.intercepting && recorder.state != AudioRecord.STATE_INITIALIZED) interceptFailed = true
                 try { recorder.stop() } catch (ignored: Exception) {}
                 try { recorder.release() } catch (ignored: Exception) {}
-                if (mediaProjection == null) {
-                    Timber.e("Media projection handle is null, stopping service")
+                if (mediaProjection == null && interceptFailed) {
+                    // "가로채기" ended (Shizuku stopped) and this start has no screen-share consent: ask for it
+                    Timber.e("Intercept capture ended without a screen-share consent, stopping service")
+                    CaptureState.interceptStartFailed = true
+                    sendLocalBroadcast(Intent(Constants.ACTION_CAPTURE_NEEDS_CONSENT))
+                    mainHandler.post { ServiceNotificationHelper.pushPermissionPromptNotification(this@RootlessAudioProcessorService) }
                     requestServiceStop()
                     return false
                 }
@@ -1348,13 +1362,27 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
             val excluded = excludedUids()
             val src = InterceptSource.start(this, sampleRate, excluded)
             if (src != null) {
+                CaptureState.interceptStartFailed = false
                 setIntercepting(true, null)
                 return src
             }
+            if (InterceptPolicy.afterFailure(mediaProjection != null) == InterceptPolicy.After.ASK_CONSENT) consentNeeded()
             interceptFailed = true
             setIntercepting(false, InterceptSource.lastError ?: "unknown")
         } else setIntercepting(false, null)
         return RecordSource(buildAudioRecord(encoding, sampleRate, bufferSizeBytes))
+    }
+
+    /**
+     * "가로채기" could not run and there is no screen-share consent to fall back on: the next start asks for it. The app
+     * (if it is on screen) asks right away; otherwise the notification does it.
+     */
+    private fun consentNeeded() {
+        Timber.w("Intercept capture unavailable (${InterceptSource.lastError}) and no screen-share consent: asking for it")
+        CaptureState.interceptStartFailed = true
+        sendLocalBroadcast(Intent(Constants.ACTION_CAPTURE_NEEDS_CONSENT))
+        mainHandler.post { ServiceNotificationHelper.pushPermissionPromptNotification(this) }
+        throw IllegalStateException("no capture without a screen-share consent")
     }
 
     private fun setIntercepting(on: Boolean, fallbackReason: String?) {

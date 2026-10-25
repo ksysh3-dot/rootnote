@@ -177,7 +177,7 @@
     <string name="welcome_know_delay_title">Sound comes a little late</string>
     <string name="welcome_know_delay_body">Processing makes the sound about 0.15 s late. If video or game sound is off, add that app under \"Exclude apps\" on the home screen: excluded apps play their original sound right away.</string>
     <string name="welcome_know_speaker_title">Only the built-in speaker changes</string>
-    <string name="welcome_know_speaker_body">Earphones and Bluetooth play the original sound. Apps that block audio capture (for example Spotify, Chrome, SoundCloud) are not processed either.</string>
+    <string name="welcome_know_speaker_body">Earphones and Bluetooth play the original sound. Apps that block audio capture (for example Spotify, Chrome) are processed with the intercept capture (Shizuku) and not with screen share.</string>
     <string name="welcome_know_others_title">Use other audio effect apps separately</string>
     <string name="welcome_know_others_body">With both on, processing can stop.</string>
     <string name="welcome_know_volume">Long listening at full volume can heat the speakers.</string>

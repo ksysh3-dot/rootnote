@@ -86,6 +86,7 @@ import timber.log.Timber
 import java.io.File
 import java.util.Timer
 import kotlin.concurrent.schedule
+import me.timschneeberger.rootlessjamesdsp.capture.CaptureStart
 
 
 class MainActivity : BaseActivity() {
@@ -676,6 +677,11 @@ class MainActivity : BaseActivity() {
                 PvbGeneral.maybeShowUnmeasuredNotice(this)
                 requestCapturePermission()
             })
+            return
+        }
+        if (isRootless() && CaptureStart.withoutConsent(this)) {
+            binding.powerToggle.isToggled = true
+            RootlessAudioProcessorService.start(this, null)
             return
         }
         if(app.mediaProjectionStartIntent != null && isRootless() && !SdkCheck.isVanillaIceCream) {

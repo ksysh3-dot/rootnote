@@ -33,11 +33,25 @@ object CaptureState {
     @Volatile var intercepting = false
     /** "가로채기" was chosen but could not run in this service start; why (InterceptSource.lastError). */
     @Volatile var fallbackReason: String? = null
+    /**
+     * A start without the screen-share consent failed ("가로채기" could not run after all): the next start asks for the
+     * consent. Cleared as soon as "가로채기" runs again (a consent-backed start tries it first).
+     */
+    @Volatile var interceptStartFailed = false
+}
+
+/** How a start begins: without the screen-share consent when "가로채기" is chosen and can run right now. */
+object CaptureStart {
+    fun withoutConsent(context: Context): Boolean = InterceptPolicy.startsWithoutConsent(
+        CaptureMode.get(context) == CaptureMode.INTERCEPT, android.os.Build.VERSION.SDK_INT,
+        CaptureState.interceptStartFailed, InterceptSource.shizukuReady())
 }
 
 /** [CaptureState.fallbackReason] (InterceptSource.lastError) in the user's words. */
-fun captureReasonText(context: Context, reason: String): String = context.getString(when (reason) {
-    "shizuku_off" -> me.timschneeberger.rootlessjamesdsp.R.string.capture_reason_shizuku_off
-    "android_13_needed" -> me.timschneeberger.rootlessjamesdsp.R.string.capture_reason_android_13
-    else -> me.timschneeberger.rootlessjamesdsp.R.string.capture_reason_other
-})
+fun captureReasonText(context: Context, reason: String): String = when (InterceptReason.kind(reason)) {
+    InterceptReason.Kind.SHIZUKU_OFF -> context.getString(me.timschneeberger.rootlessjamesdsp.R.string.capture_reason_shizuku_off)
+    InterceptReason.Kind.ANDROID_13 -> context.getString(me.timschneeberger.rootlessjamesdsp.R.string.capture_reason_android_13)
+    // the system's own message, so a report can say what failed
+    InterceptReason.Kind.OTHER -> context.getString(me.timschneeberger.rootlessjamesdsp.R.string.capture_reason_other) +
+        " (" + InterceptReason.detail(reason) + ")"
+}

@@ -40,8 +40,9 @@ object InterceptServer {
 
     @JvmStatic
     fun main(args: Array<String>) {
-        val rate = args.getOrNull(0)?.toIntOrNull() ?: 48000
-        val excluded = args.getOrNull(1)?.split(',')?.mapNotNull { it.trim().toIntOrNull() }.orEmpty()
+        val parsed = InterceptArgs.parse(args)
+        val rate = parsed.rate
+        val excluded = parsed.excluded
         val err = System.err
         try {
             if (Build.VERSION.SDK_INT < 33) throw IllegalStateException("Android 13 or later needed")
@@ -78,9 +79,11 @@ object InterceptServer {
         val addRule = ruleBuilderClass.getMethod("addMixRule", Int::class.javaPrimitiveType, Any::class.java)
         val matchUsage = ruleClass.getField("RULE_MATCH_ATTRIBUTE_USAGE").getInt(null)
         for (u in USAGES) addRule.invoke(ruleBuilder, matchUsage, AudioAttributes.Builder().setUsage(u).build())
-        // as AudioPlaybackCaptureConfiguration.excludeUid does
-        val excludeUid = ruleClass.getField("RULE_EXCLUDE_UID").getInt(null)
-        for (uid in excluded) addRule.invoke(ruleBuilder, excludeUid, Integer.valueOf(uid))
+        // as AudioPlaybackCaptureConfiguration.excludeUid does: excludeMixRule(RULE_MATCH_UID, uid). addMixRule refuses
+        // the combined RULE_EXCLUDE_UID value ("Illegal rule value 32772", seen on a Galaxy S26 Ultra).
+        val matchUid = ruleClass.getField("RULE_MATCH_UID").getInt(null)
+        val excludeMixRule = ruleBuilderClass.getMethod("excludeMixRule", Int::class.javaPrimitiveType, Any::class.java)
+        for (uid in excluded) excludeMixRule.invoke(ruleBuilder, matchUid, Integer.valueOf(uid))
         val rule = ruleBuilderClass.getMethod("build").invoke(ruleBuilder)
 
         val format = AudioFormat.Builder().setEncoding(AudioFormat.ENCODING_PCM_16BIT).setSampleRate(rate)

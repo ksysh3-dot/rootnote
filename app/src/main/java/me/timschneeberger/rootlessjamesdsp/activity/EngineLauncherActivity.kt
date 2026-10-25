@@ -13,6 +13,7 @@ import me.timschneeberger.rootlessjamesdsp.utils.SdkCheck
 import me.timschneeberger.rootlessjamesdsp.utils.isRoot
 import me.timschneeberger.rootlessjamesdsp.utils.sdkAbove
 import timber.log.Timber
+import me.timschneeberger.rootlessjamesdsp.capture.CaptureStart
 
 /**
  * Helper activity to launch the rootless foreground service
@@ -37,6 +38,13 @@ class EngineLauncherActivity : BaseActivity() {
                 me.timschneeberger.rootlessjamesdsp.pvb.PvbBuild.general,
                 me.timschneeberger.rootlessjamesdsp.pvb.PvbBuild.firstRunConfirmed)) {
             startActivity(me.timschneeberger.rootlessjamesdsp.pvb.PvbGeneral.homeIntent(this).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            finish()
+            return
+        }
+
+        // "가로채기" can run right now: start without the screen-share consent
+        if (CaptureStart.withoutConsent(this)) {
+            RootlessAudioProcessorService.start(this, null)
             finish()
             return
         }

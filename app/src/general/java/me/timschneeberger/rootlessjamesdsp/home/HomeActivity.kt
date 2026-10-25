@@ -52,6 +52,9 @@ import me.timschneeberger.rootlessjamesdsp.utils.extensions.PermissionExtensions
 import me.timschneeberger.rootlessjamesdsp.utils.extensions.PermissionExtensions.hasProjectMediaAppOp
 import me.timschneeberger.rootlessjamesdsp.utils.extensions.PermissionExtensions.hasRecordPermission
 import timber.log.Timber
+import me.timschneeberger.rootlessjamesdsp.capture.CaptureStart
+import me.timschneeberger.rootlessjamesdsp.utils.notifications.Notifications
+import android.app.NotificationManager
 
 /**
  * Launch screen of the general build (Rootnote). The DSP screen (advanced/RnAdvancedActivity) is reached through "Advanced
@@ -88,7 +91,12 @@ class HomeActivity : BaseActivity() {
     private val statusListener: () -> Unit = { refresh() }
     private val serviceReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            startPending = false
+            if (intent.action == Constants.ACTION_CAPTURE_NEEDS_CONSENT) {
+                // "가로채기" could not run: ask for the screen-share consent here instead of by notification
+                getSystemService<NotificationManager>()?.cancel(Notifications.ID_SERVICE_STARTUP)
+                startPending = true
+                requestCapturePermission()
+            } else startPending = false
             refresh()
         }
     }
@@ -214,7 +222,8 @@ class HomeActivity : BaseActivity() {
         } else
             PvbGeneral.maybeShowUnmeasuredNotice(this)
 
-        if (showAndroid15Alert()) return
+        // the screen-share protections matter only to the screen-share capture
+        if (!CaptureStart.withoutConsent(this) && showAndroid15Alert()) return
 
         // Back from onboarding, or processing expected but the service is not running: ask for capture now
         // (MainActivity does the same whenever its service is not running).
@@ -234,6 +243,7 @@ class HomeActivity : BaseActivity() {
         PvbRuntime.addStatusListener(statusListener)
         registerLocalReceiver(serviceReceiver, IntentFilter(Constants.ACTION_SERVICE_STARTED).apply {
             addAction(Constants.ACTION_SERVICE_STOPPED)
+            addAction(Constants.ACTION_CAPTURE_NEEDS_CONSENT)
         })
         refresh()
     }
@@ -402,6 +412,12 @@ class HomeActivity : BaseActivity() {
         if (isRoot()) {
             // the audio effect does the work; the service attaches it to the apps' sessions
             RootAudioProcessorService.startServiceEnhanced(this)
+            armPendingTimeout()
+            return
+        }
+        // "가로채기" can run right now: no screen-share consent (the service asks for one if it fails after all)
+        if (CaptureStart.withoutConsent(this)) {
+            RootlessAudioProcessorService.start(this, null)
             armPendingTimeout()
             return
         }

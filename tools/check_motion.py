@@ -30,7 +30,7 @@ RULES = [
     (re.compile(r"ANIMATOR_DURATION_SCALE|\banimationsOff\s*\("), "the animation setting is read once, in ui/RnMotion.kt"),
     (re.compile(r"\b(LocalReduceMotion|LocalDevReduceMotion)\b|\breduceMotion\b"), "use LocalRnReduceMotion (ui/RnMotion.kt)"),
 ]
-LONG = re.compile(r"\bSeed\.(?:move|enter|exit)\(\s*(?:ms\s*=\s*)?(\d+)")
+LONG = re.compile(r"\bSeed\.(?:move|enter|exit)\s*(?:<[^>]*>)?\s*\(\s*(?:ms\s*=\s*)?(\d+)")
 NUMERIC_CROSS = re.compile(r"\bcrossFade\(\s*(\d+)")
 
 
