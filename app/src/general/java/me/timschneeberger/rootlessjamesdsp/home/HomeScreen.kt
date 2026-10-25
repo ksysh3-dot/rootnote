@@ -81,6 +81,11 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import me.timschneeberger.rootlessjamesdsp.ui.RN_MS_COLOR
+import me.timschneeberger.rootlessjamesdsp.ui.RN_MS_MOVE
+import me.timschneeberger.rootlessjamesdsp.ui.RnEase
+import me.timschneeberger.rootlessjamesdsp.ui.rnRelease
+import me.timschneeberger.rootlessjamesdsp.ui.rnSettle
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
@@ -188,16 +193,21 @@ class HomeActions(
 private val LocalPalette = staticCompositionLocalOf<RootnotePalette> { error("RootnotePalette not provided") }
 private val LocalReduceMotion = staticCompositionLocalOf { false }
 
-/** cubic-bezier(0.32, 0.72, 0, 1): switches, dimming, colour changes. */
-private val IosEase = CubicBezierEasing(0.32f, 0.72f, 0f, 1f)
-/** cubic-bezier(0.34, 1.56, 0.64, 1): the chip's release with a slight overshoot. */
-private val OvershootEase = CubicBezierEasing(0.34f, 1.56f, 0.64f, 1f)
+/** The one curve of docs/DESIGN.md 6 (defined in ui/RnTheme.kt): switches, dimming, colour changes. */
+private val IosEase = RnEase
 
 /** Readability rule for changing text: the old text fades out completely (150 ms), then the new one fades in. */
 private fun sequentialFade(): ContentTransform = ContentTransform(
     targetContentEnter = fadeIn(tween(150, delayMillis = 150, easing = LinearEasing)),
     initialContentExit = fadeOut(tween(150, easing = LinearEasing)),
-    sizeTransform = SizeTransform(clip = false),
+    sizeTransform = SizeTransform(clip = false) { _, _ -> tween(RN_MS_MOVE, easing = IosEase) },
+)
+
+/** A tab swap: the two sections cross-fade (150 ms) and the height follows with the same curve and time. */
+private fun crossFade(): ContentTransform = ContentTransform(
+    targetContentEnter = fadeIn(tween(RN_MS_COLOR, easing = IosEase)),
+    initialContentExit = fadeOut(tween(RN_MS_COLOR, easing = IosEase)),
+    sizeTransform = SizeTransform(clip = false) { _, _ -> tween(RN_MS_COLOR, easing = IosEase) },
 )
 
 /** [spec], or an instant change when the system animations are off. */
@@ -238,7 +248,7 @@ private fun HomeContent(state: HomeUiState, actions: HomeActions, initialTab: In
         // Everything that only matters while processing is on: dimmed to 40 % and disabled when off.
         val dim by animateFloatAsState(
             targetValue = if (state.masterOn) 1f else 0.4f,
-            animationSpec = motion(tween(300, easing = IosEase)),
+            animationSpec = motion(tween(RN_MS_COLOR, easing = IosEase)),
             label = "dim",
         )
         var tab by rememberSaveable { mutableIntStateOf(initialTab) }
@@ -251,7 +261,7 @@ private fun HomeContent(state: HomeUiState, actions: HomeActions, initialTab: In
             targetState = tab,
             transitionSpec = {
                 if (reduce) ContentTransform(EnterTransition.None, ExitTransition.None, sizeTransform = null)
-                else sequentialFade()
+                else crossFade()
             },
             contentAlignment = Alignment.TopStart,
             label = "tab",
@@ -259,14 +269,14 @@ private fun HomeContent(state: HomeUiState, actions: HomeActions, initialTab: In
             if (selected == TAB_SPATIAL) {
                 val spatialDim by animateFloatAsState(
                     targetValue = if (state.processingOn) 1f else 0.4f,
-                    animationSpec = motion(tween(300, easing = IosEase)),
+                    animationSpec = motion(tween(RN_MS_COLOR, easing = IosEase)),
                     label = "spatialDim",
                 )
                 CompositionLocalProvider(LocalPalette provides c.spatial()) {
-                    SpatialSection(state, actions, Modifier.alpha(spatialDim))
+                    SpatialSection(state, actions, Modifier.graphicsLayer { alpha = spatialDim })
                 }
             } else {
-                BassSection(state, actions, Modifier.alpha(dim))
+                BassSection(state, actions, Modifier.graphicsLayer { alpha = dim })
             }
         }
 
@@ -333,11 +343,11 @@ private fun InfoButton(description: String, tint: Color, onClick: () -> Unit) {
 @Composable
 private fun RowScope.FeatureTab(label: String, selected: Boolean, on: Boolean, accent: Color, dot: Color, onClick: () -> Unit) {
     val c = LocalPalette.current
-    val colorSpec = motion(tween<Color>(300, easing = IosEase))
+    val colorSpec = motion(tween<Color>(RN_MS_COLOR, easing = IosEase))
     val bg by animateColorAsState(if (selected) c.bg else c.band, colorSpec, label = "tabBg")
     val fg by animateColorAsState(if (selected) accent else c.textSecondary, colorSpec, label = "tabText")
     val dotColor by animateColorAsState(if (on) dot else c.chevron, colorSpec, label = "tabDot")
-    val elevation by animateDpAsState(if (selected) 1.dp else 0.dp, motion(tween(300, easing = IosEase)), label = "tabLift")
+    val elevation by animateDpAsState(if (selected) 1.dp else 0.dp, motion(tween(RN_MS_COLOR, easing = IosEase)), label = "tabLift")
     val edge by animateColorAsState(if (selected) c.chipBorder else c.band, colorSpec, label = "tabEdge")
     val state = stringResource(if (on) R.string.home_tab_on else R.string.home_tab_off)
     Row(
@@ -541,7 +551,7 @@ private fun SpatialSection(state: HomeUiState, actions: HomeActions, modifier: M
     // Only one dimming at a time: the whole tab is already at 40 % while processing is off.
     val innerDim by animateFloatAsState(
         targetValue = if (state.xtcOn || !state.processingOn) 1f else 0.4f,
-        animationSpec = motion(tween(300, easing = IosEase)),
+        animationSpec = motion(tween(RN_MS_COLOR, easing = IosEase)),
         label = "xtcDim",
     )
     Column(modifier) {
@@ -563,7 +573,7 @@ private fun SpatialSection(state: HomeUiState, actions: HomeActions, modifier: M
                 )
             }
         }
-        Column(Modifier.alpha(innerDim).fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 8.dp)) {
+        Column(Modifier.graphicsLayer { alpha = innerDim }.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 8.dp)) {
             FlowRow(
                 modifier = Modifier.fillMaxWidth().padding(top = 4.dp).selectableGroup(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -641,7 +651,7 @@ private fun SpatialSection(state: HomeUiState, actions: HomeActions, modifier: M
         Box(Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp).fillMaxWidth().height(1.dp).background(c.divider))
         val balanceLine = if (state.xtcBalLoDb == 0f && state.xtcBalHiDb == 0f) stringResource(R.string.home_xtc_balance_none)
             else stringResource(R.string.home_xtc_balance_set, balanceSide(state.xtcBalLoDb), balanceSide(state.xtcBalHiDb))
-        Box(Modifier.alpha(innerDim)) {
+        Box(Modifier.graphicsLayer { alpha = innerDim }) {
             NavRow(stringResource(R.string.home_xtc_balance), "", if (active) actions.onXtcBalance else ({}), description = balanceLine)
         }
     }
@@ -824,7 +834,7 @@ private fun SwitchRow(
     val pressed by interaction.collectIsPressedAsState()
     val bg by animateColorAsState(
         targetValue = if (pressed && enabled) c.press else c.bg,
-        animationSpec = motion(tween(120)),
+        animationSpec = motion(if (pressed) tween(0) else tween(RN_MS_COLOR, easing = IosEase)),
         label = "rowPress",
     )
     Row(
@@ -855,19 +865,20 @@ private fun IosSwitch(checked: Boolean) {
     val c = LocalPalette.current
     val thumbX by animateDpAsState(
         targetValue = if (checked) 22.dp else 2.dp,
-        animationSpec = motion(tween(350, easing = IosEase)),
+        animationSpec = motion(tween(RN_MS_MOVE, easing = IosEase)),
         label = "switchThumb",
     )
     val track by animateColorAsState(
         targetValue = if (checked) c.fill else c.switchOff,
-        animationSpec = motion(tween(300, easing = IosEase)),
+        animationSpec = motion(tween(RN_MS_MOVE, easing = IosEase)),
         label = "switchTrack",
     )
     Box(Modifier.size(width = 51.dp, height = 31.dp).background(track, CircleShape)) {
         Box(
             Modifier
-                .offset(x = thumbX, y = 2.dp)
+                .offset(y = 2.dp)
                 .size(27.dp)
+                .graphicsLayer { translationX = thumbX.toPx() }
                 .shadow(3.dp, CircleShape)
                 .background(c.thumb, CircleShape)
         )
@@ -886,11 +897,11 @@ private fun PresetChip(label: String, selected: Boolean, enabled: Boolean, onCli
         animationSpec = when {
             reduce -> snap()
             pressed -> tween(120, easing = IosEase)
-            else -> tween(350, easing = OvershootEase)
+            else -> rnRelease()
         },
         label = "chipScale",
     )
-    val colorSpec = motion(tween<Color>(300, easing = IosEase))
+    val colorSpec = motion(tween<Color>(RN_MS_COLOR, easing = IosEase))
     val bg by animateColorAsState(if (selected) c.chipSelectedBg else c.chipBg, colorSpec, label = "chipBg")
     val border by animateColorAsState(if (selected) c.chipSelectedBorder else c.chipBorder, colorSpec, label = "chipBorder")
     val fg by animateColorAsState(if (selected) c.chipSelectedText else c.chipText, colorSpec, label = "chipText")
@@ -948,6 +959,7 @@ private fun StepSlider(
     var dragX by remember { mutableFloatStateOf(0f) }
     var held by remember { mutableStateOf(false) }
     var lastEmitted by remember { mutableIntStateOf(value) }
+    var lastTick by remember { mutableIntStateOf(-1) }
     LaunchedEffect(value) { lastEmitted = value }
     val maxNow by rememberUpdatedState(max)
     val rtlNow by rememberUpdatedState(rtl)
@@ -963,18 +975,24 @@ private fun StepSlider(
     fun emit(v: Int) {
         if (v == lastEmitted) return
         lastEmitted = v
-        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+        // one tick per step, but at most about 24 per sweep (a fine slider would buzz otherwise)
+        val tick = if (maxNow > 24) v * 24 / maxNow else v
+        if (tick != lastTick) {
+            lastTick = tick
+            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+        }
         onChangeNow(v)
     }
 
     val fraction by animateFloatAsState(
         targetValue = if (max > 0) value.toFloat() / max else 0f,
-        animationSpec = motion(spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMedium)),
+        // under the finger the thumb is the finger (no smoothing); a spring only after it is let go or a tap
+        animationSpec = motion(if (held) tween(0) else rnSettle()),
         label = "sliderPosition",
     )
     val thumbScale by animateFloatAsState(
         targetValue = if (held && enabled) 1.18f else 1f,
-        animationSpec = motion(spring(dampingRatio = 0.55f, stiffness = Spring.StiffnessMedium)),
+        animationSpec = motion(if (held) tween(120, easing = IosEase) else rnRelease()),
         label = "sliderThumb",
     )
     val dragState = rememberDraggableState { delta ->
@@ -1121,7 +1139,7 @@ private fun NavRow(title: String, summary: String, onClick: () -> Unit, descript
     val pressed by interaction.collectIsPressedAsState()
     val bg by animateColorAsState(
         targetValue = if (pressed) c.press else c.bg,
-        animationSpec = motion(tween(120)),
+        animationSpec = motion(if (pressed) tween(0) else tween(RN_MS_COLOR, easing = IosEase)),
         label = "navPress",
     )
     Row(

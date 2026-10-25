@@ -8,6 +8,8 @@ import android.provider.Settings
 import androidx.activity.compose.setContent
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.FiniteAnimationSpec
+import androidx.compose.animation.core.SpringSpec
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.snap
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -42,8 +44,19 @@ val LocalRnReduceMotion = staticCompositionLocalOf { false }
 /** cubic-bezier(0.32, 0.72, 0, 1): positions, sizes, colours (docs/DESIGN.md 6 IosEase). */
 val RnEase = CubicBezierEasing(0.32f, 0.72f, 0f, 1f)
 
-/** cubic-bezier(0.34, 1.56, 0.64, 1): a pressed control or a thumb settling back (OvershootEase). */
-val RnOvershoot = CubicBezierEasing(0.34f, 1.56f, 0.64f, 1f)
+/** docs/DESIGN.md 6: a press answers at once, colours change in 150 ms, things move in 300 ms at most. */
+const val RN_MS_COLOR = 150
+const val RN_MS_MOVE = 300
+
+/**
+ * A control let go of: a spring (slightly under-damped, response about 0.3 s), so a new press takes over its current
+ * value and speed instead of starting a timed animation from the beginning. Replaces the 350 ms overshoot curve,
+ * whose peak (about 0.5 % of a 0.94 scale) was never visible.
+ */
+fun <T> rnRelease(): SpringSpec<T> = spring(dampingRatio = 0.8f, stiffness = 439f)
+
+/** A position that settles without bouncing (a slider thumb let go of, a tapped value). */
+fun <T> rnSettle(): SpringSpec<T> = spring(dampingRatio = 1f, stiffness = 439f)
 
 /** [spec], or an instant change when the system animations are off. */
 @Composable

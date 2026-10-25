@@ -40,7 +40,14 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
+import me.timschneeberger.rootlessjamesdsp.ui.RN_MS_COLOR
+import me.timschneeberger.rootlessjamesdsp.ui.RN_MS_MOVE
+import me.timschneeberger.rootlessjamesdsp.ui.RnEase
+import me.timschneeberger.rootlessjamesdsp.ui.rnRelease
+import me.timschneeberger.rootlessjamesdsp.ui.rnSettle
 import androidx.compose.foundation.pager.rememberPagerState
+import me.timschneeberger.rootlessjamesdsp.ui.PagerDot
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -252,9 +259,8 @@ fun devPalette(dark: Boolean): DevPalette = rootnotePalette().let { rn -> DevPal
 internal val LocalDevPalette = staticCompositionLocalOf<DevPalette> { error("DevPalette not provided") }
 internal val LocalDevReduceMotion = staticCompositionLocalOf { false }
 
-/** docs/DESIGN.md 6: IosEase for positions/colours, OvershootEase when a thumb is released. */
-internal val IosEase = CubicBezierEasing(0.32f, 0.72f, 0f, 1f)
-internal val OvershootEase = CubicBezierEasing(0.34f, 1.56f, 0.64f, 1f)
+/** docs/DESIGN.md 6: the one curve (ui/RnTheme.kt) for positions and colours; a spring when a control is let go. */
+internal val IosEase = RnEase
 
 @Composable
 internal fun <T> motion(spec: FiniteAnimationSpec<T>): FiniteAnimationSpec<T> =
@@ -315,7 +321,7 @@ private fun DevContent(state: DevUiState, actions: DevActions) {
                     }
                 }
             }
-            PageDots(state.tab)
+            PageDots(pager)
             GroupTabs(state.tab, actions)
             val group = DevGroup.values()[state.tab]
             Row(
@@ -415,8 +421,8 @@ private fun Chip(label: String, selected: Boolean, hint: String? = null, onClick
     val c = LocalDevPalette.current
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
-    val scale by animateFloatAsState(if (pressed) 0.94f else 1f, motion(tween(120, easing = IosEase)), label = "chip")
-    val bg by animateColorAsState(if (selected) c.chipSelectedBg else c.bg, motion(tween(300, easing = IosEase)), label = "chipBg")
+    val scale by animateFloatAsState(if (pressed) 0.94f else 1f, motion(if (pressed) tween(120, easing = IosEase) else rnRelease()), label = "chip")
+    val bg by animateColorAsState(if (selected) c.chipSelectedBg else c.bg, motion(tween(RN_MS_COLOR, easing = IosEase)), label = "chipBg")
     Box(
         Modifier.heightIn(min = 48.dp)
             .selectable(selected = selected, interactionSource = interaction, indication = null, role = Role.Button, onClick = onClick)
@@ -444,18 +450,14 @@ private fun Chip(label: String, selected: Boolean, hint: String? = null, onClick
 }
 
 @Composable
-private fun PageDots(page: Int) {
+private fun PageDots(pager: PagerState) {
     val c = LocalDevPalette.current
-    val label = stringResource(R.string.dev_a11y_page, page + 1)
+    val label = stringResource(R.string.dev_a11y_page, pager.currentPage + 1)
     Row(
         Modifier.fillMaxWidth().padding(vertical = 8.dp).semantics(mergeDescendants = true) { contentDescription = label },
         horizontalArrangement = Arrangement.Center,
     ) {
-        for (i in 0 until 3) {
-            val w by animateDpAsState(if (i == page) 18.dp else 6.dp, motion(tween(350, easing = IosEase)), label = "dot")
-            Box(Modifier.padding(horizontal = 3.dp).size(width = w, height = 6.dp)
-                .background(if (i == page) c.fill else c.sliderInactive, CircleShape))
-        }
+        for (i in 0 until 3) PagerDot(pager, i, c.fill, c.sliderInactive, LocalDevReduceMotion.current, Modifier.padding(horizontal = 3.dp))
     }
 }
 
@@ -541,7 +543,7 @@ internal fun sliderRange(spec: DevSpec, vbAlgo: Int): ClosedFloatingPointRange<F
 @Composable
 private fun cardBg(touched: Boolean): Color {
     val c = LocalDevPalette.current
-    val bg by animateColorAsState(if (touched) c.chipSelectedBg else c.bg, motion(tween(300, easing = IosEase)), label = "card")
+    val bg by animateColorAsState(if (touched) c.chipSelectedBg else c.bg, motion(tween(RN_MS_COLOR, easing = IosEase)), label = "card")
     return bg
 }
 
@@ -651,7 +653,7 @@ private fun StepButton(plus: Boolean, label: String, enabled: Boolean, onClick: 
     val c = LocalDevPalette.current
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
-    val scale by animateFloatAsState(if (pressed) 0.94f else 1f, motion(tween(120, easing = IosEase)), label = "step")
+    val scale by animateFloatAsState(if (pressed) 0.94f else 1f, motion(if (pressed) tween(120, easing = IosEase) else rnRelease()), label = "step")
     Box(
         Modifier.size(48.dp)
             .clickable(interactionSource = interaction, indication = null, enabled = enabled, role = Role.Button, onClick = onClick)
@@ -705,9 +707,10 @@ private fun ValueTrack(
         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
         actions.onValue(spec, v)
     }
-    val fraction by animateFloatAsState(frac(value), motion(spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMedium)), label = "pos")
+    // under the finger the thumb is the finger (no smoothing); a spring only after it is let go or a tap
+    val fraction by animateFloatAsState(frac(value), motion(if (held) tween(0) else rnSettle()), label = "pos")
     val thumbScale by animateFloatAsState(if (held) 1.15f else 1f,
-        motion(if (held) tween(120, easing = IosEase) else tween(350, easing = OvershootEase)), label = "thumb")
+        motion(if (held) tween(120, easing = IosEase) else rnRelease()), label = "thumb")
     val dragState = rememberDraggableState { d -> dragX += d; emit(valueAt(dragX)) }
     val rangeLabel = stringResource(if (experimental) R.string.dev_range_experimental else R.string.dev_range_recommended)
     val stateText = stringResource(R.string.dev_slider_state, valueText, rangeLabel)
@@ -793,10 +796,10 @@ private fun SwitchCard(spec: DevSpec, on: Boolean, state: DevUiState, actions: D
 @Composable
 private fun DevSwitch(on: Boolean) {
     val c = LocalDevPalette.current
-    val x by animateDpAsState(if (on) 22.dp else 2.dp, motion(tween(350, easing = IosEase)), label = "sw")
-    val track by animateColorAsState(if (on) c.fill else c.switchOff, motion(tween(300, easing = IosEase)), label = "swTrack")
+    val x by animateDpAsState(if (on) 22.dp else 2.dp, motion(tween(RN_MS_MOVE, easing = IosEase)), label = "sw")
+    val track by animateColorAsState(if (on) c.fill else c.switchOff, motion(tween(RN_MS_MOVE, easing = IosEase)), label = "swTrack")
     Box(Modifier.size(width = 51.dp, height = 31.dp).background(track, CircleShape)) {
-        Box(Modifier.offset(x = x, y = 2.dp).size(27.dp).shadow(3.dp, CircleShape).background(c.thumb, CircleShape))
+        Box(Modifier.offset(y = 2.dp).size(27.dp).graphicsLayer { translationX = x.toPx() }.shadow(3.dp, CircleShape).background(c.thumb, CircleShape))
     }
 }
 

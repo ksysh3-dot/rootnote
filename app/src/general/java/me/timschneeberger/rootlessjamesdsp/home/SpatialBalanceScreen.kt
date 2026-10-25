@@ -101,7 +101,7 @@ class BalanceActions(
     val onClose: () -> Unit,
 )
 
-private val Ease = CubicBezierEasing(0.32f, 0.72f, 0f, 1f)
+private val Ease = me.timschneeberger.rootlessjamesdsp.ui.RnEase
 
 /** "왼쪽 +1.5 dB" style: which speaker is louder by how much (the correction lowers that side). */
 @Composable

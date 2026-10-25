@@ -27,12 +27,18 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.animation.core.Animatable
+import me.timschneeberger.rootlessjamesdsp.ui.RN_STORY_ROUNDS
+import me.timschneeberger.rootlessjamesdsp.ui.RnEase
+import me.timschneeberger.rootlessjamesdsp.ui.PagerDot
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.animation.core.asState
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
@@ -110,7 +116,7 @@ internal object PhoneResponse {
     const val MEDIAN_MINUS10_HZ = 206f
 }
 
-private val Ease = CubicBezierEasing(0.32f, 0.72f, 0f, 1f)
+private val Ease = RnEase
 private const val SCENES = 11
 /** The page with "직접 들어 보기" (63 Hz +10 dB at a moment the listener is not told). */
 private const val TRY_PAGE = 6
@@ -159,11 +165,7 @@ fun BassStory(reduceMotion: Boolean, trial: TryUi, actions: TryActions, onClose:
                 maxLines = 1, overflow = TextOverflow.Ellipsis,
             )
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                for (i in 0 until SCENES) {
-                    val on = i == pager.currentPage
-                    val w by animateFloatAsState(if (on) 18f else 6f, tween(if (reduceMotion) 0 else 300, easing = Ease), label = "dot")
-                    Box(Modifier.size(width = w.dp, height = 6.dp).background(if (on) c.fill else c.divider, CircleShape))
-                }
+                for (i in 0 until SCENES) PagerDot(pager, i, c.fill, c.divider, reduceMotion)
             }
             Spacer(Modifier.width(8.dp))
             val closeLabel = stringResource(R.string.home_xtc_info_close)
@@ -262,9 +264,13 @@ private fun Scene(page: Int, reduceMotion: Boolean, active: Boolean, trial: TryU
     val clock: State<Float> = if (reduceMotion || !active) {
         remember(page) { mutableFloatStateOf(KEY_FRAMES[page]) }
     } else {
-        val inf = rememberInfiniteTransition(label = "eq$page")
-        inf.animateFloat(KEY_FRAMES[page], KEY_FRAMES[page] + 1f,
-            infiniteRepeatable(tween(PERIODS[page], easing = LinearEasing), RepeatMode.Restart), label = "t$page")
+        // a few rounds, then the scene rests on its key frame: a loop nobody can stop is not for everyone
+        val anim = remember(page) { Animatable(KEY_FRAMES[page]) }
+        LaunchedEffect(page) {
+            anim.snapTo(KEY_FRAMES[page])
+            anim.animateTo(KEY_FRAMES[page] + RN_STORY_ROUNDS, tween(PERIODS[page] * RN_STORY_ROUNDS.toInt(), easing = LinearEasing))
+        }
+        anim.asState()
     }
     val description = stringArrayResource(R.array.eq_story_a11y).getOrElse(page) { "" }
     val labels = stringArrayResource(R.array.eq_story_labels)

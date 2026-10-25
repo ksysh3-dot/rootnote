@@ -38,6 +38,7 @@ import me.timschneeberger.rootlessjamesdsp.ui.RnBand
 import me.timschneeberger.rootlessjamesdsp.ui.RnButtonRow
 import me.timschneeberger.rootlessjamesdsp.ui.RnCheckMark
 import me.timschneeberger.rootlessjamesdsp.ui.RnDialog
+import me.timschneeberger.rootlessjamesdsp.ui.RN_MS_MOVE
 import me.timschneeberger.rootlessjamesdsp.ui.RnEase
 import me.timschneeberger.rootlessjamesdsp.ui.RnEndSpace
 import me.timschneeberger.rootlessjamesdsp.ui.RnFilledButton
@@ -80,8 +81,8 @@ fun SetupScreen(host: RnSetupActivity) {
             transitionSpec = {
                 val dir = if (host.forward) 1 else -1
                 if (reduce) fadeIn(tween(0)) togetherWith fadeOut(tween(0))
-                else (slideInHorizontally(tween(350, easing = RnEase)) { it / 4 * dir } + fadeIn(tween(250))) togetherWith
-                    (slideOutHorizontally(tween(350, easing = RnEase)) { -it / 4 * dir } + fadeOut(tween(200)))
+                else (slideInHorizontally(tween(RN_MS_MOVE, easing = RnEase)) { it / 4 * dir } + fadeIn(tween(250))) togetherWith
+                    (slideOutHorizontally(tween(RN_MS_MOVE, easing = RnEase)) { -it / 4 * dir } + fadeOut(tween(200)))
             },
             label = "setupPage",
         ) { shown ->

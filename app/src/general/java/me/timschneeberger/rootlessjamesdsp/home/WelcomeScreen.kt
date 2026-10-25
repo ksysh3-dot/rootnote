@@ -40,7 +40,13 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
+import me.timschneeberger.rootlessjamesdsp.ui.RN_MS_COLOR
+import me.timschneeberger.rootlessjamesdsp.ui.RN_MS_MOVE
+import me.timschneeberger.rootlessjamesdsp.ui.RnEase
+import me.timschneeberger.rootlessjamesdsp.ui.rnRelease
 import androidx.compose.foundation.pager.rememberPagerState
+import me.timschneeberger.rootlessjamesdsp.ui.PagerDot
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -146,9 +152,7 @@ class WelcomeActions(
     val onLicense: () -> Unit,
 )
 
-private val Ease = CubicBezierEasing(0.32f, 0.72f, 0f, 1f)
-/** docs/DESIGN.md 6 OvershootEase: a pressed button settles back with a slight bounce, like the home screen's chips. */
-private val Overshoot = CubicBezierEasing(0.34f, 1.56f, 0.64f, 1f)
+private val Ease = RnEase
 private const val PAGES = 7
 /** The last page (the consent); where the welcome opens when it was put off once already. */
 const val WELCOME_LAST_PAGE = PAGES - 1
@@ -184,7 +188,7 @@ fun WelcomeScreen(state: WelcomeState, actions: WelcomeActions) {
     ) {
         val stageHeight = maxHeight * 0.4f
         Column(Modifier.fillMaxSize()) {
-            WelcomeTopBar(page = pager.currentPage, reduceMotion = state.reduceMotion, showSkip = !last) {
+            WelcomeTopBar(pager = pager, reduceMotion = state.reduceMotion, showSkip = !last) {
                 scope.launch { pager.animateScrollToPage(WELCOME_LAST_PAGE) }
             }
             ScrollEdge(visible = scroll.canScrollBackward, state.reduceMotion)
@@ -203,7 +207,7 @@ fun WelcomeScreen(state: WelcomeState, actions: WelcomeActions) {
 
 /** Nothing but where you are and "건너뛰기" (kept in place, silent, on the last page): each page is one message. */
 @Composable
-private fun WelcomeTopBar(page: Int, reduceMotion: Boolean, showSkip: Boolean, onSkip: () -> Unit) {
+private fun WelcomeTopBar(pager: PagerState, reduceMotion: Boolean, showSkip: Boolean, onSkip: () -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -211,27 +215,27 @@ private fun WelcomeTopBar(page: Int, reduceMotion: Boolean, showSkip: Boolean, o
             .padding(start = 16.dp, end = 12.dp, top = 8.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Dots(page, reduceMotion)
+        Dots(pager, reduceMotion)
         Spacer(Modifier.weight(1f))
         TextAction(stringResource(R.string.welcome_skip), visible = showSkip, onClick = onSkip)
     }
 }
 
 /**
- * A 1 dp rn_divider hairline that fades in (300 ms, the colour timing of docs/DESIGN.md 6) while the page under a
+ * A 1 dp rn_divider hairline that fades in (150 ms, the colour timing of docs/DESIGN.md 6) while the page under a
  * bar has more to show in that direction. Always laid out, so showing it never moves anything.
  */
 @Composable
 private fun ScrollEdge(visible: Boolean, reduceMotion: Boolean) {
     val c = rootnotePalette()
-    val a by animateFloatAsState(if (visible) 1f else 0f, tween(if (reduceMotion) 0 else 300, easing = Ease), label = "edge")
+    val a by animateFloatAsState(if (visible) 1f else 0f, tween(if (reduceMotion) 0 else RN_MS_COLOR, easing = Ease), label = "edge")
     Box(Modifier.fillMaxWidth().height(1.dp).graphicsLayer { alpha = a }.background(c.divider))
 }
 
 @Composable
-private fun Dots(page: Int, reduceMotion: Boolean) {
+private fun Dots(pager: PagerState, reduceMotion: Boolean) {
     val c = rootnotePalette()
-    val label = stringResource(R.string.welcome_pages_a11y, page + 1, PAGES)
+    val label = stringResource(R.string.welcome_pages_a11y, pager.currentPage + 1, PAGES)
     Row(
         Modifier
             .padding(horizontal = 8.dp)
@@ -239,18 +243,14 @@ private fun Dots(page: Int, reduceMotion: Boolean) {
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        for (i in 0 until PAGES) {
-            val on = i == page
-            val w by animateFloatAsState(if (on) 18f else 6f, tween(if (reduceMotion) 0 else 300, easing = Ease), label = "dot")
-            Box(Modifier.size(width = w.dp, height = 6.dp).background(if (on) c.fill else c.sliderInactive, CircleShape))
-        }
+        for (i in 0 until PAGES) PagerDot(pager, i, c.fill, c.sliderInactive, reduceMotion)
     }
 }
 
 /**
  * The bottom call to action, outside the pages so it never scrolls away, in the same 24 dp column as the text: one
- * full-width "다음", and on the last page "나중에" and "확인하고 시작하기". The change fades out and in (150 + 150 ms,
- * like the home screen's text changes).
+ * full-width "다음", and on the last page "나중에" and "확인하고 시작하기". The two cross-fade (150 ms), so the
+ * buttons are out of reach for 150 ms at most.
  */
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
@@ -259,13 +259,13 @@ private fun WelcomeBottomBar(last: Boolean, reduceMotion: Boolean, actions: Welc
         targetState = last,
         transitionSpec = {
             if (reduceMotion) EnterTransition.None togetherWith ExitTransition.None
-            else fadeIn(tween(150, delayMillis = 150, easing = LinearEasing)) togetherWith fadeOut(tween(150, easing = LinearEasing))
+            else fadeIn(tween(RN_MS_COLOR, easing = Ease)) togetherWith fadeOut(tween(RN_MS_COLOR, easing = Ease))
         },
         contentAlignment = Alignment.BottomCenter,
         label = "cta",
     ) { isLast ->
         // Buttons answer only while fully shown: never while fading in or out (an invisible "확인하고 시작하기"
-        // must not catch a quick second tap on "다음").
+        // must not catch a quick second tap on "다음" and so give the consent). Cross-faded, that is 150 ms.
         val shown = transition.currentState == EnterExitState.Visible && transition.targetState == EnterExitState.Visible
         Column(
             Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 12.dp),
@@ -286,7 +286,7 @@ private fun WelcomeBottomBar(last: Boolean, reduceMotion: Boolean, actions: Welc
 /**
  * [enabled] false only while the button fades in or out: it keeps its look, it just does not answer. Unlike the
  * family's buttons it also pads 12 dp vertically (a wrapped label at large font sizes grows the pill instead of
- * touching its edge). Pressed, it shrinks to 0.96 (docs/DESIGN.md 6 누름: 120 ms iOS easing, back with the overshoot,
+ * touching its edge). Pressed, it shrinks to 0.96 (docs/DESIGN.md 6 누름: 120 ms iOS easing, back with a spring,
  * as the home screen's chips do at 0.94; a wide button needs less to show it) instead of a ripple.
  */
 @Composable
@@ -300,7 +300,7 @@ private fun PillButton(label: String, filled: Boolean, enabled: Boolean, reduceM
         animationSpec = when {
             reduceMotion -> snap()
             pressed -> tween(120, easing = Ease)
-            else -> tween(350, easing = Overshoot)
+            else -> rnRelease()
         },
         label = "press",
     )
@@ -424,8 +424,8 @@ private fun HelloPage(state: WelcomeState, active: Boolean, scroll: ScrollState)
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        // one entrance for the whole page: the greeting, then the line 300 ms after it, while the mark draws itself
-        Appear(state.reduceMotion, delay = 150) {
+        // one entrance for the whole page: the greeting, then the line 120 ms after it, while the mark draws itself
+        Appear(state.reduceMotion, delay = 60) {
             Text(
                 keepWords(stringResource(R.string.welcome_hello_title)),
                 modifier = Modifier.semantics { heading() },
@@ -436,7 +436,7 @@ private fun HelloPage(state: WelcomeState, active: Boolean, scroll: ScrollState)
         Spacer(Modifier.height(32.dp))
         WelcomeStage(P_HELLO, state, active, Modifier.size(200.dp), card = false)
         Spacer(Modifier.height(32.dp))
-        Appear(state.reduceMotion, delay = 450) {
+        Appear(state.reduceMotion, delay = 180) {
             Text(
                 keepWords(stringResource(R.string.welcome_hello_body, stringResource(R.string.app_brand_name))),
                 color = c.textSecondary, fontSize = 15.sp, lineHeight = 22.sp, textAlign = TextAlign.Center,
@@ -490,13 +490,13 @@ private fun Note(text: String, modifier: Modifier = Modifier) {
     Text(keepWords(text), modifier, color = c.textSecondary, fontSize = 13.sp, lineHeight = 18.sp, style = breaks(heading = false))
 }
 
-/** The first page's words come in once: a short rise and fade (350 ms, iOS easing) after [delay] ms. */
+/** The first page's words come in once: a short rise and fade (300 ms, iOS easing) after [delay] ms. */
 @Composable
 private fun Appear(reduceMotion: Boolean, delay: Int, content: @Composable () -> Unit) {
     var shown by rememberSaveable { mutableStateOf(reduceMotion) }
     LaunchedEffect(Unit) { shown = true }
     val p by animateFloatAsState(
-        if (shown) 1f else 0f, tween(if (reduceMotion) 0 else 350, delayMillis = if (reduceMotion) 0 else delay, easing = Ease),
+        if (shown) 1f else 0f, tween(if (reduceMotion) 0 else RN_MS_MOVE, delayMillis = if (reduceMotion) 0 else delay, easing = Ease),
         label = "appear",
     )
     Box(Modifier.graphicsLayer { alpha = p; translationY = (1f - p) * 12.dp.toPx() }) { content() }

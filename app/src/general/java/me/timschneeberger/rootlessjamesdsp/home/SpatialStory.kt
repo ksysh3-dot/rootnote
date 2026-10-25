@@ -34,6 +34,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.animation.core.Animatable
+import me.timschneeberger.rootlessjamesdsp.ui.RN_MS_COLOR
+import me.timschneeberger.rootlessjamesdsp.ui.RN_MS_MOVE
+import me.timschneeberger.rootlessjamesdsp.ui.RN_STORY_ROUNDS
+import me.timschneeberger.rootlessjamesdsp.ui.RnEase
+import me.timschneeberger.rootlessjamesdsp.ui.PagerDot
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -42,6 +48,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.animation.core.asState
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -120,7 +128,7 @@ data class StoryState(
     val hatCm: Int,
 )
 
-private val Ease = CubicBezierEasing(0.32f, 0.72f, 0f, 1f)
+private val Ease = RnEase
 private const val SCENES = 10
 /** The page with the honest limits and "직접 들어 보기". */
 private const val LISTEN_PAGE = 8
@@ -149,14 +157,7 @@ fun SpatialStory(state: StoryState, onListen: (Boolean) -> Unit, onClose: () -> 
                 maxLines = 1, overflow = TextOverflow.Ellipsis,
             )
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                for (i in 0 until SCENES) {
-                    val on = i == pager.currentPage
-                    val w by animateFloatAsState(if (on) 18f else 6f, tween(if (state.reduceMotion) 0 else 300, easing = Ease), label = "dot")
-                    Box(
-                        Modifier.size(width = w.dp, height = 6.dp)
-                            .background(if (on) c.xtcFill else c.divider, CircleShape)
-                    )
-                }
+                for (i in 0 until SCENES) PagerDot(pager, i, c.xtcFill, c.divider, state.reduceMotion)
             }
             Spacer(Modifier.width(8.dp))
             val closeLabel = stringResource(R.string.home_xtc_info_close)
@@ -272,7 +273,7 @@ private fun ListenControl(state: StoryState, onListen: (Boolean) -> Unit) {
             for ((on, label) in listOf(false to R.string.story_listen_off, true to R.string.story_listen_on)) {
                 val selected = state.listening == on
                 val bg by animateColorAsState(
-                    if (selected) c.bg else c.band, tween(if (state.reduceMotion) 0 else 300, easing = Ease), label = "listenBg",
+                    if (selected) c.bg else c.band, tween(if (state.reduceMotion) 0 else RN_MS_COLOR, easing = Ease), label = "listenBg",
                 )
                 Box(
                     Modifier
@@ -305,16 +306,18 @@ private fun Scene(page: Int, state: StoryState, active: Boolean) {
     val c = rootnotePalette()
     val colors = remember(c) { StageColors(c.fill, c.xtcFill, c.textPrimary, c.textSecondary, c.chipBorder, c.bg) }
     val periods = intArrayOf(2600, 3000, 4200, 1, 4000, 2400, 1, 5000, 2600, 4000)
-    // One clock per scene (0..1, looping, starting at the scene's key frame so a page that becomes active does not
+    // One clock per scene (0..1, playing a few rounds, starting at the scene's key frame so a page that becomes active does not
     // jump); a still key frame with the animations off or off-screen. Read only inside the Canvas (draw phase).
     val clock: State<Float> = if (state.reduceMotion || !active || periods[page] <= 1) {
         remember(page) { androidx.compose.runtime.mutableFloatStateOf(KEY_FRAMES[page]) }
     } else {
-        val inf = rememberInfiniteTransition(label = "scene$page")
-        inf.animateFloat(
-            KEY_FRAMES[page], KEY_FRAMES[page] + 1f,
-            infiniteRepeatable(tween(periods[page], easing = LinearEasing), RepeatMode.Restart), label = "t$page",
-        )
+        // a few rounds, then the scene rests on its key frame: a loop nobody can stop is not for everyone
+        val anim = remember(page) { Animatable(KEY_FRAMES[page]) }
+        LaunchedEffect(page) {
+            anim.snapTo(KEY_FRAMES[page])
+            anim.animateTo(KEY_FRAMES[page] + RN_STORY_ROUNDS, tween(periods[page] * RN_STORY_ROUNDS.toInt(), easing = LinearEasing))
+        }
+        anim.asState()
     }
     val description = stringArrayResource(R.array.story_scene_a11y).getOrElse(page) { "" }
     val measurer = rememberTextMeasurer()
@@ -667,10 +670,10 @@ private fun PresetScene(state: StoryState, col: StageColors, description: String
     val c = rootnotePalette()
     var preset by rememberSaveable { mutableIntStateOf(1) }
     val spread by animateFloatAsState(
-        when (preset) { 0 -> 0.55f; 1 -> 0.8f; else -> 1f }, tween(if (state.reduceMotion) 0 else 450, easing = Ease), label = "spread",
+        when (preset) { 0 -> 0.55f; 1 -> 0.8f; else -> 1f }, tween(if (state.reduceMotion) 0 else RN_MS_MOVE, easing = Ease), label = "spread",
     )
     val tint by animateFloatAsState(
-        when (preset) { 0 -> 0f; 1 -> 0.4f; else -> 0.6f }, tween(if (state.reduceMotion) 0 else 450, easing = Ease), label = "tint",
+        when (preset) { 0 -> 0f; 1 -> 0.4f; else -> 0.6f }, tween(if (state.reduceMotion) 0 else RN_MS_MOVE, easing = Ease), label = "tint",
     )
     BoxWithConstraints(Modifier.fillMaxSize().padding(12.dp)) {
     val stageH = maxHeight * 0.7f

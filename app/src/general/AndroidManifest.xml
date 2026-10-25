@@ -43,6 +43,7 @@
              tile preferences). -->
         <activity
             android:name="me.timschneeberger.rootlessjamesdsp.home.HomeActivity"
+            android:enableOnBackInvokedCallback="true"
             android:exported="true"
             android:icon="@mipmap/ic_dsp_launcher"
             android:label="@string/app_brand_name"
@@ -56,12 +57,14 @@
              first launch and by PvbGeneral.showFirstRunNotice. Not exported. -->
         <activity
             android:name="me.timschneeberger.rootlessjamesdsp.home.WelcomeActivity"
+            android:enableOnBackInvokedCallback="true"
             android:exported="false"
             android:label="@string/welcome_activity_title"
             android:theme="@style/Theme.RootlessJamesDSP" />
         <!-- Spatial "좌우 맞추기" (speaker balance by microphones or by ear), landscape like listening. -->
         <activity
             android:name="me.timschneeberger.rootlessjamesdsp.home.SpatialBalanceActivity"
+            android:enableOnBackInvokedCallback="true"
             android:exported="false"
             android:label="@string/balance_title"
             android:screenOrientation="sensorLandscape"
@@ -69,6 +72,7 @@
         <!-- Spatial explanation as a landscape motion story (home screen (i)). Landscape only while it is open. -->
         <activity
             android:name="me.timschneeberger.rootlessjamesdsp.home.SpatialStoryActivity"
+            android:enableOnBackInvokedCallback="true"
             android:exported="false"
             android:label="@string/home_xtc_info_title"
             android:screenOrientation="sensorLandscape"
@@ -77,18 +81,21 @@
              the research tools are unlocked. Not exported. -->
         <activity
             android:name="me.timschneeberger.rootlessjamesdsp.devmode.DevModeActivity"
+            android:enableOnBackInvokedCallback="true"
             android:exported="false"
             android:label="@string/dev_title"
             android:theme="@style/Theme.RootlessJamesDSP" />
         <!-- "저음 맞추기" (bass fit, devmode/BassFitActivity.kt): listening tests opened from developer mode. -->
         <activity
             android:name="me.timschneeberger.rootlessjamesdsp.devmode.BassFitActivity"
+            android:enableOnBackInvokedCallback="true"
             android:exported="false"
             android:label="@string/fit_title"
             android:theme="@style/Theme.RootlessJamesDSP" />
         <!-- EQ explanation as a landscape motion story (advanced screen, tone section (i)), like the spatial one. -->
         <activity
             android:name="me.timschneeberger.rootlessjamesdsp.home.BassStoryActivity"
+            android:enableOnBackInvokedCallback="true"
             android:exported="false"
             android:label="@string/eq_info_title"
             android:screenOrientation="sensorLandscape"
@@ -97,12 +104,14 @@
              The legacy SettingsActivity forwards here in this build. Not exported. -->
         <activity
             android:name="me.timschneeberger.rootlessjamesdsp.settings.RnSettingsActivity"
+            android:enableOnBackInvokedCallback="true"
             android:exported="false"
             android:label="@string/title_activity_settings"
             android:theme="@style/Theme.RootlessJamesDSP" />
         <!-- Excluded apps in Compose (exclusions/RnExclusionsActivity.kt); BlocklistActivity forwards here. -->
         <activity
             android:name="me.timschneeberger.rootlessjamesdsp.exclusions.RnExclusionsActivity"
+            android:enableOnBackInvokedCallback="true"
             android:exported="false"
             android:label="@string/title_activity_blocklist"
             android:theme="@style/Theme.RootlessJamesDSP" />
@@ -110,18 +119,21 @@
              this build (files opened with the app, the audio-effect panel, the tile's long press). Not exported. -->
         <activity
             android:name="me.timschneeberger.rootlessjamesdsp.advanced.RnAdvancedActivity"
+            android:enableOnBackInvokedCallback="true"
             android:exported="false"
             android:label="@string/home_advanced_title"
             android:theme="@style/Theme.RootlessJamesDSP" />
         <!-- Setup steps in Compose (setup/RnSetupActivity.kt); OnboardingActivity forwards rootless setups here. -->
         <activity
             android:name="me.timschneeberger.rootlessjamesdsp.setup.RnSetupActivity"
+            android:enableOnBackInvokedCallback="true"
             android:exported="false"
             android:label="@string/onboarding_methods_title"
             android:theme="@style/Theme.RootlessJamesDSP" />
         <!-- App compatibility in Compose (compat/RnAppCompatActivity.kt); AppCompatibilityActivity forwards here. -->
         <activity
             android:name="me.timschneeberger.rootlessjamesdsp.compat.RnAppCompatActivity"
+            android:enableOnBackInvokedCallback="true"
             android:exported="false"
             android:label="@string/title_activity_app_compat"
             android:theme="@style/Theme.RootlessJamesDSP" />

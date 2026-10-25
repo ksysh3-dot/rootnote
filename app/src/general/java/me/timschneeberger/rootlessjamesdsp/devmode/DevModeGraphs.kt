@@ -3,6 +3,7 @@ package me.timschneeberger.rootlessjamesdsp.devmode
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -401,7 +402,7 @@ private val VuRed = Color(0xFFB3261E)
 private fun VuMeter(rel: Float?, status: DevMath.GaugeStatus?) {
     val tm = rememberTextMeasurer()
     val target = DevMath.vuFraction(rel ?: (DevMath.VU_MIN_DB - 6f))
-    val f by animateFloatAsState(target, motion(tween(300, easing = LinearOutSlowInEasing)), label = "needle")
+    val f by animateFloatAsState(target, motion(spring(dampingRatio = 0.9f, stiffness = 200f)), label = "needle")
     val caption = stringResource(R.string.dev_vu_caption)
     val word = status?.let { statusText(it) } ?: ""
     Box(Modifier.fillMaxWidth().background(VuBezel, RoundedCornerShape(20.dp)).padding(12.dp)) {

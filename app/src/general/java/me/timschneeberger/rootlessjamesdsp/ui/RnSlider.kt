@@ -202,9 +202,9 @@ private fun RnTrack(
         }
         onDragNow(v, done)
     }
-    val fraction by animateFloatAsState(frac(value), rnMotion(if (held) tween(0) else tween(200, easing = RnEase)), label = "thumbX")
+    val fraction by animateFloatAsState(frac(value), rnMotion(if (held) tween(0) else rnSettle()), label = "thumbX")
     val thumbScale by animateFloatAsState(if (held) 1.15f else 1f,
-        rnMotion(if (held) tween(120, easing = RnEase) else tween(350, easing = RnOvershoot)), label = "thumbS")
+        rnMotion(if (held) tween(120, easing = RnEase) else rnRelease()), label = "thumbS")
     val dragState = rememberDraggableState { d -> dragX += d; emit(valueAt(dragX), false) }
     Box(
         modifier.height(48.dp)

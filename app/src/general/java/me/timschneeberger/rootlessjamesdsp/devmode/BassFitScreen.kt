@@ -64,6 +64,7 @@ import me.timschneeberger.rootlessjamesdsp.ui.RnChoiceRow
 import me.timschneeberger.rootlessjamesdsp.ui.RnDialog
 import me.timschneeberger.rootlessjamesdsp.ui.RnSwitchRow
 import me.timschneeberger.rootlessjamesdsp.ui.RnDivider
+import me.timschneeberger.rootlessjamesdsp.ui.RN_MS_COLOR
 import me.timschneeberger.rootlessjamesdsp.ui.RnEase
 import me.timschneeberger.rootlessjamesdsp.ui.RnFilledButton
 import me.timschneeberger.rootlessjamesdsp.ui.RnNavRow
@@ -431,7 +432,7 @@ private fun Turn(n: Int, lit: Boolean) {
 private fun RowScope.PlayPad(id: String, label: String, ui: FitUi, actions: FitActions) {
     val c = LocalRn.current
     val playing = ui.playing == id
-    val bg by animateColorAsState(if (playing) c.chipSelectedBg else c.bg, rnMotion(tween(300, easing = RnEase)), label = "pad")
+    val bg by animateColorAsState(if (playing) c.chipSelectedBg else c.bg, rnMotion(tween(RN_MS_COLOR, easing = RnEase)), label = "pad")
     val a11y = stringResource(R.string.fit_play_a11y, label)
     val stateText = stringResource(when {
         playing -> R.string.fit_playing
@@ -544,7 +545,7 @@ private fun Check(ui: FitUi, actions: FitActions) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             for (side in 1..2) {
                 val on = ui.checkSide == side
-                val bg by animateColorAsState(if (on) c.chipSelectedBg else c.bg, rnMotion(tween(300, easing = RnEase)), label = "side")
+                val bg by animateColorAsState(if (on) c.chipSelectedBg else c.bg, rnMotion(tween(RN_MS_COLOR, easing = RnEase)), label = "side")
                 val label = stringResource(if (side == 1) R.string.fit_check_one else R.string.fit_check_two)
                 val now = stringResource(R.string.fit_check_now, label)
                 Box(

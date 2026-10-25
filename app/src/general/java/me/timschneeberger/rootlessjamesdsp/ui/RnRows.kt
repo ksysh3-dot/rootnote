@@ -186,7 +186,7 @@ fun RnSectionTitle(text: String, onInfo: (() -> Unit)? = null, infoLabel: String
 private fun pressTint(interaction: MutableInteractionSource, enabled: Boolean): Color {
     val c = LocalRn.current
     val pressed by interaction.collectIsPressedAsState()
-    val bg by animateColorAsState(if (pressed && enabled) c.press else c.bg, rnMotion(tween(120)), label = "press")
+    val bg by animateColorAsState(if (pressed && enabled) c.press else c.bg, rnMotion(if (pressed && enabled) tween(0) else tween(RN_MS_COLOR, easing = RnEase)), label = "press")
     return bg
 }
 
@@ -302,10 +302,11 @@ fun RnGroupTitle(title: String, icon: Painter? = null, enabled: Boolean = true) 
 @Composable
 fun RnSwitch(checked: Boolean) {
     val c = LocalRn.current
-    val x by animateDpAsState(if (checked) 22.dp else 2.dp, rnMotion(tween(350, easing = RnEase)), label = "swX")
-    val track by animateColorAsState(if (checked) c.fill else c.switchOff, rnMotion(tween(300, easing = RnEase)), label = "swT")
+    // thumb and track end together; the thumb moves in the draw phase (no layout pass per frame)
+    val x by animateDpAsState(if (checked) 22.dp else 2.dp, rnMotion(tween(RN_MS_MOVE, easing = RnEase)), label = "swX")
+    val track by animateColorAsState(if (checked) c.fill else c.switchOff, rnMotion(tween(RN_MS_MOVE, easing = RnEase)), label = "swT")
     Box(Modifier.size(width = 51.dp, height = 31.dp).background(track, CircleShape)) {
-        Box(Modifier.offset(x = x, y = 2.dp).size(27.dp).shadow(3.dp, CircleShape).background(c.thumb, CircleShape))
+        Box(Modifier.offset(y = 2.dp).size(27.dp).graphicsLayer { translationX = x.toPx() }.shadow(3.dp, CircleShape).background(c.thumb, CircleShape))
     }
 }
 
@@ -361,7 +362,7 @@ fun RnTextAction(label: String, bold: Boolean = false, color: Color? = null, ena
     }
 }
 
-/** Pressed controls shrink to [to] over 120 ms and settle back with the overshoot (docs/DESIGN.md 6 누름). */
+/** Pressed controls shrink to [to] over 120 ms and settle back with a spring (docs/DESIGN.md 6 누름). */
 @Composable
 fun pressScale(interaction: MutableInteractionSource, enabled: Boolean, to: Float = 0.96f): Float {
     val pressed by interaction.collectIsPressedAsState()
@@ -371,7 +372,7 @@ fun pressScale(interaction: MutableInteractionSource, enabled: Boolean, to: Floa
         when {
             reduce -> androidx.compose.animation.core.snap()
             pressed -> tween(120, easing = RnEase)
-            else -> tween(350, easing = RnOvershoot)
+            else -> rnRelease()
         },
         label = "pressScale",
     )
