@@ -1,0 +1,23 @@
+# Names the intercept server (capture/InterceptServer.kt) calls by reflection, with where each was verified.
+# One entry per line: <kind> <Class>.<name> <signature>   # source
+# Source "AOSP main" = read from android.googlesource.com frameworks/base media/java/android/media/audiopolicy (2026-10-25).
+# Source "device" = the server reached READY on a Galaxy S26 Ultra (2026-10-25), so the name exists there.
+method AudioMixingRule.Builder.addMixRule (int,Object)            # AOSP main
+method AudioMixingRule.Builder.excludeMixRule (int,Object)        # AOSP main
+method AudioMixingRule.Builder.setTargetMixRole (int)             # device
+method AudioMixingRule.Builder.build ()                           # device
+field  AudioMixingRule.MIX_ROLE_PLAYERS                           # device
+field  AudioMixingRule.RULE_MATCH_ATTRIBUTE_USAGE                 # AOSP main
+field  AudioMixingRule.RULE_MATCH_UID                             # AOSP main
+method AudioMix.Builder.setFormat (AudioFormat)                   # AOSP main
+method AudioMix.Builder.setRouteFlags (int)                       # AOSP main
+method AudioMix.Builder.build ()                                  # AOSP main
+field  AudioMix.ROUTE_FLAG_LOOP_BACK                              # AOSP main
+method AudioPolicy.Builder.addMix (AudioMix)                      # AOSP main
+method AudioPolicy.Builder.build ()                               # AOSP main
+method AudioPolicy.createAudioRecordSink (AudioMix)               # device
+method ActivityThread.getSystemContext ()                         # device
+method AudioManager.registerAudioPolicyStatic (AudioPolicy)       # device
+# Rules that do NOT exist or are refused, each of which broke a start once:
+absent AudioMixingRule.Builder.excludeRule (int,Object)           # only (AudioAttributes,int) exists
+refused AudioMixingRule.Builder.addMixRule RULE_EXCLUDE_UID       # "Illegal rule value 32772" on a Galaxy S26 Ultra

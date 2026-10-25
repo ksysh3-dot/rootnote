@@ -37,6 +37,9 @@ jobs:
       - name: Motion rules of the general screens (docs/DESIGN.md 6)
         run: python3 tools/check_motion.py
 
+      - name: Static checks (reflection names, manifest, start order, versions, motion guard)
+        run: python3 tools/test_static.py
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
