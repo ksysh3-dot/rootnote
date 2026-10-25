@@ -39,6 +39,8 @@ data class ProbeView(
     val bins: List<SpeakerProbe.Bin> = emptyList(),
     val floorHz: Double? = null,
     val clipped: Boolean = false,
+    /** Harmonic distortion of the last whole sweep ("63 Hz −12 · ..."), by sweep deconvolution. */
+    val thd: String? = null,
 ) {
     companion object {
         fun of(p: SpeakerProbe, running: Boolean) = ProbeView(
@@ -92,6 +94,9 @@ internal fun ProbePanel(v: ProbeView) {
         ProbeBars(v, floorText)
         Text(floorText, color = c.accentText, fontSize = 15.sp, lineHeight = 21.sp, fontWeight = FontWeight.Bold)
         if (v.clipped) InlineNote(stringResource(R.string.dev_probe_clipped), warning = true)
+        v.thd?.let {
+            Text(stringResource(R.string.dev_probe_thd, it), color = c.textPrimary, fontSize = 13.sp, lineHeight = 18.sp)
+        }
         Text(stringResource(R.string.dev_probe_note), color = c.textSecondary, fontSize = 12.sp, lineHeight = 16.sp)
     }
 }

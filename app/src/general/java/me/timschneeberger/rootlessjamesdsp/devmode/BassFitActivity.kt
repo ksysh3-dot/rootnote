@@ -42,6 +42,7 @@ import me.timschneeberger.rootlessjamesdsp.pvb.FloorStaircase
 import me.timschneeberger.rootlessjamesdsp.pvb.NoiseGate
 import me.timschneeberger.rootlessjamesdsp.pvb.NoiseMasking
 import me.timschneeberger.rootlessjamesdsp.pvb.MicCal
+import me.timschneeberger.rootlessjamesdsp.pvb.SweepDistortion
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbBuild
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbGeneral
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbRuntime
@@ -300,14 +301,18 @@ class BassFitActivity : RnActivity() {
                 val sig = m.copy(refFrom + ((lat + 0.3) * fs).toLong(), (1.8 * fs).toInt())
                 val verdict = NoiseGate.judge(room, sig, fs)
                 val bands = room?.let { NoiseGate.bandLevels(it, fs, NoiseGate.TEST_BANDS) }
-                val probe = m.copy(probeFrom, ((PROBE_RECORD_S - 0.2) * fs).toInt())?.let { SpeakerProbe(fs).analyze(it, lat) }
+                val probeRec = m.copy(probeFrom, ((PROBE_RECORD_S - 0.2) * fs).toInt())
+                val probe = probeRec?.let { SpeakerProbe(fs).analyze(it, lat) }
+                val thd = probeRec?.let { try { SweepDistortion.analyze(it, fs, lat) } catch (_: Exception) { null } }
                 main.post {
                     if (t != token || isFinishing) return@post
                     latencyS = lat
                     roomBands = bands
                     roomRaw = m.unprocessed
                     if (ui.noiseCorr) session?.let { applyNoise(it, bands, m.unprocessed) }
-                    ui = ui.copy(micFloorHz = probe?.floorHz(), micClipped = probe?.clipped == true)
+                    ui = ui.copy(micFloorHz = probe?.floorHz(), micClipped = probe?.clipped == true,
+                        micThd = thd?.takeIf { probe?.clipped != true }?.let { SweepDistortion.line(it) }?.takeIf { it.isNotEmpty() },
+                        micThd100 = thd?.takeIf { probe?.clipped != true }?.let { SweepDistortion.thdAt(it, 100.0) })
                     if (verdict.pass) {
                         ui = ui.copy(verdict = verdict)
                         beginTest()
@@ -661,6 +666,7 @@ class BassFitActivity : RnActivity() {
             noiseCorrDb = r.noiseCorrectionDb.takeIf { floor },
             micSource = roomRaw?.let { if (it) "unprocessed" else "voice_recognition" },
             micDeclaredDbfs = declaredMic?.sensDbfs,
+            micThd100Db = ui.micThd100.takeIf { floor && conditionHp == null },
         ))
         ui = ui.copy(screen = FitScreen.VAL_NEXT, prompt = null, playing = null, logLines = logLines().coerceAtLeast(0))
     }

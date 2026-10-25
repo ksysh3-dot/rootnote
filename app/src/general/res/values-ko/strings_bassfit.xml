@@ -188,4 +188,5 @@
     <string name="fit_mic_declared_none">이 폰은 마이크 감도를 알려 주지 않아요. 소음 보정은 안드로이드 기준값으로 계산해요.</string>
     <string name="fit_r_noise_line_phone">1단계 100 Hz 소리에 더한 값. 폰이 알려 준 마이크 감도로 계산했어요.</string>
     <string name="fit_r_noise_line_guess">1단계 100 Hz 소리에 더한 값. 마이크 감도를 확인하지 못해 안드로이드 기준값으로 계산했어요. 크게 틀릴 수 있어요.</string>
+    <string name="fit_r_mic_thd">마이크가 듣는 배음 합 (참고, 원음 대비)</string>
 </resources>

@@ -289,4 +289,5 @@
     <string name="dev_micspec_note_voice">The microphone response the phone declares is taken off. Voice recognition recording does not match the sensitivity, so the levels are in dBFS.</string>
     <string name="dev_micspec_note_none">This phone declares no microphone data, so the levels are uncorrected dBFS. Treble may look louder than it is.</string>
     <string name="dev_micspec_note_off">As the microphone records it, uncorrected (dBFS). Phone microphones often record treble louder than it is.</string>
+    <string name="dev_probe_thd">Harmonics re the fundamental (last sweep): %1$s dB</string>
 </resources>

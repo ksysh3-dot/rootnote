@@ -188,4 +188,5 @@
     <string name="fit_mic_declared_none">This phone does not declare its microphone sensitivity. Noise correction uses the Android guideline value.</string>
     <string name="fit_r_noise_line_phone">Added to the 100 Hz sound in step 1. Computed with the microphone sensitivity the phone declares.</string>
     <string name="fit_r_noise_line_guess">Added to the 100 Hz sound in step 1. The microphone sensitivity is unknown, so the Android guideline value was used. It can be far off.</string>
+    <string name="fit_r_mic_thd">Harmonics the microphone hears (reference, re the fundamental)</string>
 </resources>

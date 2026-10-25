@@ -289,4 +289,5 @@
     <string name="dev_micspec_note_voice">폰이 알려 준 마이크 응답을 뺐어요. 음성 인식용 녹음이라 감도가 맞지 않아 dBFS로 보여요.</string>
     <string name="dev_micspec_note_none">이 폰은 마이크 정보를 알려 주지 않아서 보정 없이 dBFS로 보여요. 고음이 실제보다 크게 보일 수 있어요.</string>
     <string name="dev_micspec_note_off">보정 없이 마이크가 받은 그대로예요(dBFS). 폰 마이크는 고음을 실제보다 크게 받는 경우가 많아요.</string>
+    <string name="dev_probe_thd">배음 합 (원음 대비, 마지막 스윕): %1$s dB</string>
 </resources>

@@ -48,6 +48,7 @@ import me.timschneeberger.rootlessjamesdsp.pvb.PvbMeter
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbRuntime
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbSettings
 import me.timschneeberger.rootlessjamesdsp.pvb.SpeakerProbe
+import me.timschneeberger.rootlessjamesdsp.pvb.SweepDistortion
 import kotlin.math.pow
 import kotlin.math.log10
 import me.timschneeberger.rootlessjamesdsp.pvb.MicSpectrum
@@ -86,6 +87,9 @@ class DevModeActivity : BaseActivity() {
     private var probeStart = 0L
     private var probeRead = 0L
     private var probeShown = 0L
+    /** Sweeps of this probe run already analysed for harmonic distortion. */
+    private var probeSweepsDone = 0
+    private var probeThd: String? = null
 
     private val store = object : DevWarningStore {
         override fun count(w: DevWarning) = flags.getInt("dev_warn_count_${w.name}", 0)
@@ -497,6 +501,8 @@ class DevModeActivity : BaseActivity() {
         DevTestSound.start(DevTestKind.PROBE_SWEEP)
         probeStart = m.frames
         probeRead = probeStart
+        probeSweepsDone = 0
+        probeThd = null
         update { it.copy(probe = ProbeView(running = true)) }
     }
 
@@ -528,7 +534,23 @@ class DevModeActivity : BaseActivity() {
         }
         // the screen about 5 times a second
         val t = SystemClock.elapsedRealtime()
-        if (fed && t - probeShown >= 200) { probeShown = t; update { it.copy(probe = ProbeView.of(p, running = true)) } }
+        if (fed && t - probeShown >= 200) { probeShown = t; update { it.copy(probe = ProbeView.of(p, running = true).copy(thd = probeThd)) } }
+        // each whole sweep (plus the latency) once recorded: its harmonic distortion, off the main thread
+        val period = (SpeakerProbe.PERIOD_S * FitMic.FS).toLong()
+        val span = ((SpeakerProbe.SWEEP_S + 0.8) * FitMic.FS).toInt()
+        val from = probeStart + probeSweepsDone * period
+        if (now >= from + span) {
+            probeSweepsDone++
+            val x = m.copy(from, span)
+            if (x != null && !p.clipped) Thread({
+                val line = try { SweepDistortion.analyze(x, fs, FitLatency.TYPICAL_S)?.let { SweepDistortion.line(it) } } catch (_: Exception) { null }
+                main.post {
+                    if (probeMic !== m || line.isNullOrEmpty()) return@post
+                    probeThd = line
+                    update { it.copy(probe = it.probe?.copy(thd = line)) }
+                }
+            }, "dev-probe-thd").start()
+        }
     }
 
     /** The slider range of [spec] for the current model (the roll-off offset depends on it). */

@@ -103,6 +103,9 @@ data class FitUi(
     /** The microphone's reference floor from the probe sweep (reference only, never applied). */
     val micFloorHz: Double? = null,
     val micClipped: Boolean = false,
+    /** The microphone's harmonic distortion of the probe sweep ("63 Hz −12 · ..."), reference only. */
+    val micThd: String? = null,
+    val micThd100: Double? = null,
     // questions
     val step: Int = 0,
     val prompt: FitPrompt? = null,
@@ -524,6 +527,7 @@ private fun MicFloor(ui: FitUi, r: FitResult) {
     val mic = ui.micFloorHz
     RnNavRow(stringResource(R.string.fit_r_mic_floor), line = stringResource(R.string.fit_r_mic_line), onClick = null, chevron = false,
         value = mic?.let { stringResource(R.string.fit_hz, SpeakerProbe.roundHz(it)) } ?: stringResource(R.string.fit_r_mic_none))
+    ui.micThd?.let { RnNavRow(stringResource(R.string.fit_r_mic_thd), line = it + " dB", onClick = null, chevron = false) }
     val ear = r.floor?.speakerFloorHz ?: return
     if (mic == null) return
     val apart = kotlin.math.log2(ear / mic)
