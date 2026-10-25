@@ -32,6 +32,10 @@ submodule at the commit recorded in that tag (`git clone --recursive`).
 The engine's sine/cosine (`app/src/main/cpp/libpvb/pvb_fastmath.h`) uses the range reduction and kernel polynomials of
 **fdlibm** (Sun Microsystems, 1993; permissive notice preserved in the file and in the third-party list).
 
+One of the engine's virtual bass algorithms (`VbBankstown` in `app/src/main/cpp/libpvb/pvb_vb.cpp`) is a C++ port of
+**Bankstown** by James Calligeros (https://github.com/chadmed/bankstown), MIT License; the notice is in the third-party
+list.
+
 Third-party components and their licences (Apache-2.0, BSD-2-Clause, SIL OFL 1.1, MIT, public domain/MIT-0, fdlibm) are
 listed in the app (About, Third-party licenses) and in `app/src/general/assets/licenses/THIRD_PARTY.txt`.
 

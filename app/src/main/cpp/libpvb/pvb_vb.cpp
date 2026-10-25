@@ -813,6 +813,8 @@ void VbHpv::tick(double inL, double inR, double& outL, double& outR) {
 }
 
 // ================================================================================================ Bankstown
+// Port of Bankstown by James Calligeros, https://github.com/chadmed/bankstown. Copyright 2023 James Calligeros,
+// MIT License (full notice: app/src/general/assets/licenses/THIRD_PARTY.txt).
 
 VbBankstown::Biquad VbBankstown::rbj(double fs, double f, bool lowpass) {
     const double q = 1.0 / std::sqrt(2.0);
