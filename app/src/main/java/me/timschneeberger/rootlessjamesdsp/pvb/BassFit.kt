@@ -88,8 +88,7 @@ object NoiseGate {
     )
 
     /** Third-octave band power (dB, mean square) of x: Welch average of 4096-point Hann frames, 50 % overlap. */
-    fun bandLevels(x: FloatArray, fs: Double, centers: DoubleArray): DoubleArray {
-        val n = 4096
+    fun bandLevels(x: FloatArray, fs: Double, centers: DoubleArray, n: Int = 4096): DoubleArray {
         val win = DoubleArray(n) { 0.5 - 0.5 * kotlin.math.cos(2 * Math.PI * it / n) }
         val wss = win.sumOf { it * it }
         val acc = DoubleArray(n / 2 + 1)
@@ -366,6 +365,38 @@ class FloorStaircase(
     /** Too many "heard" answers on silent catch trials (over a third) or too few reversals: don't apply. */
     val reliable: Boolean
         get() = reversals.size >= 4 && (catchTrials == 0 || falseAlarms * 3 <= catchTrials)
+}
+
+/**
+ * "마이크 맞추기 (UMIK-1)" in validation mode: the phone microphone records the room, then pink noise from a PC
+ * speaker while REW records the same noise with the UMIK-1 beside the phone microphone. Per recording source
+ * (UNPROCESSED, VOICE_RECOGNITION) this gives third-octave levels in dB re full scale; set against the UMIK-1's dB SPL
+ * of the same bands (done off the phone) they give the source's sensitivity (dB SPL - dB re full scale at 1 kHz) and
+ * its response re 1 kHz. Only the phone's own measured values: nothing from third parties.
+ */
+object MicCal {
+    val BANDS = doubleArrayOf(100.0, 125.0, 160.0, 200.0, 250.0, 315.0, 400.0, 500.0, 630.0, 800.0, 1000.0, 1250.0, 1600.0, 2000.0)
+    /** 16384-point frames: 2.9 Hz bins, so even the 100 Hz third octave (23 Hz wide) holds several. */
+    const val FFT = 16384
+    /** The noise has to stand this far over the room in a band for the band to count. */
+    const val MIN_SNR_DB = 15.0
+
+    fun levels(x: FloatArray, fs: Double): DoubleArray = NoiseGate.bandLevels(x, fs, BANDS, FFT)
+
+    /** The noise's own level per band: the room's power taken off; NaN where it is under [MIN_SNR_DB] over it. */
+    fun signal(roomDb: DoubleArray, noiseDb: DoubleArray): DoubleArray = DoubleArray(BANDS.size) { b ->
+        if (noiseDb[b] - roomDb[b] < MIN_SNR_DB) Double.NaN
+        else 10 * log10(10.0.pow(noiseDb[b] / 10) - 10.0.pow(roomDb[b] / 10))
+    }
+
+    /** One CSV line: when, phone, source, then room and noise level per band (dB re full scale, one decimal). */
+    fun line(time: String, model: String, source: String, roomDb: DoubleArray, noiseDb: DoubleArray): String {
+        fun f(v: Double) = if (v.isFinite()) String.format(java.util.Locale.ROOT, "%.1f", v) else ""
+        return (listOf(time, model.replace(Regex("[,\\n\\r\"]"), "_"), source) + roomDb.map(::f) + noiseDb.map(::f)).joinToString(",")
+    }
+
+    val HEADER: String = (listOf("time", "model", "source") + BANDS.map { "room_${it.toInt()}" } + BANDS.map { "noise_${it.toInt()}" })
+        .joinToString(",")
 }
 
 /**

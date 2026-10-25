@@ -9,6 +9,7 @@ import me.timschneeberger.rootlessjamesdsp.pvb.HearingThreshold
 import me.timschneeberger.rootlessjamesdsp.pvb.RefLevelStaircase
 import me.timschneeberger.rootlessjamesdsp.pvb.NoiseGate
 import me.timschneeberger.rootlessjamesdsp.pvb.NoiseMasking
+import me.timschneeberger.rootlessjamesdsp.pvb.MicCal
 import me.timschneeberger.rootlessjamesdsp.pvb.ShapeGrid
 import me.timschneeberger.rootlessjamesdsp.pvb.StrengthBracket
 import kotlin.math.PI
@@ -333,6 +334,16 @@ fun main() {
     val plain = FloorStaircase(1, refDb = -40.0)
     val corrected = FloorStaircase(1, refDb = -40.0, noiseDb = { hz -> NoiseMasking.correctionDb(office, hz) })
     check(abs(corrected.levelDb(100.0) - (plain.levelDb(100.0) + c100)) < 1e-9, "noise correction: applied to the floor bursts")
+
+    // --- microphone match (UMIK-1)
+    val calRoom = DoubleArray(MicCal.BANDS.size) { -80.0 }
+    val calNoise = DoubleArray(MicCal.BANDS.size) { if (it == 0) -70.0 else -40.0 }
+    val calSig = MicCal.signal(calRoom, calNoise)
+    check(calSig[0].isNaN() && abs(calSig[1] - (-40.0)) < 0.01, "mic match: bands under 15 dB over the room are dropped; the room's power comes off the rest")
+    check(MicCal.line("t", "SM,X", "unprocessed", calRoom, calNoise).split(",").size == MicCal.HEADER.split(",").size, "mic match: a line has the header's columns (commas in the model name cleaned)")
+    val pinkLike = FloatArray(48000 * 4) { i -> (kotlin.math.sin(2 * PI * 1000.0 * i / 48000) * 0.1).toFloat() }
+    val lv = MicCal.levels(pinkLike, 48000.0)
+    check(abs(lv[MicCal.BANDS.toList().indexOf(1000.0)] - 10 * kotlin.math.log10(0.005)) < 0.5, "mic match: a 1 kHz tone reads its power in the 1 kHz band")
 
     // --- mapping
     val m150 = BassFitMapping.fromFloor(150.0)

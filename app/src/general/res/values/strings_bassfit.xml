@@ -173,4 +173,16 @@
     <string name="fit_noise_corr_line">Turn on when the room is not fully quiet. Step 1 adjusts its sounds for the room noise the microphone measured. A rough correction.</string>
     <string name="fit_r_noise_line">Added to the 100 Hz sound in step 1</string>
     <string name="fit_abx_unsure">Not sure</string>
+    <string name="fit_mcal_title">Microphone match (UMIK-1)</string>
+    <string name="fit_mcal_note">Measures the real sensitivity and bass response of this phone microphone against the UMIK-1. Put the phone on a soft stand and the UMIK-1 1-2 cm beside the bottom microphone hole of the phone. First measure \"Room\" with nothing playing, then play pink noise from a PC speaker and measure \"Pink noise\". While the noise is measured, save the third-octave values of the UMIK-1 in REW. Each recording source takes 12 s. No audio is saved, only the level per band.</string>
+    <string name="fit_mcal_room">Room</string>
+    <string name="fit_mcal_noise">Pink noise</string>
+    <string name="fit_mcal_start">Measure</string>
+    <string name="fit_mcal_again">Measure again</string>
+    <string name="fit_mcal_recording">Measuring. Please keep still.</string>
+    <string name="fit_mcal_src_raw">Unprocessed</string>
+    <string name="fit_mcal_src_voice">Voice recognition</string>
+    <string name="fit_mcal_line_room">%1$s: room at 1 kHz %2$s dB</string>
+    <string name="fit_mcal_line_noise">%1$s: noise at 1 kHz %2$s dB, usable bands %3$d / %4$d</string>
+    <string name="fit_mcal_rows">%1$d lines recorded</string>
 </resources>

@@ -142,6 +142,12 @@ data class FitUi(
     val umikPhase: Int = 0,
     /** Microphone floor per condition index from the last UMIK-1 sound (-1 = none found). */
     val umikFloors: Map<Int, Double> = emptyMap(),
+    /** "마이크 맞추기": 0 the room, 1 the noise being recorded; null idle. */
+    val micCalPhase: Int? = null,
+    val micCalRoomDone: Boolean = false,
+    /** One summary line per recording source of the last step. */
+    val micCalLines: List<String> = emptyList(),
+    val micCalRows: Int = 0,
 )
 
 class FitActions(
@@ -177,6 +183,10 @@ class FitActions(
     val onLogCopy: () -> Unit,
     val onLogSend: () -> Unit,
     val onLogClear: () -> Unit,
+    val onMicCalRoom: () -> Unit,
+    val onMicCalNoise: () -> Unit,
+    val onMicCalSend: () -> Unit,
+    val onMicCalClear: () -> Unit,
     val onValBack: () -> Unit,
 )
 
@@ -617,6 +627,27 @@ private fun Validate(ui: FitUi, actions: FitActions) {
             value = stringResource(if (playing) R.string.fit_val_umik_stop else R.string.fit_val_umik_play),
             valueColor = LocalRn.current.accentText,
             onClick = { actions.onUmik(i) })
+    }
+
+    RnBand()
+    RnSectionTitle(stringResource(R.string.fit_mcal_title))
+    RnParagraph(stringResource(R.string.fit_mcal_note))
+    val busy = ui.micCalPhase != null
+    RnNavRow(stringResource(R.string.fit_mcal_room), chevron = false, enabled = !busy,
+        line = if (ui.micCalPhase == 0) stringResource(R.string.fit_mcal_recording) else null,
+        value = stringResource(if (ui.micCalRoomDone) R.string.fit_mcal_again else R.string.fit_mcal_start),
+        valueColor = LocalRn.current.accentText, onClick = actions.onMicCalRoom)
+    RnNavRow(stringResource(R.string.fit_mcal_noise), chevron = false, enabled = !busy && ui.micCalRoomDone,
+        line = if (ui.micCalPhase == 1) stringResource(R.string.fit_mcal_recording) else null,
+        value = stringResource(R.string.fit_mcal_start),
+        valueColor = LocalRn.current.accentText, onClick = actions.onMicCalNoise)
+    for (l in ui.micCalLines) RnParagraph(l)
+    if (ui.micCalRows > 0) {
+        RnParagraph(stringResource(R.string.fit_mcal_rows, ui.micCalRows))
+        RnButtonRow {
+            RnOutlineButton(stringResource(R.string.fit_val_log_clear), Modifier.weight(1f), enabled = !busy, onClick = actions.onMicCalClear)
+            RnOutlineButton(stringResource(R.string.fit_val_log_send), Modifier.weight(1f), onClick = actions.onMicCalSend)
+        }
     }
 
     RnBand()

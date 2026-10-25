@@ -10,6 +10,10 @@ The corresponding source is the tagged commit; `source-*.tar.gz` below contains 
 - Measured settings exist only for the Galaxy S26 Ultra; other phones start with conservative settings based on published measurements of 92 Android phones.
 - Privacy: only settings are stored; no song titles, no recordings, nothing sent (see PRIVACY.md).
 
+## 다음 버전 (작업 중)
+
+- 검증 모드에 "마이크 맞추기 (UMIK-1)"를 넣었어요. 방 소음과 PC 스피커의 핑크 노이즈를 폰 마이크로 녹음 방식별로 재서 대역별 크기를 기록해요. UMIK-1 값과 비교해 이 폰 마이크의 실제 감도와 저음 응답을 구하는 데 써요(소리는 저장하지 않아요).
+
 ## 0.9.0-beta.11
 
 - "X는 A와 B 중 어느 쪽과 같나요?" 질문에 "잘 모르겠어요"를 넣었어요. 틀린 답으로 세어서, 두 번 고르면 그 검사는 끝나고 지금 설정이 그대로 남아요. 배음 경계 검사는 차이가 아주 작아 구분이 안 되는 게 보통이라고 안내해요.
