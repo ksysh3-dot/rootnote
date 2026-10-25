@@ -51,7 +51,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -136,6 +135,8 @@ import me.timschneeberger.rootlessjamesdsp.ui.RnSliderColors
 import me.timschneeberger.rootlessjamesdsp.ui.RnStepButton
 import me.timschneeberger.rootlessjamesdsp.ui.RnSwitchVisual
 import me.timschneeberger.rootlessjamesdsp.ui.pressScale
+import me.timschneeberger.rootlessjamesdsp.ui.RnDialogHost
+import me.timschneeberger.rootlessjamesdsp.ui.RnDialogBody
 
 /*
  * Developer-mode screen (Figma "개발자 모드 시안" 1-7, docs/DESIGN.md). Top bar, test sounds, a swipeable graph card
@@ -832,24 +833,23 @@ private fun IconAction(label: String, enabled: Boolean, onClick: () -> Unit, ico
 @Composable
 private fun ConsentDialog(actions: DevActions) {
     val c = LocalDevPalette.current
-    AlertDialog(
-        onDismissRequest = { actions.onConsent(false) },
-        containerColor = c.bg,
-        shape = RoundedCornerShape(28.dp),
-        title = { Text(stringResource(R.string.dev_consent_title), color = c.textPrimary, fontSize = 22.sp, lineHeight = 30.sp, fontWeight = FontWeight.Bold) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                for (res in listOf(R.string.dev_consent_1, R.string.dev_consent_2, R.string.dev_consent_3, R.string.dev_consent_4)) {
-                    Row {
-                        Box(Modifier.padding(top = 8.dp, end = 10.dp).size(5.dp).background(c.fill, CircleShape))
-                        Text(stringResource(res), color = c.textPrimary, fontSize = 15.sp, lineHeight = 21.sp)
+    RnDialogHost(onDismissRequest = { actions.onConsent(false) }, containerColor = c.bg) { close ->
+        RnDialogBody(
+            title = { Text(stringResource(R.string.dev_consent_title), color = c.textPrimary, fontSize = 22.sp, lineHeight = 30.sp, fontWeight = FontWeight.Bold) },
+            text = {
+                Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    for (res in listOf(R.string.dev_consent_1, R.string.dev_consent_2, R.string.dev_consent_3, R.string.dev_consent_4)) {
+                        Row {
+                            Box(Modifier.padding(top = 8.dp, end = 10.dp).size(5.dp).background(c.fill, CircleShape))
+                            Text(stringResource(res), color = c.textPrimary, fontSize = 15.sp, lineHeight = 21.sp)
+                        }
                     }
                 }
-            }
-        },
-        dismissButton = { OutlineButton(stringResource(R.string.dev_consent_cancel)) { actions.onConsent(false) } },
-        confirmButton = { FilledButton(stringResource(R.string.dev_consent_ok)) { actions.onConsent(true) } },
-    )
+            },
+            dismissButton = { OutlineButton(stringResource(R.string.dev_consent_cancel)) { close { actions.onConsent(false) } } },
+            confirmButton = { FilledButton(stringResource(R.string.dev_consent_ok)) { close { actions.onConsent(true) } } },
+        )
+    }
 }
 
 @Composable
@@ -883,42 +883,41 @@ private fun WarningDialog(d: DevDialog, actions: DevActions) {
         DevWarning.NEAR_CEILING -> Triple(R.string.dev_warn_ceiling_title, stringResource(R.string.dev_warn_ceiling_body), R.string.dev_warn_action_ceiling)
         DevWarning.UNMEASURED -> Triple(R.string.dev_warn_unmeasured_title, stringResource(R.string.dev_warn_unmeasured_body), null)
     }
-    AlertDialog(
-        onDismissRequest = { actions.onDialogClose(false, false) },
-        containerColor = c.bg,
-        shape = RoundedCornerShape(28.dp),
-        title = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(10.dp).background(c.warnDot, CircleShape))
-                Spacer(Modifier.width(10.dp))
-                Text(stringResource(title), color = c.textPrimary, fontSize = 20.sp, lineHeight = 26.sp, fontWeight = FontWeight.Bold)
-            }
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(body, color = c.textPrimary, fontSize = 15.sp, lineHeight = 21.sp)
-                if (d.offerHide) {
-                    Row(
-                        Modifier.fillMaxWidth().heightIn(min = 48.dp)
-                            .toggleable(value = hide, role = Role.Checkbox, onValueChange = { hide = it }),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Checkbox(checked = hide, onCheckedChange = null,
-                            colors = CheckboxDefaults.colors(checkedColor = c.fill, uncheckedColor = c.chevron, checkmarkColor = c.onFill))
-                        Spacer(Modifier.width(8.dp))
-                        Column {
-                            Text(stringResource(R.string.dev_warn_hide), color = c.textPrimary, fontSize = 15.sp, lineHeight = 21.sp, fontWeight = FontWeight.Bold)
-                            Text(stringResource(R.string.dev_warn_hide_note), color = c.textSecondary, fontSize = 12.sp, lineHeight = 16.sp)
+    RnDialogHost(onDismissRequest = { actions.onDialogClose(false, false) }, containerColor = c.bg) { close ->
+        RnDialogBody(
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(10.dp).background(c.warnDot, CircleShape))
+                    Spacer(Modifier.width(10.dp))
+                    Text(stringResource(title), color = c.textPrimary, fontSize = 20.sp, lineHeight = 26.sp, fontWeight = FontWeight.Bold)
+                }
+            },
+            text = {
+                Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(body, color = c.textPrimary, fontSize = 15.sp, lineHeight = 21.sp)
+                    if (d.offerHide) {
+                        Row(
+                            Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                                .toggleable(value = hide, role = Role.Checkbox, onValueChange = { hide = it }),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Checkbox(checked = hide, onCheckedChange = null,
+                                colors = CheckboxDefaults.colors(checkedColor = c.fill, uncheckedColor = c.chevron, checkmarkColor = c.onFill))
+                            Spacer(Modifier.width(8.dp))
+                            Column {
+                                Text(stringResource(R.string.dev_warn_hide), color = c.textPrimary, fontSize = 15.sp, lineHeight = 21.sp, fontWeight = FontWeight.Bold)
+                                Text(stringResource(R.string.dev_warn_hide_note), color = c.textSecondary, fontSize = 12.sp, lineHeight = 16.sp)
+                            }
                         }
                     }
                 }
-            }
-        },
-        dismissButton = if (action != null) {
-            { TextAction(stringResource(action), bold = true) { actions.onDialogClose(hide, true) } }
-        } else null,
-        confirmButton = { FilledButton(stringResource(R.string.dev_warn_ok)) { actions.onDialogClose(hide, false) } },
-    )
+            },
+            dismissButton = if (action != null) {
+                { TextAction(stringResource(action), bold = true) { close { actions.onDialogClose(hide, true) } } }
+            } else null,
+            confirmButton = { FilledButton(stringResource(R.string.dev_warn_ok)) { close { actions.onDialogClose(hide, false) } } },
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
