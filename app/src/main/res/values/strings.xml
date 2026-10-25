@@ -319,7 +319,7 @@
     <string name="limit_session_control_conflict_title">Disable other audio effect apps</string>
     <string name="limit_session_control_conflict">Audio effect apps using Android\'s built-in Dynamic Processing effect interfere with this app.</string>
     <string name="limit_unsupported_apps_title">Unsupported media apps</string>
-    <string name="limit_unsupported_apps">Apps blocking internal audio capture remain unprocessed (e.g., Spotify, Google Chrome).</string>
+    <string name="limit_unsupported_apps">Apps blocking internal audio capture remain unprocessed with screen share (e.g., Spotify, Google Chrome); the intercept capture processes them.</string>
     <string name="limit_hw_accel_title">HW-accelerated audio playback issues</string>
     <string name="limit_hw_accel">HW-accelerated audio playback (fast tracks) may sometimes cause duplicated audio or kill JamesDSP in some circumstances. Please add the affected music player to the excluded apps list to prevent JamesDSP from re-routing it.</string>
     <string name="limit_detect_delay_title">Audio session detection delay</string>

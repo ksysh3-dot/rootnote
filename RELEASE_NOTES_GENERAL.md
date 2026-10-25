@@ -6,14 +6,16 @@ The corresponding source is the tagged commit; `source-*.tar.gz` below contains 
 
 - Setup needs Shizuku or ADB once (the app shows the exact commands for its package on first start).
 - Android 15+: turn on "Disable screen share protections" in Developer options.
-- Apps that block audio capture (Spotify, Chrome, SoundCloud, ...) play unprocessed.
+- With "screen share" capture, apps that block audio capture (Spotify, Chrome, SoundCloud, ...) play unprocessed; the default "intercept" capture processes them (checked with Chrome and Spotify).
 - Measured settings exist only for the Galaxy S26 Ultra; other phones start with conservative settings based on published measurements of 92 Android phones.
 - Privacy: only settings are stored; no song titles, no recordings, nothing sent (see PRIVACY.md).
 
-## 다음 버전 (작업 중)
+## 0.9.0-beta.13
 
 - "가로채기 캡처"를 고르면 켤 때 화면 공유 동의를 묻지 않아요. beta.12는 방식과 상관없이 동의부터 받은 뒤 가로채기를 시도했어요. 이제 Shizuku가 켜져 있으면 바로 시작하고, 가로채기를 못 쓸 때(Shizuku 꺼짐 등)만 화면 공유 동의를 받아요. 앱이 열려 있으면 바로 묻고, 아니면 알림으로 알려요. 안드로이드 15의 "화면 공유 보호" 안내도 가로채기를 쓸 때는 띄우지 않아요.
 - 가로채기 캡처가 어느 폰에서도 시작되지 않던 문제를 고쳤어요(beta.12). Rootnote 자신과 제외한 앱을 빼는 규칙을 잘못된 방법으로 넣어 시스템이 거부했어요. 가로채기를 못 쓸 때는 알림과 설정에 시스템이 알려 준 이유를 그대로 보여 줘요.
+- 가로채기에서는 소리 캡처를 막는 앱도 처리돼요. Chrome과 (개조하지 않은) Spotify에서 확인했어요. 화면 공유 방식에서는 예전처럼 처리되지 않아요.
+- 개발 도구를 더했어요(앱 동작은 같아요): 가로채기 시작 판단과 실패 문구를 표로 확인하는 시험, 안드로이드 메서드 이름·매니페스트·시작 순서·버전 일치를 CI에서 확인하는 점검, 움직임 규칙 검사의 빈틈(타입을 붙인 300 ms 초과 호출) 수정.
 
 ## 0.9.0-beta.12
 

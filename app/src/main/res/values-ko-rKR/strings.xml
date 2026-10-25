@@ -237,7 +237,7 @@
     <string name="limit_session_control_conflict_title">다른 오디오 효과 앱 비활성화</string>
     <string name="limit_session_control_conflict">Android의 내장된 Dynamic Processing 효과를 사용하는 오디오 효과 앱은 이 앱과 간섭합니다.</string>
     <string name="limit_unsupported_apps_title">지원되지 않는 미디어 앱</string>
-    <string name="limit_unsupported_apps">내부 오디오 캡처를 차단하는 앱은 처리되지 않습니다 (예: Spotify, Google Chrome).</string>
+    <string name="limit_unsupported_apps">내부 오디오 캡처를 차단하는 앱은 화면 공유 방식에서 처리되지 않습니다 (예: Spotify, Google Chrome). 가로채기 방식에서는 처리됩니다.</string>
     <string name="limit_hw_accel_title">하드웨어 가속 오디오 재생 문제</string>
     <string name="limit_hw_accel">하드웨어 가속 오디오 재생 (패스트 트랙) 은 때때로 오디오 중복을 유발하거나 JamesDSP의 작동을 멈추게 할 수 있습니다. JamesDSP의 재라우팅을 방지하려면 해당 음악 플레이어를 제외된 앱 목록에 추가해 주세요.</string>
     <string name="limit_detect_delay_title">오디오 세션 감지 지연</string>

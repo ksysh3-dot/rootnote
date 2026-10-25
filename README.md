@@ -27,7 +27,7 @@ only; headphones and Bluetooth are bypassed.
 
 ## Status
 
-**Beta** (`0.9.0-beta.12`, Android 10 or later, arm64).
+**Beta** (`0.9.0-beta.13`, Android 10 or later, arm64).
 
 - The default settings were measured on a **Galaxy S26 Ultra** (model `SM-S948*`). Every other phone starts
   with a conservative neutral profile (120 Hz low cut, low-mid +2 dB, treble -2 dB, output -3 dB, limiter -1 dBTP; see docs/SPEAKER_ESTIMATES.md) and a
@@ -36,8 +36,10 @@ only; headphones and Bluetooth are bypassed.
   virtual bass** on (the notice carries the virtual-bass warning); the home screen switch turns processing off.
 - Virtual bass is experimental: it adds about 0.15 s of delay, and the effect (and any buzzing) depends on
   the song and the phone.
-- Apps that block audio capture (for example Spotify, Chrome, SoundCloud) play unprocessed. This limitation
-  comes from Android and is the same as in RootlessJamesDSP.
+- With the default "intercept" capture (Android 13 or later, Shizuku running) apps that block screen-share audio
+  capture are processed too; checked with Chrome and Spotify. With the "screen share" capture such apps (for
+  example Spotify, Chrome, SoundCloud) play unprocessed; that limit comes from Android and is the same as in
+  RootlessJamesDSP.
 
 ## Install and setup
 
@@ -148,7 +150,7 @@ RootlessJamesDSP의 루트 없는 시스템 오디오 캡처는 그대로 쓰고
 
 ### 상태
 
-**베타**(`0.9.0-beta.12`, Android 10 이상, arm64)입니다.
+**베타**(`0.9.0-beta.13`, Android 10 이상, arm64)입니다.
 
 - 기본 설정은 **갤럭시 S26 Ultra**(모델 `SM-S948*`)에서 측정했습니다. 다른 폰은 보수적인 중립 설정(보호용 저역 차단
   100 Hz, 평탄한 EQ, 출력 −3 dB, 리미터 −1 dBTP)으로 시작하고 "측정되지 않은 기기" 안내를 한 번 띄웁니다. 들으면서
@@ -156,7 +158,7 @@ RootlessJamesDSP의 루트 없는 시스템 오디오 캡처는 그대로 쓰고
 - 처음 안내를 확인하기 전에는 아무것도 처리하지 않습니다. 안내를 확인하면 스피커 보정과 **가상 저음**이 함께 켜집니다
   (안내에 가상 저음 경고가 들어 있습니다). 홈 화면 스위치로 처리를 끌 수 있습니다.
 - 가상 저음은 실험 기능입니다. 약 0.15초 지연이 있고, 효과(와 윙윙거림)는 곡과 기기에 따라 다릅니다.
-- 오디오 캡처를 막는 앱(예: Spotify, Chrome, SoundCloud)의 소리는 처리되지 않습니다(안드로이드 제약, 원본과 같음).
+- 기본값인 "가로채기" 캡처(안드로이드 13 이상, Shizuku 실행 중)에서는 화면 공유 캡처를 막는 앱도 처리됩니다(Chrome, Spotify에서 확인). "화면 공유" 캡처에서는 이런 앱(예: Spotify, Chrome, SoundCloud)의 소리가 처리되지 않습니다(안드로이드 제약, 원본과 같음).
 
 ### 설치와 설정
 
