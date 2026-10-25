@@ -42,16 +42,16 @@ object CaptureState {
 
 /** How a start begins: without the screen-share consent when "가로채기" is chosen and can run right now. */
 object CaptureStart {
-    fun withoutConsent(context: Context): Boolean =
-        CaptureMode.get(context) == CaptureMode.INTERCEPT && android.os.Build.VERSION.SDK_INT >= 33 &&
-            !CaptureState.interceptStartFailed && InterceptSource.shizukuReady()
+    fun withoutConsent(context: Context): Boolean = InterceptPolicy.startsWithoutConsent(
+        CaptureMode.get(context) == CaptureMode.INTERCEPT, android.os.Build.VERSION.SDK_INT,
+        CaptureState.interceptStartFailed, InterceptSource.shizukuReady())
 }
 
 /** [CaptureState.fallbackReason] (InterceptSource.lastError) in the user's words. */
-fun captureReasonText(context: Context, reason: String): String = when (reason) {
-    "shizuku_off" -> context.getString(me.timschneeberger.rootlessjamesdsp.R.string.capture_reason_shizuku_off)
-    "android_13_needed" -> context.getString(me.timschneeberger.rootlessjamesdsp.R.string.capture_reason_android_13)
+fun captureReasonText(context: Context, reason: String): String = when (InterceptReason.kind(reason)) {
+    InterceptReason.Kind.SHIZUKU_OFF -> context.getString(me.timschneeberger.rootlessjamesdsp.R.string.capture_reason_shizuku_off)
+    InterceptReason.Kind.ANDROID_13 -> context.getString(me.timschneeberger.rootlessjamesdsp.R.string.capture_reason_android_13)
     // the system's own message, so a report can say what failed
-    else -> context.getString(me.timschneeberger.rootlessjamesdsp.R.string.capture_reason_other) +
-        " (" + reason.removePrefix("ERROR ").take(160) + ")"
+    InterceptReason.Kind.OTHER -> context.getString(me.timschneeberger.rootlessjamesdsp.R.string.capture_reason_other) +
+        " (" + InterceptReason.detail(reason) + ")"
 }

@@ -18,6 +18,7 @@ import android.media.AudioRecord
 import me.timschneeberger.rootlessjamesdsp.capture.CaptureMode
 import me.timschneeberger.rootlessjamesdsp.capture.CaptureSource
 import me.timschneeberger.rootlessjamesdsp.capture.CaptureState
+import me.timschneeberger.rootlessjamesdsp.capture.InterceptPolicy
 import me.timschneeberger.rootlessjamesdsp.capture.InterceptSource
 import me.timschneeberger.rootlessjamesdsp.capture.RecordSource
 import android.media.AudioTrack
@@ -1365,7 +1366,7 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
                 setIntercepting(true, null)
                 return src
             }
-            if (mediaProjection == null) consentNeeded()
+            if (InterceptPolicy.afterFailure(mediaProjection != null) == InterceptPolicy.After.ASK_CONSENT) consentNeeded()
             interceptFailed = true
             setIntercepting(false, InterceptSource.lastError ?: "unknown")
         } else setIntercepting(false, null)

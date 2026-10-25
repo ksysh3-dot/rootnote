@@ -91,8 +91,8 @@ class InterceptSource private constructor(private val process: Process) : Captur
             if (android.os.Build.VERSION.SDK_INT < 33) { lastError = "android_13_needed"; return null }
             if (!shizukuReady()) { lastError = "shizuku_off"; return null }
             val apk = context.applicationInfo.sourceDir
-            val cmd = arrayOf("app_process", "-Djava.class.path=$apk", "/system/bin",
-                InterceptServer::class.java.name, sampleRate.toString(), excludedUids.joinToString(","))
+            val cmd = (listOf("app_process", "-Djava.class.path=$apk", "/system/bin", InterceptServer::class.java.name) +
+                InterceptArgs.build(sampleRate, excludedUids)).toTypedArray()
             val process = try {
                 // Shizuku.newProcess is not public in this API version; it is what the shell commands use
                 val m = Shizuku::class.java.getDeclaredMethod("newProcess",
@@ -124,10 +124,7 @@ class InterceptSource private constructor(private val process: Process) : Captur
             if (!ready.await(timeoutMs, TimeUnit.MILLISECONDS) || !ok.get()) {
                 if (lastError == null) {
                     val last = synchronized(tail) { tail.lastOrNull { !it.startsWith("at ") } ?: tail.lastOrNull() }
-                    lastError = when {
-                        ended.get() -> "exited: ${last ?: "no output"}"
-                        else -> "timeout ${timeoutMs / 1000} s${last?.let { ": $it" } ?: ""}"
-                    }
+                    lastError = InterceptReason.describe(ended.get(), (timeoutMs / 1000).toInt(), last)
                 }
                 Timber.w("Intercept capture failed: $lastError")
                 try { process.destroy() } catch (_: Exception) {}

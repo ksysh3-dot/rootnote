@@ -40,8 +40,9 @@ object InterceptServer {
 
     @JvmStatic
     fun main(args: Array<String>) {
-        val rate = args.getOrNull(0)?.toIntOrNull() ?: 48000
-        val excluded = args.getOrNull(1)?.split(',')?.mapNotNull { it.trim().toIntOrNull() }.orEmpty()
+        val parsed = InterceptArgs.parse(args)
+        val rate = parsed.rate
+        val excluded = parsed.excluded
         val err = System.err
         try {
             if (Build.VERSION.SDK_INT < 33) throw IllegalStateException("Android 13 or later needed")
