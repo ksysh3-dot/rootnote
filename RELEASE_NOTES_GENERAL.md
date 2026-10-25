@@ -10,7 +10,7 @@ The corresponding source is the tagged commit; `source-*.tar.gz` below contains 
 - Measured settings exist only for the Galaxy S26 Ultra; other phones start with conservative settings based on published measurements of 92 Android phones.
 - Privacy: only settings are stored; no song titles, no recordings, nothing sent (see PRIVACY.md).
 
-## 다음 버전 (작업 중)
+## 0.9.0-beta.12
 
 - 검증 모드에 "마이크 맞추기 (UMIK-1)"를 넣었어요. 방 소음과 PC 스피커의 핑크 노이즈를 폰 마이크로 녹음 방식별로 재서 대역별 크기를 기록해요. UMIK-1 값과 비교해 이 폰 마이크의 실제 감도와 저음 응답을 구하는 데 써요(소리는 저장하지 않아요).
 - 소음 보정이 폰이 스스로 알려 주는 마이크 감도(안드로이드 MicrophoneInfo)를 써요. 가공 없는 녹음일 때만 쓰고, 폰이 알려 주지 않으면 안드로이드 기준값을 써요. 결과 화면에 어느 값으로 계산했는지 보여 주고, 기준값이면 "크게 틀릴 수 있어요"라고 알려요. S26 Ultra는 −37 dBFS(기준값과 1 dB 차이)를 알려 줘요.
