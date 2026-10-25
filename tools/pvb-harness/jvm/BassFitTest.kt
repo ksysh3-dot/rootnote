@@ -9,7 +9,6 @@ import me.timschneeberger.rootlessjamesdsp.pvb.HearingThreshold
 import me.timschneeberger.rootlessjamesdsp.pvb.RefLevelStaircase
 import me.timschneeberger.rootlessjamesdsp.pvb.NoiseGate
 import me.timschneeberger.rootlessjamesdsp.pvb.NoiseMasking
-import me.timschneeberger.rootlessjamesdsp.pvb.MicResponse
 import me.timschneeberger.rootlessjamesdsp.pvb.ShapeGrid
 import me.timschneeberger.rootlessjamesdsp.pvb.StrengthBracket
 import kotlin.math.PI
@@ -334,16 +333,6 @@ fun main() {
     val plain = FloorStaircase(1, refDb = -40.0)
     val corrected = FloorStaircase(1, refDb = -40.0, noiseDb = { hz -> NoiseMasking.correctionDb(office, hz) })
     check(abs(corrected.levelDb(100.0) - (plain.levelDb(100.0) + c100)) < 1e-9, "noise correction: applied to the floor bursts")
-
-    // --- the microphone's typical response (aggregate medians)
-    check(MicResponse.GALAXY.size == MicResponse.BANDS.size && MicResponse.ANDROID.size == MicResponse.BANDS.size, "mic response: one value per band")
-    check(MicResponse.db(MicResponse.GALAXY, 1000.0) == 0.0 && MicResponse.db(MicResponse.ANDROID, 1000.0) == 0.0, "mic response: 0 dB at 1 kHz (where the sensitivity is defined)")
-    check((MicResponse.GALAXY + MicResponse.ANDROID).all { abs(it) <= 3.0 }, "mic response: coarse and small (within 3 dB)")
-    check(MicResponse.db(MicResponse.GALAXY, 63.0) == MicResponse.db(MicResponse.GALAXY, 100.0), "mic response: nothing new below 100 Hz")
-    check(MicResponse.forMaker("samsung") === MicResponse.GALAXY && MicResponse.forMaker("Google") === MicResponse.ANDROID && MicResponse.forMaker(null) === MicResponse.ANDROID, "mic response: table by maker")
-    val flatBands = DoubleArray(NoiseGate.TEST_BANDS.size) { -60.0 }
-    val fixed = MicResponse.correct(MicResponse.GALAXY, flatBands, NoiseGate.TEST_BANDS)
-    check(abs(fixed[NoiseGate.TEST_BANDS.toList().indexOf(200.0)] - (-61.5)) < 1e-9, "mic response: taken off the room bands (200 Hz reads 1.5 dB high)")
 
     // --- mapping
     val m150 = BassFitMapping.fromFloor(150.0)

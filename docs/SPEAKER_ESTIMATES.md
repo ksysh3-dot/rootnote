@@ -29,13 +29,6 @@ Script: `tools/pvb-harness/study/nbc_transfer.py` (reads the input tables from a
 Why only differences: one reviewer's S26 Ultra curve differed from ours by 7-9 dB at 125-160 Hz and 5-10 dB at
 2.5-6.3 kHz. Differences between phones are far more trustworthy than any lab's absolute curve.
 
-## Check of our own S26 Ultra measurement
-
-Our curve was compared with an independent lab's measurement of the same phone (third-octave, 125 Hz-8 kHz; above
-10 kHz the setups differ: phone on a desk here, free-standing there). Agreement: mean absolute difference about 1.8 dB;
-among about 60 phones in that lab's data, our curve was closest to its S26 Ultra, followed by the S26+ and S25 Ultra.
-Caveat: the band limit was chosen after seeing the data. Good enough to use as the reference, not a proof.
-
 ## Aggregate result (92 Android phones, one reviewer)
 
 | Quantity | 10th percentile | Median | 90th percentile (weakest) |
@@ -57,9 +50,7 @@ The story draws per-band aggregates only (dataset as of 2026-10-24: 97 Android p
 maker known for strong bass, "brand A", same reviewer): the 10th/50th/90th percentile of the Android phones and the
 median of brand A, plus our own S26 Ultra curve. Brand A (median): 125-250 Hz about +7 dB re the S26 Ultra; 10 dB
 under the mids at about 155 Hz (Android median about 205 Hz; about 1 Android phone in 10 reaches that low); still
-about -14 dB at 125 Hz. Cross-check with the independent lab (5 brand A phones, 54 Android phones, 100 % volume,
-50 cm): brand A 125-250 Hz about +5.5 dB over the Android median, but only about +1.4 dB over the S26 Ultra there;
-full-volume protection likely narrows it. Small samples: a rough comparison. Other makers are not named in the app.
+about -14 dB at 125 Hz. Small samples: a rough comparison. Other makers are not named in the app.
 
 ## Why the bass limit sits where it does (notes E and F)
 

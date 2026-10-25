@@ -41,7 +41,6 @@ import me.timschneeberger.rootlessjamesdsp.pvb.FitVariant
 import me.timschneeberger.rootlessjamesdsp.pvb.FloorStaircase
 import me.timschneeberger.rootlessjamesdsp.pvb.NoiseGate
 import me.timschneeberger.rootlessjamesdsp.pvb.NoiseMasking
-import me.timschneeberger.rootlessjamesdsp.pvb.MicResponse
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbBuild
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbGeneral
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbRuntime
@@ -93,8 +92,6 @@ class BassFitActivity : RnActivity() {
     private var roomBands: DoubleArray? = null
     /** The room check's recording source (null: not measured). */
     private var roomRaw: Boolean? = null
-    /** The phone microphone's typical response (Galaxy or Android median), taken off what it measures. */
-    private val micTable = MicResponse.forMaker(Build.MANUFACTURER)
     private var startVolume = -1
     private var oldSettings: PvbSettings? = null
     private var newSettings: PvbSettings? = null
@@ -302,13 +299,13 @@ class BassFitActivity : RnActivity() {
                 val sig = m.copy(refFrom + ((lat + 0.3) * fs).toLong(), (1.8 * fs).toInt())
                 val verdict = NoiseGate.judge(room, sig, fs)
                 val bands = room?.let { NoiseGate.bandLevels(it, fs, NoiseGate.TEST_BANDS) }
-                val probe = m.copy(probeFrom, ((PROBE_RECORD_S - 0.2) * fs).toInt())?.let { SpeakerProbe(fs, micTable).analyze(it, lat) }
+                val probe = m.copy(probeFrom, ((PROBE_RECORD_S - 0.2) * fs).toInt())?.let { SpeakerProbe(fs).analyze(it, lat) }
                 main.post {
                     if (t != token || isFinishing) return@post
                     latencyS = lat
                     roomBands = bands
                     roomRaw = m.unprocessed
-                    if (ui.noiseCorr) session?.let { it.noiseBandsDb = bands?.let { b -> MicResponse.correct(micTable, b, NoiseGate.TEST_BANDS) }; it.noiseSplOffsetDb = NoiseMasking.splOffsetDb(m.unprocessed) }
+                    if (ui.noiseCorr) session?.let { it.noiseBandsDb = bands; it.noiseSplOffsetDb = NoiseMasking.splOffsetDb(m.unprocessed) }
                     ui = ui.copy(micFloorHz = probe?.floorHz(), micClipped = probe?.clipped == true)
                     if (verdict.pass) {
                         ui = ui.copy(verdict = verdict)
@@ -622,7 +619,7 @@ class BassFitActivity : RnActivity() {
         conditionHp = p.runs[planIndex]
         planIndex++
         session = BassFitSession(SecureRandom().nextLong(), stored().vbLevelDb.toDouble(), ui.valScope)
-            .also { if (ui.noiseCorr) { it.noiseBandsDb = roomBands?.let { b -> MicResponse.correct(micTable, b, NoiseGate.TEST_BANDS) }; it.noiseSplOffsetDb = NoiseMasking.splOffsetDb(roomRaw == true) } }
+            .also { if (ui.noiseCorr) { it.noiseBandsDb = roomBands; it.noiseSplOffsetDb = NoiseMasking.splOffsetDb(roomRaw == true) } }
         // the microphone (silent-interval checks) only for the step-1 runs
         if (ui.valScope == FitScope.FLOOR && mic == null &&
             ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED)
@@ -728,7 +725,7 @@ class BassFitActivity : RnActivity() {
                 val x = m.copy(from, ((PROBE_RECORD_S - 0.2) * fs).toInt())
                 DevTestSound.start(DevTestKind.FIT_SILENCE)
                 Thread({
-                    val probe = x?.let { SpeakerProbe(fs, micTable).analyze(it, FitLatency.TYPICAL_S) }
+                    val probe = x?.let { SpeakerProbe(fs).analyze(it, FitLatency.TYPICAL_S) }
                     val floor = probe?.floorHz()
                     main.post {
                         if (t != token || isFinishing) return@post
