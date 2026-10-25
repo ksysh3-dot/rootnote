@@ -86,7 +86,7 @@ class InterceptSource private constructor(private val process: Process) : Captur
          * Starts the shell process and waits up to [timeoutMs] for it to say it records. Null when it can't (no
          * Shizuku, Android before 13, the policy refused); [lastError] says why.
          */
-        fun start(context: Context, sampleRate: Int, excludedUids: Collection<Int>, timeoutMs: Long = 4000): InterceptSource? {
+        fun start(context: Context, sampleRate: Int, excludedUids: Collection<Int>, timeoutMs: Long = 8000): InterceptSource? {
             lastError = null
             if (android.os.Build.VERSION.SDK_INT < 33) { lastError = "android_13_needed"; return null }
             if (!shizukuReady()) { lastError = "shizuku_off"; return null }
@@ -105,19 +105,30 @@ class InterceptSource private constructor(private val process: Process) : Captur
                 return null
             }
             val ready = CountDownLatch(1)
-            var ok = false
+            val ok = java.util.concurrent.atomic.AtomicBoolean(false)
+            val ended = java.util.concurrent.atomic.AtomicBoolean(false)
+            // the last lines the process wrote (a Java exception from app_process does not start with "ERROR")
+            val tail = ArrayDeque<String>()
             Thread({
                 try {
                     process.errorStream.bufferedReader().forEachLine { line ->
                         Timber.d("Intercept server: $line")
-                        if (line == InterceptServer.READY) { ok = true; ready.countDown() }
+                        if (line.isNotBlank()) synchronized(tail) { tail.addLast(line.trim()); if (tail.size > 4) tail.removeFirst() }
+                        if (line == InterceptServer.READY) { ok.set(true); ready.countDown() }
                         else if (line.startsWith("ERROR")) { lastError = line; ready.countDown() }
                     }
                 } catch (_: Exception) {}
+                ended.set(true)
                 ready.countDown()
             }, "intercept-stderr").apply { isDaemon = true }.start()
-            if (!ready.await(timeoutMs, TimeUnit.MILLISECONDS) || !ok) {
-                if (lastError == null) lastError = "timeout"
+            if (!ready.await(timeoutMs, TimeUnit.MILLISECONDS) || !ok.get()) {
+                if (lastError == null) {
+                    val last = synchronized(tail) { tail.lastOrNull { !it.startsWith("at ") } ?: tail.lastOrNull() }
+                    lastError = when {
+                        ended.get() -> "exited: ${last ?: "no output"}"
+                        else -> "timeout ${timeoutMs / 1000} s${last?.let { ": $it" } ?: ""}"
+                    }
+                }
                 Timber.w("Intercept capture failed: $lastError")
                 try { process.destroy() } catch (_: Exception) {}
                 return null

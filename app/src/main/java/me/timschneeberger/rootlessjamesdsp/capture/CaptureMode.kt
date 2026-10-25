@@ -48,8 +48,10 @@ object CaptureStart {
 }
 
 /** [CaptureState.fallbackReason] (InterceptSource.lastError) in the user's words. */
-fun captureReasonText(context: Context, reason: String): String = context.getString(when (reason) {
-    "shizuku_off" -> me.timschneeberger.rootlessjamesdsp.R.string.capture_reason_shizuku_off
-    "android_13_needed" -> me.timschneeberger.rootlessjamesdsp.R.string.capture_reason_android_13
-    else -> me.timschneeberger.rootlessjamesdsp.R.string.capture_reason_other
-})
+fun captureReasonText(context: Context, reason: String): String = when (reason) {
+    "shizuku_off" -> context.getString(me.timschneeberger.rootlessjamesdsp.R.string.capture_reason_shizuku_off)
+    "android_13_needed" -> context.getString(me.timschneeberger.rootlessjamesdsp.R.string.capture_reason_android_13)
+    // the system's own message, so a report can say what failed
+    else -> context.getString(me.timschneeberger.rootlessjamesdsp.R.string.capture_reason_other) +
+        " (" + reason.removePrefix("ERROR ").take(160) + ")"
+}
