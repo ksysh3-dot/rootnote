@@ -21,18 +21,21 @@ namespace pvb {
 bool VbHpv::setAlpha2Profile(int algorithm) {
     unsigned flags=0;int mode=3;
     switch(algorithm) {
-        case VB_ALPHA2_P1: case VB_ALPHA2_P1_PLUS: case VB_ALPHA2_P1PP: break;
+        case VB_ALPHA2_P1: case VB_ALPHA2_P1_PLUS: case VB_ALPHA2_P1PP: case VB_ALPHA2_P1PP_V03: break;
         case VB_ALPHA2_D2: flags=StageShortDetail|StageConditionalGain;break;
         case VB_ALPHA2_J2: flags=StageShortDetail|StageConditionalGain|StageAmFamily|StageFamilyFilterComp;break;
         case VB_ALPHA2_OSC: mode=0;flags=StageOscillator;break;
         case VB_ALPHA2_OSC_CORRECT: mode=0;flags=StageOscillator|StageOscillatorCorrect;break;
         default:return false;
     }
-    p1PlusProfile_=algorithm==VB_ALPHA2_P1 || algorithm==VB_ALPHA2_P1_PLUS || algorithm==VB_ALPHA2_P1PP;
-    // 6: the original P1 (or the host's research flags); 11: P1+ (flags 6); 12: P1++ v0.2 (flags 6, impact 4)
-    p1PlusFixed_=algorithm==VB_ALPHA2_P1_PLUS || algorithm==VB_ALPHA2_P1PP;
+    p1PlusProfile_=algorithm==VB_ALPHA2_P1 || algorithm==VB_ALPHA2_P1_PLUS || algorithm==VB_ALPHA2_P1PP ||
+                   algorithm==VB_ALPHA2_P1PP_V03;
+    // 6: the original P1 (or the host's research flags); 11: P1+ (flags 6); 12: P1++ v0.2 (flags 6, impact 4);
+    // 13: P1++ v0.3 (flags 6, impact 8)
+    p1PlusFixed_=algorithm==VB_ALPHA2_P1_PLUS || algorithm==VB_ALPHA2_P1PP || algorithm==VB_ALPHA2_P1PP_V03;
     p1PlusFlags_=p1PlusFixed_ ? 6u : p1PlusHostFlags_;
-    p1ppImpactMode_=algorithm==VB_ALPHA2_P1PP ? 4 : algorithm==VB_ALPHA2_P1_PLUS ? 0 : p1ppHostImpact_;
+    p1ppImpactMode_=algorithm==VB_ALPHA2_P1PP_V03 ? 8 : algorithm==VB_ALPHA2_P1PP ? 4 :
+                    algorithm==VB_ALPHA2_P1_PLUS ? 0 : p1ppHostImpact_;
     modulationMode_=mode;tonalOnly_=false;continuity_=ContinuityParams{};continuity_.enabled=true;
     applyDevContinuity();
     stageFlags_=flags;reset();return true;
@@ -351,6 +354,7 @@ void VbHpv::reset() {
     envA_.b0 = envP_.b0 = 1.0 - al;
     envA_.z = envP_.z = 0.0;
     nt52_=apkCount_=histCount_=holdCount_=holdPos_=onsetLeft_=0;
+    impactCtx52_=preImpactN52_=0; percSlow52_=0;
     for (auto& row : hold52_) std::fill(std::begin(row),std::end(row),-200.0);
     for (double* r : {md52_,md2_52_,max52_}) std::fill(r,r+kRing,0.0);
     std::fill(std::begin(polyT52_),std::end(polyT52_),1.0);

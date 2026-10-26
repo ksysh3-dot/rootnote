@@ -61,8 +61,13 @@ int pvb_set_p1plus_research(void* e,unsigned flags) {
     static_cast<pvb::Engine*>(e)->setP1PlusResearch(flags);return 1;
 }
 
+int pvb_set_p1pp_research_params(void* e,int hold,double historyDb,int steadyHops,double steadyA,double releaseStrength) {
+    if(!e || hold<1 || steadyHops<1 || steadyA<=0 || releaseStrength<0) return 0;
+    static_cast<pvb::Engine*>(e)->setP1PPResearchParams(hold,historyDb,steadyHops,steadyA,releaseStrength);return 1;
+}
+
 int pvb_set_p1pp_impact_research(void* e,int mode) {
-    if(!e || mode<0 || mode>4) return 0;
+    if(!e || mode<0 || mode>8) return 0;
     static_cast<pvb::Engine*>(e)->setP1PPImpactResearch(mode);return 1;
 }
 

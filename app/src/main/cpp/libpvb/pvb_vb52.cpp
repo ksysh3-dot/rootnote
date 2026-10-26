@@ -446,6 +446,29 @@ void VbHpv::pvFrame52() {
     observeScene(percEnv52_>2*harmEnv52_ ? VB_SCENE_TRANSIENT :
                  (poly>=2 || unresolved) ? VB_SCENE_COMPLEX : VB_SCENE_STEADY);
     for(int g=0;g<kPvH;++g) polyT52_[(centre+g)&(kRing-1)]=poly>=2 ? 0 : 1;
+    // research modes 5/6 (set aside, research/p1pp/2026-10-26-v03): the fit guard of mode 4 acts only around an impact (percussive envelope above a quarter of the
+    // harmonic one, held 24 hops = 128 ms; genuine tonal onsets were 16-27 dB below, impact births within 6 dB); tones that were playing when the impact began are remembered so
+    // that the same tone found again after the impact resumes at once instead of waiting for a clean fit.
+    constexpr double kImpactCtxRatio=.25;
+    const double kHistoryDb=histDbResearch_;
+    const double kSteadyA=steadyA52_; const int kSteadyHops=steadyHops52_;
+    const bool v03=p1PlusProfile_ && (p1PlusFlags_&6)==6 && (p1ppImpactMode_==5 || p1ppImpactMode_==6);
+    if(v03) {
+        // mode 5: percussive envelope above a quarter of the harmonic one; mode 6: a percussive spike (above four
+        // times its own slow average, about 0.34 s) that is not negligible next to the harmonic part
+        const double slow=percSlow52_;
+        percSlow52_+=(percEnv52_-percSlow52_)/64.;
+        const bool impact=p1ppImpactMode_==5 ? percEnv52_>kImpactCtxRatio*harmEnv52_
+                                             : percEnv52_>4*slow+1e-15 && percEnv52_>.05*harmEnv52_;
+        if(impact) {
+            if(impactCtx52_<=0) {
+                preImpactN52_=0;
+                for(int t=0;t<nt52_ && preImpactN52_<12;++t)
+                    if(tr52_[t].fade>=.5 && tr52_[t].missing==0) preImpactF52_[preImpactN52_++]=tr52_[t].f;
+            }
+            impactCtx52_=impactHold52_;
+        } else if(impactCtx52_>0) --impactCtx52_;
+    }
     Track52 next[12]; bool used[12]={}; double grain[32]={},agrain=0;
     int nextCount=np;int global[6]={};
     if(stageFlags_&StageGlobalTrack) {
@@ -469,8 +492,24 @@ void VbHpv::pvFrame52() {
             (best<0 || std::abs(tr52_[t].f-q.f)<std::abs(tr52_[best].f-q.f))) best=t;
         // Require current evidence only until the track first earns permission.
         // A valid modulation model remains accepted by its own residual.
-        if(p1PlusProfile_ && (p1PlusFlags_&6)==6 && p1ppImpactMode_>=2 &&
-           !q.modulation.valid && (best<0 || tr52_[best].fade<1e-6))
+        // mode 5: a new tone within 3 % of one that was playing when the impact began is that tone again
+        bool resumed=false;
+        if(v03 && p1ppImpactMode_==5 && impactCtx52_>0 && best<0)
+            for(int j=0;j<preImpactN52_;++j) if(std::abs(preImpactF52_[j]-q.f)<=.03*preImpactF52_[j]) resumed=true;
+        // mode 7: no guard for a tone with real stationary history before the onset (history residual between
+        // -200, the "no history" value, and -6 dB): the guard is for tracks whose only support is missing history.
+        const bool history=p1ppImpactMode_==7 && !q.modulation.valid && q.res>-199 && q.res<=kHistoryDb;
+        // mode 8: an unconfirmed track whose frequency held within 1 % and whose amplitude did not fall for three
+        // hops, and which is at least 0.4 of the strongest peak of the hop, is a steady tone (a note starting, a
+        // tone found again after an impact), not a weak partial of an impact: the guard lets it go. Its own
+        // stationary fit (as in P1+) still decides; if that passes it starts at full strength, as mode 4 recovers.
+        int steady=0;
+        if(p1ppImpactMode_==8 && best>=0 && tr52_[best].fade<1e-6)
+            steady=(std::abs(q.f-tr52_[best].f)<=.01*tr52_[best].f && q.a>=kSteadyA*tr52_[best].a) ? tr52_[best].steadyHops+1 : 0;
+        const bool released=p1ppImpactMode_==8 && steady>=kSteadyHops && q.a>=releaseStrength52_*am;
+        const bool guard=p1PlusProfile_ && (p1PlusFlags_&6)==6 && p1ppImpactMode_>=2 && !history && !released &&
+            ((p1ppImpactMode_!=5 && p1ppImpactMode_!=6) || (impactCtx52_>0 && !resumed));
+        if(guard && !q.modulation.valid && (best<0 || tr52_[best].fade<1e-6))
             q.res=std::max(q.res,q.raw);
         Track52 tr; tr.f=q.f; tr.phi=q.ph; tr.a=q.a; tr.strong=q.a>=.7*am;
         if(best>=0) {
@@ -480,6 +519,10 @@ void VbHpv::pvFrame52() {
             tr.phi=q.ph+2*kPi*std::nearbyint((pred-q.ph)/(2*kPi));
             std::copy(prev.off,prev.off+7,tr.off); tr.fade=prev.fade;
             tr.impactRecoveryPending=prev.impactRecoveryPending;
+            tr.steadyHops=steady;
+            // only the guard is lifted: the track's own stationary fit must still pass, as in P1+ (a noise
+            // partial with a steady peak but a poor fit stays out)
+            if(released && prev.fade<1e-6 && q.res<=-15) { tr.fade=1.; tr.impactRecoveryPending=false; }
             tr.id=prev.id; tr.age=prev.age+1; tr.dfdt=(q.f-prev.f)*kFsd/(kPvH*(prev.missing+1));
             std::copy(std::begin(prev.permission),std::end(prev.permission),std::begin(tr.permission));
             if(stageFlags_&StageOscillator) tr.oscillator=prev.oscillator;
@@ -491,8 +534,8 @@ void VbHpv::pvFrame52() {
             if(stageFlags_&StageGlobalTrack) tr.prediction=prev.prediction;
         } else {
             std::copy(vbt::kPsi,vbt::kPsi+7,tr.off); tr.fade=q.res<=-15 ? 1 : 0;
-            tr.impactRecoveryPending=p1PlusProfile_ && (p1PlusFlags_&6)==6 &&
-                p1ppImpactMode_==4 && q.res>-15;
+            tr.impactRecoveryPending=guard && p1ppImpactMode_>=4 && q.res>-15;
+            if(resumed) tr.fade=1;
             tr.id=++nextTrackId_; tr.age=1;
         }
         // A track admitted after quarantine should begin like any other valid
@@ -500,7 +543,7 @@ void VbHpv::pvFrame52() {
         if(p1PlusProfile_ && (p1PlusFlags_&6)==6 && p1ppImpactMode_==3 &&
            best>=0 && tr52_[best].fade<1e-6 && q.res<=-15)
             tr.fade=1.;
-        if(p1PlusProfile_ && (p1PlusFlags_&6)==6 && p1ppImpactMode_==4 &&
+        if(p1PlusProfile_ && (p1PlusFlags_&6)==6 && p1ppImpactMode_>=4 &&
            tr.impactRecoveryPending && q.raw<=-15 && q.res<=-15) {
             tr.fade=1.;tr.impactRecoveryPending=false;
         }

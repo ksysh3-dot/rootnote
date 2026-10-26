@@ -22,7 +22,7 @@ for fs in (44100,48000):
  a=P.render(lib,x,fs,6)
  if old is not None:
   b=P.render(old,x,fs,6);assert np.array_equal(a['output'],b['output'])
- for mode in (1,2,3,4):
+ for mode in (1,2,3,4,8):
   r=P.render(lib,x,fs,6,impact_mode=mode)
   chunk=P.render(lib,x,fs,6,block=1379,impact_mode=mode)
   assert np.array_equal(r['output'],chunk['output']) and r['latency']==a['latency']
@@ -33,13 +33,17 @@ for fs in (44100,48000):
   assert np.array_equal(r['output'][:round(1.7*fs)],changed['output'][:round(1.7*fs)])
   e=T.Engine(lib,fs,vb_on=1,vb_algo=6,ramp_ms=0)
   assert lib.pvb_set_p1pp_impact_research(e.h,mode)==1
-  assert lib.pvb_set_p1pp_impact_research(e.h,5)==0
+  assert lib.pvb_set_p1pp_impact_research(e.h,9)==0
   e.process(T.stereo(x[:fs]));lib.pvb_reset(e.h)
   assert np.max(abs(e.process(np.zeros((fs,2),np.float32))))<1e-7;e.close()
   for algo in (7,8,9,10):
    x0=P.render(lib,x[:fs],fs,6,algo=algo)
    x1=P.render(lib,x[:fs],fs,6,algo=algo,impact_mode=mode)
    assert np.array_equal(x0['output'],x1['output'])
+  # app models fix their own flags: 12 = flags 6 + mode 4 (v0.2), 13 = flags 6 + mode 8 (v0.3)
+  if mode in (4,8):
+   app=P.render(lib,x,fs,0,algo=12 if mode==4 else 13)
+   assert np.array_equal(app['output'],r['output']) and app['latency']==r['latency']
   result['engineering'].append(dict(fs=fs,mode=mode,mode0_bit_exact=True if old is not None else None,block_and_capture_invariant=True,prefix_causal=True,reset=True,other_profiles_unaffected=True,latency=r['latency']))
  print('engineering',fs,'PASS',flush=True)
 fs=48000

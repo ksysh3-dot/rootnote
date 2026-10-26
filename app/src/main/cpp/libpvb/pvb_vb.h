@@ -47,7 +47,9 @@ enum VbAlgo : int { VB_HPV = 0, VB_BANKSTOWN = 1, VB_HPV52M = 2, VB_GENTLE = 3,
                    VB_ALPHA2_OSC = 9, VB_ALPHA2_OSC_CORRECT = 10,
                    // P1 with the P1+ research flags 6 (phase hold + centred HPSS, +26.7 ms) and P1++ v0.2
                    // (flags 6, impact mode 4): app models, "실험" (research/p1pp, docs/P1PP_RESEARCH.md)
-                   VB_ALPHA2_P1_PLUS = 11, VB_ALPHA2_P1PP = 12, VB_ALGO_COUNT };
+                   VB_ALPHA2_P1_PLUS = 11, VB_ALPHA2_P1PP = 12,
+                   // P1++ v0.3: flags 6, impact mode 8 (research/p1pp/2026-10-26-v03)
+                   VB_ALPHA2_P1PP_V03 = 13, VB_ALGO_COUNT };
 
 // Scene observations are unvalidated. Only the opt-in adaptive profile uses
 // them to select a harmonic attenuation budget; they are not buzz labels.
@@ -211,7 +213,17 @@ public:
     // Host values apply to profile 6 only; profiles 11/12 use their fixed flags.
     void setP1PlusResearch(unsigned flags) { p1PlusHostFlags_=flags&15; if(!p1PlusFixed_) p1PlusFlags_=p1PlusHostFlags_; reset(); }
     // Host-only: 0=baseline, 1=current fit, 2=unconfirmed fit, 3=first-fit
-    // recovery, 4=clean current-fit recovery after initial rejection.
+    // recovery, 4=clean current-fit recovery after initial rejection,
+    // 5=mode 4 only inside an impact context (percussive > 1/4 of harmonic, held 24 hops) with tones playing
+    // before the impact resuming at once, 6=the same with a percussive-spike context, 7=no guard for tones with
+    // stationary history (5-7 were evaluated and set aside), 8=mode 4 with steady tones released (P1++ v0.3,
+    // app model 13; research/p1pp/2026-10-26-v03).
+    // Host-only knobs of the research modes 5-8 (impact-context hold in hops, mode 7 history limit in dB,
+    // mode 8 steady hops, amplitude ratio and minimum strength against the strongest peak of the hop).
+    // Defaults are the values the modes were evaluated with.
+    void setP1PPResearchParams(int hold, double historyDb, int steadyHops, double steadyA, double releaseStrength) {
+        impactHold52_=hold; histDbResearch_=historyDb; steadyHops52_=steadyHops; steadyA52_=steadyA;
+        releaseStrength52_=releaseStrength; }
     void setP1PPImpactResearch(int mode) { p1ppHostImpact_=mode; if(!p1PlusFixed_) p1ppImpactMode_=mode; reset(); }
     void setStageResearch(unsigned flags,StageCapture52::Sink sink=nullptr,void* user=nullptr) {
         stageFlags_=flags&8191;stageSink_=sink;stageUser_=user;reset();
@@ -373,6 +385,7 @@ private:
     struct Track52 {
         double f=0, phi=0, off[7]={}, fade=0, a=0;
         bool impactRecoveryPending=false;
+        int steadyHops=0;               // P1++ mode 8: hops of steady frequency and amplitude while unconfirmed
         bool strong=false, fastEnding=false;
         uint32_t id=0, age=0;
         double dfdt=0, life=1, residual=-200, rawResidual=-200;
@@ -396,6 +409,12 @@ private:
     bool p1PlusFixed_=false;          // profile 11/12: flags fixed by the model, host values kept for profile 6
     unsigned p1PlusHostFlags_=0;
     int p1ppHostImpact_=0;
+    // research impact modes 5/6: impact context and the tones playing when it began
+    int impactCtx52_=0, preImpactN52_=0;
+    double histDbResearch_=-6, percSlow52_=0;
+    int impactHold52_=24, steadyHops52_=3;
+    double steadyA52_=.97, releaseStrength52_=.4;
+    double preImpactF52_[12]={};
     int hpssLookahead() const { return p1PlusProfile_ && (p1PlusFlags_&4) ? 5*kHpHop : 0; }
     StageCapture52::Sink stageSink_=nullptr;
     void* stageUser_=nullptr;

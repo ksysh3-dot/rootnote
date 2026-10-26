@@ -35,6 +35,13 @@ def render(lib, x, fs=48000, flags=0, block=4096, algo=6, capture=True, impact_m
         assert lib.pvb_set_p1plus_research(engine.h, flags) == 1
     if impact_mode:
         assert lib.pvb_set_p1pp_impact_research(engine.h, impact_mode) == 1
+    # P1++ research knobs (modes 5-8): "hold,historyDb,steadyHops,steadyA"; unset = the evaluated defaults
+    params = __import__('os').environ.get('P1PP_PARAMS')
+    if params:
+        hold, hist, hops, ratio, *rest = params.split(',')
+        strength = float(rest[0]) if rest else .4
+        lib.pvb_set_p1pp_research_params.argtypes = [C.c_void_p, C.c_int, C.c_double, C.c_int, C.c_double, C.c_double]
+        assert lib.pvb_set_p1pp_research_params(engine.h, int(hold), float(hist), int(hops), float(ratio), strength) == 1
     lib.pvb_set_diagnostic_capture(engine.h, int(capture))
     stages = StageCapture(lib, engine.h, 0, int(len(x)/fs*3000)+16) if capture else None
     source=np.asarray(x,np.float32)

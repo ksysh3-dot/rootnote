@@ -27,9 +27,9 @@ def primary(f):
     return int(k[np.argmax(predicted)])
 
 
-def fixtures(fs):
-    rng=np.random.default_rng(2026102606);t=np.arange(round(4.5*fs))/fs
-    for j in range(6):
+def fixtures(fs,seed=2026102606,count=6):
+    rng=np.random.default_rng(seed);t=np.arange(round(4.5*fs))/fs
+    for j in range(count):
         f=float(rng.uniform(41,125));rate=float(rng.uniform(0,8));duration=float(rng.uniform(.08,.18))
         env=np.zeros(len(t))
         for start in (.55,1.3,2.25,3.4):

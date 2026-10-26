@@ -1,0 +1,708 @@
+{
+  "schema": "pvb.p1pp.v03.v1",
+  "library_sha256": "4e69e8bd3ecce6a8bc09f227cbb69601b7a623712e344cf63236fabf30eba141",
+  "models": {
+    "P1+": "flags 6, impact 0",
+    "P1++ v0.2": "flags 6, impact 4",
+    "P1++ v0.3": "flags 6, impact 8 (steady 3 hops, amplitude >= 0.97 of the last hop, strength >= 0.4 of the hop maximum; own stationary fit still required)"
+  },
+  "change_rule": "metric change > 0.1 dB counted better/worse; |change| <= 0.1 dB small. Not a hearing threshold.",
+  "impacts": {
+    "inspected": {
+      "seed": 2026102608,
+      "waveforms": 8,
+      "levels": 4,
+      "v03_vs_p1plus": {
+        "pre_stationary_residual_per_input_db": {
+          "settings": 32,
+          "better": 0,
+          "worse": 1,
+          "small": 31,
+          "median_db": 0.0,
+          "best_db": 0.05876213548450693,
+          "worst_db": -0.3282226595723756
+        },
+        "early_tail_stationary_residual_per_input_db": {
+          "settings": 32,
+          "better": 1,
+          "worse": 17,
+          "small": 14,
+          "median_db": -0.14092728328464688,
+          "best_db": 0.9109818060731598,
+          "worst_db": -4.202403967472073
+        },
+        "late_tail_stationary_residual_per_input_db": {
+          "settings": 32,
+          "better": 19,
+          "worse": 0,
+          "small": 13,
+          "median_db": 3.887890256279533,
+          "best_db": 65.53137251092132,
+          "worst_db": -6.028235080179911e-05
+        },
+        "late_absolute_residual_rms_dbfs": {
+          "0": {
+            "min": -165.40654978867394,
+            "median": -97.74368547743569,
+            "max": -80.58518993056961
+          },
+          "8": {
+            "min": -167.01436769879683,
+            "median": -121.25076930143518,
+            "max": -85.99587257082132
+          }
+        }
+      },
+      "v03_vs_v02": {
+        "pre_stationary_residual_per_input_db": {
+          "settings": 32,
+          "better": 0,
+          "worse": 0,
+          "small": 32,
+          "median_db": 0.0,
+          "best_db": 0.0,
+          "worst_db": 0.0
+        },
+        "early_tail_stationary_residual_per_input_db": {
+          "settings": 32,
+          "better": 1,
+          "worse": 0,
+          "small": 31,
+          "median_db": 0.0,
+          "best_db": 0.9078780340608006,
+          "worst_db": 0.0
+        },
+        "late_tail_stationary_residual_per_input_db": {
+          "settings": 32,
+          "better": 0,
+          "worse": 1,
+          "small": 31,
+          "median_db": 0.0,
+          "best_db": 0.0,
+          "worst_db": -1.343745217046873
+        },
+        "late_absolute_residual_rms_dbfs": {
+          "4": {
+            "min": -167.01436769879683,
+            "median": -121.25076930143518,
+            "max": -85.99587257082132
+          },
+          "8": {
+            "min": -167.01436769879683,
+            "median": -121.25076930143518,
+            "max": -85.99587257082132
+          }
+        }
+      },
+      "v02_vs_p1plus": {
+        "pre_stationary_residual_per_input_db": {
+          "settings": 32,
+          "better": 0,
+          "worse": 1,
+          "small": 31,
+          "median_db": 0.0,
+          "best_db": 0.05876213548450693,
+          "worst_db": -0.3282226595723756
+        },
+        "early_tail_stationary_residual_per_input_db": {
+          "settings": 32,
+          "better": 1,
+          "worse": 17,
+          "small": 14,
+          "median_db": -0.14092728328464688,
+          "best_db": 0.9109818060731598,
+          "worst_db": -4.202403967472073
+        },
+        "late_tail_stationary_residual_per_input_db": {
+          "settings": 32,
+          "better": 19,
+          "worse": 0,
+          "small": 13,
+          "median_db": 3.887890256279533,
+          "best_db": 65.53137251092132,
+          "worst_db": -6.028235080179911e-05
+        },
+        "late_absolute_residual_rms_dbfs": {
+          "0": {
+            "min": -165.40654978867394,
+            "median": -97.74368547743569,
+            "max": -80.58518993056961
+          },
+          "4": {
+            "min": -167.01436769879683,
+            "median": -121.25076930143518,
+            "max": -85.99587257082132
+          }
+        }
+      }
+    },
+    "new": {
+      "seed": 2026102609,
+      "waveforms": 12,
+      "levels": 3,
+      "v03_vs_p1plus": {
+        "pre_stationary_residual_per_input_db": {
+          "settings": 36,
+          "better": 3,
+          "worse": 0,
+          "small": 33,
+          "median_db": 0.0,
+          "best_db": 0.2792928321655239,
+          "worst_db": -0.0010264358230784865
+        },
+        "early_tail_stationary_residual_per_input_db": {
+          "settings": 36,
+          "better": 4,
+          "worse": 11,
+          "small": 21,
+          "median_db": 0.0,
+          "best_db": 1.333083707466784,
+          "worst_db": -9.602611823379206
+        },
+        "late_tail_stationary_residual_per_input_db": {
+          "settings": 36,
+          "better": 18,
+          "worse": 0,
+          "small": 18,
+          "median_db": 0.5917356869080095,
+          "best_db": 58.59085285452235,
+          "worst_db": -6.567032262694283e-05
+        },
+        "late_absolute_residual_rms_dbfs": {
+          "0": {
+            "min": -170.12539127268693,
+            "median": -95.9960393638948,
+            "max": -84.49714816715705
+          },
+          "8": {
+            "min": -170.12539127268693,
+            "median": -104.24465729065928,
+            "max": -84.49761318653266
+          }
+        }
+      },
+      "v03_vs_v02": {
+        "pre_stationary_residual_per_input_db": {
+          "settings": 36,
+          "better": 0,
+          "worse": 0,
+          "small": 36,
+          "median_db": 0.0,
+          "best_db": 9.523301471148216e-05,
+          "worst_db": 0.0
+        },
+        "early_tail_stationary_residual_per_input_db": {
+          "settings": 36,
+          "better": 1,
+          "worse": 0,
+          "small": 35,
+          "median_db": 0.0,
+          "best_db": 0.6586688925883237,
+          "worst_db": 0.0
+        },
+        "late_tail_stationary_residual_per_input_db": {
+          "settings": 36,
+          "better": 0,
+          "worse": 3,
+          "small": 33,
+          "median_db": 0.0,
+          "best_db": 0.0,
+          "worst_db": -52.90124350333062
+        },
+        "late_absolute_residual_rms_dbfs": {
+          "4": {
+            "min": -170.12539127268693,
+            "median": -104.24465729065928,
+            "max": -84.49761318653266
+          },
+          "8": {
+            "min": -170.12539127268693,
+            "median": -104.24465729065928,
+            "max": -84.49761318653266
+          }
+        }
+      },
+      "v02_vs_p1plus": {
+        "pre_stationary_residual_per_input_db": {
+          "settings": 36,
+          "better": 3,
+          "worse": 0,
+          "small": 33,
+          "median_db": 0.0,
+          "best_db": 0.2792928321655239,
+          "worst_db": -0.0010264358230784865
+        },
+        "early_tail_stationary_residual_per_input_db": {
+          "settings": 36,
+          "better": 4,
+          "worse": 11,
+          "small": 21,
+          "median_db": 0.0,
+          "best_db": 1.333083707466784,
+          "worst_db": -9.602611823379206
+        },
+        "late_tail_stationary_residual_per_input_db": {
+          "settings": 36,
+          "better": 18,
+          "worse": 0,
+          "small": 18,
+          "median_db": 0.5917356869080095,
+          "best_db": 58.59085285452235,
+          "worst_db": -6.567032262694283e-05
+        },
+        "late_absolute_residual_rms_dbfs": {
+          "0": {
+            "min": -170.12539127268693,
+            "median": -95.9960393638948,
+            "max": -84.49714816715705
+          },
+          "4": {
+            "min": -170.12539127268693,
+            "median": -104.24465729065928,
+            "max": -84.49761318653266
+          }
+        }
+      }
+    },
+    "confirm": {
+      "seed": 2026102610,
+      "waveforms": 8,
+      "levels": 3,
+      "v03_vs_p1plus": {
+        "pre_stationary_residual_per_input_db": {
+          "settings": 24,
+          "better": 0,
+          "worse": 0,
+          "small": 24,
+          "median_db": 0.0,
+          "best_db": 2.7689495816218823e-05,
+          "worst_db": -0.09459235308051461
+        },
+        "early_tail_stationary_residual_per_input_db": {
+          "settings": 24,
+          "better": 2,
+          "worse": 11,
+          "small": 11,
+          "median_db": -0.00562395706847596,
+          "best_db": 5.194786991015363,
+          "worst_db": -3.465413201275041
+        },
+        "late_tail_stationary_residual_per_input_db": {
+          "settings": 24,
+          "better": 13,
+          "worse": 0,
+          "small": 11,
+          "median_db": 3.592829075101598,
+          "best_db": 58.45804689468939,
+          "worst_db": -3.5598459646735137e-07
+        },
+        "late_absolute_residual_rms_dbfs": {
+          "0": {
+            "min": -162.760388282713,
+            "median": -95.80593388729031,
+            "max": -81.75594219369611
+          },
+          "8": {
+            "min": -162.760388282713,
+            "median": -107.07734622286762,
+            "max": -83.22674948677198
+          }
+        }
+      },
+      "v03_vs_v02": {
+        "pre_stationary_residual_per_input_db": {
+          "settings": 24,
+          "better": 0,
+          "worse": 0,
+          "small": 24,
+          "median_db": 0.0,
+          "best_db": 0.0,
+          "worst_db": 0.0
+        },
+        "early_tail_stationary_residual_per_input_db": {
+          "settings": 24,
+          "better": 2,
+          "worse": 1,
+          "small": 21,
+          "median_db": 0.0,
+          "best_db": 0.6566476812436406,
+          "worst_db": -0.14044954589863323
+        },
+        "late_tail_stationary_residual_per_input_db": {
+          "settings": 24,
+          "better": 0,
+          "worse": 1,
+          "small": 23,
+          "median_db": 0.0,
+          "best_db": 5.6401930237370834e-08,
+          "worst_db": -0.36002910630740814
+        },
+        "late_absolute_residual_rms_dbfs": {
+          "4": {
+            "min": -162.760388282713,
+            "median": -107.07734622286762,
+            "max": -83.22674948677198
+          },
+          "8": {
+            "min": -162.760388282713,
+            "median": -107.07734622286762,
+            "max": -83.22674948677198
+          }
+        }
+      },
+      "v02_vs_p1plus": {
+        "pre_stationary_residual_per_input_db": {
+          "settings": 24,
+          "better": 0,
+          "worse": 0,
+          "small": 24,
+          "median_db": 0.0,
+          "best_db": 2.7689495816218823e-05,
+          "worst_db": -0.09459235308051461
+        },
+        "early_tail_stationary_residual_per_input_db": {
+          "settings": 24,
+          "better": 2,
+          "worse": 10,
+          "small": 12,
+          "median_db": -0.00562395706847596,
+          "best_db": 5.194786991015363,
+          "worst_db": -3.465413201275041
+        },
+        "late_tail_stationary_residual_per_input_db": {
+          "settings": 24,
+          "better": 13,
+          "worse": 0,
+          "small": 11,
+          "median_db": 3.592829075101598,
+          "best_db": 58.45804689468939,
+          "worst_db": -3.5598459646735137e-07
+        },
+        "late_absolute_residual_rms_dbfs": {
+          "0": {
+            "min": -162.760388282713,
+            "median": -95.80593388729031,
+            "max": -81.75594219369611
+          },
+          "4": {
+            "min": -162.760388282713,
+            "median": -107.07734622286762,
+            "max": -83.22674948677198
+          }
+        }
+      }
+    },
+    "holdout": {
+      "seed": 2026102611,
+      "waveforms": 12,
+      "levels": 3,
+      "v03_vs_p1plus": {
+        "pre_stationary_residual_per_input_db": {
+          "settings": 36,
+          "better": 0,
+          "worse": 1,
+          "small": 35,
+          "median_db": 0.0,
+          "best_db": 0.037340219646836204,
+          "worst_db": -0.13479566029499068
+        },
+        "early_tail_stationary_residual_per_input_db": {
+          "settings": 36,
+          "better": 5,
+          "worse": 5,
+          "small": 26,
+          "median_db": 0.0,
+          "best_db": 45.130666433256934,
+          "worst_db": -5.469643752838621
+        },
+        "late_tail_stationary_residual_per_input_db": {
+          "settings": 36,
+          "better": 9,
+          "worse": 0,
+          "small": 27,
+          "median_db": 0.0,
+          "best_db": 67.91446756850053,
+          "worst_db": -0.06560790478668821
+        },
+        "late_absolute_residual_rms_dbfs": {
+          "0": {
+            "min": -164.98683746963763,
+            "median": -95.82531913989297,
+            "max": -80.17241036754935
+          },
+          "8": {
+            "min": -171.12764346326563,
+            "median": -99.18742573857571,
+            "max": -85.04074342446889
+          }
+        }
+      },
+      "v03_vs_v02": {
+        "pre_stationary_residual_per_input_db": {
+          "settings": 36,
+          "better": 0,
+          "worse": 0,
+          "small": 36,
+          "median_db": 0.0,
+          "best_db": 0.0,
+          "worst_db": 0.0
+        },
+        "early_tail_stationary_residual_per_input_db": {
+          "settings": 36,
+          "better": 1,
+          "worse": 0,
+          "small": 35,
+          "median_db": 0.0,
+          "best_db": 1.2460922618145318,
+          "worst_db": -0.021947615780746332
+        },
+        "late_tail_stationary_residual_per_input_db": {
+          "settings": 36,
+          "better": 0,
+          "worse": 0,
+          "small": 36,
+          "median_db": 0.0,
+          "best_db": 2.430653324836385e-06,
+          "worst_db": 0.0
+        },
+        "late_absolute_residual_rms_dbfs": {
+          "4": {
+            "min": -171.12764346326563,
+            "median": -99.18742573857571,
+            "max": -85.04074342446889
+          },
+          "8": {
+            "min": -171.12764346326563,
+            "median": -99.18742573857571,
+            "max": -85.04074342446889
+          }
+        }
+      },
+      "v02_vs_p1plus": {
+        "pre_stationary_residual_per_input_db": {
+          "settings": 36,
+          "better": 0,
+          "worse": 1,
+          "small": 35,
+          "median_db": 0.0,
+          "best_db": 0.037340219646836204,
+          "worst_db": -0.13479566029499068
+        },
+        "early_tail_stationary_residual_per_input_db": {
+          "settings": 36,
+          "better": 5,
+          "worse": 5,
+          "small": 26,
+          "median_db": 0.0,
+          "best_db": 45.130666433256934,
+          "worst_db": -5.469643752838621
+        },
+        "late_tail_stationary_residual_per_input_db": {
+          "settings": 36,
+          "better": 9,
+          "worse": 0,
+          "small": 27,
+          "median_db": 0.0,
+          "best_db": 67.91446756850053,
+          "worst_db": -0.06560790478675926
+        },
+        "late_absolute_residual_rms_dbfs": {
+          "0": {
+            "min": -164.98683746963763,
+            "median": -95.82531913989297,
+            "max": -80.17241036754935
+          },
+          "4": {
+            "min": -171.12764346326563,
+            "median": -99.18742573857571,
+            "max": -85.04074342446889
+          }
+        }
+      }
+    }
+  },
+  "short_note_envelope_error_rms_percent": [
+    {
+      "group": "tuning",
+      "seed": 2026102606,
+      "name": "fresh_note_0",
+      "frequency": 106.01087471612949,
+      "harmonic": 2,
+      "P1+": 7.413197361488594,
+      "P1++ v0.2": 9.036292747813473,
+      "P1++ v0.3": 7.3921085049561155
+    },
+    {
+      "group": "tuning",
+      "seed": 2026102606,
+      "name": "fresh_note_1",
+      "frequency": 112.17657845017393,
+      "harmonic": 2,
+      "P1+": 7.770259559952021,
+      "P1++ v0.2": 6.999426976245901,
+      "P1++ v0.3": 8.01997459153073
+    },
+    {
+      "group": "tuning",
+      "seed": 2026102606,
+      "name": "fresh_note_2",
+      "frequency": 121.18180327095604,
+      "harmonic": 2,
+      "P1+": 8.572656366329303,
+      "P1++ v0.2": 9.264176487767651,
+      "P1++ v0.3": 8.582803674884051
+    },
+    {
+      "group": "tuning",
+      "seed": 2026102606,
+      "name": "fresh_note_3",
+      "frequency": 45.46092460112668,
+      "harmonic": 4,
+      "P1+": 82.77753921407039,
+      "P1++ v0.2": 80.27236012082005,
+      "P1++ v0.3": 80.27236012082378
+    },
+    {
+      "group": "tuning",
+      "seed": 2026102606,
+      "name": "fresh_note_4",
+      "frequency": 88.81623185363819,
+      "harmonic": 2,
+      "P1+": 4.777281501978018,
+      "P1++ v0.2": 5.265933417146402,
+      "P1++ v0.3": 4.733929953202844
+    },
+    {
+      "group": "tuning",
+      "seed": 2026102606,
+      "name": "fresh_note_5",
+      "frequency": 81.33909327567628,
+      "harmonic": 2,
+      "P1+": 6.074429198237841,
+      "P1++ v0.2": 6.991296494435859,
+      "P1++ v0.3": 6.983519858094345
+    },
+    {
+      "group": "holdout",
+      "seed": 2026102612,
+      "name": "fresh_note_0",
+      "frequency": 123.43626016910363,
+      "harmonic": 2,
+      "P1+": 9.18232668812182,
+      "P1++ v0.2": 9.97487759853698,
+      "P1++ v0.3": 9.460366361209434
+    },
+    {
+      "group": "holdout",
+      "seed": 2026102612,
+      "name": "fresh_note_1",
+      "frequency": 66.27607260977416,
+      "harmonic": 3,
+      "P1+": 7.1798708550380415,
+      "P1++ v0.2": 6.525923863719144,
+      "P1++ v0.3": 6.525923856705898
+    },
+    {
+      "group": "holdout",
+      "seed": 2026102612,
+      "name": "fresh_note_2",
+      "frequency": 65.15765862802974,
+      "harmonic": 3,
+      "P1+": 14.935993252861007,
+      "P1++ v0.2": 13.484910817801318,
+      "P1++ v0.3": 15.470812773177725
+    },
+    {
+      "group": "holdout",
+      "seed": 2026102612,
+      "name": "fresh_note_3",
+      "frequency": 100.05516080816744,
+      "harmonic": 2,
+      "P1+": 13.825574023142165,
+      "P1++ v0.2": 17.474505640943022,
+      "P1++ v0.3": 13.799945898398743
+    },
+    {
+      "group": "holdout",
+      "seed": 2026102612,
+      "name": "fresh_note_4",
+      "frequency": 75.7738538893629,
+      "harmonic": 3,
+      "P1+": 18.4190167260543,
+      "P1++ v0.2": 43.59042720731394,
+      "P1++ v0.3": 18.117755951943543
+    },
+    {
+      "group": "holdout",
+      "seed": 2026102612,
+      "name": "fresh_note_5",
+      "frequency": 72.47398219160353,
+      "harmonic": 3,
+      "P1+": 8.532846079262134,
+      "P1++ v0.2": 8.622969764482555,
+      "P1++ v0.3": 8.513186971071326
+    },
+    {
+      "group": "holdout",
+      "seed": 2026102612,
+      "name": "fresh_note_6",
+      "frequency": 112.23432496956251,
+      "harmonic": 2,
+      "P1+": 9.265116838159498,
+      "P1++ v0.2": 11.49397702754634,
+      "P1++ v0.3": 9.271218614417997
+    },
+    {
+      "group": "holdout",
+      "seed": 2026102612,
+      "name": "fresh_note_7",
+      "frequency": 76.35622089542434,
+      "harmonic": 3,
+      "P1+": 7.512249833504982,
+      "P1++ v0.2": 7.3263641255836385,
+      "P1++ v0.3": 7.4726689440354015
+    },
+    {
+      "group": "holdout",
+      "seed": 2026102612,
+      "name": "fresh_note_8",
+      "frequency": 75.91345359943466,
+      "harmonic": 3,
+      "P1+": 15.873846615493623,
+      "P1++ v0.2": 18.602448088001687,
+      "P1++ v0.3": 15.8463517594568
+    },
+    {
+      "group": "holdout",
+      "seed": 2026102612,
+      "name": "fresh_note_9",
+      "frequency": 58.4024438715458,
+      "harmonic": 3,
+      "P1+": 19.12029640619514,
+      "P1++ v0.2": 20.137435255681304,
+      "P1++ v0.3": 19.477568366441684
+    },
+    {
+      "group": "holdout",
+      "seed": 2026102612,
+      "name": "fresh_note_10",
+      "frequency": 73.20594013398551,
+      "harmonic": 3,
+      "P1+": 9.026676506346336,
+      "P1++ v0.2": 8.239463480625254,
+      "P1++ v0.3": 8.989159437897836
+    },
+    {
+      "group": "holdout",
+      "seed": 2026102612,
+      "name": "fresh_note_11",
+      "frequency": 69.19547793621635,
+      "harmonic": 3,
+      "P1+": 13.63829800467281,
+      "P1++ v0.2": 12.290034972578052,
+      "P1++ v0.3": 13.592195959374386
+    }
+  ],
+  "listening_validation": false,
+  "device_validation": false
+}
