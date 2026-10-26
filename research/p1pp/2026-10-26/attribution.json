@@ -1,0 +1,127 @@
+{
+  "schema": "pvb.p1pp.attribution.v1",
+  "baseline_id": "p1plus-2026-10-26",
+  "library_sha256": "014dc24678b7abcc41ef47e6a141f7d9307d52c3a577710f8a538c24cc1b08cf",
+  "flags": 6,
+  "fixture": "fresh_note_3",
+  "fixture_seed": 2026102606,
+  "input": {
+    "frequency": 45.46092460112668,
+    "rate": 7.923775384370879,
+    "note_seconds": 0.09769963136555015,
+    "noise_width": 0.017501420019315192
+  },
+  "dsp_changed": false,
+  "independent_validation": false,
+  "definition": "Same declared-latency/main-harmonic envelope metric as P1+; one fitted constant scale.",
+  "caveat": "Frequency sweep retains the same note envelope but its input-defined harmonic order and extraction bandwidth can change. It does not isolate an internal DSP stage.",
+  "cases": [
+    {
+      "name": "original_mixture",
+      "frequency": 45.46092460112668,
+      "harmonic": 4,
+      "latency": 8420,
+      "extracted_envelope_rms": 0.0002883426441849274,
+      "one_constant_scale": 0.012150384278439987,
+      "shape_error_db": -1.6417497663967218,
+      "correlation": 0.7517122392348918,
+      "relative_error_rms_percent": 82.77753921407039
+    },
+    {
+      "name": "note_with_am_only",
+      "frequency": 45.46092460112668,
+      "harmonic": 4,
+      "latency": 8420,
+      "extracted_envelope_rms": 0.00028834199238585444,
+      "one_constant_scale": 0.012150393476054027,
+      "shape_error_db": -1.641814226492325,
+      "correlation": 0.7517540828076186,
+      "relative_error_rms_percent": 82.77692490413615
+    },
+    {
+      "name": "note_without_am",
+      "frequency": 45.46092460112668,
+      "harmonic": 4,
+      "latency": 8420,
+      "extracted_envelope_rms": 0.0002206615752619168,
+      "one_constant_scale": 0.008252973400970726,
+      "shape_error_db": 1.0439061767232123,
+      "correlation": 0.6347253605542671,
+      "relative_error_rms_percent": 112.77044880229164
+    },
+    {
+      "name": "note_without_am_plus_noise",
+      "frequency": 45.46092460112668,
+      "harmonic": 4,
+      "latency": 8420,
+      "extracted_envelope_rms": 0.00022066250303471232,
+      "one_constant_scale": 0.00825297152690561,
+      "shape_error_db": 1.0439749365079245,
+      "correlation": 0.6346459701635969,
+      "relative_error_rms_percent": 112.77134152632986
+    },
+    {
+      "name": "noise_only",
+      "frequency": 45.46092460112668,
+      "harmonic": 4,
+      "latency": 8420,
+      "extracted_envelope_rms": 6.963412123830511e-07
+    },
+    {
+      "name": "same_plain_envelope_41hz",
+      "frequency": 41.0,
+      "harmonic": 5,
+      "latency": 8420,
+      "extracted_envelope_rms": 9.696536966710387e-05,
+      "one_constant_scale": 0.00310921410367992,
+      "shape_error_db": 3.3503624490859805,
+      "correlation": 0.5186532841724875,
+      "relative_error_rms_percent": 147.06797833753734
+    },
+    {
+      "name": "same_plain_envelope_55hz",
+      "frequency": 55.0,
+      "harmonic": 4,
+      "latency": 8420,
+      "extracted_envelope_rms": 0.00046579300808262543,
+      "one_constant_scale": 0.024509454079324915,
+      "shape_error_db": -8.909047321250354,
+      "correlation": 0.9364560214068898,
+      "relative_error_rms_percent": 35.854827212269704
+    },
+    {
+      "name": "same_plain_envelope_65hz",
+      "frequency": 65.0,
+      "harmonic": 3,
+      "latency": 8420,
+      "extracted_envelope_rms": 0.0006495891981522635,
+      "one_constant_scale": 0.03569285353235469,
+      "shape_error_db": -15.09956804949801,
+      "correlation": 0.9836974291849334,
+      "relative_error_rms_percent": 17.58011037918748
+    },
+    {
+      "name": "same_plain_envelope_81hz",
+      "frequency": 81.0,
+      "harmonic": 2,
+      "latency": 8420,
+      "extracted_envelope_rms": 0.0007545991309245623,
+      "one_constant_scale": 0.0416294691040981,
+      "shape_error_db": -16.66495498838975,
+      "correlation": 0.9885917038148808,
+      "relative_error_rms_percent": 14.680885468777754
+    },
+    {
+      "name": "same_plain_envelope_106hz",
+      "frequency": 106.0,
+      "harmonic": 2,
+      "latency": 8420,
+      "extracted_envelope_rms": 0.0017361566428568626,
+      "one_constant_scale": 0.0964601756894471,
+      "shape_error_db": -20.805555889251433,
+      "correlation": 0.9955741456385325,
+      "relative_error_rms_percent": 9.114276623614355
+    }
+  ],
+  "baseline_commit": "8bec71f47bc1e85dcfddfcf362411347490c5119"
+}
