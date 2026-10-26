@@ -1,0 +1,32 @@
+{
+  "schema": "pvb.p1pp.recovery_publication_files.v1",
+  "normalization": "UTF-8 with LF line endings, as submitted to Git",
+  "sha256": {
+    "NOTICE.md": "fe192f9d57d915daad551447aad9d5e869d4fb7039d3b43c506b69abd64d5f74",
+    "docs/P1PP_RECOVERY_PROTOCOL.md": "0fc7b45880e4f8aedc0705780a55c6f7383c8f9ac5ad2d0083aa49625b703b68",
+    "docs/P1PP_RESEARCH.md": "6e63d5e878deeca61f95dae865244bb4ae0b07cdfd31615dbd434a5aceb259c6",
+    "app/src/main/cpp/libpvb/pvb_vb.h": "074918f419b919ba4aa04a94d591db103b0cc46e6bfaf80ea6cdcc9866082d68",
+    "app/src/main/cpp/libpvb/pvb_vb52.cpp": "d5e2e2cec6149459025277e248de5b1a0da3cdfe8bfafe35abe665bf5668c5b4",
+    "research/p1pp/2026-10-26-recovery/attribution.json": "b317f44de0a072ccc14b80b67ba4f75d46f745735cea273baf427b940b06cfaa",
+    "research/p1pp/2026-10-26-recovery/comparison-summary.json": "5697b413f97af5b3f9aa9cce5b35247fd83864a89a8083ff3d057e0a98d83a8b",
+    "research/p1pp/2026-10-26-recovery/compatibility.json": "ed55215eba61ae9aeb3aed6d673dfa07222fb4e4389db0324612233118f92199",
+    "research/p1pp/2026-10-26-recovery/confirmation.json": "0503f2fb75c4f55b62b27c4c9bf5a577c89e69fcf5e51b3b05025aa194cb7409",
+    "research/p1pp/2026-10-26-recovery/controls.json": "4e7b15914e6714f22c7bf651cbfa73804c130172bf7b473970bf7119acb4a3e8",
+    "research/p1pp/2026-10-26-recovery/engine-regression.json": "4b6eb1680d435aaff81054572415ce985c5699fba18905061bc32444a450ae3d",
+    "research/p1pp/2026-10-26-recovery/input-features-recomputed.json": "fcaa4393789612beae438fa4ed150d26fb5d86b1469546e236b7b0d1a7081fc0",
+    "research/p1pp/2026-10-26-recovery/inspected.json": "f6761ba4920d55ff65e38588b40a3ae4a2093b8c27e493ecff4d93261b54fd64",
+    "research/p1pp/2026-10-26-recovery/music.json": "b007049e0510cfe65e2c32dfe9853bd9a02ad126d1278159787f1d27a8937721",
+    "research/p1pp/2026-10-26-recovery/p1plus-frozen-regression-envelopes.json": "b77ea527a1c0bdc9346f87e5ebed15b61c6f5d245052315742433ce52799b370",
+    "research/p1pp/2026-10-26-recovery/p1plus-frozen-regression.json": "2d62b8e8612f82de936444824d575d2f34d4a5f2e6c0b443c334910a6058d232",
+    "research/p1pp/2026-10-26-recovery/README.md": "4480e4024a18160d2fd7aa6a13a69e540671fb1633fce43be99baf9d8ad87f8d",
+    "research/p1pp/2026-10-26-recovery/RESULTS_KO.md": "0ac8482810df80af98cd7a3c2b6ef70102e02c0223867fc4d4e6c7317133f9d2",
+    "research/p1pp/2026-10-26-recovery/selection.json": "7f052691a08bc88c47ecde250868fdec3413f5848ce952afde2cf8cf23105603",
+    "research/p1pp/2026-10-26-recovery/summary.json": "7bc5bfb75a69fdabb30c8325b622a32121f09d9ab1bbad09cb88b8b8a01ca77d",
+    "tools/pvb-harness/check_p1pp_impact_controls.py": "11c51a06053fafbc95e002357751d6c80e7d01d9cd811c0db4696636cdb95ce8",
+    "tools/pvb-harness/pvb_capi.cpp": "cc1e88c494190dcb3f60e4438a01e79471f19b48db4f0f8b24b12373039766ec",
+    "tools/pvb-harness/render_p1hq.py": "10115ce0d1258acf5fc72bdaf3a6f4148cd2102845288eb0f9e6fffe1e655981",
+    "tools/pvb-harness/research_p1pp_impacts.py": "98d15d6e3e645755f9ae059243938f9e40f0de11e6431f71a51c717782c7e72c",
+    "tools/pvb-harness/research_p1pp_impact_music.py": "917e8741e390a74858cc4164a2e514b85c3174551ac11b9ade05c6937adc04db",
+    "tools/pvb-harness/research_p1pp_recovery.py": "4b7fe3ee8be724cc88b7a91975aeaef51198d29770e57d2a47b4dc1c4ab6037e"
+  }
+}

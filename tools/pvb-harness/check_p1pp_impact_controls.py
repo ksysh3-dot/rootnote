@@ -22,7 +22,7 @@ for fs in (44100,48000):
  a=P.render(lib,x,fs,6)
  if old is not None:
   b=P.render(old,x,fs,6);assert np.array_equal(a['output'],b['output'])
- for mode in (1,2):
+ for mode in (1,2,3,4):
   r=P.render(lib,x,fs,6,impact_mode=mode)
   chunk=P.render(lib,x,fs,6,block=1379,impact_mode=mode)
   assert np.array_equal(r['output'],chunk['output']) and r['latency']==a['latency']
@@ -33,7 +33,7 @@ for fs in (44100,48000):
   assert np.array_equal(r['output'][:round(1.7*fs)],changed['output'][:round(1.7*fs)])
   e=T.Engine(lib,fs,vb_on=1,vb_algo=6,ramp_ms=0)
   assert lib.pvb_set_p1pp_impact_research(e.h,mode)==1
-  assert lib.pvb_set_p1pp_impact_research(e.h,3)==0
+  assert lib.pvb_set_p1pp_impact_research(e.h,5)==0
   e.process(T.stereo(x[:fs]));lib.pvb_reset(e.h)
   assert np.max(abs(e.process(np.zeros((fs,2),np.float32))))<1e-7;e.close()
   for algo in (7,8,9,10):
@@ -46,7 +46,7 @@ fs=48000
 for name,x,env,desc in E.fixtures(fs):
  f=desc['frequency'];k=E.primary(f);t=np.arange(len(x))/fs
  ref=E.envelope(env*np.cos(2*np.pi*k*f*t),fs,k*f,.35*f)[900:12000];v={}
- for mode in (0,1,2):
+ for mode in (0,1,2,3,4):
   r=P.render(lib,np.r_[x,np.zeros(fs)],fs,6,impact_mode=mode)
   y=r['stem'][r['latency']:r['latency']+len(x),0]
   measured=E.envelope(y,fs,k*f,.35*f)[900:12000]
@@ -56,7 +56,7 @@ for name,x,env,desc in E.fixtures(fs):
  result['notes'].append(dict(name=name,variants=v));print(name,{m:round(q.get('shape_error_db',999),2) for m,q in v.items()},flush=True)
 for rate in (3.,7.,11.):
  t=np.arange(5*fs)/fs;x=.12*(1+.7*np.sin(2*np.pi*rate*t))*np.sin(2*np.pi*55*t+.2);v={}
- for mode in (0,1,2):
+ for mode in (0,1,2,3,4):
   r=P.render(lib,x,fs,6,impact_mode=mode)
   v[str(mode)]=Q.am_metric(r['stem'],fs,55,3,rate,.7,1,start=1.25,stop=3.75,latency=r['latency']/fs,reference_peak=.12,temporal=True)
  result['am'].append(dict(rate=rate,variants=v));print('AM',rate,{m:q.get('depth') for m,q in v.items()},flush=True)

@@ -1,0 +1,70 @@
+{
+  "schema": "pvb.p1pp.input_features.v1",
+  "note": "Corrected input-only descriptors for inspected cohort; nfft >= complete nonzero waveform length. Older inspected descriptors in the raw results truncated some long kicks. Audio and scores are unchanged.",
+  "features": [
+    {
+      "name": "fresh_kick_0",
+      "duration": 0.11597142539275798,
+      "bed_frequency": 75.56338143255566,
+      "input_spectral_flatness_25_1000": 0.0062566222803507035,
+      "input_centroid_25_4000": 105.33820240330905,
+      "input_crest_db": 10.122873148225324
+    },
+    {
+      "name": "fresh_kick_1",
+      "duration": 0.19891523287230128,
+      "bed_frequency": 87.23502083553207,
+      "input_spectral_flatness_25_1000": 0.005918562421871064,
+      "input_centroid_25_4000": 89.16377013482023,
+      "input_crest_db": 13.825963360660818
+    },
+    {
+      "name": "fresh_kick_2",
+      "duration": 0.15842235625540768,
+      "bed_frequency": 63.95204461229823,
+      "input_spectral_flatness_25_1000": 0.00835494594299921,
+      "input_centroid_25_4000": 100.3080142432403,
+      "input_crest_db": 10.569653793323146
+    },
+    {
+      "name": "fresh_kick_3",
+      "duration": 0.1921736221166842,
+      "bed_frequency": 100.1258473158745,
+      "input_spectral_flatness_25_1000": 0.01930736703057878,
+      "input_centroid_25_4000": 156.15981144091626,
+      "input_crest_db": 12.856616884062957
+    },
+    {
+      "name": "fresh_kick_4",
+      "duration": 0.08770331264875476,
+      "bed_frequency": 77.76110189093573,
+      "input_spectral_flatness_25_1000": 0.010614623028704319,
+      "input_centroid_25_4000": 85.46682072383285,
+      "input_crest_db": 10.112943510647312
+    },
+    {
+      "name": "fresh_kick_5",
+      "duration": 0.09477005756878681,
+      "bed_frequency": 94.43699465796314,
+      "input_spectral_flatness_25_1000": 0.006214992365951064,
+      "input_centroid_25_4000": 101.67857370572372,
+      "input_crest_db": 9.580184248477492
+    },
+    {
+      "name": "fresh_noise_6",
+      "duration": 0.030930964172288272,
+      "bed_frequency": 86.54293866864741,
+      "input_spectral_flatness_25_1000": 0.49556113407692093,
+      "input_centroid_25_4000": 1754.69046706129,
+      "input_crest_db": 14.105864400879856
+    },
+    {
+      "name": "fresh_noise_7",
+      "duration": 0.06571577804253681,
+      "bed_frequency": 74.37827710483806,
+      "input_spectral_flatness_25_1000": 0.5114746892512578,
+      "input_centroid_25_4000": 1672.7510926829457,
+      "input_crest_db": 13.287819049217088
+    }
+  ]
+}

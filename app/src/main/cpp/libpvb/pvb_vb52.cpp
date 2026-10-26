@@ -469,7 +469,7 @@ void VbHpv::pvFrame52() {
             (best<0 || std::abs(tr52_[t].f-q.f)<std::abs(tr52_[best].f-q.f))) best=t;
         // Require current evidence only until the track first earns permission.
         // A valid modulation model remains accepted by its own residual.
-        if(p1PlusProfile_ && (p1PlusFlags_&6)==6 && p1ppImpactMode_==2 &&
+        if(p1PlusProfile_ && (p1PlusFlags_&6)==6 && p1ppImpactMode_>=2 &&
            !q.modulation.valid && (best<0 || tr52_[best].fade<1e-6))
             q.res=std::max(q.res,q.raw);
         Track52 tr; tr.f=q.f; tr.phi=q.ph; tr.a=q.a; tr.strong=q.a>=.7*am;
@@ -479,6 +479,7 @@ void VbHpv::pvFrame52() {
             const double pred=prev.phi+kPi*(prev.f+q.f)*16/3000;
             tr.phi=q.ph+2*kPi*std::nearbyint((pred-q.ph)/(2*kPi));
             std::copy(prev.off,prev.off+7,tr.off); tr.fade=prev.fade;
+            tr.impactRecoveryPending=prev.impactRecoveryPending;
             tr.id=prev.id; tr.age=prev.age+1; tr.dfdt=(q.f-prev.f)*kFsd/(kPvH*(prev.missing+1));
             std::copy(std::begin(prev.permission),std::end(prev.permission),std::begin(tr.permission));
             if(stageFlags_&StageOscillator) tr.oscillator=prev.oscillator;
@@ -490,7 +491,18 @@ void VbHpv::pvFrame52() {
             if(stageFlags_&StageGlobalTrack) tr.prediction=prev.prediction;
         } else {
             std::copy(vbt::kPsi,vbt::kPsi+7,tr.off); tr.fade=q.res<=-15 ? 1 : 0;
+            tr.impactRecoveryPending=p1PlusProfile_ && (p1PlusFlags_&6)==6 &&
+                p1ppImpactMode_==4 && q.res>-15;
             tr.id=++nextTrackId_; tr.age=1;
+        }
+        // A track admitted after quarantine should begin like any other valid
+        // birth. Otherwise a fake slow attack survives into a recovered tone.
+        if(p1PlusProfile_ && (p1PlusFlags_&6)==6 && p1ppImpactMode_==3 &&
+           best>=0 && tr52_[best].fade<1e-6 && q.res<=-15)
+            tr.fade=1.;
+        if(p1PlusProfile_ && (p1PlusFlags_&6)==6 && p1ppImpactMode_==4 &&
+           tr.impactRecoveryPending && q.raw<=-15 && q.res<=-15) {
+            tr.fade=1.;tr.impactRecoveryPending=false;
         }
         if(stageFlags_&StageGlobalTrack) tr.prediction.observe(q.f,best>=0?tr52_[best].missing+1:1);
         tr.modulation=q.modulation;tr.family=q.family;

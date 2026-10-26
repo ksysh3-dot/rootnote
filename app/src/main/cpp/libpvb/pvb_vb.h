@@ -206,7 +206,8 @@ public:
     // bit3 (requires bit2): mix causal/centered masks by spectral prominence.
     // No bit changes the app's stored algorithm or the public trace ABI.
     void setP1PlusResearch(unsigned flags) { p1PlusFlags_=flags&15; reset(); }
-    // Host-only impact attribution: 0=baseline, 1=current fit, 2=unconfirmed fit.
+    // Host-only: 0=baseline, 1=current fit, 2=unconfirmed fit, 3=first-fit
+    // recovery, 4=clean current-fit recovery after initial rejection.
     void setP1PPImpactResearch(int mode) { p1ppImpactMode_=mode; reset(); }
     void setStageResearch(unsigned flags,StageCapture52::Sink sink=nullptr,void* user=nullptr) {
         stageFlags_=flags&8191;stageSink_=sink;stageUser_=user;reset();
@@ -367,6 +368,7 @@ private:
     // hpv52m: all state is fixed-size and owned by the module; no audio-thread allocations.
     struct Track52 {
         double f=0, phi=0, off[7]={}, fade=0, a=0;
+        bool impactRecoveryPending=false;
         bool strong=false, fastEnding=false;
         uint32_t id=0, age=0;
         double dfdt=0, life=1, residual=-200, rawResidual=-200;

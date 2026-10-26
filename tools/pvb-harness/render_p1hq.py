@@ -22,7 +22,7 @@ def main():
     p.add_argument('--library',type=Path,default=default_library())
     p.add_argument('--input',type=Path,required=True);p.add_argument('--output',type=Path,required=True)
     p.add_argument('--mode',choices=('p1','phase','p1plus','centered','hq','prominence'),default='p1plus')
-    p.add_argument('--impact-mode',type=int,choices=(0,1,2),default=0,
+    p.add_argument('--impact-mode',type=int,choices=(0,1,2,3,4),default=0,
                    help='Unadopted P1++ impact experiment; requires the p1plus/hq mode.')
     p.add_argument('--fs',type=int,choices=(44100,48000),default=48000)
     p.add_argument('--vb-db',type=float,default=6);p.add_argument('--out-db',type=float,default=-18)

@@ -119,7 +119,7 @@ def score(r,base,source,impact,t,onset,duration,fs):
 def main():
     p=argparse.ArgumentParser();p.add_argument('--library',type=Path,default=default_library())
     p.add_argument('--out',type=Path,required=True);p.add_argument('--flags',type=int,nargs='+',default=[0,2,6])
-    p.add_argument('--impact-mode',type=int,choices=(0,1,2),default=0)
+    p.add_argument('--impact-mode',type=int,choices=(0,1,2,3,4),default=0)
     p.add_argument('--fresh',action='store_true')
     a=p.parse_args();a.out.mkdir(parents=True,exist_ok=True);lib=P.api(a.library.resolve());fs=48000
     cases=[]

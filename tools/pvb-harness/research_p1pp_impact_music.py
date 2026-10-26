@@ -17,8 +17,11 @@ def db(a,b):return float(10*np.log10(max(a,1e-30)/max(b,1e-30)))
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--library',type=Path,default=default_library())
+    p.add_argument('--modes',type=int,nargs='+',default=[0,1,2])
     p.add_argument('--test-folder',type=Path,required=True);p.add_argument('--album-folder',type=Path,required=True)
     p.add_argument('--out',type=Path,required=True);a=p.parse_args();a.out.mkdir(parents=True,exist_ok=True)
+    if 0 not in a.modes or any(m not in (0,1,2,3,4) for m in a.modes):p.error('Modes must include 0 and use values 0..4')
+    a.modes=sorted(set(a.modes))
     lib=P.api(a.library.resolve());fs=48000;events=[]
     paths=[a.test_folder/'test 3.wav']
     paths += [next(a.album_folder.glob(pattern)) for pattern in ('* - Dream.flac','* - Fighting Spirit.flac','* - Mirage.flac')]
@@ -38,7 +41,7 @@ def main():
             at=(j+.5)*.005;start=at-3.;stop=at+1.2
             x=source[round(start*fs):round(stop*fs)];local=at-start;n=len(x);tt=np.arange(n)/fs
             modes={};waves={};record={}
-            for mode in (0,1,2):
+            for mode in a.modes:
                 r=P.render(lib,np.r_[x,np.zeros((fs//2,2),np.float32)],fs,6,impact_mode=mode)
                 d=r['latency'];y=r['output'][d:d+n];stem=r['stem'][d:d+n]
                 waves[mode]=y;v=dict(full_rms_dbfs=db(power(y),1),layer_rms_dbfs=db(power(stem),1),
@@ -52,14 +55,16 @@ def main():
                         v[label+'_layer_change_db']=db(v[label+'_layer_power'],modes['0'][label+'_layer_power'])
                 modes[str(mode)]=v
             number=len(events)+1
-            common_gain_db=-1-max(T.true_peak_db(waves[m],4) for m in (0,2))
+            playback_modes=[m for m in a.modes if m!=1]
+            common_gain_db=-1-max(T.true_peak_db(waves[m],4) for m in playback_modes)
             excerpt=(tt>=local-.2)&(tt<local+.8)
-            for mode,label in ((0,'P1plus'),(2,'guard_new_experimental')):
+            for mode in playback_modes:
+                label={0:'P1plus',2:'guard_new_experimental',3:'first_confirmation_experimental',4:'clean_recovery_experimental'}[mode]
                 sf.write(a.out/f'{number:02d}_{label}.wav',waves[mode][excerpt]*10**(common_gain_db/20),fs,subtype='PCM_24')
             events.append(dict(source=path.name,source_sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
                                source_fs=sr,event_seconds=at,selection_score=float(novelty[j]),
                                context_start=start,context_stop=stop,common_playback_gain_db=common_gain_db,variants=modes))
-            print(path.name,index,'at',round(at,3),'layer change',round(modes['2']['layer_rms_change_db'],3),flush=True)
+            print(path.name,index,'at',round(at,3),'layer changes',{m:round(v.get('layer_rms_change_db',0),3) for m,v in modes.items()},flush=True)
     # Separate limiter stress at realistic app output settings. These are host
     # limits; the phone/OEM speaker protection is not modeled.
     stresses=[]
@@ -79,7 +84,7 @@ def main():
                 finally:e.close()
     result=dict(schema='pvb.p1pp.impact_music.v1',library_sha256=hashlib.sha256(a.library.read_bytes()).hexdigest(),
                 selection='Top two input-only low-band positive-energy novelty peaks per predeclared file, spaced 750 ms; 3 s preroll, not full-song state.',
-                note='Music pre/post differences are not labeled noise reduction. PCM24 excerpts share one gain per pair.',
+                note='Music pre/post differences are not labeled noise reduction. PCM24 excerpts share one gain across the selected modes for each event.',
                 events=events,limiter_stress=stresses,device_validation=False,listening_validation=False)
     (a.out/'music.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
 

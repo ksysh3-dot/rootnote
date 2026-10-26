@@ -1,0 +1,43 @@
+{
+  "schema": "pvb.p1pp.recovery_compat.v1",
+  "old_sha256": "f64af437f9da7309ce746b859f96cd14426bcfa174e11dab23f74a42ba90bead",
+  "new_sha256": "35901c61bdb5e6660888dae91707342c6853721a0f2055389eafb0b93694d9d6",
+  "checks": [
+    {
+      "fs": 44100,
+      "mode": 0,
+      "output_stem_trace_bit_exact": true
+    },
+    {
+      "fs": 44100,
+      "mode": 1,
+      "output_stem_trace_bit_exact": true
+    },
+    {
+      "fs": 44100,
+      "mode": 2,
+      "output_stem_trace_bit_exact": true
+    },
+    {
+      "fs": 48000,
+      "mode": 0,
+      "output_stem_trace_bit_exact": true
+    },
+    {
+      "fs": 48000,
+      "mode": 1,
+      "output_stem_trace_bit_exact": true
+    },
+    {
+      "fs": 48000,
+      "mode": 2,
+      "output_stem_trace_bit_exact": true
+    },
+    {
+      "fs": 48000,
+      "mode": 3,
+      "old_saved_broadband2_stem_delta_bit_exact": true
+    }
+  ],
+  "passed": true
+}

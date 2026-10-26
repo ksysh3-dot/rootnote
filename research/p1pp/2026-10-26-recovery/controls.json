@@ -1,0 +1,706 @@
+{
+  "schema": "pvb.p1pp.impact_controls.v1",
+  "library_sha256": "35901c61bdb5e6660888dae91707342c6853721a0f2055389eafb0b93694d9d6",
+  "comparison_library_sha256": "014dc24678b7abcc41ef47e6a141f7d9307d52c3a577710f8a538c24cc1b08cf",
+  "engineering": [
+    {
+      "fs": 44100,
+      "mode": 1,
+      "mode0_bit_exact": true,
+      "block_and_capture_invariant": true,
+      "prefix_causal": true,
+      "reset": true,
+      "other_profiles_unaffected": true,
+      "latency": 7737
+    },
+    {
+      "fs": 44100,
+      "mode": 2,
+      "mode0_bit_exact": true,
+      "block_and_capture_invariant": true,
+      "prefix_causal": true,
+      "reset": true,
+      "other_profiles_unaffected": true,
+      "latency": 7737
+    },
+    {
+      "fs": 44100,
+      "mode": 3,
+      "mode0_bit_exact": true,
+      "block_and_capture_invariant": true,
+      "prefix_causal": true,
+      "reset": true,
+      "other_profiles_unaffected": true,
+      "latency": 7737
+    },
+    {
+      "fs": 44100,
+      "mode": 4,
+      "mode0_bit_exact": true,
+      "block_and_capture_invariant": true,
+      "prefix_causal": true,
+      "reset": true,
+      "other_profiles_unaffected": true,
+      "latency": 7737
+    },
+    {
+      "fs": 48000,
+      "mode": 1,
+      "mode0_bit_exact": true,
+      "block_and_capture_invariant": true,
+      "prefix_causal": true,
+      "reset": true,
+      "other_profiles_unaffected": true,
+      "latency": 8420
+    },
+    {
+      "fs": 48000,
+      "mode": 2,
+      "mode0_bit_exact": true,
+      "block_and_capture_invariant": true,
+      "prefix_causal": true,
+      "reset": true,
+      "other_profiles_unaffected": true,
+      "latency": 8420
+    },
+    {
+      "fs": 48000,
+      "mode": 3,
+      "mode0_bit_exact": true,
+      "block_and_capture_invariant": true,
+      "prefix_causal": true,
+      "reset": true,
+      "other_profiles_unaffected": true,
+      "latency": 8420
+    },
+    {
+      "fs": 48000,
+      "mode": 4,
+      "mode0_bit_exact": true,
+      "block_and_capture_invariant": true,
+      "prefix_causal": true,
+      "reset": true,
+      "other_profiles_unaffected": true,
+      "latency": 8420
+    }
+  ],
+  "notes": [
+    {
+      "name": "fresh_note_0",
+      "variants": {
+        "0": {
+          "one_constant_scale": 0.09968931837506256,
+          "shape_error_db": -22.599888750121657,
+          "correlation": 0.9970227905501846,
+          "stem_energy": 0.40109711347579396
+        },
+        "1": {
+          "one_constant_scale": 0.09877846166436265,
+          "shape_error_db": -21.267941242080887,
+          "correlation": 0.9959621868884979,
+          "stem_energy": 0.39452845113556956
+        },
+        "2": {
+          "one_constant_scale": 0.0988162847696344,
+          "shape_error_db": -20.880194154633962,
+          "correlation": 0.9955779296880076,
+          "stem_energy": 0.3951598026102217
+        },
+        "3": {
+          "one_constant_scale": 0.10032715649142855,
+          "shape_error_db": -22.90236694834598,
+          "correlation": 0.997217773119425,
+          "stem_energy": 0.40609845731145844
+        },
+        "4": {
+          "one_constant_scale": 0.0988162847696344,
+          "shape_error_db": -20.880194154633962,
+          "correlation": 0.9955779296880076,
+          "stem_energy": 0.3951598026102217
+        }
+      }
+    },
+    {
+      "name": "fresh_note_1",
+      "variants": {
+        "0": {
+          "one_constant_scale": 0.10268476459979455,
+          "shape_error_db": -22.191289473216962,
+          "correlation": 0.996730161988519,
+          "stem_energy": 0.5224320870568422
+        },
+        "1": {
+          "one_constant_scale": 0.09369173836067396,
+          "shape_error_db": -24.014562872811123,
+          "correlation": 0.9978489833289553,
+          "stem_energy": 0.4339221503046289
+        },
+        "2": {
+          "one_constant_scale": 0.09373885697997739,
+          "shape_error_db": -23.098750260403182,
+          "correlation": 0.9973442753482256,
+          "stem_energy": 0.4348544726989046
+        },
+        "3": {
+          "one_constant_scale": 0.10409774006846233,
+          "shape_error_db": -22.361573973374107,
+          "correlation": 0.9968558715584953,
+          "stem_energy": 0.5367051782600816
+        },
+        "4": {
+          "one_constant_scale": 0.09373885697997739,
+          "shape_error_db": -23.098750260403182,
+          "correlation": 0.9973442753482256,
+          "stem_energy": 0.4348544726989046
+        }
+      }
+    },
+    {
+      "name": "fresh_note_2",
+      "variants": {
+        "0": {
+          "one_constant_scale": 0.08277958568497303,
+          "shape_error_db": -21.337691691097028,
+          "correlation": 0.9959854312005125,
+          "stem_energy": 0.2954235156260138
+        },
+        "1": {
+          "one_constant_scale": 0.07847224077941789,
+          "shape_error_db": -21.286813605840752,
+          "correlation": 0.9959356529701126,
+          "stem_energy": 0.26550244886890173
+        },
+        "2": {
+          "one_constant_scale": 0.07918935369358217,
+          "shape_error_db": -20.66386359967838,
+          "correlation": 0.9953109315422466,
+          "stem_energy": 0.2706958312330278
+        },
+        "3": {
+          "one_constant_scale": 0.08314879088370764,
+          "shape_error_db": -21.182423351024315,
+          "correlation": 0.9958360983452896,
+          "stem_energy": 0.29814523553471356
+        },
+        "4": {
+          "one_constant_scale": 0.07918935369358217,
+          "shape_error_db": -20.66386359967838,
+          "correlation": 0.9953109315422466,
+          "stem_energy": 0.2706958312330278
+        }
+      }
+    },
+    {
+      "name": "fresh_note_3",
+      "variants": {
+        "0": {
+          "one_constant_scale": 0.012150384278439987,
+          "shape_error_db": -1.6417497663967218,
+          "correlation": 0.7517122392348918,
+          "stem_energy": 0.014095767401147928
+        },
+        "1": {
+          "one_constant_scale": 0.011444841741070286,
+          "shape_error_db": -2.2795826437828066,
+          "correlation": 0.776058020560658,
+          "stem_energy": 0.011551187689734354
+        },
+        "2": {
+          "one_constant_scale": 0.011664058782733749,
+          "shape_error_db": -1.9086793592808946,
+          "correlation": 0.7619079822964869,
+          "stem_energy": 0.012446849344435719
+        },
+        "3": {
+          "one_constant_scale": 0.012305602427515416,
+          "shape_error_db": -1.7177088751625245,
+          "correlation": 0.7546385200768286,
+          "stem_energy": 0.0143312413842124
+        },
+        "4": {
+          "one_constant_scale": 0.011664058782733749,
+          "shape_error_db": -1.9086793592808946,
+          "correlation": 0.7619079822964869,
+          "stem_energy": 0.012446849344435719
+        }
+      }
+    },
+    {
+      "name": "fresh_note_4",
+      "variants": {
+        "0": {
+          "one_constant_scale": 0.0717301147479449,
+          "shape_error_db": -26.416383341995946,
+          "correlation": 0.9987158673465507,
+          "stem_energy": 0.3720387942935536
+        },
+        "1": {
+          "one_constant_scale": 0.07110509657338758,
+          "shape_error_db": -26.7657925939392,
+          "correlation": 0.9988188072843351,
+          "stem_energy": 0.36549032233423184
+        },
+        "2": {
+          "one_constant_scale": 0.07110633773780231,
+          "shape_error_db": -26.40610887608403,
+          "correlation": 0.9987115460855818,
+          "stem_energy": 0.36560365018226887
+        },
+        "3": {
+          "one_constant_scale": 0.07183340045605897,
+          "shape_error_db": -27.033275406539428,
+          "correlation": 0.9988824693996832,
+          "stem_energy": 0.37299984299235883
+        },
+        "4": {
+          "one_constant_scale": 0.07203314217177761,
+          "shape_error_db": -25.57049272893922,
+          "correlation": 0.9984401421369379,
+          "stem_energy": 0.3754599077334445
+        }
+      }
+    },
+    {
+      "name": "fresh_note_5",
+      "variants": {
+        "0": {
+          "one_constant_scale": 0.04982391252900061,
+          "shape_error_db": -24.329890511637764,
+          "correlation": 0.9979465501266072,
+          "stem_energy": 0.20893178273754323
+        },
+        "1": {
+          "one_constant_scale": 0.05035175361473147,
+          "shape_error_db": -24.006659072971246,
+          "correlation": 0.9977871658806858,
+          "stem_energy": 0.21363774694216653
+        },
+        "2": {
+          "one_constant_scale": 0.05035197390733206,
+          "shape_error_db": -23.841183487995945,
+          "correlation": 0.9976982301244064,
+          "stem_energy": 0.2136930601452199
+        },
+        "3": {
+          "one_constant_scale": 0.050755570832521545,
+          "shape_error_db": -25.077845520083866,
+          "correlation": 0.9982620193687581,
+          "stem_energy": 0.21690861576928194
+        },
+        "4": {
+          "one_constant_scale": 0.05069058238263769,
+          "shape_error_db": -23.108845589040644,
+          "correlation": 0.9972750438090758,
+          "stem_energy": 0.2167922573408267
+        }
+      }
+    }
+  ],
+  "am": [
+    {
+      "rate": 3.0,
+      "variants": {
+        "0": {
+          "order": 3,
+          "center_hz": 165,
+          "expected_weight": 1.0,
+          "expected_depth": 0.7,
+          "status": "measurable",
+          "passed": true,
+          "calibration": {
+            "depth": 0.7000121954891905,
+            "absolute_error": 1.2195489190514053e-05,
+            "passed": true
+          },
+          "depth": 0.7083679710400178,
+          "phase_rad": -0.08332233384060955,
+          "rms_dbfs": -49.69055633655297,
+          "rate_hz": 2.999976561011683,
+          "rate_relative_error": 7.812996105638348e-06,
+          "rate_status": "measurable",
+          "phase_error_rad": -0.0833207576753809,
+          "phase_limit_rad": 0.5235987755982988,
+          "temporal_passed": true,
+          "minimum_rms_dbfs": -100.0,
+          "absolute_error": 0.008367971040017852,
+          "relative_error": 0.011954244342882647,
+          "depth_passed": true
+        },
+        "1": {
+          "order": 3,
+          "center_hz": 165,
+          "expected_weight": 1.0,
+          "expected_depth": 0.7,
+          "status": "measurable",
+          "passed": true,
+          "calibration": {
+            "depth": 0.7000121954891905,
+            "absolute_error": 1.2195489190514053e-05,
+            "passed": true
+          },
+          "depth": 0.6927589020024023,
+          "phase_rad": -0.06326170554321009,
+          "rms_dbfs": -49.64553834693939,
+          "rate_hz": 2.9999691482242694,
+          "rate_relative_error": 1.028392524352976e-05,
+          "rate_status": "measurable",
+          "phase_error_rad": -0.06326065839486539,
+          "phase_limit_rad": 0.5235987755982988,
+          "temporal_passed": true,
+          "minimum_rms_dbfs": -100.0,
+          "absolute_error": 0.007241097997597645,
+          "relative_error": 0.01034442571085378,
+          "depth_passed": true
+        },
+        "2": {
+          "order": 3,
+          "center_hz": 165,
+          "expected_weight": 1.0,
+          "expected_depth": 0.7,
+          "status": "measurable",
+          "passed": true,
+          "calibration": {
+            "depth": 0.7000121954891905,
+            "absolute_error": 1.2195489190514053e-05,
+            "passed": true
+          },
+          "depth": 0.6927589020024023,
+          "phase_rad": -0.06326170554321009,
+          "rms_dbfs": -49.64553834693939,
+          "rate_hz": 2.9999691482242694,
+          "rate_relative_error": 1.028392524352976e-05,
+          "rate_status": "measurable",
+          "phase_error_rad": -0.06326065839486539,
+          "phase_limit_rad": 0.5235987755982988,
+          "temporal_passed": true,
+          "minimum_rms_dbfs": -100.0,
+          "absolute_error": 0.007241097997597645,
+          "relative_error": 0.01034442571085378,
+          "depth_passed": true
+        },
+        "3": {
+          "order": 3,
+          "center_hz": 165,
+          "expected_weight": 1.0,
+          "expected_depth": 0.7,
+          "status": "measurable",
+          "passed": true,
+          "calibration": {
+            "depth": 0.7000121954891905,
+            "absolute_error": 1.2195489190514053e-05,
+            "passed": true
+          },
+          "depth": 0.6927589020024023,
+          "phase_rad": -0.06326170554321005,
+          "rms_dbfs": -49.64553834693939,
+          "rate_hz": 2.9999691482242694,
+          "rate_relative_error": 1.028392524352976e-05,
+          "rate_status": "measurable",
+          "phase_error_rad": -0.0632606583948655,
+          "phase_limit_rad": 0.5235987755982988,
+          "temporal_passed": true,
+          "minimum_rms_dbfs": -100.0,
+          "absolute_error": 0.007241097997597645,
+          "relative_error": 0.01034442571085378,
+          "depth_passed": true
+        },
+        "4": {
+          "order": 3,
+          "center_hz": 165,
+          "expected_weight": 1.0,
+          "expected_depth": 0.7,
+          "status": "measurable",
+          "passed": true,
+          "calibration": {
+            "depth": 0.7000121954891905,
+            "absolute_error": 1.2195489190514053e-05,
+            "passed": true
+          },
+          "depth": 0.6927589020024026,
+          "phase_rad": -0.06326170554321009,
+          "rms_dbfs": -49.64553834693939,
+          "rate_hz": 2.9999691482242694,
+          "rate_relative_error": 1.028392524352976e-05,
+          "rate_status": "measurable",
+          "phase_error_rad": -0.0632606583948655,
+          "phase_limit_rad": 0.5235987755982988,
+          "temporal_passed": true,
+          "minimum_rms_dbfs": -100.0,
+          "absolute_error": 0.007241097997597312,
+          "relative_error": 0.010344425710853304,
+          "depth_passed": true
+        }
+      }
+    },
+    {
+      "rate": 7.0,
+      "variants": {
+        "0": {
+          "order": 3,
+          "center_hz": 165,
+          "expected_weight": 1.0,
+          "expected_depth": 0.7,
+          "status": "measurable",
+          "passed": true,
+          "calibration": {
+            "depth": 0.7000114981041899,
+            "absolute_error": 1.1498104189988645e-05,
+            "passed": true
+          },
+          "depth": 0.6447356256501814,
+          "phase_rad": -0.008967422652548664,
+          "rms_dbfs": -49.84310311413132,
+          "rate_hz": 6.99992638852269,
+          "rate_relative_error": 1.0515925330015616e-05,
+          "rate_status": "measurable",
+          "phase_error_rad": -0.008991979899231468,
+          "phase_limit_rad": 0.5235987755982988,
+          "temporal_passed": true,
+          "minimum_rms_dbfs": -100.0,
+          "absolute_error": 0.05526437434981857,
+          "relative_error": 0.07894910621402654,
+          "depth_passed": true
+        },
+        "1": {
+          "order": 3,
+          "center_hz": 165,
+          "expected_weight": 1.0,
+          "expected_depth": 0.7,
+          "status": "measurable",
+          "passed": true,
+          "calibration": {
+            "depth": 0.7000114981041899,
+            "absolute_error": 1.1498104189988645e-05,
+            "passed": true
+          },
+          "depth": 0.6516595883288211,
+          "phase_rad": -0.0057491087203676,
+          "rms_dbfs": -49.781997004063776,
+          "rate_hz": 7.0000131365544185,
+          "rate_relative_error": 1.8766506312114676e-06,
+          "rate_status": "measurable",
+          "phase_error_rad": -0.005781219425927887,
+          "phase_limit_rad": 0.5235987755982988,
+          "temporal_passed": true,
+          "minimum_rms_dbfs": -100.0,
+          "absolute_error": 0.04834041167117886,
+          "relative_error": 0.06905773095882695,
+          "depth_passed": true
+        },
+        "2": {
+          "order": 3,
+          "center_hz": 165,
+          "expected_weight": 1.0,
+          "expected_depth": 0.7,
+          "status": "measurable",
+          "passed": true,
+          "calibration": {
+            "depth": 0.7000114981041899,
+            "absolute_error": 1.1498104189988645e-05,
+            "passed": true
+          },
+          "depth": 0.6516595883288211,
+          "phase_rad": -0.0057491087203676,
+          "rms_dbfs": -49.781997004063776,
+          "rate_hz": 7.0000131365544185,
+          "rate_relative_error": 1.8766506312114676e-06,
+          "rate_status": "measurable",
+          "phase_error_rad": -0.005781219425927887,
+          "phase_limit_rad": 0.5235987755982988,
+          "temporal_passed": true,
+          "minimum_rms_dbfs": -100.0,
+          "absolute_error": 0.04834041167117886,
+          "relative_error": 0.06905773095882695,
+          "depth_passed": true
+        },
+        "3": {
+          "order": 3,
+          "center_hz": 165,
+          "expected_weight": 1.0,
+          "expected_depth": 0.7,
+          "status": "measurable",
+          "passed": true,
+          "calibration": {
+            "depth": 0.7000114981041899,
+            "absolute_error": 1.1498104189988645e-05,
+            "passed": true
+          },
+          "depth": 0.6516595883288209,
+          "phase_rad": -0.005749108720367559,
+          "rms_dbfs": -49.781997004063776,
+          "rate_hz": 7.0000131365544185,
+          "rate_relative_error": 1.8766506312114676e-06,
+          "rate_status": "measurable",
+          "phase_error_rad": -0.0057812194259279125,
+          "phase_limit_rad": 0.5235987755982988,
+          "temporal_passed": true,
+          "minimum_rms_dbfs": -100.0,
+          "absolute_error": 0.048340411671179084,
+          "relative_error": 0.06905773095882727,
+          "depth_passed": true
+        },
+        "4": {
+          "order": 3,
+          "center_hz": 165,
+          "expected_weight": 1.0,
+          "expected_depth": 0.7,
+          "status": "measurable",
+          "passed": true,
+          "calibration": {
+            "depth": 0.7000114981041899,
+            "absolute_error": 1.1498104189988645e-05,
+            "passed": true
+          },
+          "depth": 0.6516595883288208,
+          "phase_rad": -0.005749108720367357,
+          "rms_dbfs": -49.781997004063776,
+          "rate_hz": 7.0000131365544185,
+          "rate_relative_error": 1.8766506312114676e-06,
+          "rate_status": "measurable",
+          "phase_error_rad": -0.005781219425927887,
+          "phase_limit_rad": 0.5235987755982988,
+          "temporal_passed": true,
+          "minimum_rms_dbfs": -100.0,
+          "absolute_error": 0.048340411671179195,
+          "relative_error": 0.06905773095882743,
+          "depth_passed": true
+        }
+      }
+    },
+    {
+      "rate": 11.0,
+      "variants": {
+        "0": {
+          "order": 3,
+          "center_hz": 165,
+          "expected_weight": 1.0,
+          "expected_depth": 0.7,
+          "status": "measurable",
+          "passed": false,
+          "calibration": {
+            "depth": 0.6998886030329733,
+            "absolute_error": 0.0001113969670266668,
+            "passed": true
+          },
+          "depth": 0.5479041689569024,
+          "phase_rad": 0.10790326795787386,
+          "rms_dbfs": -50.05178496449933,
+          "rate_hz": 10.997349903183535,
+          "rate_relative_error": 0.00024091789240591893,
+          "rate_status": "measurable",
+          "phase_error_rad": 0.10795530474340846,
+          "phase_limit_rad": 0.5235987755982988,
+          "temporal_passed": true,
+          "minimum_rms_dbfs": -100.0,
+          "absolute_error": 0.15209583104309754,
+          "relative_error": 0.2172797586329965,
+          "depth_passed": false
+        },
+        "1": {
+          "order": 3,
+          "center_hz": 165,
+          "expected_weight": 1.0,
+          "expected_depth": 0.7,
+          "status": "measurable",
+          "passed": false,
+          "calibration": {
+            "depth": 0.6998886030329733,
+            "absolute_error": 0.0001113969670266668,
+            "passed": true
+          },
+          "depth": 0.5521314577096836,
+          "phase_rad": 0.0940193564051083,
+          "rms_dbfs": -50.01006099295949,
+          "rate_hz": 10.997954839711959,
+          "rate_relative_error": 0.00018592366254921444,
+          "rate_status": "measurable",
+          "phase_error_rad": 0.09409717315056997,
+          "phase_limit_rad": 0.5235987755982988,
+          "temporal_passed": true,
+          "minimum_rms_dbfs": -100.0,
+          "absolute_error": 0.14786854229031632,
+          "relative_error": 0.21124077470045188,
+          "depth_passed": false
+        },
+        "2": {
+          "order": 3,
+          "center_hz": 165,
+          "expected_weight": 1.0,
+          "expected_depth": 0.7,
+          "status": "measurable",
+          "passed": false,
+          "calibration": {
+            "depth": 0.6998886030329733,
+            "absolute_error": 0.0001113969670266668,
+            "passed": true
+          },
+          "depth": 0.5521314577096836,
+          "phase_rad": 0.0940193564051083,
+          "rms_dbfs": -50.01006099295949,
+          "rate_hz": 10.997954839711959,
+          "rate_relative_error": 0.00018592366254921444,
+          "rate_status": "measurable",
+          "phase_error_rad": 0.09409717315056997,
+          "phase_limit_rad": 0.5235987755982988,
+          "temporal_passed": true,
+          "minimum_rms_dbfs": -100.0,
+          "absolute_error": 0.14786854229031632,
+          "relative_error": 0.21124077470045188,
+          "depth_passed": false
+        },
+        "3": {
+          "order": 3,
+          "center_hz": 165,
+          "expected_weight": 1.0,
+          "expected_depth": 0.7,
+          "status": "measurable",
+          "passed": false,
+          "calibration": {
+            "depth": 0.6998886030329733,
+            "absolute_error": 0.0001113969670266668,
+            "passed": true
+          },
+          "depth": 0.5521314577096835,
+          "phase_rad": 0.09401935640510861,
+          "rms_dbfs": -50.01006099295949,
+          "rate_hz": 10.997954839711959,
+          "rate_relative_error": 0.00018592366254921444,
+          "rate_status": "measurable",
+          "phase_error_rad": 0.09409717315057015,
+          "phase_limit_rad": 0.5235987755982988,
+          "temporal_passed": true,
+          "minimum_rms_dbfs": -100.0,
+          "absolute_error": 0.14786854229031643,
+          "relative_error": 0.21124077470045205,
+          "depth_passed": false
+        },
+        "4": {
+          "order": 3,
+          "center_hz": 165,
+          "expected_weight": 1.0,
+          "expected_depth": 0.7,
+          "status": "measurable",
+          "passed": false,
+          "calibration": {
+            "depth": 0.6998886030329733,
+            "absolute_error": 0.0001113969670266668,
+            "passed": true
+          },
+          "depth": 0.5521314577096835,
+          "phase_rad": 0.09401935640510861,
+          "rms_dbfs": -50.01006099295949,
+          "rate_hz": 10.997954839711959,
+          "rate_relative_error": 0.00018592366254921444,
+          "rate_status": "measurable",
+          "phase_error_rad": 0.09409717315057015,
+          "phase_limit_rad": 0.5235987755982988,
+          "temporal_passed": true,
+          "minimum_rms_dbfs": -100.0,
+          "absolute_error": 0.14786854229031643,
+          "relative_error": 0.21124077470045205,
+          "depth_passed": false
+        }
+      }
+    }
+  ]
+}

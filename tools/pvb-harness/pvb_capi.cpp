@@ -62,7 +62,7 @@ int pvb_set_p1plus_research(void* e,unsigned flags) {
 }
 
 int pvb_set_p1pp_impact_research(void* e,int mode) {
-    if(!e || mode<0 || mode>2) return 0;
+    if(!e || mode<0 || mode>4) return 0;
     static_cast<pvb::Engine*>(e)->setP1PPImpactResearch(mode);return 1;
 }
 

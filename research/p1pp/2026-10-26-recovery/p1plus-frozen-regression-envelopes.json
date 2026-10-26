@@ -1,0 +1,202 @@
+{
+  "schema": "pvb.p1hq.primary_envelopes.v1",
+  "seed": 2026102606,
+  "selection": "Input frequency, P1 gentle24 table, fixed output SOS only",
+  "one_constant_gain_allowed": true,
+  "no_fitted_delay": true,
+  "controls": "gain invariance and known 50 ms error passed",
+  "cases": [
+    {
+      "name": "fresh_note_0",
+      "input": {
+        "frequency": 106.01087471612949,
+        "rate": 1.714050320701328,
+        "note_seconds": 0.11883751697298484,
+        "noise_width": 0.026482112757340602
+      },
+      "primary_harmonic": 2,
+      "variants": {
+        "0": {
+          "one_constant_scale": 0.08963109987071656,
+          "shape_error_db": -14.38952736611293,
+          "correlation": 0.9807237218909244
+        },
+        "2": {
+          "one_constant_scale": 0.08963109987071656,
+          "shape_error_db": -14.38952736611293,
+          "correlation": 0.9807237218909244
+        },
+        "6": {
+          "one_constant_scale": 0.09968931837506256,
+          "shape_error_db": -22.599888750121657,
+          "correlation": 0.9970227905501846
+        },
+        "14": {
+          "one_constant_scale": 0.09981723492145153,
+          "shape_error_db": -21.939533934017934,
+          "correlation": 0.9965261585802475
+        }
+      }
+    },
+    {
+      "name": "fresh_note_1",
+      "input": {
+        "frequency": 112.17657845017393,
+        "rate": 2.392057713906853,
+        "note_seconds": 0.11491875153137494,
+        "noise_width": 0.024398517507060978
+      },
+      "primary_harmonic": 2,
+      "variants": {
+        "0": {
+          "one_constant_scale": 0.0915530308145833,
+          "shape_error_db": -14.017113610673896,
+          "correlation": 0.9790703616057
+        },
+        "2": {
+          "one_constant_scale": 0.0915530308145833,
+          "shape_error_db": -14.017113610673896,
+          "correlation": 0.9790703616057
+        },
+        "6": {
+          "one_constant_scale": 0.10268476459979455,
+          "shape_error_db": -22.191289473216962,
+          "correlation": 0.996730161988519
+        },
+        "14": {
+          "one_constant_scale": 0.10417148030194559,
+          "shape_error_db": -21.356041408558355,
+          "correlation": 0.9960398202645451
+        }
+      }
+    },
+    {
+      "name": "fresh_note_2",
+      "input": {
+        "frequency": 121.18180327095604,
+        "rate": 1.563425153276091,
+        "note_seconds": 0.13044565455415114,
+        "noise_width": 0.009969763023171176
+      },
+      "primary_harmonic": 2,
+      "variants": {
+        "0": {
+          "one_constant_scale": 0.07509974439532356,
+          "shape_error_db": -17.56758385873691,
+          "correlation": 0.9905042936280172
+        },
+        "2": {
+          "one_constant_scale": 0.07509974439532356,
+          "shape_error_db": -17.56758385873691,
+          "correlation": 0.9905042936280172
+        },
+        "6": {
+          "one_constant_scale": 0.08277958568497303,
+          "shape_error_db": -21.337691691097028,
+          "correlation": 0.9959854312005125
+        },
+        "14": {
+          "one_constant_scale": 0.08324075755083117,
+          "shape_error_db": -22.191475558393428,
+          "correlation": 0.9966949895922466
+        }
+      }
+    },
+    {
+      "name": "fresh_note_3",
+      "input": {
+        "frequency": 45.46092460112668,
+        "rate": 7.923775384370879,
+        "note_seconds": 0.09769963136555015,
+        "noise_width": 0.017501420019315192
+      },
+      "primary_harmonic": 4,
+      "variants": {
+        "0": {
+          "one_constant_scale": 0.008761287530405011,
+          "shape_error_db": 0.16482970600447427,
+          "correlation": 0.6715571454365564
+        },
+        "2": {
+          "one_constant_scale": 0.008761287530405011,
+          "shape_error_db": 0.16482970600447427,
+          "correlation": 0.6715571454365564
+        },
+        "6": {
+          "one_constant_scale": 0.012150384278439987,
+          "shape_error_db": -1.6417497663967218,
+          "correlation": 0.7517122392348918
+        },
+        "14": {
+          "one_constant_scale": 0.00804253362368606,
+          "shape_error_db": 1.472467430080988,
+          "correlation": 0.6133938673469057
+        }
+      }
+    },
+    {
+      "name": "fresh_note_4",
+      "input": {
+        "frequency": 88.81623185363819,
+        "rate": 0.4063202397422083,
+        "note_seconds": 0.17571716313440286,
+        "noise_width": 0.025941251344400174
+      },
+      "primary_harmonic": 2,
+      "variants": {
+        "0": {
+          "one_constant_scale": 0.0651963795164221,
+          "shape_error_db": -14.474951719296733,
+          "correlation": 0.9804875413450233
+        },
+        "2": {
+          "one_constant_scale": 0.06519631081017704,
+          "shape_error_db": -14.475190330369596,
+          "correlation": 0.980488749216982
+        },
+        "6": {
+          "one_constant_scale": 0.0717301147479449,
+          "shape_error_db": -26.416383341995946,
+          "correlation": 0.9987158673465507
+        },
+        "14": {
+          "one_constant_scale": 0.07094931684707803,
+          "shape_error_db": -24.245591585224787,
+          "correlation": 0.9978804140023687
+        }
+      }
+    },
+    {
+      "name": "fresh_note_5",
+      "input": {
+        "frequency": 81.33909327567628,
+        "rate": 6.411015168840054,
+        "note_seconds": 0.16161056800118667,
+        "noise_width": 0.017039577828630557
+      },
+      "primary_harmonic": 2,
+      "variants": {
+        "0": {
+          "one_constant_scale": 0.04661154958558645,
+          "shape_error_db": -13.17184733297684,
+          "correlation": 0.9738546147628138
+        },
+        "2": {
+          "one_constant_scale": 0.04661154958558645,
+          "shape_error_db": -13.17184733297684,
+          "correlation": 0.9738546147628138
+        },
+        "6": {
+          "one_constant_scale": 0.04982391252900061,
+          "shape_error_db": -24.329890511637764,
+          "correlation": 0.9979465501266072
+        },
+        "14": {
+          "one_constant_scale": 0.05032908343706005,
+          "shape_error_db": -22.716417242394296,
+          "correlation": 0.9970225378289247
+        }
+      }
+    }
+  ]
+}

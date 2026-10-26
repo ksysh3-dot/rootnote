@@ -115,3 +115,11 @@ Research options are off by default and are not connected to Android JNI/UI.
 Sources, measured benefits/regressions and reproduction instructions are retained
 under docs/P1PLUS_BASELINE.md, docs/P1PP_IMPACT_PROTOCOL.md and research/.
 The Bankstown attribution and all prior notices above remain applicable.
+
+The P1++ recovery round adds optional host modes 3/4 to restore the normal birth
+fade after a previously rejected track obtains the declared fit evidence. Mode 4
+remembers pending recovery until both current and effective fits pass. These
+options retain the existing fit threshold and add no delay. The adopted P1+
+baseline and Android defaults remain unchanged. Definitions, selection history,
+measured gains and adverse changes are preserved in docs/P1PP_RECOVERY_PROTOCOL.md
+and research/p1pp/2026-10-26-recovery/.
