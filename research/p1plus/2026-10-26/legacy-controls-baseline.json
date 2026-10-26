@@ -1,0 +1,359 @@
+{
+  "schema": "pvb.p1plus.exploration.v1",
+  "flags": 0,
+  "fs": 48000,
+  "heldout": false,
+  "listening_validated": false,
+  "cases": {
+    "steady_55": {
+      "hops": 908,
+      "active_track_hops": 977,
+      "raw_high_but_modulation_accepted": 0,
+      "rejected_observed_track_hops": 0,
+      "phase_step_weighted_rms": 0.0,
+      "stem_rms": 0.004578956098809399,
+      "output_peak": 0.011038510128855705,
+      "latency_frames": 7140,
+      "callback_p95_ms": 1.9806100113783027,
+      "output_sha256": "8e069daf2cd56a86e8eece1ae4108bbd659e25a5d6de31a0a2c2a48e39175643",
+      "support": {
+        "residual_db": -85.14519087804703,
+        "carrier_rms": 0.004691233843066233,
+        "carrier_amplitudes": {
+          "110.0": 8.011163478422485e-10,
+          "165.0": 0.004256541536750012,
+          "220.0": 0.004754740021865332,
+          "275.0": 0.0017571467689018226,
+          "330.0": 0.00044954048047910676,
+          "385.0": 9.848898343045091e-10,
+          "440.0": 8.639374106370494e-10
+        },
+        "residual_rms": 2.5943438592777516e-07,
+        "total_rms": 0.004691233850239866
+      }
+    },
+    "steady_83": {
+      "hops": 908,
+      "active_track_hops": 953,
+      "raw_high_but_modulation_accepted": 0,
+      "rejected_observed_track_hops": 0,
+      "phase_step_weighted_rms": 0.0,
+      "stem_rms": 0.006648715414343977,
+      "output_peak": 0.016473859548568726,
+      "latency_frames": 7140,
+      "callback_p95_ms": 1.8659399880561978,
+      "output_sha256": "0aec0f8f44290c29602f3306bd2ce542ba7cd729346c33e0fea11053a38825b6",
+      "support": {
+        "residual_db": -92.26388115762308,
+        "carrier_rms": 0.006806179847283673,
+        "carrier_amplitudes": {
+          "166.0": 0.008081395208943057,
+          "249.0": 0.005043219725377009,
+          "332.0": 0.0013562894240834716,
+          "415.0": 0.0002561903661349501,
+          "498.0": 4.405433432034651e-10,
+          "581.0": 8.674088513103658e-11,
+          "664.0": 3.4842524843491886e-11
+        },
+        "residual_rms": 1.6584766556969138e-07,
+        "total_rms": 0.0068061798493042995
+      }
+    },
+    "am_3": {
+      "hops": 908,
+      "active_track_hops": 1464,
+      "raw_high_but_modulation_accepted": 512,
+      "rejected_observed_track_hops": 16,
+      "phase_step_weighted_rms": 0.0,
+      "stem_rms": 0.004955130712993685,
+      "output_peak": 0.018372895196080208,
+      "latency_frames": 7140,
+      "callback_p95_ms": 2.017510018777102,
+      "output_sha256": "0052d8515a2833ba6254d847edcc3166c295fed5b2774c7ec2e56907602c6849",
+      "support": {
+        "residual_db": -31.301905742063912,
+        "carrier_rms": 0.004500176814377235,
+        "carrier_amplitudes": {
+          "110.0": 8.259093786179137e-08,
+          "165.0": 0.004087631883663698,
+          "220.0": 0.004558712670438948,
+          "275.0": 0.0016812560046703619,
+          "330.0": 0.0004312369455146234,
+          "385.0": 1.6454065888853607e-07,
+          "440.0": 5.513994941392379e-08
+        },
+        "residual_rms": 0.00012249949283714507,
+        "total_rms": 0.005032612573158584
+      }
+    },
+    "am_7": {
+      "hops": 908,
+      "active_track_hops": 2970,
+      "raw_high_but_modulation_accepted": 666,
+      "rejected_observed_track_hops": 386,
+      "phase_step_weighted_rms": 0.0,
+      "stem_rms": 0.004565027306952851,
+      "output_peak": 0.01709654927253723,
+      "latency_frames": 7140,
+      "callback_p95_ms": 2.1717999887187025,
+      "output_sha256": "01777652e21ff8eaab550bb5462c642880b67cf26ef0da61c2dab3576698261d",
+      "support": {
+        "residual_db": -22.2864701248228,
+        "carrier_rms": 0.004286863412452149,
+        "carrier_amplitudes": {
+          "110.0": 1.357218211629063e-06,
+          "165.0": 0.0039398768969794795,
+          "220.0": 0.004308669687953873,
+          "275.0": 0.0015830292150309396,
+          "330.0": 0.0004014305915730676,
+          "385.0": 9.180266749738554e-07,
+          "440.0": 8.309573740581909e-07
+        },
+        "residual_rms": 0.0003294702003904936,
+        "total_rms": 0.004725275561619194
+      }
+    },
+    "am_11": {
+      "hops": 908,
+      "active_track_hops": 2954,
+      "raw_high_but_modulation_accepted": 1094,
+      "rejected_observed_track_hops": 0,
+      "phase_step_weighted_rms": 0.0,
+      "stem_rms": 0.0043366296713367655,
+      "output_peak": 0.014935553073883057,
+      "latency_frames": 7140,
+      "callback_p95_ms": 2.3553100356366485,
+      "output_sha256": "021839889db7ea9c4c19c99d255d40fa87ec22c54f788922ae7950f9791650b0",
+      "support": {
+        "residual_db": -12.706071493044579,
+        "carrier_rms": 0.003949223027946103,
+        "carrier_amplitudes": {
+          "110.0": 4.228355918508217e-05,
+          "165.0": 0.0036838669050926255,
+          "220.0": 0.003901076374205264,
+          "275.0": 0.00149839171253066,
+          "330.0": 0.0003947871948635715,
+          "385.0": 2.4858864161396644e-05,
+          "440.0": 3.504452425592231e-06
+        },
+        "residual_rms": 0.0009145513308715507,
+        "total_rms": 0.0044264313183814815
+      }
+    },
+    "anchor_0.3_2": {
+      "hops": 908,
+      "active_track_hops": 977,
+      "raw_high_but_modulation_accepted": 0,
+      "rejected_observed_track_hops": 0,
+      "phase_step_weighted_rms": 0.05522800817916521,
+      "stem_rms": 0.00457768141261859,
+      "output_peak": 0.011013750918209553,
+      "latency_frames": 7140,
+      "callback_p95_ms": 1.7690200358629222,
+      "output_sha256": "af2d98977d1ff23fc73ee071331185a17fc68c6098e0e7828523c2a17f6b998b",
+      "support": {
+        "residual_db": -12.989330615079329,
+        "carrier_rms": 0.003979173856629169,
+        "carrier_amplitudes": {
+          "110.0": 3.6530476810223217e-07,
+          "165.0": 0.0024013086049351675,
+          "220.0": 0.004755234789382902,
+          "275.0": 0.0017569760842631205,
+          "330.0": 0.00044960329540057734,
+          "385.0": 1.3018183094486185e-07,
+          "440.0": 9.98322778425394e-08
+        },
+        "residual_rms": 0.0008919209886482524,
+        "total_rms": 0.0046894953209163925
+      }
+    },
+    "anchor_0.3_7": {
+      "hops": 908,
+      "active_track_hops": 977,
+      "raw_high_but_modulation_accepted": 0,
+      "rejected_observed_track_hops": 0,
+      "phase_step_weighted_rms": 0.0762406796481104,
+      "stem_rms": 0.004577788881548976,
+      "output_peak": 0.010409696958959103,
+      "latency_frames": 7140,
+      "callback_p95_ms": 1.897800009464845,
+      "output_sha256": "8818c51ec73e11ff69fc5c183df9430c8c1e299aa21ae833620780460115811d",
+      "support": {
+        "residual_db": -23.230798132335273,
+        "carrier_rms": 0.004530572966650288,
+        "carrier_amplitudes": {
+          "110.0": 8.569571236024502e-07,
+          "165.0": 0.0038885322755349803,
+          "220.0": 0.004757122769659113,
+          "275.0": 0.0017605358006920076,
+          "330.0": 0.00044921639059033097,
+          "385.0": 2.8186254511305e-07,
+          "440.0": 1.545414927891537e-07
+        },
+        "residual_rms": 0.0003123296558546465,
+        "total_rms": 0.0046893295840189555
+      }
+    },
+    "anchor_1.7_2": {
+      "hops": 908,
+      "active_track_hops": 977,
+      "raw_high_but_modulation_accepted": 0,
+      "rejected_observed_track_hops": 0,
+      "phase_step_weighted_rms": 0.05739741112411979,
+      "stem_rms": 0.0045769578247450895,
+      "output_peak": 0.011308436281979084,
+      "latency_frames": 7140,
+      "callback_p95_ms": 1.7598800244741137,
+      "output_sha256": "1eae2f9db9c5ca7bf7790c4ea9732bad5949f2bfd2fa98a0a0212a38e30154de",
+      "support": {
+        "residual_db": -12.19566065631535,
+        "carrier_rms": 0.003923817020217756,
+        "carrier_amplitudes": {
+          "110.0": 1.3440408118095762e-07,
+          "165.0": 0.002215260506515666,
+          "220.0": 0.004753734571994416,
+          "275.0": 0.001756491795349211,
+          "330.0": 0.00044949423493128405,
+          "385.0": 1.762818231825903e-08,
+          "440.0": 1.0419862156930157e-07
+        },
+        "residual_rms": 0.000963664174622283,
+        "total_rms": 0.004688518447304742
+      }
+    },
+    "anchor_1.7_7": {
+      "hops": 908,
+      "active_track_hops": 977,
+      "raw_high_but_modulation_accepted": 0,
+      "rejected_observed_track_hops": 0,
+      "phase_step_weighted_rms": 0.07655619600189631,
+      "stem_rms": 0.004573511788047703,
+      "output_peak": 0.011109467595815659,
+      "latency_frames": 7140,
+      "callback_p95_ms": 1.7714199842885132,
+      "output_sha256": "f1a0750005ab4e9d525c0884e0e31d0e561fedd5ceda9864c9a756f452037f7e",
+      "support": {
+        "residual_db": -23.09442417609711,
+        "carrier_rms": 0.004528920156053014,
+        "carrier_amplitudes": {
+          "110.0": 2.3695666532577168e-07,
+          "165.0": 0.0038924722750766057,
+          "220.0": 0.00475372185459258,
+          "275.0": 0.0017523564404100848,
+          "330.0": 0.0004497448840353147,
+          "385.0": 2.546745017733522e-07,
+          "440.0": 2.766144145687643e-08
+        },
+        "residual_rms": 0.00031715638235139726,
+        "total_rms": 0.00468623962678387
+      }
+    },
+    "rank_cross": {
+      "hops": 908,
+      "active_track_hops": 2469,
+      "raw_high_but_modulation_accepted": 194,
+      "rejected_observed_track_hops": 0,
+      "phase_step_weighted_rms": 0.0032497000532221224,
+      "stem_rms": 0.004033664085901621,
+      "output_peak": 0.014969483017921448,
+      "latency_frames": 7140,
+      "callback_p95_ms": 2.4895399867091323,
+      "output_sha256": "3673dd9247209b19f7e82785a6f6950f9c81720e058b58b03f64d549e61979e2",
+      "support": {
+        "residual_db": -18.79627004048191,
+        "carrier_rms": 0.003599955761192752,
+        "carrier_amplitudes": {
+          "110.0": 1.00319641893561e-06,
+          "165.0": 0.0020285668398792216,
+          "166.0": 0.0037783275975227953,
+          "220.0": 0.0017023486207077038,
+          "249.0": 0.0019331091171194796,
+          "275.0": 0.0006421493460963965,
+          "330.0": 0.0003412969405288692,
+          "332.0": 0.0005958896786025321,
+          "385.0": 1.0245655991925066e-06,
+          "415.0": 9.845003865276211e-05,
+          "440.0": 2.226991826667927e-07,
+          "498.0": 5.613791393973381e-08,
+          "581.0": 9.735278874507483e-08,
+          "664.0": 8.373239466195196e-09
+        },
+        "residual_rms": 0.0004135077579084366,
+        "total_rms": 0.0041139793731762055
+      }
+    },
+    "close_pair": {
+      "hops": 908,
+      "active_track_hops": 1610,
+      "raw_high_but_modulation_accepted": 384,
+      "rejected_observed_track_hops": 96,
+      "phase_step_weighted_rms": 0.0,
+      "stem_rms": 0.005278354409138153,
+      "output_peak": 0.018226269632577896,
+      "latency_frames": 7140,
+      "callback_p95_ms": 2.1208399848546824,
+      "output_sha256": "1a2ec3ca627581e6a1d966a291621399de71b9789955e3c9d891ad5cba3e900e",
+      "support": {
+        "residual_db": 11.490131663280918,
+        "carrier_rms": 0.0014016916045256718,
+        "carrier_amplitudes": {
+          "110.0": 1.631462277253828e-07,
+          "116.0": 1.4184955229628168e-07,
+          "165.0": 0.0019099903699799148,
+          "174.0": 4.813113687859789e-05,
+          "220.0": 0.00043400797587276983,
+          "232.0": 2.8235662651275757e-05,
+          "275.0": 0.00027333356545197225,
+          "290.0": 1.4419586558637409e-05,
+          "330.0": 0.00012249058962515664,
+          "348.0": 3.930728755709332e-06,
+          "385.0": 2.0461962691702146e-07,
+          "406.0": 1.7155687018831394e-07,
+          "440.0": 1.04213551714567e-07,
+          "464.0": 1.6224009678135937e-07
+        },
+        "residual_rms": 0.005262099493662611,
+        "total_rms": 0.005445588163852281
+      }
+    },
+    "note_off": {
+      "hops": 908,
+      "active_track_hops": 590,
+      "raw_high_but_modulation_accepted": 6,
+      "rejected_observed_track_hops": 21,
+      "phase_step_weighted_rms": 0.0,
+      "stem_rms": 0.0032583709062576787,
+      "output_peak": 0.011178023181855679,
+      "latency_frames": 7140,
+      "callback_p95_ms": 1.7338800244033334,
+      "output_sha256": "1354b54512aa7bd2b2a11230a2034ab41428e0a9b3dace7db20f1dd32af724d5",
+      "support": null
+    },
+    "noise": {
+      "hops": 908,
+      "active_track_hops": 6749,
+      "raw_high_but_modulation_accepted": 3190,
+      "rejected_observed_track_hops": 652,
+      "phase_step_weighted_rms": 0.056358966898755976,
+      "stem_rms": 1.3884907997043992e-05,
+      "output_peak": 0.013475972227752209,
+      "latency_frames": 7140,
+      "callback_p95_ms": 2.546590002020821,
+      "output_sha256": "e416347587dcbc418c1a9c1e629668a085e915e4b20ff1ac590f21426de73d6f",
+      "support": null
+    },
+    "silence": {
+      "hops": 908,
+      "active_track_hops": 0,
+      "raw_high_but_modulation_accepted": 0,
+      "rejected_observed_track_hops": 0,
+      "phase_step_weighted_rms": 0.0,
+      "stem_rms": 0.0,
+      "output_peak": 0.0,
+      "latency_frames": 7140,
+      "callback_p95_ms": 0.8392299816478043,
+      "output_sha256": "124617c1f65e92d3bc895fbd869e4bb16a30754b198f59e6e973949b9aaa1b01",
+      "support": null
+    }
+  }
+}

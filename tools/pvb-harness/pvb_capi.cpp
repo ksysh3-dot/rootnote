@@ -56,6 +56,11 @@ struct HostStageCapture {
 
 extern "C" {
 
+int pvb_set_p1plus_research(void* e,unsigned flags) {
+    if(!e || flags>15 || ((flags&8) && !(flags&4))) return 0;
+    static_cast<pvb::Engine*>(e)->setP1PlusResearch(flags);return 1;
+}
+
 int pvb_stage_fields() {return pvb::StageCapture52::kFields;}
 // Attach before process and detach before destroying the engine. Allocation and
 // copying happen outside the audio call. Overflow is explicit, never truncated.

@@ -1,0 +1,2133 @@
+{
+  "schema": "pvb.p1hq.v1",
+  "candidate_sha256": "45b6391ed9cc89f4205a8e43fe00bddd59b3e11a4024df88f4c385297b36007c",
+  "baseline_sha256": "8754172c8d7a93c30ed6bfa847400d9e9bc53829f088394d45643ba85f9d2dd2",
+  "previous_sha256": "c3367cc333f22f80daf6a7fa99c09dc8a493ac36b2f007220485351cd7ae3113",
+  "level_and_latency_are_costs": true,
+  "oracle": [
+    {
+      "flags": 0,
+      "h_nmse_db": -276.25193851346427,
+      "p_nmse_db": -232.27533947898257,
+      "complement_max_error": 5.551115123125783e-17
+    },
+    {
+      "flags": 4,
+      "h_nmse_db": -276.2523862968914,
+      "p_nmse_db": -229.8316911517711,
+      "complement_max_error": 5.551115123125783e-17
+    },
+    {
+      "flags": 6,
+      "h_nmse_db": -276.2523862968914,
+      "p_nmse_db": -229.8316911517711,
+      "complement_max_error": 5.551115123125783e-17
+    },
+    {
+      "flags": 14,
+      "h_nmse_db": -276.2523599686103,
+      "p_nmse_db": -232.20274905065423,
+      "complement_max_error": 5.551115123125783e-17
+    }
+  ],
+  "engineering": [
+    {
+      "fs": 44100,
+      "default_bit_exact": true,
+      "phase_v01_bit_exact": true,
+      "block_and_capture_bit_exact": true,
+      "prefix_causal": true,
+      "reset": true,
+      "other_profiles_bit_exact": true,
+      "latency": 7737,
+      "extra_latency_frames": 1176,
+      "extra_latency_ms": 26.666666666666668,
+      "steady_aligned_nmse_db": -100.04250796422822
+    },
+    {
+      "fs": 48000,
+      "default_bit_exact": true,
+      "phase_v01_bit_exact": true,
+      "block_and_capture_bit_exact": true,
+      "prefix_causal": true,
+      "reset": true,
+      "other_profiles_bit_exact": true,
+      "latency": 8420,
+      "extra_latency_frames": 1280,
+      "extra_latency_ms": 26.666666666666668,
+      "steady_aligned_nmse_db": -100.03879090802941
+    }
+  ],
+  "mixtures": {
+    "dev_mix_0": {
+      "description": {
+        "frequency": 55,
+        "am_rate": 0,
+        "noise_width": 0.012,
+        "short_notes": false
+      },
+      "variants": {
+        "0": {
+          "h_error_nmse_db": -24.148004258961137,
+          "p_error_nmse_db": -0.0037488150697303733,
+          "h_gain_change_db": -0.46861533564370883,
+          "h_error_peak": 0.026777758273170242,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -44.25456110828555,
+          "stem_rms_dbfs": -49.317020971484254,
+          "latency": 7140
+        },
+        "2": {
+          "h_error_nmse_db": -24.148004258961137,
+          "p_error_nmse_db": -0.0037488150697303733,
+          "h_gain_change_db": -0.46861533564370883,
+          "h_error_peak": 0.026777758273170242,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -44.25324619850131,
+          "stem_rms_dbfs": -49.31596846620796,
+          "latency": 7140
+        },
+        "4": {
+          "h_error_nmse_db": -23.78151094135346,
+          "p_error_nmse_db": 0.36274449213409143,
+          "h_gain_change_db": -0.46664138864843996,
+          "h_error_peak": 0.030417118987768506,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -44.257773633068,
+          "stem_rms_dbfs": -49.326544344476986,
+          "latency": 8420
+        },
+        "6": {
+          "h_error_nmse_db": -23.78151094135346,
+          "p_error_nmse_db": 0.36274449213409143,
+          "h_gain_change_db": -0.46664138864843996,
+          "h_error_peak": 0.030417118987768506,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -44.25663481955249,
+          "stem_rms_dbfs": -49.32612797100098,
+          "latency": 8420
+        },
+        "14": {
+          "h_error_nmse_db": -24.1115108626447,
+          "p_error_nmse_db": 0.03274458189258967,
+          "h_gain_change_db": -0.4679957561628317,
+          "h_error_peak": 0.02853756334471652,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -44.25778991040174,
+          "stem_rms_dbfs": -49.329308103601846,
+          "latency": 8420
+        }
+      }
+    },
+    "dev_mix_1": {
+      "description": {
+        "frequency": 72,
+        "am_rate": 5,
+        "noise_width": 0.012,
+        "short_notes": false
+      },
+      "variants": {
+        "0": {
+          "h_error_nmse_db": -23.650348175392203,
+          "p_error_nmse_db": -3.52647653519722,
+          "h_gain_change_db": -0.3460644226482089,
+          "h_error_peak": 0.035813452672239204,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -43.459410926212854,
+          "stem_rms_dbfs": -47.87060000521307,
+          "latency": 7140
+        },
+        "2": {
+          "h_error_nmse_db": -23.650348175392203,
+          "p_error_nmse_db": -3.52647653519722,
+          "h_gain_change_db": -0.3460644226482089,
+          "h_error_peak": 0.035813452672239204,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -43.4435594411352,
+          "stem_rms_dbfs": -47.87147817243516,
+          "latency": 7140
+        },
+        "4": {
+          "h_error_nmse_db": -22.757895180722404,
+          "p_error_nmse_db": -2.6340235427500778,
+          "h_gain_change_db": -0.29798313653656017,
+          "h_error_peak": 0.04711590817949152,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -43.48762324449052,
+          "stem_rms_dbfs": -47.94799705548609,
+          "latency": 8420
+        },
+        "6": {
+          "h_error_nmse_db": -22.757895180722404,
+          "p_error_nmse_db": -2.6340235427500778,
+          "h_gain_change_db": -0.29798313653656017,
+          "h_error_peak": 0.04711590817949152,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -43.47598767498496,
+          "stem_rms_dbfs": -47.948911527485535,
+          "latency": 8420
+        },
+        "14": {
+          "h_error_nmse_db": -23.803186098833034,
+          "p_error_nmse_db": -3.67931445727278,
+          "h_gain_change_db": -0.31178106264920175,
+          "h_error_peak": 0.0393319760627083,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -43.44930212216198,
+          "stem_rms_dbfs": -47.87703287628552,
+          "latency": 8420
+        }
+      }
+    },
+    "dev_mix_2": {
+      "description": {
+        "frequency": 83,
+        "am_rate": 0,
+        "noise_width": 0.012,
+        "short_notes": true
+      },
+      "variants": {
+        "0": {
+          "h_error_nmse_db": -11.058722137821116,
+          "p_error_nmse_db": 1.516162621424118,
+          "h_gain_change_db": -1.6450754185196137,
+          "h_error_peak": 0.02943017332475711,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -45.777508488606244,
+          "stem_rms_dbfs": -62.484659887288444,
+          "latency": 7140
+        },
+        "2": {
+          "h_error_nmse_db": -11.058722137821116,
+          "p_error_nmse_db": 1.516162621424118,
+          "h_gain_change_db": -1.6450754185196137,
+          "h_error_peak": 0.02943017332475711,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -45.777508488606244,
+          "stem_rms_dbfs": -62.484659887288444,
+          "latency": 7140
+        },
+        "4": {
+          "h_error_nmse_db": -17.176741041656868,
+          "p_error_nmse_db": -4.601856282411638,
+          "h_gain_change_db": -0.5145654335010956,
+          "h_error_peak": 0.018032161191721872,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -45.74976932634404,
+          "stem_rms_dbfs": -61.371295685663256,
+          "latency": 8420
+        },
+        "6": {
+          "h_error_nmse_db": -17.176741041656868,
+          "p_error_nmse_db": -4.601856282411638,
+          "h_gain_change_db": -0.5145654335010956,
+          "h_error_peak": 0.018032161191721872,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -45.74976932634404,
+          "stem_rms_dbfs": -61.371295685663256,
+          "latency": 8420
+        },
+        "14": {
+          "h_error_nmse_db": -19.057552170521646,
+          "p_error_nmse_db": -6.482667411276418,
+          "h_gain_change_db": -0.6722555506106456,
+          "h_error_peak": 0.012804996880188449,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -45.754479150531736,
+          "stem_rms_dbfs": -61.50755389418718,
+          "latency": 8420
+        }
+      }
+    },
+    "dev_mix_3": {
+      "description": {
+        "frequency": 64,
+        "am_rate": 0,
+        "noise_width": 0.012,
+        "short_notes": false
+      },
+      "variants": {
+        "0": {
+          "h_error_nmse_db": -28.566628093174764,
+          "p_error_nmse_db": -4.956608269849699,
+          "h_gain_change_db": -0.17652102672721987,
+          "h_error_peak": 0.018633404355894084,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -43.07087482791943,
+          "stem_rms_dbfs": -47.20693815476786,
+          "latency": 7140
+        },
+        "2": {
+          "h_error_nmse_db": -28.566628093174764,
+          "p_error_nmse_db": -4.956608269849699,
+          "h_gain_change_db": -0.17652102672721987,
+          "h_error_peak": 0.018633404355894084,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -43.06971744947706,
+          "stem_rms_dbfs": -47.208282018317185,
+          "latency": 7140
+        },
+        "4": {
+          "h_error_nmse_db": -27.51964035361416,
+          "p_error_nmse_db": -3.909620560180965,
+          "h_gain_change_db": -0.1736453660864442,
+          "h_error_peak": 0.02850649286605708,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -43.09347269519752,
+          "stem_rms_dbfs": -47.24411709659263,
+          "latency": 8420
+        },
+        "6": {
+          "h_error_nmse_db": -27.51964035361416,
+          "p_error_nmse_db": -3.909620560180965,
+          "h_gain_change_db": -0.1736453660864442,
+          "h_error_peak": 0.02850649286605708,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -43.090902643568974,
+          "stem_rms_dbfs": -47.24264286575291,
+          "latency": 8420
+        },
+        "14": {
+          "h_error_nmse_db": -28.441210338709357,
+          "p_error_nmse_db": -4.831190517334219,
+          "h_gain_change_db": -0.17517283141765583,
+          "h_error_peak": 0.01939292422114866,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -43.091891511057874,
+          "stem_rms_dbfs": -47.245378653024616,
+          "latency": 8420
+        }
+      }
+    },
+    "held_mix_0": {
+      "description": {
+        "frequency": 60.86526399563041,
+        "am_rate": 1.6132176857921667,
+        "noise_width": 0.025800086086781977,
+        "short_notes": false
+      },
+      "variants": {
+        "0": {
+          "h_error_nmse_db": -25.756565202360395,
+          "p_error_nmse_db": -4.356394989845279,
+          "h_gain_change_db": -0.024369924360368292,
+          "h_error_peak": 0.030745053676071697,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -41.692899635535795,
+          "stem_rms_dbfs": -48.80004050561184,
+          "latency": 7140
+        },
+        "2": {
+          "h_error_nmse_db": -25.756565202360395,
+          "p_error_nmse_db": -4.356394989845279,
+          "h_gain_change_db": -0.024369924360368292,
+          "h_error_peak": 0.030745053676071697,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -41.70493099078125,
+          "stem_rms_dbfs": -48.802352956505466,
+          "latency": 7140
+        },
+        "4": {
+          "h_error_nmse_db": -24.870888537107028,
+          "p_error_nmse_db": -3.470718302734876,
+          "h_gain_change_db": -0.021945789011806757,
+          "h_error_peak": 0.03534117875517847,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -41.70189405003313,
+          "stem_rms_dbfs": -48.84306960861741,
+          "latency": 8420
+        },
+        "6": {
+          "h_error_nmse_db": -24.870888537107028,
+          "p_error_nmse_db": -3.470718302734876,
+          "h_gain_change_db": -0.021945789011806757,
+          "h_error_peak": 0.03534117875517847,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -41.710461779680884,
+          "stem_rms_dbfs": -48.8505873756592,
+          "latency": 8420
+        },
+        "14": {
+          "h_error_nmse_db": -25.66532601161255,
+          "p_error_nmse_db": -4.265155792295685,
+          "h_gain_change_db": -0.0240726349454479,
+          "h_error_peak": 0.031152743749382976,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -41.7095310795022,
+          "stem_rms_dbfs": -48.82299718634258,
+          "latency": 8420
+        }
+      }
+    },
+    "held_mix_1": {
+      "description": {
+        "frequency": 98.92383113515433,
+        "am_rate": 2.1659211885367844,
+        "noise_width": 0.023248385985346322,
+        "short_notes": false
+      },
+      "variants": {
+        "0": {
+          "h_error_nmse_db": -23.709364199090956,
+          "p_error_nmse_db": -5.258455427855015,
+          "h_gain_change_db": -0.2374236659654545,
+          "h_error_peak": 0.03916488694510601,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -39.482599567866004,
+          "stem_rms_dbfs": -43.48534261813684,
+          "latency": 7140
+        },
+        "2": {
+          "h_error_nmse_db": -23.709364199090956,
+          "p_error_nmse_db": -5.258455427855015,
+          "h_gain_change_db": -0.2374236659654545,
+          "h_error_peak": 0.03916488694510601,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -39.461249929632956,
+          "stem_rms_dbfs": -43.48328419416749,
+          "latency": 7140
+        },
+        "4": {
+          "h_error_nmse_db": -22.409323521251743,
+          "p_error_nmse_db": -3.958414747552097,
+          "h_gain_change_db": -0.2236619808358865,
+          "h_error_peak": 0.044538427277384614,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -39.516336519548716,
+          "stem_rms_dbfs": -43.54135617356356,
+          "latency": 8420
+        },
+        "6": {
+          "h_error_nmse_db": -22.409323521251743,
+          "p_error_nmse_db": -3.958414747552097,
+          "h_gain_change_db": -0.2236619808358865,
+          "h_error_peak": 0.044538427277384614,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -39.49526648548896,
+          "stem_rms_dbfs": -43.53986914344176,
+          "latency": 8420
+        },
+        "14": {
+          "h_error_nmse_db": -23.570148341276443,
+          "p_error_nmse_db": -5.119239574668951,
+          "h_gain_change_db": -0.23006523175281987,
+          "h_error_peak": 0.03983763606905254,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -39.47400043844495,
+          "stem_rms_dbfs": -43.501623326202676,
+          "latency": 8420
+        }
+      }
+    },
+    "held_mix_2": {
+      "description": {
+        "frequency": 43.4378169700836,
+        "am_rate": 4.336722020716077,
+        "noise_width": 0.007288679365245632,
+        "short_notes": true
+      },
+      "variants": {
+        "0": {
+          "h_error_nmse_db": -15.032460781665392,
+          "p_error_nmse_db": -0.929565816486847,
+          "h_gain_change_db": -0.8821766281220105,
+          "h_error_peak": 0.014672956621380021,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -48.01029202477583,
+          "stem_rms_dbfs": -71.65241064485892,
+          "latency": 7140
+        },
+        "2": {
+          "h_error_nmse_db": -15.032460781665392,
+          "p_error_nmse_db": -0.929565816486847,
+          "h_gain_change_db": -0.8821766281220105,
+          "h_error_peak": 0.014672956621380021,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -48.01029202477583,
+          "stem_rms_dbfs": -71.65241064485892,
+          "latency": 7140
+        },
+        "4": {
+          "h_error_nmse_db": -20.55797564842947,
+          "p_error_nmse_db": -6.455080683250918,
+          "h_gain_change_db": -0.23712870957565055,
+          "h_error_peak": 0.011945750536550285,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -48.00720195073077,
+          "stem_rms_dbfs": -71.30692823059378,
+          "latency": 8420
+        },
+        "6": {
+          "h_error_nmse_db": -20.55797564842947,
+          "p_error_nmse_db": -6.455080683250918,
+          "h_gain_change_db": -0.23712870957565055,
+          "h_error_peak": 0.011945750536550285,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -48.00720195073077,
+          "stem_rms_dbfs": -71.30692823059378,
+          "latency": 8420
+        },
+        "14": {
+          "h_error_nmse_db": -24.345347088527557,
+          "p_error_nmse_db": -10.24245212334899,
+          "h_gain_change_db": -0.27027144821784344,
+          "h_error_peak": 0.00833649118937452,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -48.00267396309639,
+          "stem_rms_dbfs": -70.222433222895,
+          "latency": 8420
+        }
+      }
+    },
+    "held_mix_3": {
+      "description": {
+        "frequency": 83.29004129004069,
+        "am_rate": 4.134793809409087,
+        "noise_width": 0.027536626195920746,
+        "short_notes": false
+      },
+      "variants": {
+        "0": {
+          "h_error_nmse_db": -24.750247458840864,
+          "p_error_nmse_db": -3.817484739520829,
+          "h_gain_change_db": -0.13316636310031518,
+          "h_error_peak": 0.029625503024643257,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -39.3726117614795,
+          "stem_rms_dbfs": -43.96186019387364,
+          "latency": 7140
+        },
+        "2": {
+          "h_error_nmse_db": -24.750247458840864,
+          "p_error_nmse_db": -3.817484739520829,
+          "h_gain_change_db": -0.13316636310031518,
+          "h_error_peak": 0.029625503024643257,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -39.36802300438438,
+          "stem_rms_dbfs": -43.95923079302301,
+          "latency": 7140
+        },
+        "4": {
+          "h_error_nmse_db": -23.89491375075034,
+          "p_error_nmse_db": -2.9621510330470233,
+          "h_gain_change_db": -0.1287452885609631,
+          "h_error_peak": 0.03725778143492117,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -39.38464665148097,
+          "stem_rms_dbfs": -43.976704984490254,
+          "latency": 8420
+        },
+        "6": {
+          "h_error_nmse_db": -23.89491375075034,
+          "p_error_nmse_db": -2.9621510330470233,
+          "h_gain_change_db": -0.1287452885609631,
+          "h_error_peak": 0.03725778143492117,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -39.379097920784126,
+          "stem_rms_dbfs": -43.97236552387217,
+          "latency": 8420
+        },
+        "14": {
+          "h_error_nmse_db": -24.512693597668388,
+          "p_error_nmse_db": -3.579930878911898,
+          "h_gain_change_db": -0.13136252453192454,
+          "h_error_peak": 0.032203288856951645,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -39.379568526592976,
+          "stem_rms_dbfs": -43.975520477424574,
+          "latency": 8420
+        }
+      }
+    },
+    "held_mix_4": {
+      "description": {
+        "frequency": 70.20516046590961,
+        "am_rate": 5.170549244226724,
+        "noise_width": 0.02623363894396675,
+        "short_notes": false
+      },
+      "variants": {
+        "0": {
+          "h_error_nmse_db": -21.312215007711345,
+          "p_error_nmse_db": 1.2731731763572773,
+          "h_gain_change_db": -0.6208500096141585,
+          "h_error_peak": 0.03852603984216022,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -41.475703580018475,
+          "stem_rms_dbfs": -48.664693148076516,
+          "latency": 7140
+        },
+        "2": {
+          "h_error_nmse_db": -21.312215007711345,
+          "p_error_nmse_db": 1.2731731763572773,
+          "h_gain_change_db": -0.6208500096141585,
+          "h_error_peak": 0.03852603984216022,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -41.45890623612469,
+          "stem_rms_dbfs": -48.64142634571978,
+          "latency": 7140
+        },
+        "4": {
+          "h_error_nmse_db": -21.867785187990453,
+          "p_error_nmse_db": 0.7176029988743367,
+          "h_gain_change_db": -0.5582033909468326,
+          "h_error_peak": 0.03724540146540202,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -41.473998848777576,
+          "stem_rms_dbfs": -48.64786799253794,
+          "latency": 8420
+        },
+        "6": {
+          "h_error_nmse_db": -21.867785187990453,
+          "p_error_nmse_db": 0.7176029988743367,
+          "h_gain_change_db": -0.5582033909468326,
+          "h_error_peak": 0.03724540146540202,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -41.45714670995207,
+          "stem_rms_dbfs": -48.62494114858055,
+          "latency": 8420
+        },
+        "14": {
+          "h_error_nmse_db": -21.923439412341708,
+          "p_error_nmse_db": 0.6619487669698448,
+          "h_gain_change_db": -0.5689546474679301,
+          "h_error_peak": 0.038653780712747554,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -41.45935102149834,
+          "stem_rms_dbfs": -48.636541789241086,
+          "latency": 8420
+        }
+      }
+    },
+    "held_mix_5": {
+      "description": {
+        "frequency": 98.071687757836,
+        "am_rate": 8.910497194071304,
+        "noise_width": 0.025691416929634787,
+        "short_notes": false
+      },
+      "variants": {
+        "0": {
+          "h_error_nmse_db": -20.472690041937526,
+          "p_error_nmse_db": -2.64700984062686,
+          "h_gain_change_db": -0.3618946115016883,
+          "h_error_peak": 0.04960749431106908,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -39.60276947194683,
+          "stem_rms_dbfs": -44.177357773490684,
+          "latency": 7140
+        },
+        "2": {
+          "h_error_nmse_db": -20.472690041937526,
+          "p_error_nmse_db": -2.64700984062686,
+          "h_gain_change_db": -0.3618946115016883,
+          "h_error_peak": 0.04960749431106908,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -39.59684118514915,
+          "stem_rms_dbfs": -44.18087648843198,
+          "latency": 7140
+        },
+        "4": {
+          "h_error_nmse_db": -20.560584278964708,
+          "p_error_nmse_db": -2.73490408386164,
+          "h_gain_change_db": -0.27890640701234104,
+          "h_error_peak": 0.06456590963636252,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -39.657922969254,
+          "stem_rms_dbfs": -44.35509861157273,
+          "latency": 8420
+        },
+        "6": {
+          "h_error_nmse_db": -20.560584278964708,
+          "p_error_nmse_db": -2.73490408386164,
+          "h_gain_change_db": -0.27890640701234104,
+          "h_error_peak": 0.06456590963636252,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -39.65440094878364,
+          "stem_rms_dbfs": -44.357127923322054,
+          "latency": 8420
+        },
+        "14": {
+          "h_error_nmse_db": -21.09315248791544,
+          "p_error_nmse_db": -3.2674722804752014,
+          "h_gain_change_db": -0.2936293786959444,
+          "h_error_peak": 0.050716571380247266,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -39.6073076180011,
+          "stem_rms_dbfs": -44.2111580185734,
+          "latency": 8420
+        }
+      }
+    },
+    "held_mix_6": {
+      "description": {
+        "frequency": 71.75779985446957,
+        "am_rate": 6.631610002772485,
+        "noise_width": 0.02072272040317978,
+        "short_notes": true
+      },
+      "variants": {
+        "0": {
+          "h_error_nmse_db": -9.417539374237519,
+          "p_error_nmse_db": 0.11617027451559003,
+          "h_gain_change_db": -2.216452875457356,
+          "h_error_peak": 0.045997041842307546,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -43.57043126473276,
+          "stem_rms_dbfs": -63.87866353964093,
+          "latency": 7140
+        },
+        "2": {
+          "h_error_nmse_db": -9.417539374237519,
+          "p_error_nmse_db": 0.11617027451559003,
+          "h_gain_change_db": -2.216452875457356,
+          "h_error_peak": 0.045997041842307546,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -43.57043126473276,
+          "stem_rms_dbfs": -63.87866353964093,
+          "latency": 7140
+        },
+        "4": {
+          "h_error_nmse_db": -13.406519182969914,
+          "p_error_nmse_db": -3.872809534218548,
+          "h_gain_change_db": -0.7619976558744108,
+          "h_error_peak": 0.03207442150507502,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -43.559283496716986,
+          "stem_rms_dbfs": -62.83018354811132,
+          "latency": 8420
+        },
+        "6": {
+          "h_error_nmse_db": -13.406519182969914,
+          "p_error_nmse_db": -3.872809534218548,
+          "h_gain_change_db": -0.7619976558744108,
+          "h_error_peak": 0.03207442150507502,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -43.559283496716986,
+          "stem_rms_dbfs": -62.83018354811132,
+          "latency": 8420
+        },
+        "14": {
+          "h_error_nmse_db": -14.610292061458978,
+          "p_error_nmse_db": -5.07658241270677,
+          "h_gain_change_db": -0.981395913481355,
+          "h_error_peak": 0.027874310912974796,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -43.560114367205244,
+          "stem_rms_dbfs": -62.92864472419164,
+          "latency": 8420
+        }
+      }
+    },
+    "held_mix_7": {
+      "description": {
+        "frequency": 80.00295460650342,
+        "am_rate": 4.645700711434457,
+        "noise_width": 0.014805847939232588,
+        "short_notes": false
+      },
+      "variants": {
+        "0": {
+          "h_error_nmse_db": -25.772228074612883,
+          "p_error_nmse_db": -2.765988416826726,
+          "h_gain_change_db": -0.16136917181779342,
+          "h_error_peak": 0.035567225321759544,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -40.93588968256097,
+          "stem_rms_dbfs": -44.49519639990946,
+          "latency": 7140
+        },
+        "2": {
+          "h_error_nmse_db": -25.772228074612883,
+          "p_error_nmse_db": -2.765988416826726,
+          "h_gain_change_db": -0.16136917181779342,
+          "h_error_peak": 0.035567225321759544,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -40.94453516952547,
+          "stem_rms_dbfs": -44.496604383461246,
+          "latency": 7140
+        },
+        "4": {
+          "h_error_nmse_db": -25.12073742886768,
+          "p_error_nmse_db": -2.1144977545483585,
+          "h_gain_change_db": -0.15886530064186727,
+          "h_error_peak": 0.04566200704434159,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -40.96108502757147,
+          "stem_rms_dbfs": -44.53310998540299,
+          "latency": 8420
+        },
+        "6": {
+          "h_error_nmse_db": -25.12073742886768,
+          "p_error_nmse_db": -2.1144977545483585,
+          "h_gain_change_db": -0.15886530064186727,
+          "h_error_peak": 0.04566200704434159,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -40.96796048544788,
+          "stem_rms_dbfs": -44.53395713673176,
+          "latency": 8420
+        },
+        "14": {
+          "h_error_nmse_db": -25.592924796070484,
+          "p_error_nmse_db": -2.5866851358473193,
+          "h_gain_change_db": -0.16041105194938537,
+          "h_error_peak": 0.03839112268929526,
+          "source_evaluation_start_core": 900,
+          "source_evaluation_end_core": 11940,
+          "full_mix_rms_dbfs": -40.96721813924128,
+          "stem_rms_dbfs": -44.53489831175874,
+          "latency": 8420
+        }
+      }
+    }
+  },
+  "phase": {
+    "44100": [
+      {
+        "name": "phase_holdout_0",
+        "f": 52.457750000624124,
+        "rate": 2.29175461476658,
+        "phase": 2.2020245866638577,
+        "variants": {
+          "0": {
+            "support": {
+              "residual_db": -19.048475983202767,
+              "carrier_rms": 0.003549878155516101,
+              "carrier_amplitudes": {
+                "104.915500001": 9.984187590252164e-07,
+                "157.373250002": 0.001586202881750375,
+                "209.831000002": 0.004304635296033984,
+                "262.288750003": 0.0019406326673253077,
+                "314.746500004": 0.0006255309707935433,
+                "367.204250004": 2.575556008837975e-07,
+                "419.662000005": 1.26487375914802e-07
+              },
+              "residual_rms": 0.00039608614177442475,
+              "total_rms": 0.0037622215157913927
+            },
+            "latency": 6561
+          },
+          "2": {
+            "support": {
+              "residual_db": -48.48013164544427,
+              "carrier_rms": 0.0037604409645256008,
+              "carrier_amplitudes": {
+                "104.915500001": 5.082781244283835e-08,
+                "157.373250002": 0.0023640276054937757,
+                "209.831000002": 0.004305116287626082,
+                "262.288750003": 0.001941067256893588,
+                "314.746500004": 0.000625649763740727,
+                "367.204250004": 2.042789613944498e-08,
+                "419.662000005": 1.3800581462182556e-08
+              },
+              "residual_rms": 1.416550927440322e-05,
+              "total_rms": 0.003765336482451879
+            },
+            "latency": 6561
+          },
+          "6": {
+            "support": {
+              "residual_db": -48.34292204295954,
+              "carrier_rms": 0.0037605140510295486,
+              "carrier_amplitudes": {
+                "104.915500001": 9.843971372841343e-08,
+                "157.373250002": 0.002364035162652895,
+                "209.831000002": 0.004305237265476402,
+                "262.288750003": 0.0019410671507232333,
+                "314.746500004": 0.0006256676434674539,
+                "367.204250004": 1.4804668582196922e-08,
+                "419.662000005": 8.174387398165681e-09
+              },
+              "residual_rms": 1.4391336021625697e-05,
+              "total_rms": 0.00375825484553019
+            },
+            "latency": 7737
+          },
+          "14": {
+            "support": {
+              "residual_db": -48.34244033398111,
+              "carrier_rms": 0.0037605126956832156,
+              "carrier_amplitudes": {
+                "104.915500001": 9.846660452890403e-08,
+                "157.373250002": 0.002364034236324418,
+                "209.831000002": 0.004305235685404388,
+                "262.288750003": 0.0019410666091430836,
+                "314.746500004": 0.000625667403885475,
+                "367.204250004": 1.4740994274480139e-08,
+                "419.662000005": 8.242215193409137e-09
+              },
+              "residual_rms": 1.4392128982777576e-05,
+              "total_rms": 0.0037582535487696235
+            },
+            "latency": 7737
+          }
+        }
+      },
+      {
+        "name": "phase_holdout_1",
+        "f": 83.7084368591963,
+        "rate": 3.771299173138466,
+        "phase": -2.3088371676885315,
+        "variants": {
+          "0": {
+            "support": {
+              "residual_db": -12.661071106288869,
+              "carrier_rms": 0.005557140029356129,
+              "carrier_amplitudes": {
+                "167.416873718": 0.006014938066672662,
+                "251.125310578": 0.004879568980341982,
+                "334.833747437": 0.0013103711586135956,
+                "418.542184296": 0.00023846266368967794,
+                "502.250621155": 3.125468346229163e-07,
+                "585.959058014": 1.9329219304784812e-07,
+                "669.667494874": 2.8561024989812606e-07
+              },
+              "residual_rms": 0.001293593381827454,
+              "total_rms": 0.006948695671910493
+            },
+            "latency": 6561
+          },
+          "2": {
+            "support": {
+              "residual_db": -31.961620343172644,
+              "carrier_rms": 0.006964030479608646,
+              "carrier_amplitudes": {
+                "167.416873718": 0.008438905690081476,
+                "251.125310578": 0.004899734667000583,
+                "334.833747437": 0.0013098972455943747,
+                "418.542184296": 0.00023891667994628945,
+                "502.250621155": 7.466088425001586e-08,
+                "585.959058014": 5.8471510402697726e-08,
+                "669.667494874": 7.598798524942982e-08
+              },
+              "residual_rms": 0.00017570318984804306,
+              "total_rms": 0.0069647396848737725
+            },
+            "latency": 6561
+          },
+          "6": {
+            "support": {
+              "residual_db": -31.986218408922234,
+              "carrier_rms": 0.006963992919836359,
+              "carrier_amplitudes": {
+                "167.416873718": 0.00843898737814801,
+                "251.125310578": 0.004899494685582137,
+                "334.833747437": 0.001309883339837858,
+                "418.542184296": 0.00023883940002503336,
+                "502.250621155": 5.447654342528131e-08,
+                "585.959058014": 4.7755836566316595e-08,
+                "669.667494874": 6.508008341124508e-08
+              },
+              "residual_rms": 0.00017520536492038783,
+              "total_rms": 0.006965979536544946
+            },
+            "latency": 7737
+          },
+          "14": {
+            "support": {
+              "residual_db": -31.985796866388803,
+              "carrier_rms": 0.006963998268302814,
+              "carrier_amplitudes": {
+                "167.416873718": 0.008438992295331318,
+                "251.125310578": 0.0048995008772524905,
+                "334.833747437": 0.0013098852349596876,
+                "418.542184296": 0.00023884014893377702,
+                "502.250621155": 5.442077338369519e-08,
+                "585.959058014": 4.780433448595831e-08,
+                "669.667494874": 6.507643338042967e-08
+              },
+              "residual_rms": 0.00017521400273933145,
+              "total_rms": 0.006965985007788449
+            },
+            "latency": 7737
+          }
+        }
+      },
+      {
+        "name": "phase_holdout_2",
+        "f": 58.65275112528653,
+        "rate": 7.865369511477804,
+        "phase": 0.07212921642807268,
+        "variants": {
+          "0": {
+            "support": {
+              "residual_db": -23.470033882800454,
+              "carrier_rms": 0.004720901266070339,
+              "carrier_amplitudes": {
+                "117.305502251": 6.252138875928566e-07,
+                "175.958253376": 0.005074492755750345,
+                "234.611004501": 0.004067601092003509,
+                "293.263755626": 0.0014876869551535155,
+                "351.916506752": 0.0002544554158270787,
+                "410.569257877": 1.3054920240501201e-06,
+                "469.222009002": 1.6049516807257927e-07
+              },
+              "residual_rms": 0.0003166089762362228,
+              "total_rms": 0.004943340417542868
+            },
+            "latency": 6561
+          },
+          "2": {
+            "support": {
+              "residual_db": -48.32194982725532,
+              "carrier_rms": 0.004947216765250848,
+              "carrier_amplitudes": {
+                "117.305502251": 1.1982396578997512e-07,
+                "175.958253376": 0.005489526402238397,
+                "234.611004501": 0.004066796487288196,
+                "293.263755626": 0.0014870723729115038,
+                "351.916506752": 0.00025453758136759143,
+                "410.569257877": 1.3280798544958175e-07,
+                "469.222009002": 1.628565542712001e-08
+              },
+              "residual_rms": 1.8978568350263767e-05,
+              "total_rms": 0.004947808168068274
+            },
+            "latency": 6561
+          },
+          "6": {
+            "support": {
+              "residual_db": -48.315210223575946,
+              "carrier_rms": 0.004947227651288978,
+              "carrier_amplitudes": {
+                "117.305502251": 9.731786954934567e-08,
+                "175.958253376": 0.005489519566772165,
+                "234.611004501": 0.004066829939279679,
+                "293.263755626": 0.0014870795724915085,
+                "351.916506752": 0.00025453164111313063,
+                "410.569257877": 1.3239092679966107e-07,
+                "469.222009002": 1.0634964039404273e-08
+              },
+              "residual_rms": 1.899334181447395e-05,
+              "total_rms": 0.004946574173687236
+            },
+            "latency": 7737
+          },
+          "14": {
+            "support": {
+              "residual_db": -48.31463926467226,
+              "carrier_rms": 0.004947227380422145,
+              "carrier_amplitudes": {
+                "117.305502251": 9.728210372184337e-08,
+                "175.958253376": 0.0054895193055522346,
+                "234.611004501": 0.004066829719616836,
+                "293.263755626": 0.0014870793343101996,
+                "351.916506752": 0.00025453164668808704,
+                "410.569257877": 1.3240937075599368e-07,
+                "469.222009002": 1.0650111147675441e-08
+              },
+              "residual_rms": 1.8994589325250016e-05,
+              "total_rms": 0.0049465738854403436
+            },
+            "latency": 7737
+          }
+        }
+      },
+      {
+        "name": "phase_holdout_3",
+        "f": 75.69304368888194,
+        "rate": 3.4265583191666122,
+        "phase": -1.078208356574148,
+        "variants": {
+          "0": {
+            "support": {
+              "residual_db": -31.71359979084194,
+              "carrier_rms": 0.005646253892021548,
+              "carrier_amplitudes": {
+                "151.386087378": 0.002216124644963371,
+                "227.079131067": 0.007382557243728929,
+                "302.772174756": 0.0020165252374299155,
+                "378.465218444": 0.0005297471008960712,
+                "454.158262133": 1.4633264284479587e-07,
+                "529.851305822": 1.0768792516175105e-07,
+                "605.544349511": 2.6510179573633613e-07
+              },
+              "residual_rms": 0.0001465819224977191,
+              "total_rms": 0.005662349424083412
+            },
+            "latency": 6561
+          },
+          "2": {
+            "support": {
+              "residual_db": -41.14700012739973,
+              "carrier_rms": 0.005664461091937611,
+              "carrier_amplitudes": {
+                "151.386087378": 0.002301312206616459,
+                "227.079131067": 0.007384421944606965,
+                "302.772174756": 0.0020163608590360086,
+                "378.465218444": 0.000529907899007053,
+                "454.158262133": 1.491865157236188e-07,
+                "529.851305822": 6.369005984429638e-08,
+                "605.544349511": 2.724696402184034e-07
+              },
+              "residual_rms": 4.963735045926003e-05,
+              "total_rms": 0.005664053187960752
+            },
+            "latency": 6561
+          },
+          "6": {
+            "support": {
+              "residual_db": -41.05534506467079,
+              "carrier_rms": 0.005664489209318543,
+              "carrier_amplitudes": {
+                "151.386087378": 0.0023012976234169998,
+                "227.079131067": 0.007384462972916047,
+                "302.772174756": 0.0020163863105931326,
+                "378.465218444": 0.0005299037633685217,
+                "454.158262133": 1.4636327716753253e-07,
+                "529.851305822": 6.793473855008013e-08,
+                "605.544349511": 2.7756577033314994e-07
+              },
+              "residual_rms": 5.016415494187494e-05,
+              "total_rms": 0.005664152024932886
+            },
+            "latency": 7737
+          },
+          "14": {
+            "support": {
+              "residual_db": -41.05416758271854,
+              "carrier_rms": 0.005664490894695425,
+              "carrier_amplitudes": {
+                "151.386087378": 0.002301297401808982,
+                "227.079131067": 0.00738446580375077,
+                "302.772174756": 0.0020163857082106038,
+                "378.465218444": 0.0005299036011982085,
+                "454.158262133": 1.4619224593001283e-07,
+                "529.851305822": 6.759994104459265e-08,
+                "605.544349511": 2.775909855246165e-07
+              },
+              "residual_rms": 5.0170970714639e-05,
+              "total_rms": 0.0056641537687974084
+            },
+            "latency": 7737
+          }
+        }
+      },
+      {
+        "name": "phase_holdout_4",
+        "f": 56.5093760878634,
+        "rate": 2.0158857858638863,
+        "phase": 2.8827042501545233,
+        "variants": {
+          "0": {
+            "support": {
+              "residual_db": -16.463951037232334,
+              "carrier_rms": 0.004492611486278839,
+              "carrier_amplitudes": {
+                "113.018752176": 1.6001301408752273e-06,
+                "169.528128264": 0.00411680223781993,
+                "226.037504351": 0.00452802720711343,
+                "282.546880439": 0.0016681092884873593,
+                "339.056256527": 0.00036528575293778707,
+                "395.565632615": 1.4580431806719355e-07,
+                "452.075008703": 1.3527003159995574e-07
+              },
+              "residual_rms": 0.000674996174151543,
+              "total_rms": 0.004958329672406245
+            },
+            "latency": 6561
+          },
+          "2": {
+            "support": {
+              "residual_db": -49.049493392268566,
+              "carrier_rms": 0.004964825077682868,
+              "carrier_amplitudes": {
+                "113.018752176": 1.2961139594117464e-07,
+                "169.528128264": 0.005084947147200016,
+                "226.037504351": 0.004530190260665306,
+                "282.546880439": 0.001669139361001758,
+                "339.056256527": 0.0003655661251851838,
+                "395.565632615": 2.949591153946406e-08,
+                "452.075008703": 1.8320135596383118e-08
+              },
+              "residual_rms": 1.7515771954394397e-05,
+              "total_rms": 0.004959280104311443
+            },
+            "latency": 6561
+          },
+          "6": {
+            "support": {
+              "residual_db": -49.134293558180254,
+              "carrier_rms": 0.0049648377190058685,
+              "carrier_amplitudes": {
+                "113.018752176": 1.815030519795615e-07,
+                "169.528128264": 0.005084946686250078,
+                "226.037504351": 0.004530217656900376,
+                "282.546880439": 0.0016691419207959686,
+                "339.056256527": 0.00036556469372535534,
+                "395.565632615": 3.074191555715864e-08,
+                "452.075008703": 1.684693098750747e-08
+              },
+              "residual_rms": 1.7345642044631396e-05,
+              "total_rms": 0.004970118333145282
+            },
+            "latency": 7737
+          },
+          "14": {
+            "support": {
+              "residual_db": -49.128417336678076,
+              "carrier_rms": 0.004964836935497484,
+              "carrier_amplitudes": {
+                "113.018752176": 1.8153121477000443e-07,
+                "169.528128264": 0.005084945881796911,
+                "226.037504351": 0.0045302168631390916,
+                "282.546880439": 0.0016691418842567042,
+                "339.056256527": 0.00036556460485495516,
+                "395.565632615": 3.075203981029799e-08,
+                "452.075008703": 1.6879206568671307e-08
+              },
+              "residual_rms": 1.7357378036275962e-05,
+              "total_rms": 0.0049701175423746075
+            },
+            "latency": 7737
+          }
+        }
+      },
+      {
+        "name": "phase_holdout_5",
+        "f": 80.86323035146617,
+        "rate": 3.7763934246402826,
+        "phase": 0.5135142251835796,
+        "variants": {
+          "0": {
+            "support": {
+              "residual_db": -22.341500878267674,
+              "carrier_rms": 0.005803088639211591,
+              "carrier_amplitudes": {
+                "161.726460703": 0.0059895400285832085,
+                "242.589691054": 0.005409062002868776,
+                "323.452921406": 0.001458138613548311,
+                "404.316151757": 0.00030490287464485845,
+                "485.179382109": 5.7897663838028175e-08,
+                "566.04261246": 9.482622213820804e-08,
+                "646.905842812": 1.1217183464524005e-07
+              },
+              "residual_rms": 0.0004431840891805572,
+              "total_rms": 0.005995709148553182
+            },
+            "latency": 6561
+          },
+          "2": {
+            "support": {
+              "residual_db": -31.38970710529621,
+              "carrier_rms": 0.005996988681528846,
+              "carrier_amplitudes": {
+                "161.726460703": 0.006353897619116456,
+                "242.589691054": 0.0054163742803665154,
+                "323.452921406": 0.001457986925797252,
+                "404.316151757": 0.0003047872906069704,
+                "485.179382109": 9.512179296981802e-08,
+                "566.04261246": 4.097309734814107e-08,
+                "646.905842812": 1.2042557697391072e-07
+              },
+              "residual_rms": 0.00016160242515246437,
+              "total_rms": 0.006001433257242959
+            },
+            "latency": 6561
+          },
+          "6": {
+            "support": {
+              "residual_db": -31.44400289600766,
+              "carrier_rms": 0.005996958731518912,
+              "carrier_amplitudes": {
+                "161.726460703": 0.006354032371162076,
+                "242.589691054": 0.005416159117491444,
+                "323.452921406": 0.0014579389814130734,
+                "404.316151757": 0.000304852418850397,
+                "485.179382109": 1.2106640271957655e-07,
+                "566.04261246": 2.2427775549486984e-08,
+                "646.905842812": 9.673558278973794e-08
+              },
+              "residual_rms": 0.0001605945916436881,
+              "total_rms": 0.00599923877856038
+            },
+            "latency": 7737
+          },
+          "14": {
+            "support": {
+              "residual_db": -31.443923597233898,
+              "carrier_rms": 0.00599696042120584,
+              "carrier_amplitudes": {
+                "161.726460703": 0.006354034164350839,
+                "242.589691054": 0.005416161304356413,
+                "323.452921406": 0.001457936872879594,
+                "404.316151757": 0.00030485275232278267,
+                "485.179382109": 1.212734189646835e-07,
+                "566.04261246": 2.2434893776055114e-08,
+                "646.905842812": 9.675719622897582e-08
+              },
+              "residual_rms": 0.00016059610306527728,
+              "total_rms": 0.005999240435760103
+            },
+            "latency": 7737
+          }
+        }
+      },
+      {
+        "name": "phase_holdout_6",
+        "f": 52.31300682396839,
+        "rate": 5.60435070183138,
+        "phase": -2.476989152558861,
+        "variants": {
+          "0": {
+            "support": {
+              "residual_db": -31.29825820574888,
+              "carrier_rms": 0.0036998808074228564,
+              "carrier_amplitudes": {
+                "104.626013648": 2.455175386476437e-07,
+                "156.939020472": 0.0022169973401122527,
+                "209.252027296": 0.004273041944290607,
+                "261.56503412": 0.0019493348047512867,
+                "313.878040944": 0.0006358970599927072,
+                "366.191047768": 2.3652297413599122e-08,
+                "418.504054592": 4.2189677859278875e-08
+              },
+              "residual_rms": 0.00010075690604617236,
+              "total_rms": 0.0037109472186886237
+            },
+            "latency": 6561
+          },
+          "2": {
+            "support": {
+              "residual_db": -48.68723401057992,
+              "carrier_rms": 0.0037106546429456666,
+              "carrier_amplitudes": {
+                "104.626013648": 3.6468897621661836e-08,
+                "156.939020472": 0.002253351019349823,
+                "209.252027296": 0.0042726635894785895,
+                "261.56503412": 0.0019494047136578423,
+                "313.878040944": 0.0006359968977636269,
+                "366.191047768": 7.336594803836157e-09,
+                "418.504054592": 1.3686926880530425e-08
+              },
+              "residual_rms": 1.364862291325467e-05,
+              "total_rms": 0.0037112803917026815
+            },
+            "latency": 6561
+          },
+          "6": {
+            "support": {
+              "residual_db": -48.698173081421004,
+              "carrier_rms": 0.003710642503030374,
+              "carrier_amplitudes": {
+                "104.626013648": 2.0765646412260804e-08,
+                "156.939020472": 0.0022533299110565307,
+                "209.252027296": 0.0042726515281559865,
+                "261.56503412": 0.00194940695283272,
+                "313.878040944": 0.0006360041926667862,
+                "366.191047768": 6.147236644261996e-09,
+                "418.504054592": 1.2807586509803923e-08
+              },
+              "residual_rms": 1.3631399963428529e-05,
+              "total_rms": 0.0037101910299696533
+            },
+            "latency": 7737
+          },
+          "14": {
+            "support": {
+              "residual_db": -48.697106128272125,
+              "carrier_rms": 0.003710641882524407,
+              "carrier_amplitudes": {
+                "104.626013648": 2.0715986713173446e-08,
+                "156.939020472": 0.0022533292254258135,
+                "209.252027296": 0.004272650731832616,
+                "261.56503412": 0.0019494068184887424,
+                "313.878040944": 0.0006360051428264266,
+                "366.191047768": 5.667946365913521e-09,
+                "418.504054592": 1.293554611885364e-08
+              },
+              "residual_rms": 1.3633072233883437e-05,
+              "total_rms": 0.0037101904047173438
+            },
+            "latency": 7737
+          }
+        }
+      },
+      {
+        "name": "phase_holdout_7",
+        "f": 75.58169832233908,
+        "rate": 2.58869282150041,
+        "phase": 2.282798186649261,
+        "variants": {
+          "0": {
+            "support": {
+              "residual_db": -20.49775615079341,
+              "carrier_rms": 0.005505428944035702,
+              "carrier_amplitudes": {
+                "151.163396645": 0.0011391453911073182,
+                "226.745094967": 0.007411355265757879,
+                "302.326793289": 0.0020266565442872094,
+                "377.908491612": 0.0005350884945135382,
+                "453.490189934": 3.6710879405032316e-07,
+                "529.071888256": 1.8678072536397767e-07,
+                "604.653586579": 5.6348785830592956e-08
+              },
+              "residual_rms": 0.0005198802920504172,
+              "total_rms": 0.005667274960634189
+            },
+            "latency": 6561
+          },
+          "2": {
+            "support": {
+              "residual_db": -44.777142958912066,
+              "carrier_rms": 0.005670584419870299,
+              "carrier_amplitudes": {
+                "151.163396645": 0.0022172846449297207,
+                "226.745094967": 0.00741628016891825,
+                "302.326793289": 0.0020266663365886717,
+                "377.908491612": 0.0005348982562559903,
+                "453.490189934": 8.83967666754254e-09,
+                "529.071888256": 1.1940887293466267e-08,
+                "604.653586579": 2.433404879252325e-08
+              },
+              "residual_rms": 3.27167889434959e-05,
+              "total_rms": 0.005672417371944802
+            },
+            "latency": 6561
+          },
+          "6": {
+            "support": {
+              "residual_db": -44.790882357831364,
+              "carrier_rms": 0.005670577771768383,
+              "carrier_amplitudes": {
+                "151.163396645": 0.002217287581652128,
+                "226.745094967": 0.0074162764329231134,
+                "302.326793289": 0.0020266392710214104,
+                "377.908491612": 0.0005348994729396121,
+                "453.490189934": 1.741767325067816e-08,
+                "529.071888256": 6.604450494930857e-09,
+                "604.653586579": 2.6899306314871362e-08
+              },
+              "residual_rms": 3.266503991864085e-05,
+              "total_rms": 0.005672363552087822
+            },
+            "latency": 7737
+          },
+          "14": {
+            "support": {
+              "residual_db": -44.79056758867826,
+              "carrier_rms": 0.005670579064172045,
+              "carrier_amplitudes": {
+                "151.163396645": 0.002217287568897547,
+                "226.745094967": 0.007416278234933206,
+                "302.326793289": 0.00202663985832062,
+                "377.908491612": 0.0005348997181857197,
+                "453.490189934": 1.7469195317729154e-08,
+                "529.071888256": 6.601803248233495e-09,
+                "604.653586579": 2.689396814750385e-08
+              },
+              "residual_rms": 3.266623113806645e-05,
+              "total_rms": 0.005672364879525539
+            },
+            "latency": 7737
+          }
+        }
+      }
+    ],
+    "48000": [
+      {
+        "name": "phase_holdout_0",
+        "f": 52.457750000624124,
+        "rate": 2.29175461476658,
+        "phase": 2.2020245866638577,
+        "variants": {
+          "0": {
+            "support": {
+              "residual_db": -19.045535566827958,
+              "carrier_rms": 0.003549780465525969,
+              "carrier_amplitudes": {
+                "104.915500001": 9.970072064120727e-07,
+                "157.373250002": 0.0015858200521237488,
+                "209.831000002": 0.004304617824027457,
+                "262.288750003": 0.0019406291828973454,
+                "314.746500004": 0.0006255239042052734,
+                "367.204250004": 2.583483756817078e-07,
+                "419.662000005": 1.3112820462347655e-07
+              },
+              "residual_rms": 0.00039620934701603555,
+              "total_rms": 0.0037622177769715795
+            },
+            "latency": 7140
+          },
+          "2": {
+            "support": {
+              "residual_db": -48.47956826793986,
+              "carrier_rms": 0.0037604311076390395,
+              "carrier_amplitudes": {
+                "104.915500001": 5.1511167949658844e-08,
+                "157.373250002": 0.0023640174821223862,
+                "209.831000002": 0.0043051047012578015,
+                "262.288750003": 0.0019410672136035974,
+                "314.746500004": 0.0006256493866888194,
+                "367.204250004": 1.993066943205335e-08,
+                "419.662000005": 1.3597498945775695e-08
+              },
+              "residual_rms": 1.4166390963474903e-05,
+              "total_rms": 0.003765325934151432
+            },
+            "latency": 7140
+          },
+          "6": {
+            "support": {
+              "residual_db": -48.34184061306418,
+              "carrier_rms": 0.0037605042585033164,
+              "carrier_amplitudes": {
+                "104.915500001": 9.79579070682013e-08,
+                "157.373250002": 0.002364024222508457,
+                "209.831000002": 0.0043052259268065345,
+                "262.288750003": 0.0019410674993107638,
+                "314.746500004": 0.0006256682061723473,
+                "367.204250004": 1.5186181562485628e-08,
+                "419.662000005": 8.210744811572614e-09
+              },
+              "residual_rms": 1.4393090434936943e-05,
+              "total_rms": 0.0037582625516435634
+            },
+            "latency": 8420
+          },
+          "14": {
+            "support": {
+              "residual_db": -48.34137295218119,
+              "carrier_rms": 0.003760502904549717,
+              "carrier_amplitudes": {
+                "104.915500001": 9.798389250494549e-08,
+                "157.373250002": 0.002364023299621641,
+                "209.831000002": 0.0043052243466276535,
+                "262.288750003": 0.001941066959529264,
+                "314.746500004": 0.0006256679654818269,
+                "367.204250004": 1.511547194349988e-08,
+                "419.662000005": 8.279176291163245e-09
+              },
+              "residual_rms": 1.4393860218192247e-05,
+              "total_rms": 0.0037582612567330473
+            },
+            "latency": 8420
+          }
+        }
+      },
+      {
+        "name": "phase_holdout_1",
+        "f": 83.7084368591963,
+        "rate": 3.771299173138466,
+        "phase": -2.3088371676885315,
+        "variants": {
+          "0": {
+            "support": {
+              "residual_db": -12.656598028674729,
+              "carrier_rms": 0.005556730817785751,
+              "carrier_amplitudes": {
+                "167.416873718": 0.006014199767677515,
+                "251.125310578": 0.004879541742781126,
+                "334.833747437": 0.0013103943766126004,
+                "418.542184296": 0.00023844212918875895,
+                "502.250621155": 3.240220088072962e-07,
+                "585.959058014": 1.97992449452927e-07,
+                "669.667494874": 2.866405302823292e-07
+              },
+              "residual_rms": 0.0012941644253086045,
+              "total_rms": 0.006948668051145785
+            },
+            "latency": 7140
+          },
+          "2": {
+            "support": {
+              "residual_db": -31.96022782527279,
+              "carrier_rms": 0.006964007453951644,
+              "carrier_amplitudes": {
+                "167.416873718": 0.008438866168757407,
+                "251.125310578": 0.004899738076257806,
+                "334.833747437": 0.0013098943170980714,
+                "418.542184296": 0.00023891645229120865,
+                "502.250621155": 7.270594276850626e-08,
+                "585.959058014": 5.686888115980601e-08,
+                "669.667494874": 7.481845792400403e-08
+              },
+              "residual_rms": 0.00017573077972933045,
+              "total_rms": 0.006964725409555647
+            },
+            "latency": 7140
+          },
+          "6": {
+            "support": {
+              "residual_db": -31.984840033435496,
+              "carrier_rms": 0.006963970139571477,
+              "carrier_amplitudes": {
+                "167.416873718": 0.008438949505854122,
+                "251.125310578": 0.004899495351053208,
+                "334.833747437": 0.0013098827137849006,
+                "418.542184296": 0.00023883889729728092,
+                "502.250621155": 5.509634864967369e-08,
+                "585.959058014": 4.6433858611445806e-08,
+                "669.667494874": 6.642623000613709e-08
+              },
+              "residual_rms": 0.00017523259748718323,
+              "total_rms": 0.0069659630038157614
+            },
+            "latency": 8420
+          },
+          "14": {
+            "support": {
+              "residual_db": -31.984425786827927,
+              "carrier_rms": 0.00696397548420066,
+              "carrier_amplitudes": {
+                "167.416873718": 0.008438954419437263,
+                "251.125310578": 0.004899501538654961,
+                "334.833747437": 0.0013098846072763283,
+                "418.542184296": 0.0002388396417935661,
+                "502.250621155": 5.5044287718392216e-08,
+                "585.959058014": 4.64815988818996e-08,
+                "669.667494874": 6.642030334737576e-08
+              },
+              "residual_rms": 0.0001752410893544925,
+              "total_rms": 0.006965968467347877
+            },
+            "latency": 8420
+          }
+        }
+      },
+      {
+        "name": "phase_holdout_2",
+        "f": 58.65275112528653,
+        "rate": 7.865369511477804,
+        "phase": 0.07212921642807268,
+        "variants": {
+          "0": {
+            "support": {
+              "residual_db": -23.46998601232624,
+              "carrier_rms": 0.004720887394908454,
+              "carrier_amplitudes": {
+                "117.305502251": 6.300338882097481e-07,
+                "175.958253376": 0.005074466796219603,
+                "234.611004501": 0.004067601600502264,
+                "293.263755626": 0.0014876875922053149,
+                "351.916506752": 0.00025444652473195236,
+                "410.569257877": 1.309938231483917e-06,
+                "469.222009002": 1.601142057432931e-07
+              },
+              "residual_rms": 0.00031660979088586394,
+              "total_rms": 0.0049432959178983054
+            },
+            "latency": 7140
+          },
+          "2": {
+            "support": {
+              "residual_db": -48.32192010751872,
+              "carrier_rms": 0.004947201810306926,
+              "carrier_amplitudes": {
+                "117.305502251": 1.1982433419286792e-07,
+                "175.958253376": 0.005489503841566972,
+                "234.611004501": 0.0040667902198568565,
+                "293.263755626": 0.0014870732956719676,
+                "351.916506752": 0.0002545375530013886,
+                "410.569257877": 1.3301517206982383e-07,
+                "469.222009002": 1.6333946847964854e-08
+              },
+              "residual_rms": 1.8978575917135786e-05,
+              "total_rms": 0.004947791079973013
+            },
+            "latency": 7140
+          },
+          "6": {
+            "support": {
+              "residual_db": -48.3151981078865,
+              "carrier_rms": 0.004947212698861741,
+              "carrier_amplitudes": {
+                "117.305502251": 9.733447717451096e-08,
+                "175.958253376": 0.005489497006653147,
+                "234.611004501": 0.0040668237487789605,
+                "293.263755626": 0.0014870803523263775,
+                "351.916506752": 0.0002545313035290003,
+                "410.569257877": 1.3242186480151973e-07,
+                "469.222009002": 1.0510330491083088e-08
+              },
+              "residual_rms": 1.8993310902466968e-05,
+              "total_rms": 0.004946583399838247
+            },
+            "latency": 8420
+          },
+          "14": {
+            "support": {
+              "residual_db": -48.314629142068426,
+              "carrier_rms": 0.0049472124274940405,
+              "carrier_amplitudes": {
+                "117.305502251": 9.729988316934488e-08,
+                "175.958253376": 0.005489496745721327,
+                "234.611004501": 0.004066823527613898,
+                "293.263755626": 0.0014870801143082105,
+                "351.916506752": 0.0002545313064718327,
+                "410.569257877": 1.3244135351726618e-07,
+                "469.222009002": 1.052687571349425e-08
+              },
+              "residual_rms": 1.8994554050748885e-05,
+              "total_rms": 0.004946583110671843
+            },
+            "latency": 8420
+          }
+        }
+      },
+      {
+        "name": "phase_holdout_3",
+        "f": 75.69304368888194,
+        "rate": 3.4265583191666122,
+        "phase": -1.078208356574148,
+        "variants": {
+          "0": {
+            "support": {
+              "residual_db": -31.708247735886385,
+              "carrier_rms": 0.005646210265694897,
+              "carrier_amplitudes": {
+                "151.386087378": 0.0022159412286241673,
+                "227.079131067": 0.007382543944239711,
+                "302.772174756": 0.0020165310245403873,
+                "378.465218444": 0.0005297477113109437,
+                "454.158262133": 1.433338363500418e-07,
+                "529.851305822": 1.0528528162726454e-07,
+                "605.544349511": 2.633010012469365e-07
+              },
+              "residual_rms": 0.00014667113762291853,
+              "total_rms": 0.0056623135561934095
+            },
+            "latency": 7140
+          },
+          "2": {
+            "support": {
+              "residual_db": -41.145794769517096,
+              "carrier_rms": 0.005664449306273992,
+              "carrier_amplitudes": {
+                "151.386087378": 0.0023013016493061427,
+                "227.079131067": 0.007384407122838136,
+                "302.772174756": 0.002016361433664904,
+                "378.465218444": 0.0005299061392721752,
+                "454.158262133": 1.5140410533624175e-07,
+                "529.851305822": 6.527739805218833e-08,
+                "605.544349511": 2.7382508535083424e-07
+              },
+              "residual_rms": 4.9644135917943595e-05,
+              "total_rms": 0.005664024538962776
+            },
+            "latency": 7140
+          },
+          "6": {
+            "support": {
+              "residual_db": -41.05410927891086,
+              "carrier_rms": 0.005664477487044635,
+              "carrier_amplitudes": {
+                "151.386087378": 0.0023012866851782974,
+                "227.079131067": 0.007384448264565428,
+                "302.772174756": 0.002016386956600347,
+                "378.465218444": 0.0005299031622833177,
+                "454.158262133": 1.47317954919775e-07,
+                "529.851305822": 6.74502224741283e-08,
+                "605.544349511": 2.768586893484728e-07
+              },
+              "residual_rms": 5.0171188733380965e-05,
+              "total_rms": 0.005664121751484746
+            },
+            "latency": 8420
+          },
+          "14": {
+            "support": {
+              "residual_db": -41.052931223398524,
+              "carrier_rms": 0.005664479169911093,
+              "carrier_amplitudes": {
+                "151.386087378": 0.002301286460754089,
+                "227.079131067": 0.007384451092663,
+                "302.772174756": 0.0020163863531611715,
+                "378.465218444": 0.000529903000835984,
+                "454.158262133": 1.4714855474735336e-07,
+                "529.851305822": 6.711294809824854e-08,
+                "605.544349511": 2.7688453760982415e-07
+              },
+              "residual_rms": 5.01780087530463e-05,
+              "total_rms": 0.005664123492796732
+            },
+            "latency": 8420
+          }
+        }
+      },
+      {
+        "name": "phase_holdout_4",
+        "f": 56.5093760878634,
+        "rate": 2.0158857858638863,
+        "phase": 2.8827042501545233,
+        "variants": {
+          "0": {
+            "support": {
+              "residual_db": -16.460474794265924,
+              "carrier_rms": 0.004492212408067719,
+              "carrier_amplitudes": {
+                "113.018752176": 1.607464964312583e-06,
+                "169.528128264": 0.004115921773237121,
+                "226.037504351": 0.004528037371843871,
+                "282.546880439": 0.0016681032913612587,
+                "339.056256527": 0.0003652929501319263,
+                "395.565632615": 1.4749119026890764e-07,
+                "452.075008703": 1.3568116485856085e-07
+              },
+              "residual_rms": 0.0006752063894958859,
+              "total_rms": 0.004958260312539197
+            },
+            "latency": 7140
+          },
+          "2": {
+            "support": {
+              "residual_db": -49.04701824649009,
+              "carrier_rms": 0.004964810176325739,
+              "carrier_amplitudes": {
+                "113.018752176": 1.292900298294844e-07,
+                "169.528128264": 0.0050849257074245605,
+                "226.037504351": 0.00453018151254176,
+                "282.546880439": 0.0016691399065734765,
+                "339.056256527": 0.00036556550943398836,
+                "395.565632615": 2.924201739590319e-08,
+                "452.075008703": 1.783431094741229e-08
+              },
+              "residual_rms": 1.752071140300566e-05,
+              "total_rms": 0.004959246930508768
+            },
+            "latency": 7140
+          },
+          "6": {
+            "support": {
+              "residual_db": -49.131991284335896,
+              "carrier_rms": 0.004964822837210224,
+              "carrier_amplitudes": {
+                "113.018752176": 1.8167575851174836e-07,
+                "169.528128264": 0.005084925182404514,
+                "226.037504351": 0.004530208957435935,
+                "282.546880439": 0.001669142471370542,
+                "339.056256527": 0.0003655648740063165,
+                "395.565632615": 3.0676642052647845e-08,
+                "452.075008703": 1.7223090988817118e-08
+              },
+              "residual_rms": 1.7350188267506157e-05,
+              "total_rms": 0.004970101745027343
+            },
+            "latency": 8420
+          },
+          "14": {
+            "support": {
+              "residual_db": -49.12606271432739,
+              "carrier_rms": 0.0049648220516093355,
+              "carrier_amplitudes": {
+                "113.018752176": 1.8170263700336076e-07,
+                "169.528128264": 0.005084924376594246,
+                "226.037504351": 0.004530208161443253,
+                "282.546880439": 0.0016691424330022744,
+                "339.056256527": 0.00036556478317698043,
+                "395.565632615": 3.068665055277951e-08,
+                "452.075008703": 1.7254515549308594e-08
+              },
+              "residual_rms": 1.736203196573298e-05,
+              "total_rms": 0.0049701009529180785
+            },
+            "latency": 8420
+          }
+        }
+      },
+      {
+        "name": "phase_holdout_5",
+        "f": 80.86323035146617,
+        "rate": 3.7763934246402826,
+        "phase": 0.5135142251835796,
+        "variants": {
+          "0": {
+            "support": {
+              "residual_db": -22.34572523031583,
+              "carrier_rms": 0.005803370779038401,
+              "carrier_amplitudes": {
+                "161.726460703": 0.005990110319055312,
+                "242.589691054": 0.005409037526539746,
+                "323.452921406": 0.0014581347464874524,
+                "404.316151757": 0.0003048921679318756,
+                "485.179382109": 5.945100057963775e-08,
+                "566.04261246": 9.76068629985027e-08,
+                "646.905842812": 1.1825254756770242e-07
+              },
+              "residual_rms": 0.00044299013720324756,
+              "total_rms": 0.005995732092565182
+            },
+            "latency": 7140
+          },
+          "2": {
+            "support": {
+              "residual_db": -31.39108746882624,
+              "carrier_rms": 0.0059969700945649105,
+              "carrier_amplitudes": {
+                "161.726460703": 0.006353870157111207,
+                "242.589691054": 0.00541636510809405,
+                "323.452921406": 0.001457987496585141,
+                "404.316151757": 0.00030478862710860984,
+                "485.179382109": 9.608987061754765e-08,
+                "566.04261246": 3.9777760008649725e-08,
+                "646.905842812": 1.1989910497913797e-07
+              },
+              "residual_rms": 0.0001615762445111853,
+              "total_rms": 0.00600147328000258
+            },
+            "latency": 7140
+          },
+          "6": {
+            "support": {
+              "residual_db": -31.44540370550775,
+              "carrier_rms": 0.005996941307763167,
+              "carrier_amplitudes": {
+                "161.726460703": 0.006354006172157786,
+                "242.589691054": 0.005416151632867986,
+                "323.452921406": 0.0014579374072478544,
+                "404.316151757": 0.00030485347770574936,
+                "485.179382109": 1.2263631160105448e-07,
+                "566.04261246": 2.1872741460568365e-08,
+                "646.905842812": 9.815629290389634e-08
+              },
+              "residual_rms": 0.0001605682274537881,
+              "total_rms": 0.005999235521064108
+            },
+            "latency": 8420
+          },
+          "14": {
+            "support": {
+              "residual_db": -31.445325441583392,
+              "carrier_rms": 0.005996942998086062,
+              "carrier_amplitudes": {
+                "161.726460703": 0.006354007965971624,
+                "242.589691054": 0.005416153820486101,
+                "323.452921406": 0.0014579352983084496,
+                "404.316151757": 0.00030485381173195943,
+                "485.179382109": 1.2284527392042753e-07,
+                "566.04261246": 2.1881291503700218e-08,
+                "646.905842812": 9.817765031432079e-08
+              },
+              "residual_rms": 0.00016056971951390373,
+              "total_rms": 0.005999237178464837
+            },
+            "latency": 8420
+          }
+        }
+      },
+      {
+        "name": "phase_holdout_6",
+        "f": 52.31300682396839,
+        "rate": 5.60435070183138,
+        "phase": -2.476989152558861,
+        "variants": {
+          "0": {
+            "support": {
+              "residual_db": -31.290865321277444,
+              "carrier_rms": 0.0036998363986515473,
+              "carrier_amplitudes": {
+                "104.626013648": 2.4294308539972877e-07,
+                "156.939020472": 0.002216876114487816,
+                "209.252027296": 0.004273028774018226,
+                "261.56503412": 0.0019493332147624773,
+                "313.878040944": 0.00063589629616405,
+                "366.191047768": 2.4245919189933766e-08,
+                "418.504054592": 4.169916540897205e-08
+              },
+              "residual_rms": 0.00010084149012081201,
+              "total_rms": 0.0037109295235591526
+            },
+            "latency": 7140
+          },
+          "2": {
+            "support": {
+              "residual_db": -48.686297636829565,
+              "carrier_rms": 0.0037106441457900193,
+              "carrier_amplitudes": {
+                "104.626013648": 3.643059789299197e-08,
+                "156.939020472": 0.0022533408390906355,
+                "209.252027296": 0.004272651574532717,
+                "261.56503412": 0.0019494027885165277,
+                "313.878040944": 0.0006359970954786617,
+                "366.191047768": 7.477857397144568e-09,
+                "418.504054592": 1.3582155254426446e-08
+              },
+              "residual_rms": 1.3650055753811693e-05,
+              "total_rms": 0.0037112678712536025
+            },
+            "latency": 7140
+          },
+          "6": {
+            "support": {
+              "residual_db": -48.697236644454804,
+              "carrier_rms": 0.0037106318475043525,
+              "carrier_amplitudes": {
+                "104.626013648": 2.079016219205542e-08,
+                "156.939020472": 0.0022533197465491044,
+                "209.252027296": 0.004272639351054208,
+                "261.56503412": 0.001949404747526012,
+                "313.878040944": 0.0006360044345347532,
+                "366.191047768": 6.186526854934372e-09,
+                "418.504054592": 1.291332140395851e-08
+              },
+              "residual_rms": 1.3632830513152056e-05,
+              "total_rms": 0.00371021979131835
+            },
+            "latency": 8420
+          },
+          "14": {
+            "support": {
+              "residual_db": -48.696167364274245,
+              "carrier_rms": 0.003710631226713481,
+              "carrier_amplitudes": {
+                "104.626013648": 2.0740404202609724e-08,
+                "156.939020472": 0.0022533190616162305,
+                "209.252027296": 0.004272638553679418,
+                "261.56503412": 0.001949404613603345,
+                "313.878040944": 0.0006360053846633735,
+                "366.191047768": 5.699815944845114e-09,
+                "418.504054592": 1.3043075642675005e-08
+              },
+              "residual_rms": 1.363450661086258e-05,
+              "total_rms": 0.0037102191659293834
+            },
+            "latency": 8420
+          }
+        }
+      },
+      {
+        "name": "phase_holdout_7",
+        "f": 75.58169832233908,
+        "rate": 2.58869282150041,
+        "phase": 2.282798186649261,
+        "variants": {
+          "0": {
+            "support": {
+              "residual_db": -20.50059833154753,
+              "carrier_rms": 0.005505451308195832,
+              "carrier_amplitudes": {
+                "151.163396645": 0.0011393605727188431,
+                "226.745094967": 0.007411356268205826,
+                "302.326793289": 0.002026658092962959,
+                "377.908491612": 0.0005350708024480774,
+                "453.490189934": 3.6968647894511593e-07,
+                "529.071888256": 1.8868817215313362e-07,
+                "604.653586579": 5.6695699712052404e-08
+              },
+              "residual_rms": 0.0005197123167787249,
+              "total_rms": 0.005667298531142892
+            },
+            "latency": 7140
+          },
+          "2": {
+            "support": {
+              "residual_db": -44.778727071299855,
+              "carrier_rms": 0.005670574965576018,
+              "carrier_amplitudes": {
+                "151.163396645": 0.002217274611996305,
+                "226.745094967": 0.007416268610450591,
+                "302.326793289": 0.002026667129306906,
+                "377.908491612": 0.0005348966435474193,
+                "453.490189934": 9.025447893043195e-09,
+                "529.071888256": 1.1979033604692812e-08,
+                "604.653586579": 2.3673894266497652e-08
+              },
+              "residual_rms": 3.271076813836373e-05,
+              "total_rms": 0.005672412010636654
+            },
+            "latency": 7140
+          },
+          "6": {
+            "support": {
+              "residual_db": -44.79247949311676,
+              "carrier_rms": 0.005670568133121592,
+              "carrier_amplitudes": {
+                "151.163396645": 0.002217277892541605,
+                "226.745094967": 0.007416264458677237,
+                "302.326793289": 0.0020266400978259454,
+                "377.908491612": 0.000534898162071244,
+                "453.490189934": 1.7283050918814188e-08,
+                "529.071888256": 6.770294306759708e-09,
+                "604.653586579": 2.6600456941115e-08
+              },
+              "residual_rms": 3.265897860877374e-05,
+              "total_rms": 0.005672373942967129
+            },
+            "latency": 8420
+          },
+          "14": {
+            "support": {
+              "residual_db": -44.79216015992481,
+              "carrier_rms": 0.00567056942886173,
+              "carrier_amplitudes": {
+                "151.163396645": 0.002217277878615769,
+                "226.745094967": 0.007416266265736673,
+                "302.326793289": 0.0020266406863508747,
+                "377.908491612": 0.000534898408254731,
+                "453.490189934": 1.7335768198246744e-08,
+                "529.071888256": 6.766536806173259e-09,
+                "604.653586579": 2.65964455966977e-08
+              },
+              "residual_rms": 3.266018678782062e-05,
+              "total_rms": 0.00567237527356303
+            },
+            "latency": 8420
+          }
+        }
+      }
+    ]
+  },
+  "execution": "completed",
+  "listening_validated": false,
+  "device_validated": false,
+  "mixture_eval_interval_note": "Identical source-clock interval for all variants; maximum declared source delay used as common end margin."
+}

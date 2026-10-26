@@ -198,6 +198,14 @@ public:
     void setModulationResearch(int mode, bool tonalOnly=false) {
         for(VbHpv* m : {&vb52_, &vbGentle_, &vbGentleStrong_, &vbGentleAdaptive_}) m->setModulationResearch(mode,tonalOnly);
     }
+    // Before processing, host only. Only profile 6 may apply these controls.
+    void setP1PlusResearch(unsigned flags) {
+        vbAlpha2_.setP1PlusResearch(flags);
+        if(vbCur_==VB_ALPHA2_P1) {
+            vbDelay_=clampv(vbAlpha2_.latencyFrames(),0,kVbDelayLen-1);
+            updateLatency();
+        }
+    }
     void setContinuityResearch(const ContinuityParams& p) {
         for(VbHpv* m : {&vb52_, &vbGentle_, &vbGentleStrong_, &vbGentleAdaptive_}) m->setContinuityResearch(p);
     }
@@ -311,7 +319,9 @@ private:
     int vbHold_ = 0;
     RampedValue vbX_;                 // switching fade of the whole output
     RampedValue vbGain_;              // layer level
-    static constexpr int kVbDelayLen = 8192;  // power of two > the largest latency (7052 at 48 kHz)
+    // HQ centered HPSS needs 8332 module frames at 48 kHz. Keep the
+    // dry/layer alignment exact instead of silently clipping it to 8191.
+    static constexpr int kVbDelayLen = 16384;
     float vbDL_[kVbDelayLen] = {}, vbDR_[kVbDelayLen] = {};
     int vbPos_ = 0;
     std::atomic<int> mVb_{0};

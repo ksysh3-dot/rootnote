@@ -28,6 +28,7 @@ bool VbHpv::setAlpha2Profile(int algorithm) {
         case VB_ALPHA2_OSC_CORRECT: mode=0;flags=StageOscillator|StageOscillatorCorrect;break;
         default:return false;
     }
+    p1PlusProfile_=algorithm==VB_ALPHA2_P1;
     modulationMode_=mode;tonalOnly_=false;continuity_=ContinuityParams{};continuity_.enabled=true;
     applyDevContinuity();
     stageFlags_=flags;reset();return true;
@@ -441,7 +442,7 @@ double VbHpv::bandLayer(double re, double im) {
 
 // HPSS frame j (complete at core sample i = 16 j - 1): b[i-191 .. i].
 void VbHpv::hpssFrame() {
-    const int64_t i = static_cast<int64_t>(i_);
+    int64_t i = static_cast<int64_t>(i_);
     double fr[kHpN];
     for (int n = 0; n < kHpN; ++n) fr[n] = bRing_[(i - (kHpN - 1) + n) & (kRing - 1)] * winHp_[n];
     double Fr[kHpBins], Fi[kHpBins], S[kHpBins];
@@ -450,17 +451,42 @@ void VbHpv::hpssFrame() {
         dft192(fr, zero, Fr, Fi, kHpBins);
     }
     for (int k = 0; k < kHpBins; ++k) S[k] = std::hypot(Fr[k], Fi[k]);
+    const int future=hpssLookahead();
+    const bool prominence=future && (p1PlusFlags_&8);
+    const int history=prominence?kHpMedT+5:kHpMedT;
     std::copy(S, S + kHpBins, sHist_[sPos_]);
-    sPos_ = (sPos_ + 1) % kHpMedT;
+    sPos_ = (sPos_ + 1) % history;
+    if(future) {
+        // Current spectrum updates the eleven-frame history; classify the
+        // frame five hops earlier, now with five past and five future frames.
+        // Recompute its complex spectrum from the input ring, not magnitudes
+        // with a guessed phase. Extra work is an explicit HQ-mode cost.
+        if(i<future) return;
+        i-=future;
+        for(int n=0;n<kHpN;++n)
+            fr[n]=bRing_[(i-(kHpN-1)+n)&(kRing-1)]*winHp_[n];
+        const double zero[kHpN]={};
+        dft192(fr,zero,Fr,Fi,kHpBins);
+        for(int k=0;k<kHpBins;++k) S[k]=std::hypot(Fr[k],Fi[k]);
+    }
     double Mh[kHpBins];
     for (int k = 0; k < kHpBins; ++k) {
         double v[kHpMedT];
-        for (int t = 0; t < kHpMedT; ++t) v[t] = sHist_[t][k];
-        const double H = kth(v, kHpMedT, kHpMedT / 2);  // median over the last 11 frames
+        for (int t = 0; t < kHpMedT; ++t)
+            v[t] = sHist_[prominence?(sPos_+5+t)%history:t][k];
+        const double H = kth(v, kHpMedT, kHpMedT / 2);  // causal or centered eleven-frame median
         double u[kHpMedF];
         for (int d = 0; d < kHpMedF; ++d) u[d] = S[clampv(k - kHpMedF / 2 + d, 0, kHpBins - 1)];
         const double P = kth(u, kHpMedF, kHpMedF / 2);  // median over +-3 bins
         Mh[k] = (H * H) / (H * H + P * P + 1e-20);
+        if(prominence) {
+            double past[kHpMedT];
+            for(int t=0;t<kHpMedT;++t) past[t]=sHist_[(sPos_+t)%history][k];
+            const double causal=kth(past,kHpMedT,kHpMedT/2);
+            const double causalMask=causal*causal/(causal*causal+P*P+1e-20);
+            const double weight=clampv((S[k]/(P+1e-20)-1.)/(std::sqrt(10.)-1.),0.,1.);
+            Mh[k]=causalMask+weight*(Mh[k]-causalMask);
+        }
     }
     // inverse real DFT of F * Mh (numpy.fft.irfft, n = 192), windowed, overlap-added. The percussive part
     // irfft(F * (1 - Mh)) is the windowed frame minus that (the inverse of F itself is the windowed frame).

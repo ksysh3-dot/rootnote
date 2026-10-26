@@ -1,0 +1,94 @@
+{
+  "schema": "pvb.p1hq.v1",
+  "candidate_sha256": "45b6391ed9cc89f4205a8e43fe00bddd59b3e11a4024df88f4c385297b36007c",
+  "baseline_sha256": "8754172c8d7a93c30ed6bfa847400d9e9bc53829f088394d45643ba85f9d2dd2",
+  "previous_sha256": "c3367cc333f22f80daf6a7fa99c09dc8a493ac36b2f007220485351cd7ae3113",
+  "level_and_latency_are_costs": true,
+  "oracle": [
+    {
+      "flags": 0,
+      "h_nmse_db": -276.25193851346427,
+      "p_nmse_db": -232.27533947898257,
+      "complement_max_error": 5.551115123125783e-17
+    },
+    {
+      "flags": 4,
+      "h_nmse_db": -276.2523862968914,
+      "p_nmse_db": -229.8316911517711,
+      "complement_max_error": 5.551115123125783e-17
+    },
+    {
+      "flags": 6,
+      "h_nmse_db": -276.2523862968914,
+      "p_nmse_db": -229.8316911517711,
+      "complement_max_error": 5.551115123125783e-17
+    },
+    {
+      "flags": 14,
+      "h_nmse_db": -276.2523599686103,
+      "p_nmse_db": -232.20274905065423,
+      "complement_max_error": 5.551115123125783e-17
+    }
+  ],
+  "engineering": [
+    {
+      "fs": 44100,
+      "flags": 6,
+      "default_bit_exact": true,
+      "phase_v01_bit_exact": true,
+      "block_and_capture_bit_exact": true,
+      "prefix_causal": true,
+      "reset": true,
+      "other_profiles_bit_exact": true,
+      "latency": 7737,
+      "extra_latency_frames": 1176,
+      "extra_latency_ms": 26.666666666666668,
+      "steady_aligned_nmse_db": -80.70686750512235
+    },
+    {
+      "fs": 48000,
+      "flags": 6,
+      "default_bit_exact": true,
+      "phase_v01_bit_exact": true,
+      "block_and_capture_bit_exact": true,
+      "prefix_causal": true,
+      "reset": true,
+      "other_profiles_bit_exact": true,
+      "latency": 8420,
+      "extra_latency_frames": 1280,
+      "extra_latency_ms": 26.666666666666668,
+      "steady_aligned_nmse_db": -80.7043979863411
+    },
+    {
+      "fs": 44100,
+      "flags": 14,
+      "default_bit_exact": true,
+      "phase_v01_bit_exact": true,
+      "block_and_capture_bit_exact": true,
+      "prefix_causal": true,
+      "reset": true,
+      "other_profiles_bit_exact": true,
+      "latency": 7737,
+      "extra_latency_frames": 1176,
+      "extra_latency_ms": 26.666666666666668,
+      "steady_aligned_nmse_db": -100.04250796422822
+    },
+    {
+      "fs": 48000,
+      "flags": 14,
+      "default_bit_exact": true,
+      "phase_v01_bit_exact": true,
+      "block_and_capture_bit_exact": true,
+      "prefix_causal": true,
+      "reset": true,
+      "other_profiles_bit_exact": true,
+      "latency": 8420,
+      "extra_latency_frames": 1280,
+      "extra_latency_ms": 26.666666666666668,
+      "steady_aligned_nmse_db": -100.03879090802941
+    }
+  ],
+  "mixtures": {},
+  "phase": {},
+  "execution": "completed_engineering_only"
+}

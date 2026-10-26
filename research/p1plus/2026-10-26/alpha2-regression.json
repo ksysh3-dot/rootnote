@@ -1,0 +1,234 @@
+{
+  "schema": "pvb.alpha2.profiles.v1",
+  "library_sha256": "45b6391ed9cc89f4205a8e43fe00bddd59b3e11a4024df88f4c385297b36007c",
+  "dispatch": [
+    {
+      "fs": 44100,
+      "algorithm": 6,
+      "mode": 3,
+      "flags": 0,
+      "app_research_output_bit_exact": true,
+      "stem_bit_exact": true,
+      "chunk_max_abs_error": 1.0339757656912846e-25,
+      "chunk_stage_and_stem_bit_exact": true,
+      "prefix_invariant": true,
+      "latency": 6561,
+      "peak": 0.02183281071484089,
+      "detail_fraction": 0.0,
+      "family_fraction": 0.0
+    },
+    {
+      "fs": 44100,
+      "algorithm": 7,
+      "mode": 3,
+      "flags": 48,
+      "app_research_output_bit_exact": true,
+      "stem_bit_exact": true,
+      "chunk_max_abs_error": 3.2311742677852644e-27,
+      "chunk_stage_and_stem_bit_exact": true,
+      "prefix_invariant": true,
+      "latency": 6561,
+      "peak": 0.03192354738712311,
+      "detail_fraction": 0.713261144705386,
+      "family_fraction": 0.0
+    },
+    {
+      "fs": 44100,
+      "algorithm": 8,
+      "mode": 3,
+      "flags": 240,
+      "app_research_output_bit_exact": true,
+      "stem_bit_exact": true,
+      "chunk_max_abs_error": 2.5849394142282115e-26,
+      "chunk_stage_and_stem_bit_exact": true,
+      "prefix_invariant": true,
+      "latency": 6561,
+      "peak": 0.03270764276385307,
+      "detail_fraction": 0.13275207425116017,
+      "family_fraction": 0.6682604415693996
+    },
+    {
+      "fs": 44100,
+      "algorithm": 9,
+      "mode": 0,
+      "flags": 2048,
+      "app_research_output_bit_exact": true,
+      "stem_bit_exact": true,
+      "chunk_max_abs_error": 4.1359030627651384e-25,
+      "chunk_stage_and_stem_bit_exact": true,
+      "prefix_invariant": true,
+      "latency": 6561,
+      "peak": 0.02136341854929924,
+      "detail_fraction": 0.0,
+      "family_fraction": 0.0
+    },
+    {
+      "fs": 44100,
+      "algorithm": 10,
+      "mode": 0,
+      "flags": 6144,
+      "app_research_output_bit_exact": true,
+      "stem_bit_exact": true,
+      "chunk_max_abs_error": 6.462348535570529e-27,
+      "chunk_stage_and_stem_bit_exact": true,
+      "prefix_invariant": true,
+      "latency": 6561,
+      "peak": 0.02162490226328373,
+      "detail_fraction": 0.0,
+      "family_fraction": 0.0
+    },
+    {
+      "fs": 48000,
+      "algorithm": 6,
+      "mode": 3,
+      "flags": 0,
+      "app_research_output_bit_exact": true,
+      "stem_bit_exact": true,
+      "chunk_max_abs_error": 2.0679515313825692e-25,
+      "chunk_stage_and_stem_bit_exact": true,
+      "prefix_invariant": true,
+      "latency": 7140,
+      "peak": 0.02183377929031849,
+      "detail_fraction": 0.0,
+      "family_fraction": 0.0
+    },
+    {
+      "fs": 48000,
+      "algorithm": 7,
+      "mode": 3,
+      "flags": 48,
+      "app_research_output_bit_exact": true,
+      "stem_bit_exact": true,
+      "chunk_max_abs_error": 2.0679515313825692e-25,
+      "chunk_stage_and_stem_bit_exact": true,
+      "prefix_invariant": true,
+      "latency": 7140,
+      "peak": 0.031925018876791,
+      "detail_fraction": 0.713261144705386,
+      "family_fraction": 0.0
+    },
+    {
+      "fs": 48000,
+      "algorithm": 8,
+      "mode": 3,
+      "flags": 240,
+      "app_research_output_bit_exact": true,
+      "stem_bit_exact": true,
+      "chunk_max_abs_error": 2.5849394142282115e-26,
+      "chunk_stage_and_stem_bit_exact": true,
+      "prefix_invariant": true,
+      "latency": 7140,
+      "peak": 0.032707784324884415,
+      "detail_fraction": 0.13275207425116017,
+      "family_fraction": 0.6682604415693996
+    },
+    {
+      "fs": 48000,
+      "algorithm": 9,
+      "mode": 0,
+      "flags": 2048,
+      "app_research_output_bit_exact": true,
+      "stem_bit_exact": true,
+      "chunk_max_abs_error": 2.0679515313825692e-25,
+      "chunk_stage_and_stem_bit_exact": true,
+      "prefix_invariant": true,
+      "latency": 7140,
+      "peak": 0.021364308893680573,
+      "detail_fraction": 0.0,
+      "family_fraction": 0.0
+    },
+    {
+      "fs": 48000,
+      "algorithm": 10,
+      "mode": 0,
+      "flags": 6144,
+      "app_research_output_bit_exact": true,
+      "stem_bit_exact": true,
+      "chunk_max_abs_error": 2.0679515313825692e-25,
+      "chunk_stage_and_stem_bit_exact": true,
+      "prefix_invariant": true,
+      "latency": 7140,
+      "peak": 0.021625593304634094,
+      "detail_fraction": 0.0,
+      "family_fraction": 0.0
+    }
+  ],
+  "switching": [
+    {
+      "fs": 44100,
+      "shared_module_switches": 5,
+      "reset_tail": true,
+      "unsupported_rate": true
+    },
+    {
+      "fs": 48000,
+      "shared_module_switches": 5,
+      "reset_tail": true,
+      "unsupported_rate": true
+    }
+  ],
+  "legacy": [
+    {
+      "fs": 44100,
+      "algorithm": 0,
+      "bit_exact": true
+    },
+    {
+      "fs": 44100,
+      "algorithm": 1,
+      "bit_exact": true
+    },
+    {
+      "fs": 44100,
+      "algorithm": 2,
+      "bit_exact": true
+    },
+    {
+      "fs": 44100,
+      "algorithm": 3,
+      "bit_exact": true
+    },
+    {
+      "fs": 44100,
+      "algorithm": 4,
+      "bit_exact": true
+    },
+    {
+      "fs": 44100,
+      "algorithm": 5,
+      "bit_exact": true
+    },
+    {
+      "fs": 48000,
+      "algorithm": 0,
+      "bit_exact": true
+    },
+    {
+      "fs": 48000,
+      "algorithm": 1,
+      "bit_exact": true
+    },
+    {
+      "fs": 48000,
+      "algorithm": 2,
+      "bit_exact": true
+    },
+    {
+      "fs": 48000,
+      "algorithm": 3,
+      "bit_exact": true
+    },
+    {
+      "fs": 48000,
+      "algorithm": 4,
+      "bit_exact": true
+    },
+    {
+      "fs": 48000,
+      "algorithm": 5,
+      "bit_exact": true
+    }
+  ],
+  "listening": "not_evaluated",
+  "device": "not_evaluated"
+}

@@ -38,11 +38,11 @@ void VbHpv::beginHarmonic52() {
     std::fill(std::begin(harmonicTrace_.data),std::end(harmonicTrace_.data),0.f);
     auto* h=harmonicTrace_.data; h[2]=static_cast<float>(harmonicEpoch_);
     for(int j=0;j<4;++j) h[3+j]=static_cast<float>((i_>>(16*j))&65535);
-    h[7]=-383; h[8]=191;
+    h[7]=-383; h[8]=static_cast<float>(191+hpssLookahead());
     const double hostPerCore=static_cast<double>(M_)/L_;
     const double fractional=static_cast<double>(M_)*static_cast<double>(m_)/L_-static_cast<double>(n_);
     const double firDelay=static_cast<double>(taps_-1)/(2*L_);
-    h[9]=static_cast<float>(fractional-382.*hostPerCore-firDelay);
+    h[9]=static_cast<float>(fractional-(382.+hpssLookahead())*hostPerCore-firDelay);
     h[10]=static_cast<float>(fractional+16*hostPerCore+firDelay);
     h[15]=static_cast<float>(harmEnv52_); h[16]=static_cast<float>(percEnv52_);
     h[23]=HarmonicTrace::kVersion; h[27]=static_cast<float>(modulationMode_+(tonalOnly_?16:0)); harmonicReady_=true;
@@ -82,6 +82,7 @@ void VbHpv::renderTrack52(Track52& tr,const double src[2][256],const int ns[2],
     };
     const bool alive=!tr.fastEnding && tr.missing<=continuity_.hold;
     const bool oscillator=stageFlags_&StageOscillator;
+    const bool preserveUnreferencedPhase=p1PlusProfile_ && (p1PlusFlags_&2);
     double targetAmplitude[7]={},targetPhase[7]={};
     for(int j=0;j<7;++j) targetPhase[j]=(j+2)*tr.phi+tr.off[j];
     for(int k=2;k<=8;++k) {
@@ -153,7 +154,12 @@ void VbHpv::renderTrack52(Track52& tr,const double src[2][256],const int ns[2],
                 found=std::abs(fe-fk)<=tol && ae>=tr.a*.01 && ae>=pvAbs_;
             }
         }
-        const double target=!observed || !on ? tr.off[k-2] : found ? std::atan2(si52_[ii],sr52_[ii])+interp52(vb52t::kPhase,3920,(fk-20)*4)+phaseDelta52(fk)+2*kPi*fk*tc-k*tr.phi : vbt::kPsi[k-2];
+        double target=!observed || !on ? tr.off[k-2] : found ? std::atan2(si52_[ii],sr52_[ii])+interp52(vb52t::kPhase,3920,(fk-20)*4)+phaseDelta52(fk)+2*kPi*fk*tc-k*tr.phi : vbt::kPsi[k-2];
+        // Losing a reference gives no new phase observation. Returning to an
+        // arbitrary table offset would itself modulate an otherwise steady
+        // oscillator. Keep its offset until a valid reference or a new track.
+        // No stale source phase is advanced or claimed as a new observation.
+        if(preserveUnreferencedPhase && !found) target=tr.off[k-2];
         const double d=target-tr.off[k-2];
         const double adjustment=(stageFlags_&StageFreezePhase)?0.:clampv(std::atan2(std::sin(d),std::cos(d)),-.12,.12);
         tr.off[k-2]+=adjustment;
@@ -265,6 +271,9 @@ double VbHpv::phaseDelta52(double f) const {
     ref*=ref;
     ref*=response(svfBell(48000,220,3,1),48000)*response(svfBell(48000,4500,-3,.6),48000);
     // Both resamplers have the same FIR group delay in seconds. Only rounding the dry delay differs by rate.
+    // latency_ is the base placement/rounding correction. HQ HPSS delays both
+    // source observations and the dry stream equally; do not subtract that
+    // additional delay again from the relative harmonic phase reference.
     const double timing=2*kPi*f*(7052./48000-static_cast<double>(latency_)/eqFs52_);
     return std::arg(actual/ref)+timing;
 }
@@ -386,7 +395,12 @@ void VbHpv::pvFrame52() {
     if(apkCount_==56) { std::move(apk52_+1,apk52_+56,apk52_); --apkCount_; }
     apk52_[apkCount_++]=am;
     double* hm=hold52_[holdPos_]; std::fill(hm,hm+190,-200.0);
+    const bool modelAwareHistory=p1PlusProfile_ && (p1PlusFlags_&1);
     if(onsetLeft_<=0 && !falling) for(int p=0;p<np;++p) {
+        // A stationary-model mismatch explained by a valid modulation model
+        // is not evidence against a later stationary frame. Do not insert the
+        // modulation residual as a "good" stationary value either.
+        if(modelAwareHistory && pk[p].modulation.valid) continue;
         int g0,g1; holdRange52(pk[p].f,g0,g1);
         for(int g=g0;g<=g1;++g) if(std::abs(g+20-pk[p].f)<=8) hm[g]=std::max(hm[g],pk[p].res);
     }
@@ -398,6 +412,10 @@ void VbHpv::pvFrame52() {
         int g0,g1; holdRange52(pk[p].f,g0,g1);
         for(int h=0;h<holdCount_;++h) for(int g=g0;g<=g1;++g)
             if(std::abs(g+20-pk[p].f)<=8) r=std::max(r,hold52_[h][g]);
+        // History exclusion must not turn missing history into acceptance.
+        // Preserve a direct current-frame check outside the existing onset/
+        // falling exceptions (onsetLeft_ was decremented above).
+        if(modelAwareHistory && onsetLeft_<0 && !falling) r=std::max(r,pk[p].raw);
         pk[p].res=r;
     }
     spectrum52(md2_52_,s0,sr52_,si52_);
@@ -567,15 +585,16 @@ void VbHpv::takeGrain52(int64_t index,double& sample,double& nominalAmplitude) {
 
 double VbHpv::core52(double d) {
     const int64_t i=static_cast<int64_t>(i_); const int slot=i&(kRing-1);
-    md52_[slot]=d; md2_52_[slot]=i>=191?md52_[(i-191)&(kRing-1)]:0;
+    const int future=hpssLookahead(),hpssDelay=191+future;
+    md52_[slot]=d; md2_52_[slot]=i>=hpssDelay?md52_[(i-hpssDelay)&(kRing-1)]:0;
     double b=d; for(auto& s:band_) b=s.tick(b); bRing_[slot]=b;
     if((i+1)%16==0) hpssFrame();
     double bh=0,bp=0;
-    if(i>=191) {
-        const int64_t t=i-191; const int s=t&(kRing-1); const double ws=wsumHp_[t%16];
+    if(i>=hpssDelay) {
+        const int64_t t=i-hpssDelay; const int s=t&(kRing-1); const double ws=wsumHp_[t%16];
         bh=olaH_[s]/ws; bp=olaP_[s]/ws; olaH_[s]=olaP_[s]=0;
     }
-    const double originalH=bh,originalP=bp,bandDelayed=i>=191?bRing_[(i-191)&(kRing-1)]:0.;
+    const double originalH=bh,originalP=bp,bandDelayed=i>=hpssDelay?bRing_[(i-hpssDelay)&(kRing-1)]:0.;
     detailRing52_[slot]=bandDelayed;
     if(stageFlags_&StageBypassHpss) {bh=bandDelayed;bp=0.;}
     double hr,hi,pr,pi; hilH_.tick(bh,hr,hi); hilP_.tick(bp,pr,pi);
@@ -601,7 +620,7 @@ double VbHpv::core52(double d) {
         const int64_t j=static_cast<int64_t>(i)-kBurstDelay;
         if(j>=0) hpRing_[j&(kRing-1)]=burstSample52(j);
     }
-    if(i>=383 && (i-383)%16==0) pvFrame52();
+    if(i>=383+future && (i-383-future)%16==0) pvFrame52();
     // Exact nearest-edge centred closing, evaluated with the existing vocoder delay.
     if(i>=90) {
         double m=0; for(int64_t j=std::max<int64_t>(0,i-180);j<=i;++j) m=std::max(m,aRing_[j&(kRing-1)]);

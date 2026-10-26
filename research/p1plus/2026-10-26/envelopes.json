@@ -1,0 +1,96 @@
+{
+  "schema": "pvb.p1hq.envelopes.v1",
+  "cases": [
+    {
+      "name": "dev_mix_2",
+      "frequency": 83,
+      "variants": {
+        "0": {
+          "one_constant_scale": 0.03168661475699936,
+          "shape_error_db": -15.41510914959819,
+          "correlation": 0.9847675003636667,
+          "latency": 7140
+        },
+        "2": {
+          "one_constant_scale": 0.03168661475699936,
+          "shape_error_db": -15.41510914959819,
+          "correlation": 0.9847675003636667,
+          "latency": 7140
+        },
+        "6": {
+          "one_constant_scale": 0.03526114625539734,
+          "shape_error_db": -21.386104941782232,
+          "correlation": 0.9960425512173855,
+          "latency": 8420
+        },
+        "14": {
+          "one_constant_scale": 0.03462116709835839,
+          "shape_error_db": -20.143705709746563,
+          "correlation": 0.9947724014516471,
+          "latency": 8420
+        }
+      }
+    },
+    {
+      "name": "held_mix_2",
+      "frequency": 43.4378169700836,
+      "variants": {
+        "0": {
+          "one_constant_scale": 0.000764520455349419,
+          "shape_error_db": 0.2866902361663808,
+          "correlation": 0.657771611308456,
+          "latency": 7140
+        },
+        "2": {
+          "one_constant_scale": 0.000764520455349419,
+          "shape_error_db": 0.2866902361663808,
+          "correlation": 0.657771611308456,
+          "latency": 7140
+        },
+        "6": {
+          "one_constant_scale": 0.0006210431827443013,
+          "shape_error_db": -1.5223409782169275,
+          "correlation": 0.7384599938315622,
+          "latency": 8420
+        },
+        "14": {
+          "one_constant_scale": 0.0005115947916036815,
+          "shape_error_db": 0.656015817668243,
+          "correlation": 0.6394150322239666,
+          "latency": 8420
+        }
+      }
+    },
+    {
+      "name": "held_mix_6",
+      "frequency": 71.75779985446957,
+      "variants": {
+        "0": {
+          "one_constant_scale": 0.04088645976365425,
+          "shape_error_db": -11.966615421856572,
+          "correlation": 0.9669246543685168,
+          "latency": 7140
+        },
+        "2": {
+          "one_constant_scale": 0.04088645976365425,
+          "shape_error_db": -11.966615421856572,
+          "correlation": 0.9669246543685168,
+          "latency": 7140
+        },
+        "6": {
+          "one_constant_scale": 0.049512361008106756,
+          "shape_error_db": -22.070023885290276,
+          "correlation": 0.9966412141635879,
+          "latency": 8420
+        },
+        "14": {
+          "one_constant_scale": 0.048715120784555865,
+          "shape_error_db": -19.48536696649991,
+          "correlation": 0.9939547374907474,
+          "latency": 8420
+        }
+      }
+    }
+  ],
+  "definition": "Declared-latency aligned third-harmonic envelope; input-defined short-note objective; one constant scale."
+}

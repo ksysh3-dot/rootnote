@@ -1,0 +1,74 @@
+{
+  "definition": "Error RMS divided by one-constant-gain-scaled reference envelope RMS; not whole-song distortion.",
+  "extra_latency_ms": 26.666666666666668,
+  "latency_increase_percent": 17.92717086834734,
+  "short_note_cases": [
+    {
+      "name": "fresh_note_0",
+      "frequency": 106.01087471612949,
+      "harmonic": 2,
+      "phase_error_rms_percent": 19.077595299683253,
+      "hq_error_rms_percent": 7.413197361489693,
+      "incremental_hq_gain_db": 8.210361384008728,
+      "phase_gain_db": 0.0,
+      "normalized_error_energy_reduction_percent": 84.90045497009852
+    },
+    {
+      "name": "fresh_note_1",
+      "frequency": 112.17657845017393,
+      "harmonic": 2,
+      "phase_error_rms_percent": 19.91334965293708,
+      "hq_error_rms_percent": 7.770259559952017,
+      "incremental_hq_gain_db": 8.174175862543066,
+      "phase_gain_db": 0.0,
+      "normalized_error_energy_reduction_percent": 84.77411961127515
+    },
+    {
+      "name": "fresh_note_2",
+      "frequency": 121.18180327095604,
+      "harmonic": 2,
+      "phase_error_rms_percent": 13.231857254671597,
+      "hq_error_rms_percent": 8.572656366329308,
+      "incremental_hq_gain_db": 3.770107832360118,
+      "phase_gain_db": 0.0,
+      "normalized_error_energy_reduction_percent": 58.02514382091085
+    },
+    {
+      "name": "fresh_note_3",
+      "frequency": 45.46092460112668,
+      "harmonic": 4,
+      "phase_error_rms_percent": 101.91579235641488,
+      "hq_error_rms_percent": 82.77753921407039,
+      "incremental_hq_gain_db": 1.806579472401196,
+      "phase_gain_db": 0.0,
+      "normalized_error_energy_reduction_percent": 34.03067312097882
+    },
+    {
+      "name": "fresh_note_4",
+      "frequency": 88.81623185363819,
+      "harmonic": 2,
+      "phase_error_rms_percent": 18.89037082995514,
+      "hq_error_rms_percent": 4.777281501978016,
+      "incremental_hq_gain_db": 11.94119301162635,
+      "phase_gain_db": 0.0002386110728629376,
+      "normalized_error_energy_reduction_percent": 93.60440876231512
+    },
+    {
+      "name": "fresh_note_5",
+      "frequency": 81.33909327567628,
+      "harmonic": 2,
+      "phase_error_rms_percent": 21.948640912599856,
+      "hq_error_rms_percent": 6.074429198237841,
+      "incremental_hq_gain_db": 11.158043178660924,
+      "phase_gain_db": 0.0,
+      "normalized_error_energy_reduction_percent": 92.34058356851409
+    }
+  ],
+  "median_incremental_envelope_gain_db": 8.192268623275897,
+  "incremental_phase_fixture_gain_db": {
+    "min": -0.1377276548756825,
+    "median": 0.01233923488019073,
+    "max": 0.08497303784580623
+  },
+  "repeated_fixtures_for_illustration_only": true
+}

@@ -1,0 +1,107 @@
+--- a/app/src/main/cpp/libpvb/pvb_vb.h
++++ b/app/src/main/cpp/libpvb/pvb_vb.h
+@@ -195,6 +195,12 @@
+     void setContinuityResearch(const ContinuityParams& p) { continuity_ = p; reset(); }
+     // Host-only controls, no JNI/UI; bit0=synthesis, bit1=analysis.
+     void setModulationResearch(int mode, bool tonalOnly=false) { modulationMode_=mode&3; tonalOnly_=tonalOnly; reset(); }
++    // Host-only P1+ experiments, off by default. Bit0: exclude a valid
++    // modulation frame's stationary residual from the stationary history;
++    // bit1: keep the current synthesis phase offset when no source reference
++    // is available; new tracks still start at the table phase.
++    // Neither bit changes the app's stored algorithm or the public trace ABI.
++    void setP1PlusResearch(unsigned flags) { p1PlusFlags_=flags&3; reset(); }
+     void setStageResearch(unsigned flags,StageCapture52::Sink sink=nullptr,void* user=nullptr) {
+         stageFlags_=flags&8191;stageSink_=sink;stageUser_=user;reset();
+     }
+@@ -370,6 +376,8 @@
+     int modulationMode_=0;
+     bool tonalOnly_=false;
+     unsigned stageFlags_=0;
++    unsigned p1PlusFlags_=0;
++    bool p1PlusProfile_=false;
+     StageCapture52::Sink stageSink_=nullptr;
+     void* stageUser_=nullptr;
+     double detailRing52_[kRing]={};
+--- a/app/src/main/cpp/libpvb/pvb_vb.cpp
++++ b/app/src/main/cpp/libpvb/pvb_vb.cpp
+@@ -28,6 +28,7 @@
+         case VB_ALPHA2_OSC_CORRECT: mode=0;flags=StageOscillator|StageOscillatorCorrect;break;
+         default:return false;
+     }
++    p1PlusProfile_=algorithm==VB_ALPHA2_P1;
+     modulationMode_=mode;tonalOnly_=false;continuity_=ContinuityParams{};continuity_.enabled=true;
+     applyDevContinuity();
+     stageFlags_=flags;reset();return true;
+--- a/app/src/main/cpp/libpvb/pvb_vb52.cpp
++++ b/app/src/main/cpp/libpvb/pvb_vb52.cpp
+@@ -82,6 +82,7 @@
+     };
+     const bool alive=!tr.fastEnding && tr.missing<=continuity_.hold;
+     const bool oscillator=stageFlags_&StageOscillator;
++    const bool preserveUnreferencedPhase=p1PlusProfile_ && (p1PlusFlags_&2);
+     double targetAmplitude[7]={},targetPhase[7]={};
+     for(int j=0;j<7;++j) targetPhase[j]=(j+2)*tr.phi+tr.off[j];
+     for(int k=2;k<=8;++k) {
+@@ -153,7 +154,12 @@
+                 found=std::abs(fe-fk)<=tol && ae>=tr.a*.01 && ae>=pvAbs_;
+             }
+         }
+-        const double target=!observed || !on ? tr.off[k-2] : found ? std::atan2(si52_[ii],sr52_[ii])+interp52(vb52t::kPhase,3920,(fk-20)*4)+phaseDelta52(fk)+2*kPi*fk*tc-k*tr.phi : vbt::kPsi[k-2];
++        double target=!observed || !on ? tr.off[k-2] : found ? std::atan2(si52_[ii],sr52_[ii])+interp52(vb52t::kPhase,3920,(fk-20)*4)+phaseDelta52(fk)+2*kPi*fk*tc-k*tr.phi : vbt::kPsi[k-2];
++        // Losing a reference gives no new phase observation. Returning to an
++        // arbitrary table offset would itself modulate an otherwise steady
++        // oscillator. Keep its offset until a valid reference or a new track.
++        // No stale source phase is advanced or claimed as a new observation.
++        if(preserveUnreferencedPhase && !found) target=tr.off[k-2];
+         const double d=target-tr.off[k-2];
+         const double adjustment=(stageFlags_&StageFreezePhase)?0.:clampv(std::atan2(std::sin(d),std::cos(d)),-.12,.12);
+         tr.off[k-2]+=adjustment;
+@@ -386,7 +392,12 @@
+     if(apkCount_==56) { std::move(apk52_+1,apk52_+56,apk52_); --apkCount_; }
+     apk52_[apkCount_++]=am;
+     double* hm=hold52_[holdPos_]; std::fill(hm,hm+190,-200.0);
++    const bool modelAwareHistory=p1PlusProfile_ && (p1PlusFlags_&1);
+     if(onsetLeft_<=0 && !falling) for(int p=0;p<np;++p) {
++        // A stationary-model mismatch explained by a valid modulation model
++        // is not evidence against a later stationary frame. Do not insert the
++        // modulation residual as a "good" stationary value either.
++        if(modelAwareHistory && pk[p].modulation.valid) continue;
+         int g0,g1; holdRange52(pk[p].f,g0,g1);
+         for(int g=g0;g<=g1;++g) if(std::abs(g+20-pk[p].f)<=8) hm[g]=std::max(hm[g],pk[p].res);
+     }
+@@ -398,6 +409,10 @@
+         int g0,g1; holdRange52(pk[p].f,g0,g1);
+         for(int h=0;h<holdCount_;++h) for(int g=g0;g<=g1;++g)
+             if(std::abs(g+20-pk[p].f)<=8) r=std::max(r,hold52_[h][g]);
++        // History exclusion must not turn missing history into acceptance.
++        // Preserve a direct current-frame check outside the existing onset/
++        // falling exceptions (onsetLeft_ was decremented above).
++        if(modelAwareHistory && onsetLeft_<0 && !falling) r=std::max(r,pk[p].raw);
+         pk[p].res=r;
+     }
+     spectrum52(md2_52_,s0,sr52_,si52_);
+--- a/app/src/main/cpp/libpvb/pvb_engine.h
++++ b/app/src/main/cpp/libpvb/pvb_engine.h
+@@ -198,6 +198,8 @@
+     void setModulationResearch(int mode, bool tonalOnly=false) {
+         for(VbHpv* m : {&vb52_, &vbGentle_, &vbGentleStrong_, &vbGentleAdaptive_}) m->setModulationResearch(mode,tonalOnly);
+     }
++    // Before processing, host only. Only profile 6 may apply these controls.
++    void setP1PlusResearch(unsigned flags) { vbAlpha2_.setP1PlusResearch(flags); }
+     void setContinuityResearch(const ContinuityParams& p) {
+         for(VbHpv* m : {&vb52_, &vbGentle_, &vbGentleStrong_, &vbGentleAdaptive_}) m->setContinuityResearch(p);
+     }
+--- a/tools/pvb-harness/pvb_capi.cpp
++++ b/tools/pvb-harness/pvb_capi.cpp
+@@ -56,6 +56,11 @@
+ 
+ extern "C" {
+ 
++int pvb_set_p1plus_research(void* e,unsigned flags) {
++    if(!e || flags>3) return 0;
++    static_cast<pvb::Engine*>(e)->setP1PlusResearch(flags);return 1;
++}
++
+ int pvb_stage_fields() {return pvb::StageCapture52::kFields;}
+ // Attach before process and detach before destroying the engine. Allocation and
+ // copying happen outside the audio call. Overflow is explicit, never truncated.

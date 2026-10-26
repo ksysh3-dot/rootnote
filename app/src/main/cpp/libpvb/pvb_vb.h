@@ -182,7 +182,10 @@ public:
     explicit VbHpv(bool masked = false, bool gentle = false, int upperMode = 0);
     bool configure(int sampleRate) override;
     void reset() override;
-    int latencyFrames() const override { return latency_; }
+    int latencyFrames() const override {
+        return latency_ + (supported_ ? static_cast<int>(std::lround(
+            static_cast<double>(hpssLookahead())*M_/L_)) : 0);
+    }
     bool inputAfterEq() const override { return false; }
     void tick(double inL, double inR, double& outL, double& outR) override;
     VbResearchStats researchStats() const override { return research_; }
@@ -195,6 +198,14 @@ public:
     void setContinuityResearch(const ContinuityParams& p) { continuity_ = p; reset(); }
     // Host-only controls, no JNI/UI; bit0=synthesis, bit1=analysis.
     void setModulationResearch(int mode, bool tonalOnly=false) { modulationMode_=mode&3; tonalOnly_=tonalOnly; reset(); }
+    // Host-only P1+ experiments, off by default. Bit0: exclude a valid
+    // modulation frame's stationary residual from the stationary history;
+    // bit1: keep the current synthesis phase offset when no source reference
+    // is available; new tracks still start at the table phase.
+    // bit2: centered eleven-frame HPSS, five future hops (26.667 ms).
+    // bit3 (requires bit2): mix causal/centered masks by spectral prominence.
+    // No bit changes the app's stored algorithm or the public trace ABI.
+    void setP1PlusResearch(unsigned flags) { p1PlusFlags_=flags&15; reset(); }
     void setStageResearch(unsigned flags,StageCapture52::Sink sink=nullptr,void* user=nullptr) {
         stageFlags_=flags&8191;stageSink_=sink;stageUser_=user;reset();
     }
@@ -319,7 +330,8 @@ private:
     int bitrev64_[64] = {};
     double tw64r_[63] = {}, tw64i_[63] = {};   // per-stage twiddles of fft64 (same values as its table lookups)
     double fr3_[3][64] = {}, fi3_[3][64] = {};
-    double sHist_[kHpMedT][kHpBins] = {};  // magnitude spectra of the last 11 frames (ring)
+    // HQ prominence mode retains both target-frame windows: past 10..future 5.
+    double sHist_[kHpMedT+5][kHpBins] = {};
     int sPos_ = 0;
     double olaH_[kRing] = {}, olaP_[kRing] = {};
     Hilbert hilH_, hilP_;
@@ -370,6 +382,9 @@ private:
     int modulationMode_=0;
     bool tonalOnly_=false;
     unsigned stageFlags_=0;
+    unsigned p1PlusFlags_=0;
+    bool p1PlusProfile_=false;
+    int hpssLookahead() const { return p1PlusProfile_ && (p1PlusFlags_&4) ? 5*kHpHop : 0; }
     StageCapture52::Sink stageSink_=nullptr;
     void* stageUser_=nullptr;
     double detailRing52_[kRing]={};

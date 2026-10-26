@@ -102,6 +102,15 @@ tools/pvb-harness/jvm/run_jvm_test.sh
 
 The full list of host tests that CI runs is in [.github/workflows/build.yml](.github/workflows/build.yml).
 
+### P1+ research baseline
+
+On 2026-10-26, the HQ refinement of P1 was provisionally named **P1+** as the fixed
+baseline for **P1++** research. It combines phase preservation with centered HPSS
+and adds 26.667 ms of algorithmic delay. The source, reproducible measurements and
+known regressions are committed; Android defaults and APK rollout are separate.
+See [P1+ adoption](docs/P1PLUS_BASELINE.md), [results](research/p1plus/2026-10-26/README.md)
+and [P1++ research](docs/P1PP_RESEARCH.md).
+
 ## License and credits
 
 Rootnote is free software under the **GNU General Public License version 3** ([LICENSE](LICENSE)), the same
@@ -162,6 +171,11 @@ RootlessJamesDSP의 루트 없는 시스템 오디오 캡처는 그대로 쓰고
 
 ### 설치와 설정
 
+연구 상태(2026-10-26): 현재 HQ 정교화를 **P1+**로 명명하고 **P1++**의 비교 기준으로 임시 채택했습니다.
+채택 범위는 연구 코드와 측정 기준이며 Android 기본 모드 반영은 별도입니다.
+[P1+ 결정·실행 방법](docs/P1PLUS_BASELINE.md), [측정 기록](research/p1plus/2026-10-26/README.md),
+[P1++ 연구 방향](docs/P1PP_RESEARCH.md)을 보세요.
+
 이 저장소의 [릴리스](https://github.com/ksysh3-dot/rootnote/releases)에서 APK를 받고 옆의 `.sha256` 파일로 확인하세요.
 패키지 이름은 `kr.ksysh3.rootnote`입니다. 원본 RootlessJamesDSP와 함께 설치할 수 있지만 둘을 동시에 켜지는 마세요.
 
@@ -208,3 +222,4 @@ S26 Ultra 채널(연구 도구 포함)이며, 이 저장소에서는 시험 빌�
 바뀐 내용과 수정한 원본 파일 목록은 [NOTICE.md](NOTICE.md)에 있습니다. 원본 앱의 스토어 배포(Google Play,
 F-Droid)와 문서는 [RootlessJamesDSP 저장소](https://github.com/ThePBone/RootlessJamesDSP)를 보세요. 그 스토어
 목록은 원본 앱의 것이며 Rootnote의 것이 아닙니다.
+
