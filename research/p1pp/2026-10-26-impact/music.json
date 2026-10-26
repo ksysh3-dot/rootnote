@@ -1,0 +1,500 @@
+{
+  "schema": "pvb.p1pp.impact_music.v1",
+  "library_sha256": "f64af437f9da7309ce746b859f96cd14426bcfa174e11dab23f74a42ba90bead",
+  "selection": "Top two input-only low-band positive-energy novelty peaks per predeclared file, spaced 750 ms; 3 s preroll, not full-song state.",
+  "note": "Music pre/post differences are not labeled noise reduction. PCM24 excerpts share one gain per pair.",
+  "events": [
+    {
+      "source": "test 3.wav",
+      "source_sha256": "548f34e8caa5d68ad3a84cc0c1ba0d0238c4de16f40399ccc595ce3efd980c2a",
+      "source_fs": 48000,
+      "event_seconds": 68.0675,
+      "selection_score": 0.08556793214303521,
+      "context_start": 65.0675,
+      "context_stop": 69.2675,
+      "common_playback_gain_db": 20.268092225294986,
+      "variants": {
+        "0": {
+          "full_rms_dbfs": -34.096189324713684,
+          "layer_rms_dbfs": -48.761249407140326,
+          "true_peak_4x_dbtp": -21.268092225294986,
+          "latency": 8420,
+          "pre_layer_power": 2.827340799775238e-06,
+          "attack_layer_power": 1.643570152367933e-05,
+          "post_layer_power": 4.572399846079819e-06
+        },
+        "1": {
+          "full_rms_dbfs": -34.09189020754615,
+          "layer_rms_dbfs": -48.801536031086464,
+          "true_peak_4x_dbtp": -21.269578119366514,
+          "latency": 8420,
+          "pre_layer_power": 2.8413272713937074e-06,
+          "attack_layer_power": 1.6228151378911492e-05,
+          "post_layer_power": 4.5734175441308296e-06,
+          "full_difference_db": -32.38711902033971,
+          "layer_rms_change_db": -0.04028662394613747,
+          "pre_layer_change_db": 0.02143099470661033,
+          "attack_layer_change_db": -0.05519195545681435,
+          "post_layer_change_db": 0.0009665197341357931
+        },
+        "2": {
+          "full_rms_dbfs": -34.09072558963239,
+          "layer_rms_dbfs": -48.76086430235539,
+          "true_peak_4x_dbtp": -21.269578119366514,
+          "latency": 8420,
+          "pre_layer_power": 2.841327273259672e-06,
+          "attack_layer_power": 1.6228151378916165e-05,
+          "post_layer_power": 4.5734175441308296e-06,
+          "full_difference_db": -34.17384586130528,
+          "layer_rms_change_db": 0.00038510478493947176,
+          "pre_layer_change_db": 0.021430997558721708,
+          "attack_layer_change_db": -0.05519195545556374,
+          "post_layer_change_db": 0.0009665197341357931
+        }
+      }
+    },
+    {
+      "source": "test 3.wav",
+      "source_sha256": "548f34e8caa5d68ad3a84cc0c1ba0d0238c4de16f40399ccc595ce3efd980c2a",
+      "source_fs": 48000,
+      "event_seconds": 81.9675,
+      "selection_score": 0.08503058958622059,
+      "context_start": 78.9675,
+      "context_stop": 83.1675,
+      "common_playback_gain_db": 20.522425019383547,
+      "variants": {
+        "0": {
+          "full_rms_dbfs": -33.33246789130349,
+          "layer_rms_dbfs": -52.41201985856311,
+          "true_peak_4x_dbtp": -21.522425019383547,
+          "latency": 8420,
+          "pre_layer_power": 1.0119645324922747e-06,
+          "attack_layer_power": 9.39500999259688e-07,
+          "post_layer_power": 9.132929860989454e-07
+        },
+        "1": {
+          "full_rms_dbfs": -33.33834797173207,
+          "layer_rms_dbfs": -52.73580455717635,
+          "true_peak_4x_dbtp": -21.522425019383547,
+          "latency": 8420,
+          "pre_layer_power": 1.0119645324922747e-06,
+          "attack_layer_power": 7.767842627722114e-07,
+          "post_layer_power": 7.007114597117913e-07,
+          "full_difference_db": -34.09742077122927,
+          "layer_rms_change_db": -0.3237846986132382,
+          "pre_layer_change_db": 0.0,
+          "attack_layer_change_db": -0.8259682793691232,
+          "post_layer_change_db": -1.1507090219397278
+        },
+        "2": {
+          "full_rms_dbfs": -33.33741978588596,
+          "layer_rms_dbfs": -52.718839693293596,
+          "true_peak_4x_dbtp": -21.522425019383547,
+          "latency": 8420,
+          "pre_layer_power": 1.0119645324922747e-06,
+          "attack_layer_power": 7.767842627722114e-07,
+          "post_layer_power": 7.61113510321188e-07,
+          "full_difference_db": -34.36823196887696,
+          "layer_rms_change_db": -0.3068198347304829,
+          "pre_layer_change_db": 0.0,
+          "attack_layer_change_db": -0.8259682793691232,
+          "post_layer_change_db": -0.791606913146658
+        }
+      }
+    },
+    {
+      "source": "01 - Rabpit - Dream.flac",
+      "source_sha256": "0c991ca54ff030ccaa5494a2f6c333443f81c4f4ad2f24dfbdfa6f6625e6b736",
+      "source_fs": 44100,
+      "event_seconds": 88.8875,
+      "selection_score": 0.09028401974211271,
+      "context_start": 85.8875,
+      "context_stop": 90.0875,
+      "common_playback_gain_db": 14.48175352730343,
+      "variants": {
+        "0": {
+          "full_rms_dbfs": -27.88565379849455,
+          "layer_rms_dbfs": -50.973098517852335,
+          "true_peak_4x_dbtp": -15.489960177539217,
+          "latency": 8420,
+          "pre_layer_power": 6.477831348270681e-06,
+          "attack_layer_power": 1.2637293921054454e-06,
+          "post_layer_power": 2.1447491293940346e-08
+        },
+        "1": {
+          "full_rms_dbfs": -27.898734836928526,
+          "layer_rms_dbfs": -51.724757756733474,
+          "true_peak_4x_dbtp": -15.482612160660373,
+          "latency": 8420,
+          "pre_layer_power": 4.937707187169228e-06,
+          "attack_layer_power": 7.886076523551478e-07,
+          "post_layer_power": 7.734528221575742e-09,
+          "full_difference_db": -35.887578467455455,
+          "layer_rms_change_db": -0.751659238881139,
+          "pre_layer_change_db": -1.1790430477218399,
+          "attack_layer_change_db": -2.047930995378901,
+          "post_layer_change_db": -4.4294267176694895
+        },
+        "2": {
+          "full_rms_dbfs": -27.88738645225576,
+          "layer_rms_dbfs": -50.94019122487108,
+          "true_peak_4x_dbtp": -15.48175352730343,
+          "latency": 8420,
+          "pre_layer_power": 6.745695591644314e-06,
+          "attack_layer_power": 1.2354445794554055e-06,
+          "post_layer_power": 2.131698069276798e-08,
+          "full_difference_db": -47.707540750418396,
+          "layer_rms_change_db": 0.03290729298125683,
+          "pre_layer_change_db": 0.17597102316297283,
+          "attack_layer_change_db": -0.09830818275933435,
+          "post_layer_change_db": -0.026508083582015056
+        }
+      }
+    },
+    {
+      "source": "01 - Rabpit - Dream.flac",
+      "source_sha256": "0c991ca54ff030ccaa5494a2f6c333443f81c4f4ad2f24dfbdfa6f6625e6b736",
+      "source_fs": 44100,
+      "event_seconds": 111.6425,
+      "selection_score": 0.11675630068383759,
+      "context_start": 108.6425,
+      "context_stop": 112.8425,
+      "common_playback_gain_db": 13.121936078706,
+      "variants": {
+        "0": {
+          "full_rms_dbfs": -27.232396158063953,
+          "layer_rms_dbfs": -45.13604148480923,
+          "true_peak_4x_dbtp": -14.121936078706,
+          "latency": 8420,
+          "pre_layer_power": 2.7910577038501737e-05,
+          "attack_layer_power": 2.792946918730448e-05,
+          "post_layer_power": 1.698374426236953e-05
+        },
+        "1": {
+          "full_rms_dbfs": -27.240257126073214,
+          "layer_rms_dbfs": -45.323962324953875,
+          "true_peak_4x_dbtp": -14.121936078706,
+          "latency": 8420,
+          "pre_layer_power": 2.7910577041056043e-05,
+          "attack_layer_power": 2.7929469186860933e-05,
+          "post_layer_power": 1.484361617241534e-05,
+          "full_difference_db": -37.49410096505478,
+          "layer_rms_change_db": -0.18792084014464194,
+          "pre_layer_change_db": 3.9745527994148266e-10,
+          "attack_layer_change_db": -6.897014689963857e-11,
+          "post_layer_change_db": -0.5849372589718485
+        },
+        "2": {
+          "full_rms_dbfs": -27.232949185018867,
+          "layer_rms_dbfs": -45.14013208660184,
+          "true_peak_4x_dbtp": -14.121936078706,
+          "latency": 8420,
+          "pre_layer_power": 2.7910577041056043e-05,
+          "attack_layer_power": 2.7929469186860933e-05,
+          "post_layer_power": 1.695465090800845e-05,
+          "full_difference_db": -51.11548517271501,
+          "layer_rms_change_db": -0.004090601792604787,
+          "pre_layer_change_db": 3.9745527994148266e-10,
+          "attack_layer_change_db": -6.897014689963857e-11,
+          "post_layer_change_db": -0.0074458950051428585
+        }
+      }
+    },
+    {
+      "source": "06 - Chamber Chu - Fighting Spirit.flac",
+      "source_sha256": "21235cb5d34e67d8de72f31f52addff7d1085c383987b3d9f1a15becbae87b58",
+      "source_fs": 44100,
+      "event_seconds": 44.3975,
+      "selection_score": 0.14501922177146395,
+      "context_start": 41.3975,
+      "context_stop": 45.597500000000004,
+      "common_playback_gain_db": 13.435142020350312,
+      "variants": {
+        "0": {
+          "full_rms_dbfs": -29.522515602661592,
+          "layer_rms_dbfs": -51.03556064240675,
+          "true_peak_4x_dbtp": -14.435142020350312,
+          "latency": 8420,
+          "pre_layer_power": 2.903466433068503e-05,
+          "attack_layer_power": 1.1730048763818802e-05,
+          "post_layer_power": 1.8602225077814387e-05
+        },
+        "1": {
+          "full_rms_dbfs": -29.559160010697067,
+          "layer_rms_dbfs": -59.03387354098964,
+          "true_peak_4x_dbtp": -14.482940424947481,
+          "latency": 8420,
+          "pre_layer_power": 2.1396717730023094e-07,
+          "attack_layer_power": 1.2145521858215375e-07,
+          "post_layer_power": 2.688251740247342e-06,
+          "full_difference_db": -23.517605014145552,
+          "layer_rms_change_db": -7.998312898582888,
+          "pre_layer_change_db": -21.325696521149812,
+          "attack_layer_change_db": -19.84883637626246,
+          "post_layer_change_db": -8.4009495920387
+        },
+        "2": {
+          "full_rms_dbfs": -29.536694581879775,
+          "layer_rms_dbfs": -51.74481179594426,
+          "true_peak_4x_dbtp": -14.44180782710303,
+          "latency": 8420,
+          "pre_layer_power": 2.3477561111062577e-05,
+          "attack_layer_power": 8.512469417715427e-06,
+          "post_layer_power": 3.2696959826243063e-06,
+          "full_difference_db": -26.836033476141715,
+          "layer_rms_change_db": -0.7092511535375081,
+          "pre_layer_change_db": -0.9226382985635526,
+          "attack_layer_change_db": -1.3924425289816964,
+          "post_layer_change_db": -7.550575211231906
+        }
+      }
+    },
+    {
+      "source": "06 - Chamber Chu - Fighting Spirit.flac",
+      "source_sha256": "21235cb5d34e67d8de72f31f52addff7d1085c383987b3d9f1a15becbae87b58",
+      "source_fs": 44100,
+      "event_seconds": 55.5475,
+      "selection_score": 0.20619280110047455,
+      "context_start": 52.5475,
+      "context_stop": 56.7475,
+      "common_playback_gain_db": 14.374923914701334,
+      "variants": {
+        "0": {
+          "full_rms_dbfs": -28.917266477637604,
+          "layer_rms_dbfs": -49.19594344253815,
+          "true_peak_4x_dbtp": -15.374923914701334,
+          "latency": 8420,
+          "pre_layer_power": 1.2867403757179595e-05,
+          "attack_layer_power": 4.055050422348092e-06,
+          "post_layer_power": 2.1125435637881676e-05
+        },
+        "1": {
+          "full_rms_dbfs": -28.958646609638535,
+          "layer_rms_dbfs": -56.957085428960966,
+          "true_peak_4x_dbtp": -15.325072920188092,
+          "latency": 8420,
+          "pre_layer_power": 3.433051730655978e-07,
+          "attack_layer_power": 1.5429781104244004e-08,
+          "post_layer_power": 4.128700782331113e-06,
+          "full_difference_db": -22.62988827356924,
+          "layer_rms_change_db": -7.761141986422814,
+          "pre_layer_change_db": -15.738105809870028,
+          "attack_layer_change_db": -24.196364938412394,
+          "post_layer_change_db": -7.08992263945685
+        },
+        "2": {
+          "full_rms_dbfs": -28.931226153276377,
+          "layer_rms_dbfs": -49.40871460750627,
+          "true_peak_4x_dbtp": -15.44130482255484,
+          "latency": 8420,
+          "pre_layer_power": 1.5261357917873472e-05,
+          "attack_layer_power": 6.015450220156642e-06,
+          "post_layer_power": 1.2616159041948576e-05,
+          "full_difference_db": -26.159663101509917,
+          "layer_rms_change_db": -0.21277116496811743,
+          "pre_layer_change_db": 0.7410224919421725,
+          "attack_layer_change_db": 1.712718784174971,
+          "post_layer_change_db": -2.2387851834904553
+        }
+      }
+    },
+    {
+      "source": "07 - Chamber Chu, Hannah Sumner - Mirage.flac",
+      "source_sha256": "689e94bea29ca42ca039fefc3ad2c831c9b31b91ebcce6afe5de4ef51ca449f1",
+      "source_fs": 44100,
+      "event_seconds": 8.9425,
+      "selection_score": 0.368996501517863,
+      "context_start": 5.942500000000001,
+      "context_stop": 10.1425,
+      "common_playback_gain_db": 20.117325381242193,
+      "variants": {
+        "0": {
+          "full_rms_dbfs": -35.710530241602775,
+          "layer_rms_dbfs": -47.509668963175386,
+          "true_peak_4x_dbtp": -21.117325381242193,
+          "latency": 8420,
+          "pre_layer_power": 3.3531111232368986e-10,
+          "attack_layer_power": 9.234731711558206e-05,
+          "post_layer_power": 8.554336769686974e-05
+        },
+        "1": {
+          "full_rms_dbfs": -35.83104595670799,
+          "layer_rms_dbfs": -49.577573425492304,
+          "true_peak_4x_dbtp": -21.125424287124837,
+          "latency": 8420,
+          "pre_layer_power": 3.35311887950142e-10,
+          "attack_layer_power": 2.9913995127308953e-08,
+          "post_layer_power": 5.448956701572428e-05,
+          "full_difference_db": -18.234038802359176,
+          "layer_rms_change_db": -2.0679044623169176,
+          "pre_layer_change_db": 1.0045891299334342e-05,
+          "attack_layer_change_db": -34.895498642112514,
+          "post_layer_change_db": -1.9587298675957066
+        },
+        "2": {
+          "full_rms_dbfs": -35.70948867882042,
+          "layer_rms_dbfs": -47.33041340064852,
+          "true_peak_4x_dbtp": -21.118493472629645,
+          "latency": 8420,
+          "pre_layer_power": 3.3531112199183487e-10,
+          "attack_layer_power": 2.9913995127308953e-08,
+          "post_layer_power": 0.0001083512344940823,
+          "full_difference_db": -20.21886771620774,
+          "layer_rms_change_db": 0.17925556252686903,
+          "pre_layer_change_db": 1.2522167674647338e-07,
+          "attack_layer_change_db": -34.895498642112514,
+          "post_layer_change_db": 1.0264752010299552
+        }
+      }
+    },
+    {
+      "source": "07 - Chamber Chu, Hannah Sumner - Mirage.flac",
+      "source_sha256": "689e94bea29ca42ca039fefc3ad2c831c9b31b91ebcce6afe5de4ef51ca449f1",
+      "source_fs": 44100,
+      "event_seconds": 33.0625,
+      "selection_score": 0.2609660362711623,
+      "context_start": 30.0625,
+      "context_stop": 34.2625,
+      "common_playback_gain_db": 14.23696577355016,
+      "variants": {
+        "0": {
+          "full_rms_dbfs": -30.356551022609143,
+          "layer_rms_dbfs": -50.75725401271817,
+          "true_peak_4x_dbtp": -15.236968017452849,
+          "latency": 8420,
+          "pre_layer_power": 6.8794562898918e-10,
+          "attack_layer_power": 1.3670324346293204e-05,
+          "post_layer_power": 1.9340867061486917e-05
+        },
+        "1": {
+          "full_rms_dbfs": -30.39065206053625,
+          "layer_rms_dbfs": -55.907291079001844,
+          "true_peak_4x_dbtp": -15.23696577355016,
+          "latency": 8420,
+          "pre_layer_power": 1.1330958605978108e-09,
+          "attack_layer_power": 9.64404158158572e-07,
+          "post_layer_power": 3.6874461774218404e-06,
+          "full_difference_db": -23.795821373015936,
+          "layer_rms_change_db": -5.150037066283673,
+          "pre_layer_change_db": 2.1671253737975524,
+          "attack_layer_change_db": -11.515197446649925,
+          "post_layer_change_db": -7.197502498410002
+        },
+        "2": {
+          "full_rms_dbfs": -30.35708195417856,
+          "layer_rms_dbfs": -50.346049549932914,
+          "true_peak_4x_dbtp": -15.23696577355016,
+          "latency": 8420,
+          "pre_layer_power": 2.0006743067877804e-09,
+          "attack_layer_power": 9.664093452939703e-07,
+          "post_layer_power": 2.6003197423867573e-05,
+          "full_difference_db": -26.25938674315588,
+          "layer_rms_change_db": 0.4112044627852569,
+          "pre_layer_change_db": 4.636222792296213,
+          "attack_layer_change_db": -11.506176979167137,
+          "post_layer_change_db": 1.2855081344588077
+        }
+      }
+    }
+  ],
+  "limiter_stress": [
+    {
+      "input_peak_dbfs": -12,
+      "out_db": -18,
+      "vb_db": 6,
+      "limiter_max_gr_db": 0.0,
+      "limiter_max_active_pct": 0.0,
+      "output_sample_peak": 0.020452048629522324
+    },
+    {
+      "input_peak_dbfs": -12,
+      "out_db": -18,
+      "vb_db": 9,
+      "limiter_max_gr_db": 0.0,
+      "limiter_max_active_pct": 0.0,
+      "output_sample_peak": 0.020529793575406075
+    },
+    {
+      "input_peak_dbfs": -12,
+      "out_db": -3,
+      "vb_db": 6,
+      "limiter_max_gr_db": 0.0,
+      "limiter_max_active_pct": 0.0,
+      "output_sample_peak": 0.1150103211402893
+    },
+    {
+      "input_peak_dbfs": -12,
+      "out_db": -3,
+      "vb_db": 9,
+      "limiter_max_gr_db": 0.0,
+      "limiter_max_active_pct": 0.0,
+      "output_sample_peak": 0.1154475137591362
+    },
+    {
+      "input_peak_dbfs": -6,
+      "out_db": -18,
+      "vb_db": 6,
+      "limiter_max_gr_db": 0.0,
+      "limiter_max_active_pct": 0.0,
+      "output_sample_peak": 0.04096449911594391
+    },
+    {
+      "input_peak_dbfs": -6,
+      "out_db": -18,
+      "vb_db": 9,
+      "limiter_max_gr_db": 0.0,
+      "limiter_max_active_pct": 0.0,
+      "output_sample_peak": 0.041209109127521515
+    },
+    {
+      "input_peak_dbfs": -6,
+      "out_db": -3,
+      "vb_db": 6,
+      "limiter_max_gr_db": 0.0,
+      "limiter_max_active_pct": 0.0,
+      "output_sample_peak": 0.23036029934883118
+    },
+    {
+      "input_peak_dbfs": -6,
+      "out_db": -3,
+      "vb_db": 9,
+      "limiter_max_gr_db": 0.0,
+      "limiter_max_active_pct": 0.0,
+      "output_sample_peak": 0.23173585534095764
+    },
+    {
+      "input_peak_dbfs": -1,
+      "out_db": -18,
+      "vb_db": 6,
+      "limiter_max_gr_db": 0.0,
+      "limiter_max_active_pct": 0.0,
+      "output_sample_peak": 0.07341278344392776
+    },
+    {
+      "input_peak_dbfs": -1,
+      "out_db": -18,
+      "vb_db": 9,
+      "limiter_max_gr_db": 0.0,
+      "limiter_max_active_pct": 0.0,
+      "output_sample_peak": 0.07410068809986115
+    },
+    {
+      "input_peak_dbfs": -1,
+      "out_db": -3,
+      "vb_db": 6,
+      "limiter_max_gr_db": 0.0,
+      "limiter_max_active_pct": 0.0,
+      "output_sample_peak": 0.4128304123878479
+    },
+    {
+      "input_peak_dbfs": -1,
+      "out_db": -3,
+      "vb_db": 9,
+      "limiter_max_gr_db": 0.0,
+      "limiter_max_active_pct": 0.0,
+      "output_sample_peak": 0.4166988134384155
+    }
+  ],
+  "device_validation": false,
+  "listening_validation": false
+}

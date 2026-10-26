@@ -1,0 +1,449 @@
+{
+  "schema": "pvb.p1pp.impact_summary.v1",
+  "candidate_mode": 2,
+  "adopted_as_P1plus": false,
+  "additional_latency_ms": 0,
+  "development_comparisons": [
+    {
+      "shape": "noise_bang",
+      "bed": false,
+      "level": -36,
+      "late_residual_reduction_db": 0.0,
+      "attack_change_db": 0.0,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "noise_bang",
+      "bed": false,
+      "level": -24,
+      "late_residual_reduction_db": 0.0,
+      "attack_change_db": 0.0,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "noise_bang",
+      "bed": false,
+      "level": -12,
+      "late_residual_reduction_db": 0.0,
+      "attack_change_db": 0.0,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "noise_bang",
+      "bed": false,
+      "level": -6,
+      "late_residual_reduction_db": 0.0,
+      "attack_change_db": 0.0,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "noise_bang",
+      "bed": false,
+      "level": -1,
+      "late_residual_reduction_db": 0.0,
+      "attack_change_db": 0.0,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "noise_bang",
+      "bed": true,
+      "level": -36,
+      "late_residual_reduction_db": 0.0,
+      "attack_change_db": 0.0,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "noise_bang",
+      "bed": true,
+      "level": -24,
+      "late_residual_reduction_db": 0.0,
+      "attack_change_db": 0.0,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "noise_bang",
+      "bed": true,
+      "level": -12,
+      "late_residual_reduction_db": 0.0,
+      "attack_change_db": 0.0,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "noise_bang",
+      "bed": true,
+      "level": -6,
+      "late_residual_reduction_db": 0.0,
+      "attack_change_db": 0.0,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "noise_bang",
+      "bed": true,
+      "level": -1,
+      "late_residual_reduction_db": 0.0,
+      "attack_change_db": 0.0,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "kick_bang",
+      "bed": false,
+      "level": -36,
+      "late_residual_reduction_db": 0.0,
+      "attack_change_db": -0.021970455045099868,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "kick_bang",
+      "bed": false,
+      "level": -24,
+      "late_residual_reduction_db": -0.05604074465384201,
+      "attack_change_db": -0.011134232592382887,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "kick_bang",
+      "bed": false,
+      "level": -12,
+      "late_residual_reduction_db": -1.5039385449390466,
+      "attack_change_db": -0.008355466035510517,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "kick_bang",
+      "bed": false,
+      "level": -6,
+      "late_residual_reduction_db": -1.9812103870763451,
+      "attack_change_db": -0.007622183157700135,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "kick_bang",
+      "bed": false,
+      "level": -1,
+      "late_residual_reduction_db": -2.55271540701645,
+      "attack_change_db": -0.010084832309523506,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "kick_bang",
+      "bed": true,
+      "level": -36,
+      "late_residual_reduction_db": 0.0,
+      "attack_change_db": 0.0,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "kick_bang",
+      "bed": true,
+      "level": -24,
+      "late_residual_reduction_db": 0.00026982852224932685,
+      "attack_change_db": -4.871165700137681e-06,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "kick_bang",
+      "bed": true,
+      "level": -12,
+      "late_residual_reduction_db": 6.314503542625971e-05,
+      "attack_change_db": -0.07681479351650466,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "kick_bang",
+      "bed": true,
+      "level": -6,
+      "late_residual_reduction_db": 11.351381314222436,
+      "attack_change_db": -0.05534848687309335,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "kick_bang",
+      "bed": true,
+      "level": -1,
+      "late_residual_reduction_db": 4.702129894133293,
+      "attack_change_db": -0.40954034027326713,
+      "pre_residual_reduction_db": 0.0
+    }
+  ],
+  "fresh_comparisons": [
+    {
+      "shape": "fresh_kick_0",
+      "bed": true,
+      "level": -24,
+      "late_residual_reduction_db": 65.53137273589765,
+      "attack_change_db": -0.01616945004041881,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "fresh_kick_0",
+      "bed": true,
+      "level": -12,
+      "late_residual_reduction_db": 9.738274820231425,
+      "attack_change_db": -0.027823985706625365,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "fresh_kick_0",
+      "bed": true,
+      "level": -6,
+      "late_residual_reduction_db": 8.671648247255035,
+      "attack_change_db": 0.011004657089841885,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "fresh_kick_0",
+      "bed": true,
+      "level": -1,
+      "late_residual_reduction_db": 6.198050123550956,
+      "attack_change_db": -0.1466672523449688,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "fresh_kick_1",
+      "bed": true,
+      "level": -24,
+      "late_residual_reduction_db": 0.0,
+      "attack_change_db": -0.004692545988216779,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "fresh_kick_1",
+      "bed": true,
+      "level": -12,
+      "late_residual_reduction_db": 0.0,
+      "attack_change_db": -0.0005985817057094778,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "fresh_kick_1",
+      "bed": true,
+      "level": -6,
+      "late_residual_reduction_db": 17.56690897632518,
+      "attack_change_db": -0.0012597397471196814,
+      "pre_residual_reduction_db": 0.05876213548491194
+    },
+    {
+      "shape": "fresh_kick_1",
+      "bed": true,
+      "level": -1,
+      "late_residual_reduction_db": 14.362056781656193,
+      "attack_change_db": 0.31905159724426824,
+      "pre_residual_reduction_db": 0.0466587382640995
+    },
+    {
+      "shape": "fresh_kick_2",
+      "bed": true,
+      "level": -24,
+      "late_residual_reduction_db": 14.830994012300508,
+      "attack_change_db": -0.023005357917003977,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "fresh_kick_2",
+      "bed": true,
+      "level": -12,
+      "late_residual_reduction_db": 28.59521296602648,
+      "attack_change_db": -0.266313569397596,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "fresh_kick_2",
+      "bed": true,
+      "level": -6,
+      "late_residual_reduction_db": 6.558587831302418,
+      "attack_change_db": 0.0002805372190266553,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "fresh_kick_2",
+      "bed": true,
+      "level": -1,
+      "late_residual_reduction_db": 3.748414471875563,
+      "attack_change_db": 0.0,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "fresh_kick_3",
+      "bed": true,
+      "level": -24,
+      "late_residual_reduction_db": 0.0,
+      "attack_change_db": 0.0,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "fresh_kick_3",
+      "bed": true,
+      "level": -12,
+      "late_residual_reduction_db": -6.0282339205741664e-05,
+      "attack_change_db": -0.04378002920537227,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "fresh_kick_3",
+      "bed": true,
+      "level": -6,
+      "late_residual_reduction_db": 0.0011967605410063697,
+      "attack_change_db": 0.00505799394207429,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "fresh_kick_3",
+      "bed": true,
+      "level": -1,
+      "late_residual_reduction_db": 16.412491962755965,
+      "attack_change_db": -4.860311676679885e-05,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "fresh_kick_4",
+      "bed": true,
+      "level": -24,
+      "late_residual_reduction_db": 0.0,
+      "attack_change_db": 0.0,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "fresh_kick_4",
+      "bed": true,
+      "level": -12,
+      "late_residual_reduction_db": 0.0,
+      "attack_change_db": 0.0,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "fresh_kick_4",
+      "bed": true,
+      "level": -6,
+      "late_residual_reduction_db": 0.7887182431471587,
+      "attack_change_db": 0.0,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "fresh_kick_4",
+      "bed": true,
+      "level": -1,
+      "late_residual_reduction_db": 6.897195710941659,
+      "attack_change_db": 0.0006444043708100367,
+      "pre_residual_reduction_db": -0.07548532615981429
+    },
+    {
+      "shape": "fresh_kick_5",
+      "bed": true,
+      "level": -24,
+      "late_residual_reduction_db": 0.0,
+      "attack_change_db": 0.0,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "fresh_kick_5",
+      "bed": true,
+      "level": -12,
+      "late_residual_reduction_db": 0.01898187182841582,
+      "attack_change_db": 0.0,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "fresh_kick_5",
+      "bed": true,
+      "level": -6,
+      "late_residual_reduction_db": -0.09789594017929915,
+      "attack_change_db": 0.0,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "fresh_kick_5",
+      "bed": true,
+      "level": -1,
+      "late_residual_reduction_db": 8.75131873301656,
+      "attack_change_db": 0.0007959597382409811,
+      "pre_residual_reduction_db": -0.32822265957462093
+    },
+    {
+      "shape": "fresh_noise_6",
+      "bed": true,
+      "level": -24,
+      "late_residual_reduction_db": 0.0,
+      "attack_change_db": 0.0,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "fresh_noise_6",
+      "bed": true,
+      "level": -12,
+      "late_residual_reduction_db": 0.0,
+      "attack_change_db": 0.0,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "fresh_noise_6",
+      "bed": true,
+      "level": -6,
+      "late_residual_reduction_db": 0.0,
+      "attack_change_db": 0.0,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "fresh_noise_6",
+      "bed": true,
+      "level": -1,
+      "late_residual_reduction_db": 0.0,
+      "attack_change_db": 0.0,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "fresh_noise_7",
+      "bed": true,
+      "level": -24,
+      "late_residual_reduction_db": 0.0,
+      "attack_change_db": 0.0,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "fresh_noise_7",
+      "bed": true,
+      "level": -12,
+      "late_residual_reduction_db": 57.72028674227441,
+      "attack_change_db": 0.0297043800248602,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "fresh_noise_7",
+      "bed": true,
+      "level": -6,
+      "late_residual_reduction_db": 47.523692279384235,
+      "attack_change_db": 0.0,
+      "pre_residual_reduction_db": 0.0
+    },
+    {
+      "shape": "fresh_noise_7",
+      "bed": true,
+      "level": -1,
+      "late_residual_reduction_db": -46.31555165983836,
+      "attack_change_db": 0.0,
+      "pre_residual_reduction_db": 0.0
+    }
+  ],
+  "fresh_independent_shapes": 8,
+  "fresh_level_settings_per_shape": 4,
+  "strongest_kick_late_reduction_db": [
+    6.198050123550956,
+    14.362056781656193,
+    3.748414471875563,
+    16.412491962755965,
+    6.897195710941659,
+    8.75131873301656
+  ],
+  "strongest_kick_attack_change_db": [
+    -0.1466672523449688,
+    0.31905159724426824,
+    0.0,
+    -4.860311676679885e-05,
+    0.0006444043708100367,
+    0.0007959597382409811
+  ],
+  "worst_late_regression_db": 46.31555165983836,
+  "note": "Window residual of a declared synthetic bed model; not music noise reduction or phone validation.",
+  "engine_checks": 71,
+  "frozen_P1plus_unchanged": true,
+  "library_sha256": "f64af437f9da7309ce746b859f96cd14426bcfa174e11dab23f74a42ba90bead"
+}

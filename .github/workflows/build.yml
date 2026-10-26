@@ -58,6 +58,7 @@ jobs:
             tools/pvb-harness/build_host.sh &&
             python3 tools/pvb-harness/test_engine.py --report engine-report.json &&
             OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_p1plus_baseline.py --report p1plus-baseline-ci.json &&
+            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/check_p1pp_impact_controls.py --out p1pp-impact-controls-ci &&
             OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_alpha2_profiles.py --lib tools/pvb-harness/build/libpvbcapi.so --report alpha2-profiles-ci.json &&
             OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_diagnostic_solo.py &&
             OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_xtc.py &&
@@ -113,6 +114,7 @@ jobs:
             native-mutation-q0.json
             engine-report.json
             p1plus-baseline-ci.json
+            p1pp-impact-controls-ci/controls.json
             experimental-report.json
             devmode-report.json
             alpha2-profiles-ci.json

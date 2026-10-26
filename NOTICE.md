@@ -103,3 +103,15 @@ Removed upstream files:
 
 Files added by this fork (not listed): 205. New source files carry their own GPL-3.0 header or are covered by this notice.
 <!-- END GENERATED -->
+
+
+## P1+ and P1++ research modifications (2026-10-26)
+
+The P1+ research baseline adds source-phase preservation, centered HPSS and the
+corresponding delay alignment to libpvb. The P1++ impact investigation adds two
+host-only fit-validation counterfactuals for analysis. These modifications affect
+`pvb_vb.h`, `pvb_vb.cpp`, `pvb_vb52.cpp`, `pvb_engine.h` and the host C API/tools.
+Research options are off by default and are not connected to Android JNI/UI.
+Sources, measured benefits/regressions and reproduction instructions are retained
+under docs/P1PLUS_BASELINE.md, docs/P1PP_IMPACT_PROTOCOL.md and research/.
+The Bankstown attribution and all prior notices above remain applicable.

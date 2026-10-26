@@ -22,6 +22,8 @@ def main():
     p.add_argument('--library',type=Path,default=default_library())
     p.add_argument('--input',type=Path,required=True);p.add_argument('--output',type=Path,required=True)
     p.add_argument('--mode',choices=('p1','phase','p1plus','centered','hq','prominence'),default='p1plus')
+    p.add_argument('--impact-mode',type=int,choices=(0,1,2),default=0,
+                   help='Unadopted P1++ impact experiment; requires the p1plus/hq mode.')
     p.add_argument('--fs',type=int,choices=(44100,48000),default=48000)
     p.add_argument('--vb-db',type=float,default=6);p.add_argument('--out-db',type=float,default=-18)
     p.add_argument('--peak-target',type=float,default=None,
@@ -39,9 +41,11 @@ def main():
     if source_fs!=a.fs:
         g=math.gcd(source_fs,a.fs);data=np.asarray(resample_poly(data,a.fs//g,source_fs//g,axis=0),np.float32)
     flags={'p1':0,'phase':2,'p1plus':P1PLUS_FLAGS,'centered':P1PLUS_FLAGS,'hq':P1PLUS_FLAGS,'prominence':14}[a.mode]
+    if a.impact_mode and flags!=P1PLUS_FLAGS:p.error('Impact experiments require p1plus/hq/centered')
     lib=P.api(a.library.resolve());e=T.Engine(lib,a.fs,vb_on=1,vb_algo=6,vb_level_db=a.vb_db,out_db=a.out_db,ramp_ms=0)
     try:
         assert lib.pvb_set_p1plus_research(e.h,flags)==1
+        if a.impact_mode:assert lib.pvb_set_p1pp_impact_research(e.h,a.impact_mode)==1
         padded=np.concatenate((data,np.zeros((a.fs,2),np.float32)))
         start=time.perf_counter();rendered=e.process(padded);elapsed=time.perf_counter()-start
         latency=e.latency();meters=e.meters()
@@ -54,8 +58,10 @@ def main():
     a.output.parent.mkdir(parents=True,exist_ok=True);sf.write(str(a.output),output,a.fs,subtype='PCM_24')
     result=dict(schema='pvb.p1hq.render.v1',source=str(a.input.resolve()),source_sha256=hashlib.sha256(a.input.read_bytes()).hexdigest(),
                 source_fs=source_fs,processing_fs=a.fs,source_seconds=len(data)/a.fs,mode=a.mode,flags=flags,
-                model_name='P1+' if flags==P1PLUS_FLAGS else a.mode,
-                research_baseline_id=P1PLUS_BASELINE_ID if flags==P1PLUS_FLAGS else None,
+                model_name=f'P1++ impact experiment {a.impact_mode}' if a.impact_mode else 'P1+' if flags==P1PLUS_FLAGS else a.mode,
+                impact_research_mode=a.impact_mode,
+                comparison_baseline_id=P1PLUS_BASELINE_ID if a.impact_mode else None,
+                research_baseline_id=P1PLUS_BASELINE_ID if flags==P1PLUS_FLAGS and not a.impact_mode else None,
                 settings=dict(algorithm=6,vb_db=a.vb_db,out_db=a.out_db,ramp_ms=0),
                 latency_frames=latency,latency_ms=1000*latency/a.fs,latency_compensated_in_file=True,
                 tail_seconds=a.tail_seconds,raw_true_peak_4x_dbtp=raw_peak,whole_file_playback_gain_db=gain_db,

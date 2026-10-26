@@ -206,6 +206,8 @@ public:
     // bit3 (requires bit2): mix causal/centered masks by spectral prominence.
     // No bit changes the app's stored algorithm or the public trace ABI.
     void setP1PlusResearch(unsigned flags) { p1PlusFlags_=flags&15; reset(); }
+    // Host-only impact attribution: 0=baseline, 1=current fit, 2=unconfirmed fit.
+    void setP1PPImpactResearch(int mode) { p1ppImpactMode_=mode; reset(); }
     void setStageResearch(unsigned flags,StageCapture52::Sink sink=nullptr,void* user=nullptr) {
         stageFlags_=flags&8191;stageSink_=sink;stageUser_=user;reset();
     }
@@ -383,6 +385,7 @@ private:
     bool tonalOnly_=false;
     unsigned stageFlags_=0;
     unsigned p1PlusFlags_=0;
+    int p1ppImpactMode_=0;
     bool p1PlusProfile_=false;
     int hpssLookahead() const { return p1PlusProfile_ && (p1PlusFlags_&4) ? 5*kHpHop : 0; }
     StageCapture52::Sink stageSink_=nullptr;

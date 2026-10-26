@@ -1,0 +1,37 @@
+{
+  "schema": "pvb.p1plus.baseline_ci.v1",
+  "baseline_id": "p1plus-2026-10-26",
+  "library_sha256": "f64af437f9da7309ce746b859f96cd14426bcfa174e11dab23f74a42ba90bead",
+  "oracle": [
+    {
+      "flags": 0,
+      "h_nmse_db": -276.25193851346427,
+      "p_nmse_db": -232.27533947898257,
+      "complement_max_error": 5.551115123125783e-17
+    },
+    {
+      "flags": 4,
+      "h_nmse_db": -276.2523862968914,
+      "p_nmse_db": -229.8316911517711,
+      "complement_max_error": 5.551115123125783e-17
+    },
+    {
+      "flags": 6,
+      "h_nmse_db": -276.2523862968914,
+      "p_nmse_db": -229.8316911517711,
+      "complement_max_error": 5.551115123125783e-17
+    },
+    {
+      "flags": 14,
+      "h_nmse_db": -276.2523599686103,
+      "p_nmse_db": -232.20274905065423,
+      "complement_max_error": 5.551115123125783e-17
+    }
+  ],
+  "envelope_cases": 6,
+  "variant_comparisons": 24,
+  "max_metric_difference_db": 0.0,
+  "metric_tolerance_db": 0.05,
+  "passed": true,
+  "perceptual_validation": false
+}

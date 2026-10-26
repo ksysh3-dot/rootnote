@@ -415,7 +415,9 @@ void VbHpv::pvFrame52() {
         // History exclusion must not turn missing history into acceptance.
         // Preserve a direct current-frame check outside the existing onset/
         // falling exceptions (onsetLeft_ was decremented above).
-        if(modelAwareHistory && onsetLeft_<0 && !falling) r=std::max(r,pk[p].raw);
+        if((modelAwareHistory && onsetLeft_<0 && !falling) ||
+           (p1PlusProfile_ && (p1PlusFlags_&6)==6 && p1ppImpactMode_==1))
+            r=std::max(r,pk[p].raw);
         pk[p].res=r;
     }
     spectrum52(md2_52_,s0,sr52_,si52_);
@@ -461,10 +463,15 @@ void VbHpv::pvFrame52() {
         assignment52::match(observed,np,old,nt52_,global,predicted);
     }
     for(int p=0;p<np;++p) {
-        const auto& q=pk[p]; int best=-1;
+        auto q=pk[p]; int best=-1;
         if(stageFlags_&StageGlobalTrack) best=global[p];
         else for(int t=0;t<nt52_;++t) if(!used[t] && std::abs(tr52_[t].f-q.f)<.1*q.f &&
             (best<0 || std::abs(tr52_[t].f-q.f)<std::abs(tr52_[best].f-q.f))) best=t;
+        // Require current evidence only until the track first earns permission.
+        // A valid modulation model remains accepted by its own residual.
+        if(p1PlusProfile_ && (p1PlusFlags_&6)==6 && p1ppImpactMode_==2 &&
+           !q.modulation.valid && (best<0 || tr52_[best].fade<1e-6))
+            q.res=std::max(q.res,q.raw);
         Track52 tr; tr.f=q.f; tr.phi=q.ph; tr.a=q.a; tr.strong=q.a>=.7*am;
         if(best>=0) {
             used[best]=true; const auto& prev=tr52_[best];

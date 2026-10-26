@@ -23,14 +23,18 @@ def api(path):
     lib.pvb_copy_diagnostic.argtypes = [C.c_void_p,T.FP,T.FP,C.c_int,T.FP,C.c_int]
     if hasattr(lib, 'pvb_set_p1plus_research'):
         lib.pvb_set_p1plus_research.argtypes = [C.c_void_p, C.c_uint]
+    if hasattr(lib, 'pvb_set_p1pp_impact_research'):
+        lib.pvb_set_p1pp_impact_research.argtypes = [C.c_void_p, C.c_int]
     return lib
 
 
-def render(lib, x, fs=48000, flags=0, block=4096, algo=6, capture=True):
+def render(lib, x, fs=48000, flags=0, block=4096, algo=6, capture=True, impact_mode=0):
     engine = T.Engine(lib, fs, vb_on=1, vb_algo=algo, vb_level_db=6,
                       out_db=-18, ramp_ms=0)
     if flags:
         assert lib.pvb_set_p1plus_research(engine.h, flags) == 1
+    if impact_mode:
+        assert lib.pvb_set_p1pp_impact_research(engine.h, impact_mode) == 1
     lib.pvb_set_diagnostic_capture(engine.h, int(capture))
     stages = StageCapture(lib, engine.h, 0, int(len(x)/fs*3000)+16) if capture else None
     source=np.asarray(x,np.float32)

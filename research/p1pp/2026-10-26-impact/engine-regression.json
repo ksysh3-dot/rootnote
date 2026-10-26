@@ -1,0 +1,445 @@
+{
+ "results": [
+  {
+   "test": "response EQ v1.1 @ 44100",
+   "ok": true,
+   "max_err_db": 6.90118198818368e-05
+  },
+  {
+   "test": "response other @ 44100",
+   "ok": true,
+   "max_err_db": 9.918303263134476e-06
+  },
+  {
+   "test": "response cut @ 44100",
+   "ok": true,
+   "max_err_db": 0.0001381505592235044
+  },
+  {
+   "test": "response EQ v1.1 @ 48000",
+   "ok": true,
+   "max_err_db": 4.6175226444233886e-05
+  },
+  {
+   "test": "response other @ 48000",
+   "ok": true,
+   "max_err_db": 1.7679884479093744e-05
+  },
+  {
+   "test": "response cut @ 48000",
+   "ok": true,
+   "max_err_db": 7.740456800320317e-05
+  },
+  {
+   "test": "latency @ 44100",
+   "ok": true,
+   "frames": 82,
+   "ms": 1.8594104308390023
+  },
+  {
+   "test": "latency @ 48000",
+   "ok": true,
+   "frames": 88,
+   "ms": 1.8333333333333333
+  },
+  {
+   "test": "waveform vs reference (limiter idle)",
+   "ok": true,
+   "residual_db": -151.80114577260116
+  },
+  {
+   "test": "no clicks on parameter changes (HF > 2 kHz from a 100 Hz tone)",
+   "ok": true,
+   "ramped_dbfs": -97.41091493057266,
+   "abrupt_dbfs": -34.657308990350906
+  },
+  {
+   "test": "true peak <= -1 dBTP: fs/4 sine, +3 dB between samples",
+   "ok": true,
+   "dbtp": -1.0847466680258961
+  },
+  {
+   "test": "true peak <= -1 dBTP: full-scale 1 kHz square",
+   "ok": true,
+   "dbtp": -1.0980471266999976
+  },
+  {
+   "test": "true peak <= -1 dBTP: noise +12 dB into the limiter",
+   "ok": true,
+   "dbtp": -0.9950246438849084
+  },
+  {
+   "test": "true peak <= -1 dBTP: huge values (1e6)",
+   "ok": true,
+   "dbtp": -1.094221679554837
+  },
+  {
+   "test": "silence -> exact zeros",
+   "ok": true
+  },
+  {
+   "test": "DC removed",
+   "ok": true,
+   "tail_peak": 0.0
+  },
+  {
+   "test": "NaN/Inf input -> finite output, counted",
+   "ok": true,
+   "nan_events": 1.0
+  },
+  {
+   "test": "denormal input -> finite output",
+   "ok": true
+  },
+  {
+   "test": "block-size invariance (bit exact)",
+   "ok": true,
+   "max_diff": 0.0
+  },
+  {
+   "test": "sample-rate switch 44.1 -> 48 kHz",
+   "ok": true,
+   "rate": 48000.0
+  },
+  {
+   "test": "absurd parameters are clamped",
+   "ok": true,
+   "dbtp": -0.0036667446821978407
+  },
+  {
+   "test": "bypass crossfade 1000 Hz",
+   "ok": true,
+   "wet_db": -25.23218290958074,
+   "dry_db": -19.99999987057016,
+   "min_db": -25.23218290958074,
+   "max_db": -19.99999987057016
+  },
+  {
+   "test": "bypass crossfade 100 Hz",
+   "ok": true,
+   "wet_db": -30.27783498437517,
+   "dry_db": -19.99999987057016,
+   "min_db": -36.352381743926806,
+   "max_db": -19.99999987057016
+  },
+  {
+   "test": "int16 path matches float path",
+   "ok": true,
+   "max_lsb": 0.0
+  },
+  {
+   "test": "meters: low gain, mix, rate, latency",
+   "ok": true,
+   "low_db": 4.0,
+   "latency": 88.0
+  },
+  {
+   "test": "phone processor static curve hits the measured points",
+   "ok": true,
+   "max_err": 0.0
+  },
+  {
+   "test": "meters: limiter working time (quiet 0 %, 4 s loud > 70 %, a second read gives the same value, 8 s quiet < 10 %)",
+   "ok": true,
+   "quiet_pct": 0.0,
+   "loud_pct": 73.64028930664062,
+   "reread_pct": 73.64028930664062,
+   "after_quiet_pct": 5.523524761199951
+  },
+  {
+   "test": "reset: fade in from silence, no stale audio",
+   "ok": true,
+   "first_10_peak": 0.0,
+   "after_60ms_peak": 0.2123727947473526
+  },
+  {
+   "test": "analysis 48 kHz: EQ curve = RBJ reference (no audio yet)",
+   "ok": true,
+   "max_err_db": 1.8220622806097708e-06
+  },
+  {
+   "test": "analysis 44.1 kHz: EQ curve = RBJ reference (no audio yet)",
+   "ok": true,
+   "max_err_db": 1.8532576362417785e-06
+  },
+  {
+   "test": "analysis 32 kHz: points above Nyquist are NaN",
+   "ok": true,
+   "nan_points": 8
+  },
+  {
+   "test": "analysis: EQ curve follows a glide, then lands on the new setting",
+   "ok": true,
+   "mid_220hz_db": 5.6192731857299805,
+   "low_db_now": 6.0,
+   "end_err_db": 1.8337937675028115e-06
+  },
+  {
+   "test": "analysis: 1 kHz sine peaks at 1 kHz, level is linear",
+   "ok": true,
+   "peak_hz": 989.8984976217724,
+   "step_db": 20.000000953674316
+  },
+  {
+   "test": "analysis: pink noise flat with +3 dB/oct tilt; bypass shows no change",
+   "ok": true,
+   "spread_db": 0.8797362503402368,
+   "octave_means_spread_db": 0.11691508880137746,
+   "bypass_change_db": 0.0
+  },
+  {
+   "test": "analysis: measured change = EQ curve (limiter idle, 150 Hz - 12 kHz)",
+   "ok": true,
+   "max_err_db": 0.17213034629821777,
+   "limiter_gr_db": 0.0,
+   "out_db": -5.0
+  },
+  {
+   "test": "analysis: limiter reduction reported, measured change drops below the curve",
+   "ok": true,
+   "limiter_gr_db": 10.10171890258789,
+   "mean_below_curve_db": -6.8319315910339355
+  },
+  {
+   "test": "analysis: fresh flag, 30 dB/s fall, 8192-frame blocks, cost per call",
+   "ok": true,
+   "fall_db_in_100ms": 3.0,
+   "ms_per_call_unchanged_audio": 0.07113000028766692
+  },
+  {
+   "test": "analysis: clock-mode fall follows the time since the last new audio",
+   "ok": true,
+   "fall_db": 3.8026533126831055,
+   "expected_db": 3.802550998516381
+  },
+  {
+   "test": "analysis: cost per frame on the host (process 33 ms + analyze)",
+   "ok": true,
+   "ms_per_frame": 0.5480766665035238
+  },
+  {
+   "test": "dynamic: off = static EQ (bit exact)",
+   "ok": true
+  },
+  {
+   "test": "dynamic: loud takes boost back (capped 4 dB, louder takes more)",
+   "ok": true,
+   "loud_db": -3.7501425743103027,
+   "medium_db": -0.9510036110877991,
+   "eq220_loud": -1.130839228630066
+  },
+  {
+   "test": "dynamic: quiet adds up to +2 dB, near silence holds",
+   "ok": true,
+   "quiet_db": 2.0,
+   "silence_db": 0.0
+  },
+  {
+   "test": "dynamic: moves slowly (0.5 s rise); switching off restores the curve",
+   "ok": true,
+   "after_100ms": 2.0,
+   "after_4s": -3.993096351623535
+  },
+  {
+   "test": "dynamic default (headroom only): loud untouched, quiet +2 dB",
+   "ok": true,
+   "loud_db": 0.0,
+   "quiet_db": 2.0
+  },
+  {
+   "test": "dynamic: level meter follows the stage (quiet ~-46, loud ~-14 dBFS; off -120)",
+   "ok": true,
+   "quiet_level_db": -47.956146240234375,
+   "loud_level_db": -16.36326789855957,
+   "off_db": -120.0
+  },
+  {
+   "test": "dynamic: no clicks on 220 Hz bursts, true peak held",
+   "ok": true,
+   "hf_db": -43.06861420445884,
+   "hf_static_db": -43.07050098545139,
+   "dbtp": -2.0421565374562882
+  },
+  {
+   "test": "high shelf = RBJ (analysis curve and audio path, -6/-3/+4 dB)",
+   "ok": true,
+   "max_err_db": 2.260100680828714e-06
+  },
+  {
+   "test": "phone estimate: own band 10.2 dB at -13 dBFS (48 and 44.1 kHz), quiet 0, 2 kHz ducks 250 Hz 7.3 / 1.7 dB",
+   "ok": true,
+   "own_db": 10.266080856323242,
+   "level_db": -12.913068771362305,
+   "own_44k_db": 10.276328086853027,
+   "quiet_db": 0.0,
+   "cross_db": 7.3248209953308105,
+   "cross_m8_db": 1.6598546504974365,
+   "from_63hz_db": 1.9656366109848022
+  },
+  {
+   "test": "phone estimate: runs only while read (none without a reader; stops 3 s after the last read)",
+   "ok": true,
+   "unread_level_db": -120.0,
+   "unread_gr_db": 0.0,
+   "after_4s_unread_level_db": -120.0
+  },
+  {
+   "test": "mute: -90 dB output, 150 ms glide without a click",
+   "ok": true,
+   "muted_db": -94.02104187011719,
+   "after_glide_db": -94.02104187011719,
+   "hf_db": -148.70783741444495,
+   "hf_steady_db": -151.8717949197132
+  },
+  {
+   "test": "gate: mute after the mix holds through a bypass (old out-gain mute did not)",
+   "ok": true,
+   "old_mute_bypass_dbfs": -23.01029993933012,
+   "gate_mute_bypass_dbfs": -300.0,
+   "gate_mute_dbfs": -300.0,
+   "headroom_bypass_minus_dry_db": -9.999999933663272
+  },
+  {
+   "test": "gate: 150 ms glide to silence without a click",
+   "ok": true,
+   "hf_db": -102.37457373712267,
+   "after_glide_db": -300.0
+  },
+  {
+   "test": "open time: counts only audible, processed, non-silent audio of the active tag",
+   "ok": true,
+   "tag7_ms": 500,
+   "other_tag": -1,
+   "muted_ms": 0,
+   "bypassed_ms": 0,
+   "silent_ms": 0,
+   "after_unbypass_ms": 250
+  },
+  {
+   "test": "phone estimate: R = -L reads like R = L (per-channel power), one channel 3 dB lower",
+   "ok": true,
+   "level_same_db": -12.984251976013184,
+   "level_opposite_db": -12.984251976013184,
+   "level_one_channel_db": -15.994552612304688,
+   "gr_same_db": 1.0555713176727295,
+   "gr_opposite_db": 1.0555713176727295
+  },
+  {
+   "test": "analysis concurrent with audio: no torn windows",
+   "ok": true,
+   "fresh_calls": 2049,
+   "calls": 8389,
+   "bad": 0
+  },
+  {
+   "test": "muted: new setting applied at once; audible: it glides (150 ms)",
+   "ok": true,
+   "eq220_muted": 8.619254112243652,
+   "eq220_audible": 2.6972010135650635,
+   "eq220_target": 8.619254112243652
+  },
+  {
+   "test": "virtual bass: frozen reference (vb_port) == vbcore.layer_hpv",
+   "ok": true,
+   "rel_db": -257.76778395649256
+  },
+  {
+   "test": "virtual bass hpv latency @ 48000",
+   "ok": true,
+   "frames": 7052,
+   "ms": 146.91666666666666
+  },
+  {
+   "test": "virtual bass hpv latency @ 44100",
+   "ok": true,
+   "frames": 6479,
+   "ms": 146.91609977324262
+  },
+  {
+   "test": "virtual bass hpv: C++ == Python reference (tone, fifth, kick+bass; 44.1 and 48 kHz)",
+   "ok": true,
+   "worst_rel_db": -250.45859684093114,
+   "tone_48000": -250.59629141755534,
+   "fifth_48000": -252.07040256700816,
+   "kick_bass_48000": -260.34976157963206,
+   "tone_44100": -250.45859684093114,
+   "fifth_44100": -253.3245266748192,
+   "kick_bass_44100": -260.27889728907076
+  },
+  {
+   "test": "virtual bass hpv: 44.1 kHz layer == 48 kHz layer (same 3 kHz core)",
+   "ok": true,
+   "rel_db": -70.36902789341984
+  },
+  {
+   "test": "Bankstown: C++ == formula reference, per channel, no latency @ 48000",
+   "ok": true,
+   "left_rel_db": -247.28299148551878,
+   "right_rel_db": -242.98229049662405,
+   "latency": 0
+  },
+  {
+   "test": "Bankstown: C++ == formula reference, per channel, no latency @ 44100",
+   "ok": true,
+   "left_rel_db": -248.6561885175143,
+   "right_rel_db": -244.73698482770044,
+   "latency": 0
+  },
+  {
+   "test": "virtual bass in the engine: EQ(input delayed) + layer, before output gain (limiter idle) @ 48 kHz, -3 and +9 dB",
+   "ok": true,
+   "rel_db": -151.8534531848723,
+   "rel_db_plus9": -152.30442795479675,
+   "latency_frames": 7140.0,
+   "latency_ms": 148.75
+  },
+  {
+   "test": "Bankstown in the engine: EQ out + layer(EQ out) per channel, latency unchanged",
+   "ok": true,
+   "rel_db": -151.8529475244583,
+   "latency_frames": 88.0
+  },
+  {
+   "test": "latency meter @ 44.1 kHz with hpv",
+   "ok": true,
+   "latency_frames": 6561.0,
+   "latency_ms": 148.77551020408163
+  },
+  {
+   "test": "virtual bass switch: on = fade, silence for the added latency, fade in, aligned; off = short dip; no click",
+   "ok": true,
+   "silent_after_on_ms": 145.0,
+   "added_latency_ms": 146.91666666666666,
+   "delay_after_switch": 7052,
+   "silent_after_off_ms": 0.0,
+   "hf_db": -65.64103126347933,
+   "hf_steady_db": -165.8084280695736
+  },
+  {
+   "test": "virtual bass switch while muted: immediate, aligned when the sound returns",
+   "ok": true,
+   "delay": 7052,
+   "max_err": 3.750441970873375e-09
+  },
+  {
+   "test": "virtual bass level change: 20 ms glide, no click",
+   "ok": true,
+   "hf_at_change_db": -134.68218705285994,
+   "hf_before_db": -51.102778697931896
+  },
+  {
+   "test": "virtual bass CPU (host, 60 s stereo @ 48 kHz, whole engine)",
+   "ok": true,
+   "off_ms_per_s": 2.2793733330521113,
+   "hpv_ms_per_s": 8.62853166666658,
+   "bankstown_ms_per_s": 4.885046667186543
+  },
+  {
+   "test": "speed (host, 60 s stereo @ 48 kHz)",
+   "ok": true,
+   "seconds": 0.13663330004783347,
+   "realtime_pct": 0.22772216674638912
+  }
+ ],
+ "album": null
+}

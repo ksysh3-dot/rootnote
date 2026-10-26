@@ -206,6 +206,7 @@ public:
             updateLatency();
         }
     }
+    void setP1PPImpactResearch(int mode) { vbAlpha2_.setP1PPImpactResearch(mode); }
     void setContinuityResearch(const ContinuityParams& p) {
         for(VbHpv* m : {&vb52_, &vbGentle_, &vbGentleStrong_, &vbGentleAdaptive_}) m->setContinuityResearch(p);
     }
