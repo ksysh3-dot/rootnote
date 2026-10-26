@@ -230,7 +230,7 @@ fun PvbSection(host: RnAdvancedActivity, showIcons: Boolean) {
         if (research) {
             val model = PvbModels.fromKey(p.string(P.KEY_VB_ALGO, PvbModels.DEFAULT_KEY))
             RnChoiceRow(stringResource(R.string.pvb_vb_algo), PvbModels.models.map { RnChoice(it.key, it.title, it.description) },
-                model.key, { p.put(P.KEY_VB_ALGO, it) }, line = "${model.title} · 약 0.15초 지연\n${model.description}",
+                model.key, { p.put(P.KEY_VB_ALGO, it) }, line = "${model.title} · 약 ${if (model.id == PvbModels.P1_PLUS || model.id == PvbModels.P1PP) "0.18" else "0.15"}초 지연\n${model.description}",
                 enabled = vbOn)
         }
         PrefSlider(p, P.KEY_VB_STRENGTH_DB, stringResource(R.string.pvb_vb_level), P.VB_LEVEL_DEFAULT,

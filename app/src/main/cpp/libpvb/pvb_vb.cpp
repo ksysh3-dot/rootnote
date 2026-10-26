@@ -21,14 +21,18 @@ namespace pvb {
 bool VbHpv::setAlpha2Profile(int algorithm) {
     unsigned flags=0;int mode=3;
     switch(algorithm) {
-        case VB_ALPHA2_P1: break;
+        case VB_ALPHA2_P1: case VB_ALPHA2_P1_PLUS: case VB_ALPHA2_P1PP: break;
         case VB_ALPHA2_D2: flags=StageShortDetail|StageConditionalGain;break;
         case VB_ALPHA2_J2: flags=StageShortDetail|StageConditionalGain|StageAmFamily|StageFamilyFilterComp;break;
         case VB_ALPHA2_OSC: mode=0;flags=StageOscillator;break;
         case VB_ALPHA2_OSC_CORRECT: mode=0;flags=StageOscillator|StageOscillatorCorrect;break;
         default:return false;
     }
-    p1PlusProfile_=algorithm==VB_ALPHA2_P1;
+    p1PlusProfile_=algorithm==VB_ALPHA2_P1 || algorithm==VB_ALPHA2_P1_PLUS || algorithm==VB_ALPHA2_P1PP;
+    // 6: the original P1 (or the host's research flags); 11: P1+ (flags 6); 12: P1++ v0.2 (flags 6, impact 4)
+    p1PlusFixed_=algorithm==VB_ALPHA2_P1_PLUS || algorithm==VB_ALPHA2_P1PP;
+    p1PlusFlags_=p1PlusFixed_ ? 6u : p1PlusHostFlags_;
+    p1ppImpactMode_=algorithm==VB_ALPHA2_P1PP ? 4 : algorithm==VB_ALPHA2_P1_PLUS ? 0 : p1ppHostImpact_;
     modulationMode_=mode;tonalOnly_=false;continuity_=ContinuityParams{};continuity_.enabled=true;
     applyDevContinuity();
     stageFlags_=flags;reset();return true;

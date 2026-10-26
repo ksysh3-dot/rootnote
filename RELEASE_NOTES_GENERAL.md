@@ -10,6 +10,10 @@ The corresponding source is the tagged commit; `source-*.tar.gz` below contains 
 - Measured settings exist only for the Galaxy S26 Ultra; other phones start with conservative settings based on published measurements of 92 Android phones.
 - Privacy: only settings are stored; no song titles, no recordings, nothing sent (see PRIVACY.md).
 
+## 다음 버전 (작업 중)
+
+- 고급 설정의 가상 저음 모델에 "연결형 P1+ (실험)"과 "연결형 P1++ (실험)"을 넣었어요. P1+는 배음 위상을 유지하고 앞뒤를 함께 보는 분리로 짧은 음의 강약 윤곽을 원음에 더 가깝게 만들어요. P1++는 여기에 강한 타격 뒤에 남는 잔여를 줄이는 처리를 더했어요. 둘 다 합성 신호 시험 결과를 바탕으로 넣었고, 지연이 약 0.18초로 늘어나요. 기본 모델(P1)은 그대로예요.
+
 ## 0.9.0-beta.13
 
 - "가로채기 캡처"를 고르면 켤 때 화면 공유 동의를 묻지 않아요. beta.12는 방식과 상관없이 동의부터 받은 뒤 가로채기를 시도했어요. 이제 Shizuku가 켜져 있으면 바로 시작하고, 가로채기를 못 쓸 때(Shizuku 꺼짐 등)만 화면 공유 동의를 받아요. 앱이 열려 있으면 바로 묻고, 아니면 알림으로 알려요. 안드로이드 15의 "화면 공유 보호" 안내도 가로채기를 쓸 때는 띄우지 않아요.

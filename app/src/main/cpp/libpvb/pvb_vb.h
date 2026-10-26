@@ -44,7 +44,10 @@ namespace pvb {
 enum VbAlgo : int { VB_HPV = 0, VB_BANKSTOWN = 1, VB_HPV52M = 2, VB_GENTLE = 3,
                    VB_GENTLE_STRONG = 4, VB_GENTLE_ADAPTIVE = 5,
                    VB_ALPHA2_P1 = 6, VB_ALPHA2_D2 = 7, VB_ALPHA2_J2 = 8,
-                   VB_ALPHA2_OSC = 9, VB_ALPHA2_OSC_CORRECT = 10, VB_ALGO_COUNT };
+                   VB_ALPHA2_OSC = 9, VB_ALPHA2_OSC_CORRECT = 10,
+                   // P1 with the P1+ research flags 6 (phase hold + centred HPSS, +26.7 ms) and P1++ v0.2
+                   // (flags 6, impact mode 4): app models, "실험" (research/p1pp, docs/P1PP_RESEARCH.md)
+                   VB_ALPHA2_P1_PLUS = 11, VB_ALPHA2_P1PP = 12, VB_ALGO_COUNT };
 
 // Scene observations are unvalidated. Only the opt-in adaptive profile uses
 // them to select a harmonic attenuation budget; they are not buzz labels.
@@ -205,10 +208,11 @@ public:
     // bit2: centered eleven-frame HPSS, five future hops (26.667 ms).
     // bit3 (requires bit2): mix causal/centered masks by spectral prominence.
     // No bit changes the app's stored algorithm or the public trace ABI.
-    void setP1PlusResearch(unsigned flags) { p1PlusFlags_=flags&15; reset(); }
+    // Host values apply to profile 6 only; profiles 11/12 use their fixed flags.
+    void setP1PlusResearch(unsigned flags) { p1PlusHostFlags_=flags&15; if(!p1PlusFixed_) p1PlusFlags_=p1PlusHostFlags_; reset(); }
     // Host-only: 0=baseline, 1=current fit, 2=unconfirmed fit, 3=first-fit
     // recovery, 4=clean current-fit recovery after initial rejection.
-    void setP1PPImpactResearch(int mode) { p1ppImpactMode_=mode; reset(); }
+    void setP1PPImpactResearch(int mode) { p1ppHostImpact_=mode; if(!p1PlusFixed_) p1ppImpactMode_=mode; reset(); }
     void setStageResearch(unsigned flags,StageCapture52::Sink sink=nullptr,void* user=nullptr) {
         stageFlags_=flags&8191;stageSink_=sink;stageUser_=user;reset();
     }
@@ -389,6 +393,9 @@ private:
     unsigned p1PlusFlags_=0;
     int p1ppImpactMode_=0;
     bool p1PlusProfile_=false;
+    bool p1PlusFixed_=false;          // profile 11/12: flags fixed by the model, host values kept for profile 6
+    unsigned p1PlusHostFlags_=0;
+    int p1ppHostImpact_=0;
     int hpssLookahead() const { return p1PlusProfile_ && (p1PlusFlags_&4) ? 5*kHpHop : 0; }
     StageCapture52::Sink stageSink_=nullptr;
     void* stageUser_=nullptr;
