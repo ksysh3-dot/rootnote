@@ -37,9 +37,9 @@ fun main() {
     val legacyLevel = PvbSettings.KEY_VB_LEVEL_DB
     val strength = PvbSettings.KEY_VB_STRENGTH_DB
 
-    // Catalogue: every alpha 2 model plus the re-exposed gentle12 (ID 3); P1 is the default.
-    check(PvbModels.models.map { it.id } == listOf(6, 4, 7, 8, 9, 10, 3))
-    check(PvbModels.models.map { it.key }.distinct().size == 7)
+    // Catalogue: every alpha 2 model, P1+ / P1++ / P1++ v0.3 (11-13), and the re-exposed gentle12 (ID 3); P1 is the default.
+    check(PvbModels.models.map { it.id } == listOf(6, 11, 12, 13, 4, 7, 8, 9, 10, 3))
+    check(PvbModels.models.map { it.key }.distinct().size == 10)
     check(PvbModels.DEFAULT_KEY == "alpha2_p1" && PvbModels.fromKey(null).id == PvbModels.P1)
     check(PvbModels.fromKey("alpha2_reference").id == 4 && PvbModels.fromKey("alpha3_gentle12").id == 3)
     for (model in PvbModels.models) check(PvbSettings.vbAlgoName(model.id) == model.title)
@@ -137,6 +137,6 @@ fun main() {
     check(fresh.values[PvbSettings.KEY_VB_ALPHA2_MODEL] == null && fresh.values[PvbSettings.KEY_VB_LEGACY_MODEL] == null)
     check(PvbModels.presetFor(PvbModels.fromId(f.vbAlgo)?.key, f.vbLevelDb)?.key == PvbModels.PRESET_FULLNESS)
     check(PvbSettings() == f.copy(vbOn = false))   // data class defaults = loaded defaults
-    println("Alpha3 settings: catalogue (7 models, P1 default), reference->P1 once, other models kept, alpha1/corrupt, " +
+    println("Alpha3 settings: catalogue (10 models, P1 default), reference->P1 once, other models kept, alpha1/corrupt, " +
         "level clamp 0..12 (-3->0, 9->9, 15->12), presets and fresh install passed")
 }
