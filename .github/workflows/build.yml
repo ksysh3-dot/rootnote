@@ -59,6 +59,7 @@ jobs:
             python3 tools/pvb-harness/test_engine.py --report engine-report.json &&
             OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_p1plus_baseline.py --report p1plus-baseline-ci.json &&
             OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/check_p1pp_impact_controls.py --out p1pp-impact-controls-ci &&
+            g++ -std=c++17 -O2 -Wall -Wextra -Werror -Iapp/src/main/cpp/libpvb tools/pvb-harness/vb_quality/test_track_protection.cpp -o /tmp/pvb-track-protection && /tmp/pvb-track-protection &&
             OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/research_p1pp_track_identity.py --report track-identity-report.json &&
             OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_alpha2_profiles.py --lib tools/pvb-harness/build/libpvbcapi.so --report alpha2-profiles-ci.json &&
             OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_diagnostic_solo.py &&
