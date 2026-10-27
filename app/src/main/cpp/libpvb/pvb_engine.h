@@ -225,7 +225,11 @@ public:
         // P1 (ID 6) is the host research profile: allow an explicit stage probe
         // to compare greedy and global track assignment in the *same* engine.
         // Fixed app profiles (IDs 11-13) remain capture-only and unaffected.
-        if(vbCur_==VB_ALPHA2_P1) vbAlpha2_.setStageResearch(flags,sink,user);
+        // The test harness attaches before the first audio block, while vbCur_
+        // can still be -1. Consult the pending profile as well.
+        const bool hostP1=vbCur_==VB_ALPHA2_P1 ||
+            (hasPending_ && static_cast<int>(pending_[P_VB_ALGO])==VB_ALPHA2_P1);
+        if(hostP1) vbAlpha2_.setStageResearch(flags,sink,user);
         else vbAlpha2_.setStageCapture(sink,user);
     }
     // Host research only (gen-s1s2): S1/S2 generator variants on the app profiles. Not reachable from JNI.
