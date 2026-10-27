@@ -443,7 +443,11 @@ void VbHpv::pvFrame52() {
             auto& tr=tr52_[t];
             const bool confirmed=tr.fade>=.5 && tr.missing==0;
             mature |= confirmed && tr.protection.recentlyMature();
-            if(ampOnset && (diag&2))
+            // P&M overlapped for ten hops in the inspected kick while the
+            // instantaneous amplitude-onset marker arrived after maturity was
+            // lost (O&M=0). Percussion evidence is the earlier trigger here;
+            // the long-established tonal track is an independent prerequisite.
+            if(diag&2)
                 armed |= tr.protection.arm(true,confirmed);
         }
         if(mature) diag|=4;
