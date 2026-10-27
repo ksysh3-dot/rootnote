@@ -13,6 +13,7 @@ better. The measured differences and their denominators are written to JSON.
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 
 import numpy as np
@@ -29,11 +30,14 @@ STAGE_TRACK_LINEAR = 512
 SEED = 2026102609
 CASE = 'new_kick_2'
 IMPACT_DB = -12
+# tuple: label, impact mode, stage research, v0.4 research flags.
 VARIANTS = (
-    ('P1+ greedy', 0, 0),
-    ('P1++ v0.3 greedy', 8, 0),
-    ('P1++ v0.3 global', 8, STAGE_GLOBAL_TRACK),
-    ('P1++ v0.3 global+linear', 8, STAGE_GLOBAL_TRACK | STAGE_TRACK_LINEAR),
+    ('P1+ greedy', 0, 0, 0),
+    ('P1++ v0.3 greedy', 8, 0, 0),
+    ('P1++ v0.3 global', 8, STAGE_GLOBAL_TRACK, 0),
+    ('P1++ v0.3 global+linear', 8, STAGE_GLOBAL_TRACK | STAGE_TRACK_LINEAR, 0),
+    ('R01 stable-track lock', 8, 0, 64),
+    ('R01 stable lock + local peaks', 8, 0, 65),
 )
 
 
@@ -93,7 +97,9 @@ def main():
     lib = P.api(args.library.resolve())
     results = []
 
-    for label, mode, stages in VARIANTS:
+    saved = os.environ.get('P1PP_V04')
+    for label, mode, stages, v04 in VARIANTS:
+        os.environ['P1PP_V04'] = str(v04)
         reference = P.render(lib, np.r_[bed, np.zeros(fs // 2)], fs=fs,
                              flags=6, impact_mode=mode, stage_flags=stages)
         measured = P.render(lib, x, fs=fs, flags=6, impact_mode=mode,
@@ -105,7 +111,8 @@ def main():
         # Prevent a false comparison if a stage flag was silently ignored.
         assert np.all(measured['stages'][:, 21] == stages), (label, stages)
         ident = track_identity(measured['rows'], fs, onset, duration, desc['bed_frequency'])
-        row = dict(variant=label, impact_mode=mode, stage_flags=stages,
+        row = dict(variant=label, impact_mode=mode, stage_flags=stages, v04_flags=v04,
+                   protected_onsets=int(np.count_nonzero(measured['rows'][:, 27].astype(np.int64) & 64)),
                    **ident,
                    early_tail_energy_per_input_db=scores['early_tail_energy_per_input_db'],
                    early_tail_stationary_residual_per_input_db=scores['early_tail_stationary_residual_per_input_db'],
@@ -115,12 +122,14 @@ def main():
                    onset_raw_mismatch_accepted_track_hops=scores['onset_raw_mismatch_accepted_track_hops'],
                    latency_frames=int(measured['latency']))
         results.append(row)
-        print(f"{label}: captured={row['original_id_stolen_hops_over_5_percent']}/"
+        print(f"{label}: protection={row['protected_onsets']} captured={row['original_id_stolen_hops_over_5_percent']}/"
               f"{row['original_id_observed_hops']} missing_bed="
               f"{row['missing_confirmed_near_bed_hops']}/{row['event_hops']} "
               f"early={row['early_tail_energy_per_input_db']:.3f}dB", flush=True)
 
-    report = dict(schema='pvb.p1pp.track_identity.v1', study_type='previously_inspected_development_case',
+    if saved is None: os.environ.pop('P1PP_V04', None)
+    else: os.environ['P1PP_V04'] = saved
+    report = dict(schema='pvb.p1pp.track_identity.v2', study_type='previously_inspected_development_case',
                   seed=SEED, case=name, input_impact_db=IMPACT_DB,
                   independent_waveforms=1, levels_per_waveform=1,
                   study_limitations=['No new holdout', 'Track ID does not establish musical source identity',
