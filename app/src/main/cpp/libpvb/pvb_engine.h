@@ -222,7 +222,11 @@ public:
     }
     void setStageResearch(unsigned flags,StageCapture52::Sink sink=nullptr,void* user=nullptr) {
         for(VbHpv* m : {&vb52_, &vbGentle_, &vbGentleStrong_, &vbGentleAdaptive_}) m->setStageResearch(flags,sink,user);
-        vbAlpha2_.setStageCapture(sink,user); // capture fixed app profiles without overriding their controls
+        // P1 (ID 6) is the host research profile: allow an explicit stage probe
+        // to compare greedy and global track assignment in the *same* engine.
+        // Fixed app profiles (IDs 11-13) remain capture-only and unaffected.
+        if(vbCur_==VB_ALPHA2_P1) vbAlpha2_.setStageResearch(flags,sink,user);
+        else vbAlpha2_.setStageCapture(sink,user);
     }
     // Host research only (gen-s1s2): S1/S2 generator variants on the app profiles. Not reachable from JNI.
     // While set (any field on), the app option P_X_S1M no longer changes the generator (its -2 dB trim still applies).
