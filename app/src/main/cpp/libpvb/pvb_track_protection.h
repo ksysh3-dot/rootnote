@@ -10,8 +10,10 @@ namespace pvb { namespace trackprotection {
 struct State {
     double smoothedHz=0, lockedHz=0, lastMatureHz=0;
     int steadyHops=0, lockHops=0, matureAgo=100000;
+    bool pendingBornCut=false; // delayed fast-release once a protected note is genuinely missing
     void observe(double frequency) {
         if(!(std::isfinite(frequency) && frequency>0)) {steadyHops=0;return;}
+        pendingBornCut=false; // matching a peak clears any earlier deferred termination
         if(lockHops>0) {--lockHops;return;}
         if(matureAgo<100000) ++matureAgo;
         if(steadyHops>0 && std::abs(frequency-smoothedHz)<=.015*smoothedHz) {
@@ -26,7 +28,7 @@ struct State {
     bool recentlyMature() const {return matureAgo<=24 && lastMatureHz>0;}
     bool arm(bool transientOnset,bool confirmed) {
         if(transientOnset && confirmed && lockHops==0 && recentlyMature()) {
-            lockedHz=lastMatureHz;lockHops=40;return true;
+            lockedHz=lastMatureHz;lockHops=40;pendingBornCut=false;return true;
         }
         return false;
     }
