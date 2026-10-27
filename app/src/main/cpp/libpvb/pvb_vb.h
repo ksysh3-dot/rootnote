@@ -37,6 +37,7 @@
 #include "pvb_vb_am_family.h"
 #include "pvb_vb_stage.h"
 #include "pvb_track_prediction.h"
+#include "pvb_track_protection.h"
 #include "pvb_harmonic_renderer.h"
 
 namespace pvb {
@@ -232,7 +233,7 @@ public:
     // 3 % of a confirmed track that ended in the last 250 ms is that track again, 16 = a guarded track still emits
     // the harmonics the input already has at k f, 32 = the layer is read four hops later and a guarded track's
     // grains are kept; when the track is released within three hops they are added back where they belonged.
-    void setP1PPV04Research(unsigned flags) { p1ppV04Host_=flags&63; if(!p1PlusFixed_) p1ppV04_=p1ppV04Host_; reset(); }
+    void setP1PPV04Research(unsigned flags) { p1ppV04Host_=flags&127; if(!p1PlusFixed_) p1ppV04_=p1ppV04Host_; reset(); }
     void setStageResearch(unsigned flags,StageCapture52::Sink sink=nullptr,void* user=nullptr) {
         stageHostFlags_=flags&8191;stageFlags_=stageHostFlags_;stageSink_=sink;stageUser_=user;reset();
     }
@@ -408,6 +409,7 @@ private:
         AmFamily52 family;
         HarmonicPermission permission[7];
         prediction52::History prediction;
+        trackprotection::State protection;  // host-only v0.4 bit 64: frozen stable frequency over kick onset
         oscillator52::State oscillator;
         double envPeak=0; // S1 research: largest harmonic envelope after the last render
     };
