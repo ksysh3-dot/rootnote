@@ -116,6 +116,10 @@ def main():
                    strong_onset_hops=int(np.count_nonzero(diagnostic & 1)),
                    percussion_context_hops=int(np.count_nonzero(diagnostic & 2)),
                    mature_track_hops=int(np.count_nonzero(diagnostic & 4)),
+                   onset_and_percussion_hops=int(np.count_nonzero((diagnostic & 3)==3)),
+                   onset_and_mature_hops=int(np.count_nonzero((diagnostic & 5)==5)),
+                   percussive_and_mature_hops=int(np.count_nonzero((diagnostic & 6)==6)),
+                   all_three_hops=int(np.count_nonzero((diagnostic & 7)==7)),
                    protected_onsets=int(np.count_nonzero(diagnostic & 8)),
                    **ident,
                    early_tail_energy_per_input_db=scores['early_tail_energy_per_input_db'],
@@ -126,7 +130,7 @@ def main():
                    onset_raw_mismatch_accepted_track_hops=scores['onset_raw_mismatch_accepted_track_hops'],
                    latency_frames=int(measured['latency']))
         results.append(row)
-        print(f"{label}: onset={row['strong_onset_hops']} perc={row['percussion_context_hops']} mature={row['mature_track_hops']} armed={row['protected_onsets']} captured={row['original_id_stolen_hops_over_5_percent']}/"
+        print(f"{label}: onset={row['strong_onset_hops']} perc={row['percussion_context_hops']} mature={row['mature_track_hops']} O&P={row['onset_and_percussion_hops']} O&M={row['onset_and_mature_hops']} P&M={row['percussive_and_mature_hops']} all={row['all_three_hops']} armed={row['protected_onsets']} captured={row['original_id_stolen_hops_over_5_percent']}/"
               f"{row['original_id_observed_hops']} missing_bed="
               f"{row['missing_confirmed_near_bed_hops']}/{row['event_hops']} "
               f"early={row['early_tail_energy_per_input_db']:.3f}dB", flush=True)
