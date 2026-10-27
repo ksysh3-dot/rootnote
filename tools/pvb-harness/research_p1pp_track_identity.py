@@ -94,9 +94,9 @@ def main():
     results = []
 
     for label, mode, stages in VARIANTS:
-        reference = P.render(lib, np.r_[bed, np.zeros(fs // 2)], fs, 6,
+        reference = P.render(lib, np.r_[bed, np.zeros(fs // 2)], fs=fs,
                              flags=6, impact_mode=mode, stage_flags=stages)
-        measured = P.render(lib, x, fs, 6, flags=6, impact_mode=mode,
+        measured = P.render(lib, x, fs=fs, flags=6, impact_mode=mode,
                             stage_flags=stages)
         scores, _ = score(measured, reference, source, source - bed, t, onset, duration, fs)
         assert np.isfinite(measured['stem']).all()
