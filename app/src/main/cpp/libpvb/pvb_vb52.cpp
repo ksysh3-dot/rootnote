@@ -433,12 +433,22 @@ void VbHpv::pvFrame52() {
     // tracks at a strong percussive onset. A transient peak crossing their
     // previous frequency may not inherit their ID when it walks away.
     const bool protectIdentity=v04 && (p1ppV04_&64);
-    if(protectIdentity && ampOnset && percEnv52_>.25*harmEnv52_) {
+    if(protectIdentity) {
+        // Reserved trace field 27: high 16 bits hold one-off R01 diagnostic
+        // flags (1 strong onset, 2 percussion, 4 mature track, 8 armed).
+        // Low 16 bits remain for the existing modulation observer (+=32).
+        int diag=(ampOnset?1:0) | (percEnv52_>.25*harmEnv52_?2:0);
+        bool mature=false,armed=false;
         for(int t=0;t<nt52_;++t) {
             auto& tr=tr52_[t];
-            if(tr.protection.arm(true,tr.fade>=.5 && tr.missing==0) && harmonicCapture_)
-                harmonicTrace_.data[27]+=64;
+            const bool confirmed=tr.fade>=.5 && tr.missing==0;
+            mature |= confirmed && tr.protection.steadyHops>=56;
+            if(ampOnset && (diag&2))
+                armed |= tr.protection.arm(true,confirmed);
         }
+        if(mature) diag|=4;
+        if(armed) diag|=8;
+        if(harmonicCapture_) harmonicTrace_.data[27]+=static_cast<float>(diag*65536);
     }
     if(apkCount_==56) { std::move(apk52_+1,apk52_+56,apk52_); --apkCount_; }
     apk52_[apkCount_++]=am;
