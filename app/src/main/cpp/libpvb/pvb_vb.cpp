@@ -39,7 +39,9 @@ bool VbHpv::setAlpha2Profile(int algorithm) {
     p1ppV04_=p1PlusFixed_ ? 0u : p1ppV04Host_;
     modulationMode_=mode;tonalOnly_=false;continuity_=ContinuityParams{};continuity_.enabled=true;
     applyDevContinuity();
-    stageFlags_=flags;reset();return true;
+    // P1 is the host research profile: an explicitly attached stage probe may
+    // precede the first vbApply() call. Preserve its assignment flags there.
+    stageFlags_=flags|(algorithm==VB_ALPHA2_P1 ? stageHostFlags_ : 0u);reset();return true;
 }
 
 // ------------------------------------------------------------------------------------------------ developer mode
