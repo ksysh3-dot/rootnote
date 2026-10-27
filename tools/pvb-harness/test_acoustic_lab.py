@@ -40,7 +40,7 @@ def impact_fixture():
                     p = 10 ** ((-40 + level) / 10)
                     r.update(model_id=model, input_db=level, repeat=repeat, impact=impact, valid=True,
                         marker_correlation=.9, render_sha256="0" * 64, recovery_ms=200 if impact else 160,
-                        ambient_power=1e-10, window_powers={"before": p + 1e-10, "attack": p * (4 if impact else 1) + 1e-10,
+                        ambient_power=1e-10, window_powers={"before": p + 1e-10, "pre": p + 1e-10, "attack": p * (4 if impact else 1) + 1e-10,
                         "early": p * (2 if impact else 1) + 1e-10, "late": p * (1.5 if impact else 1) + 1e-10})
                     rows.append(r)
     return dict(band_hz=[150, 2000], complete=True, trials=rows)
@@ -106,6 +106,14 @@ class ImpactTests(unittest.TestCase):
         for r in report["trials"]: r["window_powers"]["late"] = 1.01e-10
         result = lab.analyze_impact(report)
         self.assertTrue(all(c["windows"]["late"]["median_delta_to_bed_db"] is None for c in result["summary"]))
+
+    def test_pre_impact_energy_is_not_hidden_in_the_steady_baseline(self):
+        report = impact_fixture()
+        for row in report["trials"]:
+            if row["impact"]: row["window_powers"]["pre"] *= 2
+        result = lab.analyze_impact(report)
+        self.assertTrue(all(c["windows"]["pre"]["median_delta_to_bed_db"] > 3 for c in result["summary"]))
+        self.assertTrue(all(p["gain_control_pass"] for p in result["pairs"]))
 
     def test_global_attenuation_fails_gain_control_and_is_reported(self):
         report = impact_fixture()

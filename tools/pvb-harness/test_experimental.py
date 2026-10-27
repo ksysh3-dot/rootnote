@@ -125,6 +125,16 @@ def env_db(v, sr, ms=20):
 
 
 # ------------------------------------------------------------------------------------------------ bit exactness
+def historical_difference(y, ref, algo):
+    """P1/default paths remain bit exact. Only three legacy paths permit independent-build float rounding."""
+    error = float(np.max(np.abs(y.astype(np.float64) - ref.astype(np.float64))))
+    peak = float(max(np.max(np.abs(y)), np.max(np.abs(ref))))
+    bound = float(2 * np.finfo(np.float32).eps * peak + np.finfo(np.float32).tiny)
+    exact = bool(np.array_equal(y, ref))
+    return dict(equal=exact, max_diff=error, float32_bound=bound,
+                compatible=exact or bool(algo in (0, 9, 10) and np.isfinite(error) and error <= bound))
+
+
 def build_baseline(ref, out_dir):
     root = subprocess.check_output(['git', 'rev-parse', '--show-toplevel'], cwd=HERE, text=True).strip()
     if subprocess.run(['git', 'cat-file', '-e', ref + '^{commit}'], cwd=root).returncode != 0:
@@ -161,14 +171,10 @@ def t_baseline(lib, base_path, label):
                 b.set(vb_algo=P1 if algo != P1 else D2, vb_level_db=4)
                 ya = np.concatenate([ya, a.process(x[:sr * 2])])
                 yb = np.concatenate([yb, b.process(x[:sr * 2])])
-            error = float(np.max(np.abs(ya.astype(np.float64) - yb.astype(np.float64))))
-            peak = float(max(np.max(np.abs(ya)), np.max(np.abs(yb))))
             # Independently compiled historical code may differ at float32 rounding boundaries. The base branch
             # already failed by 2.328e-10 on 2026-10-27 (run 40434973221), before acoustic-lab changes.
             # Keep bit identity visible; permit at most two float32 epsilons of the peak, not a fixed dB/audio floor.
-            bound = 2 * np.finfo(np.float32).eps * peak + np.finfo(np.float32).tiny
-            cases.append(dict(sr=sr, algo=-1 if algo is None else algo, equal=bool(np.array_equal(ya, yb)),
-                              max_diff=error, float32_bound=float(bound), compatible=bool(np.isfinite(error) and error <= bound)))
+            cases.append(dict(sr=sr, algo=-1 if algo is None else algo, **historical_difference(ya, yb, algo)))
             a.close()
             b.close()
     bad = [c for c in cases if not c['compatible']]
@@ -180,6 +186,10 @@ def t_baseline(lib, base_path, label):
     bound = 2 * np.finfo(np.float32).eps * float(np.max(np.abs(probe)))
     changed = probe.astype(np.float64) * (1 + 1e-4)
     check('historical tolerance control rejects a 0.01% gain mutation', float(np.max(abs(changed - probe))) > bound)
+    rounded = np.nextafter(probe, np.float32(1))
+    check('historical tolerance is unavailable to P1/default models, including a one-step float mutation',
+          not historical_difference(rounded, probe, P1)['compatible'] and
+          historical_difference(rounded, probe, 0)['compatible'])
 
 
 def t_off_after_blend(lib, sr=48000):

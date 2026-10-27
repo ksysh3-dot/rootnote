@@ -180,7 +180,7 @@ def analyze_impact(report):
         before_bed, before_hit = quantified_power(bed, "before"), quantified_power(hit, "before")
         gain_db = db(before_hit / before_bed) if before_hit and before_bed else None
         windows = {}
-        for window in ("attack", "early", "late"):
+        for window in ("pre", "attack", "early", "late"):
             bp, hp = quantified_power(bed, window), quantified_power(hit, window)
             ratio = db(hp / bp) if bp and hp else None
             windows[window] = {"bed_dbfs": db(bed["window_powers"][window]), "impact_dbfs": db(hit["window_powers"][window]),
@@ -198,7 +198,7 @@ def analyze_impact(report):
                 continue
             cell = {"model_id": model, "input_db": level, "paired_repeats": len(group),
                     "gain_control_failures": sum(not p["gain_control_pass"] for p in group), "windows": {}}
-            for window in ("attack", "early", "late"):
+            for window in ("pre", "attack", "early", "late"):
                 values = [p["windows"][window]["delta_to_bed_db"] for p in group if p["windows"][window]["quantified"]]
                 cell["windows"][window] = {"quantified_repeats": len(values), "median_delta_to_bed_db":
                     statistics.median(values) if values else None, "range_db": [min(values), max(values)] if values else None}
@@ -258,9 +258,9 @@ def write_outputs(out, result, inputs):
         lines += [f"완료된 시험: {result['run_complete']} · 유효한 짝: {result['accepted_pairs']} · 제외 기록: {len(result['excluded'])}",
                   "", "공간·몸체·마이크를 포함한 녹음 에너지입니다. 타격 직후의 원하는 소리와 잡음을 분리하지 못합니다.",
                   "null은 측정 하한·회복 미확인 또는 결측이며 0으로 해석하지 않습니다. 자동 우승 모델은 고르지 않습니다.", "",
-                  "| 모델 ID | 입력 dB | 반복 | 어택/지속음 dB | 초기/지속음 dB | 후기/지속음 dB | 회복 중앙값 ms |", "|---|---:|---:|---:|---:|---:|---:|"]
+                  "| 모델 ID | 입력 dB | 반복 | 직전/지속음 dB | 어택/지속음 dB | 초기/지속음 dB | 후기/지속음 dB | 회복 중앙값 ms |", "|---|---:|---:|---:|---:|---:|---:|---:|"]
         for c in result["summary"]:
-            vals = [c["windows"][w]["median_delta_to_bed_db"] for w in ("attack", "early", "late")]
+            vals = [c["windows"][w]["median_delta_to_bed_db"] for w in ("pre", "attack", "early", "late")]
             fmt = lambda v: "미확인" if v is None else f"{v:.3f}"
             lines.append(f"| {c['model_id']} | {c['input_db']} | {c['paired_repeats']} | " + " | ".join(map(fmt, vals + [c['recovery_median_ms']])) + " |")
     (out / "RESULTS_KO.md").write_text("\n".join(lines) + "\n", encoding="utf-8")

@@ -5,7 +5,8 @@
 
 Checks
   - never used: developer mode off (any P_D_* values), and on with every value at its default, and the display meters
-    on, are bit-identical to the engine before developer mode existed (--baseline-ref builds that commit, like
+    on, are compared with the engine before developer mode existed (bit identity plus the explicit legacy-only
+    historical float32 exception; --baseline-ref builds that commit, like
     test_experimental.py; CI passes it). In-tree: the same three against each other.
   - ranges: out-of-range and non-finite values are clamped (no NaN, finite output); the output stays at or below the
     -1 dBTP ceiling at the most extreme settings, also when the ceiling parameter asks for 0 dBTP.
@@ -27,7 +28,7 @@ from scipy.signal import butter, sosfilt
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from test_engine import Engine, FP, P, load_lib, true_peak_db  # noqa: E402
-from test_experimental import build_baseline, music  # noqa: E402
+from test_experimental import build_baseline, music, historical_difference  # noqa: E402
 
 D = dict(X_SMOOTH=29, X_RISE=30, X_S1M=31, X_DENSE=32, DEV_ON=33, DEV_METER=34, D_BOUNDARY_HZ=35, D_OUT_LO_HZ=36,
          D_OUT_HI_HZ=37, D_H2_DB=38, D_H3_DB=39, D_H4_DB=40, D_H5_DB=41, D_ROLLOFF_DB_OCT=42, D_SUST_DB=43,
@@ -120,7 +121,7 @@ VARIANTS = {
 
 def t_baseline(lib, base_path, label):
     base = setup(load_lib(base_path))
-    worst, bad, n = 0.0, [], 0
+    worst, bad, n, exact, details = 0.0, [], 0, 0, []
     for sr in (48000, 44100):
         x = music(sr, 5.0)
         for algo in (None, 0, 1, 2, 3, 4, 5, P1, D2, 8, 9, 10):
@@ -128,12 +129,15 @@ def t_baseline(lib, base_path, label):
             for name, extra in VARIANTS.items():
                 y = run_case(lib, sr, x, algo, extra)
                 n += 1
-                d = float(np.max(np.abs(y - ref)))
+                difference = historical_difference(y, ref, algo)
+                exact += int(difference['equal'])
+                details.append(dict(sr=sr, algo=algo, variant=name, **difference))
+                d = difference['max_diff']
                 worst = max(worst, d)
-                if not np.array_equal(y, ref):
+                if not difference['compatible']:
                     bad.append((sr, algo, name))
-    check(f'never used = engine at {label} (bit exact; dev off with values moved, dev on at defaults, meters on; '
-          f'VB off and all 11 models, 44.1/48 kHz, switch + level)', not bad, cases=n, worst=worst, bad=str(bad[:4]))
+    check(f'never used compatible with historical engine at {label} (P1 bit exact; legacy float32 exception reported)',
+          not bad, cases=n, bit_exact_cases=exact, worst=worst, bad=str(bad[:4]), details=details)
 
 
 def t_in_tree(lib):

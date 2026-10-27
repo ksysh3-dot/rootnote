@@ -13,7 +13,7 @@ object AcousticLab {
     const val IMPACT_END_S = 0.16
     const val BIN_S = 0.01
     val MODELS = listOf(6, 11, 12, 13)
-    val WINDOWS = listOf("before" to (-0.45 to -0.08), "attack" to (0.0 to 0.08),
+    val WINDOWS = listOf("before" to (-0.45 to -0.08), "pre" to (-0.08 to 0.0), "attack" to (0.0 to 0.08),
         "early" to (0.08 to 0.30), "late" to (0.30 to 0.80))
 
     data class Trial(val model: Int, val inputDb: Int, val repeat: Int, val impact: Boolean)
