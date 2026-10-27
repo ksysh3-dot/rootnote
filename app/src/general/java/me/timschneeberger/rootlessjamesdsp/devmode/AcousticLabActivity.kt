@@ -164,6 +164,13 @@ class AcousticLabActivity : RnActivity() {
         // Re-measuring ambient invalidates both old phases; no calibration/validation mixing across sessions.
         if (phase == "room") calibration = newReport("calibration").put("phases", JSONObject())
         val report = calibration
+        report.getJSONObject("phases").remove(phase)
+        if (phase == "fit") report.getJSONObject("phases").remove("validation")
+        save(calFile, report)
+        main.post { if (generation.get() == token) {
+            calibrationReady = report.getJSONObject("phases").has("room")
+            fitReady = report.getJSONObject("phases").has("fit")
+        } }
         val rows = JSONArray()
         val failed = JSONArray()
         val roomRows = report.optJSONObject("phases")?.optJSONArray("room")
@@ -268,6 +275,8 @@ class AcousticLabActivity : RnActivity() {
             .put("band_hz", JSONArray(listOf(150, 2000))).put("bin_start_relative_s", -0.5).put("bin_seconds", AcousticLab.BIN_S)
             .put("limits", "Recorded speaker-room-body-microphone loop; energy is not identified noise or calibrated SPL/THD. No automatic model winner.")
         val trials = AcousticLab.plan(seed)
+        // A failure before trial one must not export the preceding run as the new result.
+        save(impactFile, report)
         expectedVolumeIndex = report.getInt("system_volume_index")
         val focus = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE)
             .setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).build())

@@ -93,6 +93,13 @@ class CalibrationTests(unittest.TestCase):
 
 
 class ImpactTests(unittest.TestCase):
+    def test_first_trial_failure_remains_an_empty_incomplete_attempt(self):
+        report = impact_fixture(); report.update(trials=[], complete=False)
+        result = lab.analyze_impact(report)
+        self.assertFalse(result["run_complete"])
+        self.assertEqual(result["accepted_pairs"], 0)
+        self.assertIsNone(result["automatic_winner"])
+
     def test_complete_pairs_and_known_window_ratios(self):
         result = lab.analyze_impact(impact_fixture())
         self.assertEqual(result["accepted_pairs"], 24)
