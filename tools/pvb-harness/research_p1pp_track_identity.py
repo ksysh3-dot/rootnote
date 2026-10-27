@@ -111,8 +111,12 @@ def main():
         # Prevent a false comparison if a stage flag was silently ignored.
         assert np.all(measured['stages'][:, 21] == stages), (label, stages)
         ident = track_identity(measured['rows'], fs, onset, duration, desc['bed_frequency'])
+        diagnostic=(measured['rows'][:, 27].astype(np.int64) // 65536)
         row = dict(variant=label, impact_mode=mode, stage_flags=stages, v04_flags=v04,
-                   protected_onsets=int(np.count_nonzero(measured['rows'][:, 27].astype(np.int64) & 64)),
+                   strong_onset_hops=int(np.count_nonzero(diagnostic & 1)),
+                   percussion_context_hops=int(np.count_nonzero(diagnostic & 2)),
+                   mature_track_hops=int(np.count_nonzero(diagnostic & 4)),
+                   protected_onsets=int(np.count_nonzero(diagnostic & 8)),
                    **ident,
                    early_tail_energy_per_input_db=scores['early_tail_energy_per_input_db'],
                    early_tail_stationary_residual_per_input_db=scores['early_tail_stationary_residual_per_input_db'],
@@ -122,7 +126,7 @@ def main():
                    onset_raw_mismatch_accepted_track_hops=scores['onset_raw_mismatch_accepted_track_hops'],
                    latency_frames=int(measured['latency']))
         results.append(row)
-        print(f"{label}: protection={row['protected_onsets']} captured={row['original_id_stolen_hops_over_5_percent']}/"
+        print(f"{label}: onset={row['strong_onset_hops']} perc={row['percussion_context_hops']} mature={row['mature_track_hops']} armed={row['protected_onsets']} captured={row['original_id_stolen_hops_over_5_percent']}/"
               f"{row['original_id_observed_hops']} missing_bed="
               f"{row['missing_confirmed_near_bed_hops']}/{row['event_hops']} "
               f"early={row['early_tail_energy_per_input_db']:.3f}dB", flush=True)
