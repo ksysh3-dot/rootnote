@@ -1,0 +1,26 @@
+inspected vs_p1plus P1++ v0.3 {'pre': (0, 1, 31, -0.33), 'early_energy': (15, 2, 15, -1.41), 'early_stat': (1, 17, 14, -4.2), 'early_bed': (15, 2, 15, -1.16), 'early_nonbed': (5, 13, 14, -8.8), 'late': (19, 0, 13, -0.0)}
+inspected vs_p1plus b8 grave2 {'pre': (0, 1, 31, -0.33), 'early_energy': (15, 2, 15, -1.41), 'early_stat': (1, 17, 14, -4.2), 'early_bed': (16, 2, 14, -1.16), 'early_nonbed': (5, 13, 14, -8.8), 'late': (19, 0, 13, -0.0)}
+inspected vs_p1plus b40 defer+grave2 {'pre': (0, 1, 31, -0.33), 'early_energy': (15, 2, 15, -1.41), 'early_stat': (1, 17, 14, -4.2), 'early_bed': (16, 2, 14, -1.16), 'early_nonbed': (5, 13, 14, -8.8), 'late': (19, 0, 13, -0.0)}
+inspected vs_v03 b8 grave2 {'pre': (0, 0, 32, 0.0), 'early_energy': (1, 1, 30, -0.24), 'early_stat': (2, 0, 30, 0.0), 'early_bed': (1, 1, 30, -0.42), 'early_nonbed': (1, 1, 30, -0.92), 'late': (0, 2, 30, -0.8)}
+inspected vs_v03 b40 defer+grave2 {'pre': (0, 0, 32, 0.0), 'early_energy': (2, 2, 28, -0.24), 'early_stat': (3, 1, 28, -0.14), 'early_bed': (2, 2, 28, -0.42), 'early_nonbed': (2, 1, 29, -0.92), 'late': (0, 3, 29, -0.8)}
+new vs_p1plus P1++ v0.3 {'pre': (3, 0, 33, -0.0), 'early_energy': (12, 4, 20, -7.76), 'early_stat': (4, 11, 21, -9.6), 'early_bed': (12, 4, 20, -8.18), 'early_nonbed': (4, 11, 21, -8.05), 'late': (18, 0, 18, -0.0)}
+new vs_p1plus b8 grave2 {'pre': (3, 0, 33, -0.0), 'early_energy': (12, 4, 20, -4.01), 'early_stat': (4, 11, 21, -4.24), 'early_bed': (12, 4, 20, -4.25), 'early_nonbed': (4, 11, 21, -8.05), 'late': (18, 0, 18, -0.0)}
+new vs_p1plus b40 defer+grave2 {'pre': (2, 0, 34, -0.0), 'early_energy': (12, 3, 21, -4.01), 'early_stat': (4, 11, 21, -4.24), 'early_bed': (13, 3, 20, -4.25), 'early_nonbed': (3, 12, 21, -8.05), 'late': (18, 0, 18, -0.0)}
+new vs_v03 b8 grave2 {'pre': (0, 0, 36, 0.0), 'early_energy': (1, 0, 35, 0.0), 'early_stat': (1, 0, 35, 0.0), 'early_bed': (1, 0, 35, 0.0), 'early_nonbed': (0, 1, 35, -0.27), 'late': (0, 1, 35, -5.78)}
+new vs_v03 b40 defer+grave2 {'pre': (0, 1, 35, -0.21), 'early_energy': (2, 0, 34, -0.1), 'early_stat': (1, 0, 35, -0.02), 'early_bed': (2, 1, 33, -0.11), 'early_nonbed': (0, 2, 34, -6.45), 'late': (0, 3, 33, -5.78)}
+confirm vs_p1plus P1++ v0.3 {'pre': (0, 0, 24, -0.09), 'early_energy': (10, 0, 14, -0.02), 'early_stat': (2, 11, 11, -3.47), 'early_bed': (10, 0, 14, -0.01), 'early_nonbed': (6, 9, 9, -6.11), 'late': (13, 0, 11, -0.0)}
+confirm vs_p1plus b8 grave2 {'pre': (0, 0, 24, -0.09), 'early_energy': (10, 0, 14, -0.02), 'early_stat': (2, 11, 11, -3.47), 'early_bed': (10, 0, 14, -0.01), 'early_nonbed': (6, 9, 9, -6.11), 'late': (13, 0, 11, -0.0)}
+confirm vs_p1plus b40 defer+grave2 {'pre': (0, 0, 24, -0.09), 'early_energy': (10, 0, 14, -0.02), 'early_stat': (2, 11, 11, -3.47), 'early_bed': (10, 0, 14, -0.01), 'early_nonbed': (6, 9, 9, -6.11), 'late': (13, 0, 11, -0.0)}
+confirm vs_v03 b8 grave2 {'pre': (0, 0, 24, 0.0), 'early_energy': (0, 0, 24, -0.07), 'early_stat': (1, 0, 23, 0.0), 'early_bed': (1, 0, 23, -0.07), 'early_nonbed': (0, 1, 23, -0.74), 'late': (0, 2, 22, -0.63)}
+confirm vs_v03 b40 defer+grave2 {'pre': (0, 0, 24, 0.0), 'early_energy': (1, 1, 22, -0.44), 'early_stat': (3, 1, 20, -0.22), 'early_bed': (2, 1, 21, -0.54), 'early_nonbed': (1, 2, 21, -0.74), 'late': (0, 4, 20, -0.63)}
+holdout vs_p1plus P1++ v0.3 {'pre': (0, 1, 35, -0.13), 'early_energy': (10, 0, 26, -0.03), 'early_stat': (5, 5, 26, -5.47), 'early_bed': (10, 0, 26, -0.03), 'early_nonbed': (7, 9, 20, -12.7), 'late': (9, 0, 27, -0.07)}
+holdout vs_p1plus b8 grave2 {'pre': (0, 1, 35, -0.13), 'early_energy': (10, 0, 26, -0.03), 'early_stat': (5, 5, 26, -5.47), 'early_bed': (10, 0, 26, -0.03), 'early_nonbed': (7, 9, 20, -12.7), 'late': (9, 0, 27, -0.07)}
+holdout vs_p1plus b40 defer+grave2 {'pre': (0, 1, 35, -0.13), 'early_energy': (10, 0, 26, -0.03), 'early_stat': (5, 5, 26, -5.47), 'early_bed': (10, 0, 26, -0.03), 'early_nonbed': (7, 9, 20, -12.7), 'late': (9, 0, 27, -0.07)}
+holdout vs_v03 b8 grave2 {'pre': (0, 0, 36, 0.0), 'early_energy': (0, 0, 36, 0.0), 'early_stat': (0, 0, 36, 0.0), 'early_bed': (0, 0, 36, 0.0), 'early_nonbed': (0, 0, 36, 0.0), 'late': (0, 0, 36, 0.0)}
+holdout vs_v03 b40 defer+grave2 {'pre': (0, 0, 36, 0.0), 'early_energy': (0, 0, 36, 0.0), 'early_stat': (0, 0, 36, 0.0), 'early_bed': (1, 0, 35, -0.0), 'early_nonbed': (0, 1, 35, -2.0), 'late': (0, 1, 35, -0.27)}
+holdout_v03 note envelope error %: _0 9.18 9.46 9.46 9.46 | _1 7.18 6.53 6.53 6.53 | _2 14.94 15.47 15.47 15.73 | _3 13.83 13.80 13.80 13.82 | _4 18.42 18.12 18.12 18.16 | _5 8.53 8.51 8.51 8.54 | _6 9.27 9.27 9.27 9.27 | _7 7.51 7.47 7.47 7.51 | _8 15.87 15.85 15.85 15.88 | _9 19.12 19.48 19.48 19.64 | 10 9.03 8.99 8.99 9.02 | 11 13.64 13.59 13.59 13.64
+  b8 grave2 vs v0.3 lower/higher/same(0.1 pt): 0 0 12 vs P1+: 2 3
+  b40 defer+grave2 vs v0.3 lower/higher/same(0.1 pt): 0 2 10 vs P1+: 2 3
+tuning note envelope error %: _0 7.41 7.39 7.39 7.41 | _1 7.77 8.02 8.02 8.01 | _2 8.57 8.58 8.58 8.57 | _3 82.78 80.27 80.27 80.27 | _4 4.78 4.73 4.73 4.77 | _5 6.07 6.98 6.98 7.02
+  b8 grave2 vs v0.3 lower/higher/same(0.1 pt): 0 0 6 vs P1+: 1 2
+  b40 defer+grave2 vs v0.3 lower/higher/same(0.1 pt): 0 0 6 vs P1+: 1 2

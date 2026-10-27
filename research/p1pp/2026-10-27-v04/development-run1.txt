@@ -1,0 +1,56 @@
+inspected vs_p1plus P1++ v0.3 {'pre': (0, 1, 31, -0.33), 'early': (1, 17, 14, -4.2), 'early_bed': (15, 2, 15, -1.16), 'early_nonbed': (5, 13, 14, -8.8), 'late': (19, 0, 13, -0.0)}
+inspected vs_p1plus b1 reserve {'pre': (0, 1, 31, -0.33), 'early': (1, 17, 14, -13.91), 'early_bed': (14, 3, 15, -1.16), 'early_nonbed': (3, 14, 15, -19.15), 'late': (19, 0, 13, -0.0)}
+inspected vs_p1plus b2 phase {'pre': (0, 1, 31, -0.33), 'early': (0, 18, 14, -4.2), 'early_bed': (15, 2, 15, -1.19), 'early_nonbed': (4, 14, 14, -8.8), 'late': (19, 0, 13, -0.0)}
+inspected vs_p1plus b6 phase-nostrength {'pre': (0, 1, 31, -0.33), 'early': (0, 18, 14, -4.2), 'early_bed': (13, 2, 17, -1.19), 'early_nonbed': (3, 16, 13, -8.8), 'late': (18, 1, 13, -0.33)}
+inspected vs_p1plus b8 grave {'pre': (0, 1, 31, -0.33), 'early': (1, 17, 14, -4.2), 'early_bed': (15, 2, 15, -1.16), 'early_nonbed': (5, 13, 14, -8.8), 'late': (19, 0, 13, -0.0)}
+inspected vs_p1plus b16 perharm {'pre': (0, 1, 31, -0.33), 'early': (1, 17, 14, -4.2), 'early_bed': (15, 2, 15, -1.16), 'early_nonbed': (5, 13, 14, -8.8), 'late': (19, 0, 13, -0.0)}
+inspected vs_v03 b1 reserve {'pre': (0, 0, 32, 0.0), 'early': (1, 4, 27, -13.21), 'early_bed': (2, 1, 29, -9.53), 'early_nonbed': (3, 1, 28, -21.16), 'late': (6, 2, 24, -14.82)}
+inspected vs_v03 b2 phase {'pre': (0, 0, 32, 0.0), 'early': (1, 2, 29, -1.82), 'early_bed': (0, 2, 30, -1.68), 'early_nonbed': (0, 2, 30, -8.31), 'late': (0, 3, 29, -53.95)}
+inspected vs_v03 b6 phase-nostrength {'pre': (0, 0, 32, 0.0), 'early': (5, 5, 22, -1.82), 'early_bed': (2, 6, 24, -1.68), 'early_nonbed': (3, 5, 24, -8.31), 'late': (0, 9, 23, -64.47)}
+inspected vs_v03 b8 grave {'pre': (0, 0, 32, 0.0), 'early': (0, 0, 32, 0.0), 'early_bed': (0, 0, 32, 0.0), 'early_nonbed': (0, 0, 32, 0.0), 'late': (0, 0, 32, 0.0)}
+inspected vs_v03 b16 perharm {'pre': (0, 0, 32, 0.0), 'early': (0, 0, 32, -0.0), 'early_bed': (0, 0, 32, -0.0), 'early_nonbed': (0, 0, 32, 0.0), 'late': (0, 0, 32, -0.01)}
+new vs_p1plus P1++ v0.3 {'pre': (3, 0, 33, -0.0), 'early': (4, 11, 21, -9.6), 'early_bed': (12, 4, 20, -8.18), 'early_nonbed': (4, 11, 21, -8.05), 'late': (18, 0, 18, -0.0)}
+new vs_p1plus b1 reserve {'pre': (3, 0, 33, -0.0), 'early': (4, 11, 21, -9.6), 'early_bed': (13, 3, 20, -8.18), 'early_nonbed': (6, 9, 21, -8.05), 'late': (16, 2, 18, -2.64)}
+new vs_p1plus b2 phase {'pre': (3, 0, 33, -0.0), 'early': (4, 11, 21, -4.24), 'early_bed': (12, 3, 21, -4.25), 'early_nonbed': (3, 12, 21, -8.05), 'late': (18, 0, 18, -0.0)}
+new vs_p1plus b6 phase-nostrength {'pre': (2, 0, 34, -0.0), 'early': (4, 11, 21, -4.24), 'early_bed': (11, 4, 21, -4.25), 'early_nonbed': (2, 13, 21, -8.16), 'late': (17, 0, 19, -0.0)}
+new vs_p1plus b8 grave {'pre': (3, 0, 33, -0.0), 'early': (4, 11, 21, -9.6), 'early_bed': (12, 4, 20, -8.18), 'early_nonbed': (4, 11, 21, -8.05), 'late': (18, 0, 18, -0.0)}
+new vs_p1plus b16 perharm {'pre': (3, 0, 33, -0.0), 'early': (4, 11, 21, -9.6), 'early_bed': (12, 4, 20, -8.18), 'early_nonbed': (4, 11, 21, -8.26), 'late': (18, 0, 18, -0.0)}
+new vs_v03 b1 reserve {'pre': (0, 0, 36, 0.0), 'early': (1, 2, 33, -0.28), 'early_bed': (1, 1, 34, -1.02), 'early_nonbed': (3, 1, 32, -0.13), 'late': (2, 3, 31, -15.13)}
+new vs_v03 b2 phase {'pre': (0, 0, 36, 0.0), 'early': (2, 0, 34, 0.0), 'early_bed': (2, 0, 34, -0.08), 'early_nonbed': (0, 2, 34, -4.07), 'late': (0, 2, 34, -5.72)}
+new vs_v03 b6 phase-nostrength {'pre': (0, 1, 35, -0.25), 'early': (4, 1, 31, -0.46), 'early_bed': (3, 3, 30, -0.56), 'early_nonbed': (3, 4, 29, -4.07), 'late': (0, 8, 28, -38.54)}
+new vs_v03 b8 grave {'pre': (0, 0, 36, 0.0), 'early': (0, 0, 36, 0.0), 'early_bed': (0, 0, 36, 0.0), 'early_nonbed': (0, 0, 36, 0.0), 'late': (0, 0, 36, 0.0)}
+new vs_v03 b16 perharm {'pre': (0, 0, 36, -0.01), 'early': (0, 0, 36, -0.03), 'early_bed': (0, 0, 36, -0.03), 'early_nonbed': (0, 1, 35, -0.21), 'late': (0, 1, 35, -0.1)}
+confirm vs_p1plus P1++ v0.3 {'pre': (0, 0, 24, -0.09), 'early': (2, 11, 11, -3.47), 'early_bed': (10, 0, 14, -0.01), 'early_nonbed': (6, 9, 9, -6.11), 'late': (13, 0, 11, -0.0)}
+confirm vs_p1plus b1 reserve {'pre': (0, 0, 24, -0.09), 'early': (2, 11, 11, -3.47), 'early_bed': (10, 0, 14, -0.01), 'early_nonbed': (7, 8, 9, -6.11), 'late': (13, 0, 11, -0.0)}
+confirm vs_p1plus b2 phase {'pre': (0, 0, 24, -0.09), 'early': (2, 11, 11, -3.45), 'early_bed': (10, 0, 14, -0.01), 'early_nonbed': (6, 9, 9, -6.07), 'late': (13, 0, 11, -0.0)}
+confirm vs_p1plus b6 phase-nostrength {'pre': (0, 0, 24, -0.09), 'early': (2, 11, 11, -3.45), 'early_bed': (10, 0, 14, -0.01), 'early_nonbed': (5, 10, 9, -6.07), 'late': (13, 0, 11, -0.0)}
+confirm vs_p1plus b8 grave {'pre': (0, 0, 24, -0.09), 'early': (2, 11, 11, -3.47), 'early_bed': (10, 0, 14, -0.01), 'early_nonbed': (6, 9, 9, -6.11), 'late': (13, 0, 11, -0.0)}
+confirm vs_p1plus b16 perharm {'pre': (0, 0, 24, -0.09), 'early': (2, 11, 11, -3.47), 'early_bed': (10, 0, 14, -0.01), 'early_nonbed': (6, 9, 9, -6.11), 'late': (13, 0, 11, -0.0)}
+confirm vs_v03 b1 reserve {'pre': (0, 0, 24, 0.0), 'early': (0, 0, 24, -0.05), 'early_bed': (0, 0, 24, -0.05), 'early_nonbed': (2, 1, 21, -0.18), 'late': (3, 3, 18, -4.84)}
+confirm vs_v03 b2 phase {'pre': (0, 0, 24, 0.0), 'early': (2, 1, 21, -0.3), 'early_bed': (1, 1, 22, -0.72), 'early_nonbed': (1, 0, 23, 0.0), 'late': (0, 2, 22, -31.82)}
+confirm vs_v03 b6 phase-nostrength {'pre': (0, 0, 24, 0.0), 'early': (2, 3, 19, -0.56), 'early_bed': (1, 3, 20, -1.49), 'early_nonbed': (3, 1, 20, -4.35), 'late': (0, 4, 20, -32.49)}
+confirm vs_v03 b8 grave {'pre': (0, 0, 24, 0.0), 'early': (0, 0, 24, 0.0), 'early_bed': (0, 0, 24, 0.0), 'early_nonbed': (0, 0, 24, 0.0), 'late': (0, 0, 24, 0.0)}
+confirm vs_v03 b16 perharm {'pre': (0, 0, 24, 0.0), 'early': (0, 0, 24, -0.0), 'early_bed': (0, 0, 24, -0.0), 'early_nonbed': (0, 0, 24, -0.0), 'late': (0, 0, 24, 0.0)}
+holdout vs_p1plus P1++ v0.3 {'pre': (0, 1, 35, -0.13), 'early': (5, 5, 26, -5.47), 'early_bed': (10, 0, 26, -0.03), 'early_nonbed': (7, 9, 20, -12.7), 'late': (9, 0, 27, -0.07)}
+holdout vs_p1plus b1 reserve {'pre': (0, 1, 35, -0.13), 'early': (5, 5, 26, -5.47), 'early_bed': (10, 0, 26, -0.03), 'early_nonbed': (7, 9, 20, -12.7), 'late': (9, 0, 27, -0.07)}
+holdout vs_p1plus b2 phase {'pre': (0, 1, 35, -0.13), 'early': (5, 5, 26, -5.47), 'early_bed': (10, 0, 26, -0.03), 'early_nonbed': (7, 9, 20, -12.7), 'late': (9, 0, 27, -0.07)}
+holdout vs_p1plus b6 phase-nostrength {'pre': (0, 1, 35, -0.13), 'early': (5, 5, 26, -5.47), 'early_bed': (10, 0, 26, -0.03), 'early_nonbed': (7, 9, 20, -13.05), 'late': (9, 0, 27, -0.07)}
+holdout vs_p1plus b8 grave {'pre': (0, 1, 35, -0.13), 'early': (5, 5, 26, -5.47), 'early_bed': (10, 0, 26, -0.03), 'early_nonbed': (7, 9, 20, -12.7), 'late': (9, 0, 27, -0.07)}
+holdout vs_p1plus b16 perharm {'pre': (0, 1, 35, -0.13), 'early': (5, 5, 26, -5.47), 'early_bed': (10, 0, 26, -0.03), 'early_nonbed': (7, 9, 20, -12.7), 'late': (9, 0, 27, -0.07)}
+holdout vs_v03 b1 reserve {'pre': (0, 0, 36, 0.0), 'early': (0, 1, 35, -0.15), 'early_bed': (0, 0, 36, -0.0), 'early_nonbed': (0, 0, 36, -0.08), 'late': (2, 1, 33, -12.52)}
+holdout vs_v03 b2 phase {'pre': (0, 0, 36, 0.0), 'early': (0, 0, 36, 0.0), 'early_bed': (0, 0, 36, 0.0), 'early_nonbed': (0, 0, 36, 0.0), 'late': (0, 0, 36, 0.0)}
+holdout vs_v03 b6 phase-nostrength {'pre': (0, 0, 36, 0.0), 'early': (1, 3, 32, -23.65), 'early_bed': (0, 0, 36, -0.09), 'early_nonbed': (0, 2, 34, -1.12), 'late': (0, 3, 33, -49.57)}
+holdout vs_v03 b8 grave {'pre': (0, 0, 36, 0.0), 'early': (0, 0, 36, 0.0), 'early_bed': (0, 0, 36, 0.0), 'early_nonbed': (0, 0, 36, 0.0), 'late': (0, 0, 36, 0.0)}
+holdout vs_v03 b16 perharm {'pre': (0, 0, 36, 0.0), 'early': (0, 0, 36, -0.0), 'early_bed': (0, 0, 36, -0.0), 'early_nonbed': (0, 0, 36, -0.01), 'late': (0, 0, 36, 0.0)}
+holdout_v03 note envelope error %: _0 9.18 9.46 9.45 9.46 9.52 9.46 9.46 | _1 7.18 6.53 6.38 6.53 6.53 6.53 6.53 | _2 14.94 15.47 15.47 15.47 15.47 15.47 15.47 | _3 13.83 13.80 13.80 13.80 13.80 13.80 13.80 | _4 18.42 18.12 18.12 18.12 18.12 18.12 18.12 | _5 8.53 8.51 8.46 8.51 8.51 8.51 8.51 | _6 9.27 9.27 9.27 9.27 9.27 9.27 9.27 | _7 7.51 7.47 7.44 7.47 7.47 7.47 7.47 | _8 15.87 15.85 15.85 15.85 15.85 15.85 15.85 | _9 19.12 19.48 19.51 19.48 19.24 19.48 19.48 | 10 9.03 8.99 8.99 8.99 8.99 8.99 8.99 | 11 13.64 13.59 13.61 13.59 13.59 13.59 13.58
+  b1 reserve vs v0.3 lower/higher/same(0.1 pt): 1 0 11 vs P1+: 2 3
+  b2 phase vs v0.3 lower/higher/same(0.1 pt): 0 0 12 vs P1+: 2 3
+  b6 phase-nostrength vs v0.3 lower/higher/same(0.1 pt): 1 0 11 vs P1+: 2 3
+  b8 grave vs v0.3 lower/higher/same(0.1 pt): 0 0 12 vs P1+: 2 3
+  b16 perharm vs v0.3 lower/higher/same(0.1 pt): 0 0 12 vs P1+: 2 3
+tuning note envelope error %: _0 7.41 7.39 7.68 7.39 7.39 7.39 7.39 | _1 7.77 8.02 8.02 8.02 8.02 8.02 8.02 | _2 8.57 8.58 8.61 8.58 8.58 8.58 8.58 | _3 82.78 80.27 80.26 80.27 80.27 80.27 80.27 | _4 4.78 4.73 4.76 4.73 4.73 4.73 4.73 | _5 6.07 6.98 6.97 6.98 6.89 6.98 6.98
+  b1 reserve vs v0.3 lower/higher/same(0.1 pt): 0 1 5 vs P1+: 1 3
+  b2 phase vs v0.3 lower/higher/same(0.1 pt): 0 0 6 vs P1+: 1 2
+  b6 phase-nostrength vs v0.3 lower/higher/same(0.1 pt): 0 0 6 vs P1+: 1 2
+  b8 grave vs v0.3 lower/higher/same(0.1 pt): 0 0 6 vs P1+: 1 2
+  b16 perharm vs v0.3 lower/higher/same(0.1 pt): 0 0 6 vs P1+: 1 2

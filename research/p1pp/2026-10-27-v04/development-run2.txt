@@ -1,0 +1,46 @@
+inspected vs_p1plus P1++ v0.3 {'pre': (0, 1, 31, -0.33), 'early_energy': (15, 2, 15, -1.41), 'early_stat': (1, 17, 14, -4.2), 'early_bed': (15, 2, 15, -1.16), 'early_nonbed': (5, 13, 14, -8.8), 'late': (19, 0, 13, -0.0)}
+inspected vs_p1plus b1 reserve {'pre': (0, 1, 31, -0.33), 'early_energy': (14, 3, 15, -2.77), 'early_stat': (1, 17, 14, -13.91), 'early_bed': (14, 3, 15, -1.16), 'early_nonbed': (3, 14, 15, -19.15), 'late': (19, 0, 13, -0.0)}
+inspected vs_p1plus b32 defer {'pre': (0, 1, 31, -0.33), 'early_energy': (16, 2, 14, -1.41), 'early_stat': (1, 17, 14, -4.2), 'early_bed': (16, 2, 14, -1.16), 'early_nonbed': (5, 13, 14, -8.8), 'late': (19, 0, 13, -0.0)}
+inspected vs_p1plus b33 defer+reserve {'pre': (0, 1, 31, -0.33), 'early_energy': (15, 3, 14, -2.77), 'early_stat': (2, 16, 14, -13.91), 'early_bed': (15, 3, 14, -1.16), 'early_nonbed': (3, 14, 15, -19.15), 'late': (19, 0, 13, -0.0)}
+inspected vs_p1plus b40 defer+grave {'pre': (0, 1, 31, -0.33), 'early_energy': (16, 2, 14, -1.41), 'early_stat': (1, 17, 14, -4.2), 'early_bed': (16, 2, 14, -1.16), 'early_nonbed': (5, 13, 14, -8.8), 'late': (19, 0, 13, -0.0)}
+inspected vs_v03 b1 reserve {'pre': (0, 0, 32, 0.0), 'early_energy': (2, 1, 29, -11.24), 'early_stat': (1, 4, 27, -13.21), 'early_bed': (2, 1, 29, -9.53), 'early_nonbed': (3, 1, 28, -21.16), 'late': (6, 2, 24, -14.82)}
+inspected vs_v03 b32 defer {'pre': (0, 0, 32, 0.0), 'early_energy': (2, 2, 28, -0.17), 'early_stat': (3, 1, 28, -0.14), 'early_bed': (2, 2, 28, -0.24), 'early_nonbed': (2, 1, 29, -0.92), 'late': (0, 3, 29, -0.8)}
+inspected vs_v03 b33 defer+reserve {'pre': (0, 0, 32, 0.0), 'early_energy': (4, 1, 27, -11.24), 'early_stat': (3, 3, 26, -13.21), 'early_bed': (4, 2, 26, -9.53), 'early_nonbed': (4, 2, 26, -21.16), 'late': (6, 2, 24, -14.82)}
+inspected vs_v03 b40 defer+grave {'pre': (0, 0, 32, 0.0), 'early_energy': (2, 2, 28, -0.17), 'early_stat': (3, 1, 28, -0.14), 'early_bed': (2, 2, 28, -0.24), 'early_nonbed': (2, 1, 29, -0.92), 'late': (0, 3, 29, -0.8)}
+new vs_p1plus P1++ v0.3 {'pre': (3, 0, 33, -0.0), 'early_energy': (12, 4, 20, -7.76), 'early_stat': (4, 11, 21, -9.6), 'early_bed': (12, 4, 20, -8.18), 'early_nonbed': (4, 11, 21, -8.05), 'late': (18, 0, 18, -0.0)}
+new vs_p1plus b1 reserve {'pre': (3, 0, 33, -0.0), 'early_energy': (13, 3, 20, -7.76), 'early_stat': (4, 11, 21, -9.6), 'early_bed': (13, 3, 20, -8.18), 'early_nonbed': (6, 9, 21, -8.05), 'late': (16, 2, 18, -2.64)}
+new vs_p1plus b32 defer {'pre': (2, 0, 34, -0.0), 'early_energy': (12, 3, 21, -4.01), 'early_stat': (4, 11, 21, -5.91), 'early_bed': (13, 3, 20, -4.25), 'early_nonbed': (3, 12, 21, -8.05), 'late': (18, 0, 18, -0.0)}
+new vs_p1plus b33 defer+reserve {'pre': (2, 0, 34, -0.0), 'early_energy': (13, 2, 21, -4.01), 'early_stat': (4, 11, 21, -5.91), 'early_bed': (14, 2, 20, -4.25), 'early_nonbed': (5, 10, 21, -8.05), 'late': (16, 2, 18, -2.64)}
+new vs_p1plus b40 defer+grave {'pre': (2, 0, 34, -0.0), 'early_energy': (12, 3, 21, -4.01), 'early_stat': (4, 11, 21, -5.91), 'early_bed': (13, 3, 20, -4.25), 'early_nonbed': (3, 12, 21, -8.05), 'late': (18, 0, 18, -0.0)}
+new vs_v03 b1 reserve {'pre': (0, 0, 36, 0.0), 'early_energy': (1, 1, 34, -0.46), 'early_stat': (1, 2, 33, -0.28), 'early_bed': (1, 1, 34, -1.02), 'early_nonbed': (3, 1, 32, -0.13), 'late': (2, 3, 31, -15.13)}
+new vs_v03 b32 defer {'pre': (0, 1, 35, -0.21), 'early_energy': (2, 0, 34, -0.1), 'early_stat': (1, 0, 35, -0.02), 'early_bed': (2, 1, 33, -0.11), 'early_nonbed': (0, 2, 34, -6.45), 'late': (0, 3, 33, -3.81)}
+new vs_v03 b33 defer+reserve {'pre': (0, 1, 35, -0.21), 'early_energy': (3, 1, 32, -0.46), 'early_stat': (2, 2, 32, -0.28), 'early_bed': (3, 2, 31, -1.02), 'early_nonbed': (3, 3, 30, -6.45), 'late': (2, 5, 29, -15.13)}
+new vs_v03 b40 defer+grave {'pre': (0, 1, 35, -0.21), 'early_energy': (2, 0, 34, -0.1), 'early_stat': (1, 0, 35, -0.02), 'early_bed': (2, 1, 33, -0.11), 'early_nonbed': (0, 2, 34, -6.45), 'late': (0, 3, 33, -3.81)}
+confirm vs_p1plus P1++ v0.3 {'pre': (0, 0, 24, -0.09), 'early_energy': (10, 0, 14, -0.02), 'early_stat': (2, 11, 11, -3.47), 'early_bed': (10, 0, 14, -0.01), 'early_nonbed': (6, 9, 9, -6.11), 'late': (13, 0, 11, -0.0)}
+confirm vs_p1plus b1 reserve {'pre': (0, 0, 24, -0.09), 'early_energy': (10, 0, 14, -0.02), 'early_stat': (2, 11, 11, -3.47), 'early_bed': (10, 0, 14, -0.01), 'early_nonbed': (7, 8, 9, -6.11), 'late': (13, 0, 11, -0.0)}
+confirm vs_p1plus b32 defer {'pre': (0, 0, 24, -0.09), 'early_energy': (10, 0, 14, -0.02), 'early_stat': (2, 11, 11, -3.47), 'early_bed': (10, 0, 14, -0.01), 'early_nonbed': (6, 9, 9, -6.11), 'late': (13, 0, 11, -0.0)}
+confirm vs_p1plus b33 defer+reserve {'pre': (0, 0, 24, -0.09), 'early_energy': (10, 0, 14, -0.02), 'early_stat': (2, 11, 11, -3.47), 'early_bed': (10, 0, 14, -0.01), 'early_nonbed': (7, 8, 9, -6.11), 'late': (13, 0, 11, -0.0)}
+confirm vs_p1plus b40 defer+grave {'pre': (0, 0, 24, -0.09), 'early_energy': (10, 0, 14, -0.02), 'early_stat': (2, 11, 11, -3.47), 'early_bed': (10, 0, 14, -0.01), 'early_nonbed': (6, 9, 9, -6.11), 'late': (13, 0, 11, -0.0)}
+confirm vs_v03 b1 reserve {'pre': (0, 0, 24, 0.0), 'early_energy': (0, 0, 24, -0.06), 'early_stat': (0, 0, 24, -0.05), 'early_bed': (0, 0, 24, -0.05), 'early_nonbed': (2, 1, 21, -0.18), 'late': (3, 3, 18, -4.84)}
+confirm vs_v03 b32 defer {'pre': (0, 0, 24, 0.0), 'early_energy': (1, 1, 22, -0.44), 'early_stat': (3, 1, 20, -0.22), 'early_bed': (1, 1, 22, -0.54), 'early_nonbed': (1, 2, 21, -0.56), 'late': (0, 3, 21, -0.51)}
+confirm vs_v03 b33 defer+reserve {'pre': (0, 0, 24, 0.0), 'early_energy': (2, 1, 21, -0.42), 'early_stat': (3, 1, 20, -0.27), 'early_bed': (2, 1, 21, -0.56), 'early_nonbed': (3, 3, 18, -0.56), 'late': (2, 5, 17, -4.9)}
+confirm vs_v03 b40 defer+grave {'pre': (0, 0, 24, 0.0), 'early_energy': (1, 1, 22, -0.44), 'early_stat': (3, 1, 20, -0.22), 'early_bed': (1, 1, 22, -0.54), 'early_nonbed': (1, 2, 21, -0.56), 'late': (0, 3, 21, -0.51)}
+holdout vs_p1plus P1++ v0.3 {'pre': (0, 1, 35, -0.13), 'early_energy': (10, 0, 26, -0.03), 'early_stat': (5, 5, 26, -5.47), 'early_bed': (10, 0, 26, -0.03), 'early_nonbed': (7, 9, 20, -12.7), 'late': (9, 0, 27, -0.07)}
+holdout vs_p1plus b1 reserve {'pre': (0, 1, 35, -0.13), 'early_energy': (10, 0, 26, -0.03), 'early_stat': (5, 5, 26, -5.47), 'early_bed': (10, 0, 26, -0.03), 'early_nonbed': (7, 9, 20, -12.7), 'late': (9, 0, 27, -0.07)}
+holdout vs_p1plus b32 defer {'pre': (0, 1, 35, -0.13), 'early_energy': (10, 0, 26, -0.03), 'early_stat': (5, 5, 26, -5.47), 'early_bed': (10, 0, 26, -0.03), 'early_nonbed': (7, 9, 20, -12.7), 'late': (9, 0, 27, -0.07)}
+holdout vs_p1plus b33 defer+reserve {'pre': (0, 1, 35, -0.13), 'early_energy': (10, 0, 26, -0.03), 'early_stat': (5, 5, 26, -5.47), 'early_bed': (10, 0, 26, -0.03), 'early_nonbed': (7, 9, 20, -12.7), 'late': (9, 0, 27, -0.07)}
+holdout vs_p1plus b40 defer+grave {'pre': (0, 1, 35, -0.13), 'early_energy': (10, 0, 26, -0.03), 'early_stat': (5, 5, 26, -5.47), 'early_bed': (10, 0, 26, -0.03), 'early_nonbed': (7, 9, 20, -12.7), 'late': (9, 0, 27, -0.07)}
+holdout vs_v03 b1 reserve {'pre': (0, 0, 36, 0.0), 'early_energy': (0, 0, 36, -0.0), 'early_stat': (0, 1, 35, -0.15), 'early_bed': (0, 0, 36, -0.0), 'early_nonbed': (0, 0, 36, -0.08), 'late': (2, 1, 33, -12.52)}
+holdout vs_v03 b32 defer {'pre': (0, 0, 36, 0.0), 'early_energy': (0, 0, 36, 0.0), 'early_stat': (0, 0, 36, 0.0), 'early_bed': (1, 0, 35, -0.0), 'early_nonbed': (0, 1, 35, -2.0), 'late': (0, 1, 35, -0.27)}
+holdout vs_v03 b33 defer+reserve {'pre': (0, 0, 36, 0.0), 'early_energy': (0, 0, 36, -0.0), 'early_stat': (0, 1, 35, -0.15), 'early_bed': (1, 0, 35, -0.0), 'early_nonbed': (0, 1, 35, -1.99), 'late': (2, 1, 33, -12.52)}
+holdout vs_v03 b40 defer+grave {'pre': (0, 0, 36, 0.0), 'early_energy': (0, 0, 36, 0.0), 'early_stat': (0, 0, 36, 0.0), 'early_bed': (1, 0, 35, -0.0), 'early_nonbed': (0, 1, 35, -2.0), 'late': (0, 1, 35, -0.27)}
+holdout_v03 note envelope error %: _0 9.18 9.46 9.45 9.46 9.45 9.46 | _1 7.18 6.53 6.38 6.53 6.38 6.53 | _2 14.94 15.47 15.47 15.73 15.73 15.73 | _3 13.83 13.80 13.80 13.82 13.82 13.82 | _4 18.42 18.12 18.12 18.16 18.16 18.16 | _5 8.53 8.51 8.46 8.54 8.49 8.54 | _6 9.27 9.27 9.27 9.27 9.27 9.27 | _7 7.51 7.47 7.44 7.51 7.48 7.51 | _8 15.87 15.85 15.85 15.88 15.88 15.88 | _9 19.12 19.48 19.51 19.64 19.67 19.64 | 10 9.03 8.99 8.99 9.02 9.02 9.02 | 11 13.64 13.59 13.61 13.64 13.64 13.64
+  b1 reserve vs v0.3 lower/higher/same(0.1 pt): 1 0 11 vs P1+: 2 3
+  b32 defer vs v0.3 lower/higher/same(0.1 pt): 0 2 10 vs P1+: 2 3
+  b33 defer+reserve vs v0.3 lower/higher/same(0.1 pt): 1 2 9 vs P1+: 2 3
+  b40 defer+grave vs v0.3 lower/higher/same(0.1 pt): 0 2 10 vs P1+: 2 3
+tuning note envelope error %: _0 7.41 7.39 7.68 7.41 7.70 7.41 | _1 7.77 8.02 8.02 8.01 8.01 8.01 | _2 8.57 8.58 8.61 8.57 8.60 8.57 | _3 82.78 80.27 80.26 80.27 80.26 80.27 | _4 4.78 4.73 4.76 4.77 4.79 4.77 | _5 6.07 6.98 6.97 7.02 7.00 7.02
+  b1 reserve vs v0.3 lower/higher/same(0.1 pt): 0 1 5 vs P1+: 1 3
+  b32 defer vs v0.3 lower/higher/same(0.1 pt): 0 0 6 vs P1+: 1 2
+  b33 defer+reserve vs v0.3 lower/higher/same(0.1 pt): 0 1 5 vs P1+: 1 3
+  b40 defer+grave vs v0.3 lower/higher/same(0.1 pt): 0 0 6 vs P1+: 1 2
