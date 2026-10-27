@@ -40,6 +40,10 @@ jobs:
         env:
           OPENBLAS_NUM_THREADS: '1'
         run: python3 tools/pvb-harness/research_p1pp_track_cohort.py --report track-cohort-report.json
+      - name: Negative controls - bass ends and moving bass under kick
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+        run: python3 tools/pvb-harness/research_p1pp_track_counterfactual.py --report track-counterfactual-report.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -48,4 +52,5 @@ jobs:
             track-identity-report.json
             track-controls-report.json
             track-cohort-report.json
+            track-counterfactual-report.json
           if-no-files-found: warn
