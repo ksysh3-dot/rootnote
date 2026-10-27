@@ -12,6 +12,7 @@
     <string name="lab_impact_title">타격 전후 변화</string>
     <string name="lab_impact_note">현재 시스템 볼륨에서 약 4분 동안 P1·P1+·P1++·v0.3을 자동 비교해요. 지속음만 있는 소리와 같은 지속음에 타격을 더한 소리를 두 세기로 세 번씩 재요. 중간에 폰이나 볼륨을 움직이지 마세요. 시험용 출력과 배음 세기는 고정되며 저장한 설정은 바뀌지 않아요.</string>
     <string name="lab_impact_start">48회 자동 측정 시작</string>
+    <string name="lab_root_not_qualified">타격 자동 측정은 현재 루트 없는 일반 앱에서 제공해요. 루팅용 앱은 전역 효과가 시험음을 다시 처리하는 경로를 먼저 확인해야 해요. 마이크 대조는 사용할 수 있어요.</string>
     <string name="lab_impact_export">타격 측정 결과 내보내기</string>
     <string name="lab_exported">선택한 파일에 결과를 저장했어요.</string>
     <string name="lab_limits">녹음 경로를 기록하고 이상을 검사해요. 가공 없는 녹음이 없으면 다른 방식을 표시해 사용해요. 이 결과는 스피커·공간·몸체·마이크를 합친 변화이며, 잡음만의 양이나 들리는 우위를 확정하지 않아요. 설정에 자동 적용하지 않아요.</string>

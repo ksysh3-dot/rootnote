@@ -73,7 +73,8 @@ class AcousticLabActivity : RnActivity() {
                 RnBand()
                 RnSectionTitle(stringResource(R.string.lab_impact_title))
                 RnParagraph(stringResource(R.string.lab_impact_note))
-                RnNavRow(stringResource(R.string.lab_impact_start), enabled = !busy, onClick = { impactRun() })
+                if (!BuildConfig.ROOTLESS) RnNote(stringResource(R.string.lab_root_not_qualified))
+                RnNavRow(stringResource(R.string.lab_impact_start), enabled = !busy && BuildConfig.ROOTLESS, onClick = { impactRun() })
                 RnNavRow(stringResource(R.string.lab_impact_export), enabled = !busy, onClick = { share(impactFile) })
                 if (busy) RnNavRow(stringResource(R.string.lab_stop), onClick = { cancel() })
                 if (status.isNotEmpty()) RnParagraph(status)
@@ -93,6 +94,7 @@ class AcousticLabActivity : RnActivity() {
         .put("protocol_version", AcousticLab.VERSION).put("app_version", BuildConfig.VERSION_NAME)
         .put("model", Build.MODEL).put("manufacturer", Build.MANUFACTURER).put("device", Build.DEVICE)
         .put("os_build", Build.DISPLAY).put("sdk", Build.VERSION.SDK_INT).put("sample_rate_hz", AcousticLab.RATE)
+        .put("build_flavor", BuildConfig.FLAVOR)
         .put("created_epoch_ms", System.currentTimeMillis()).put("audio_saved", false)
         .put("unprocessed_support_advertised", audio.getProperty(AudioManager.PROPERTY_SUPPORT_AUDIO_SOURCE_UNPROCESSED) == "true")
 
@@ -258,6 +260,7 @@ class AcousticLabActivity : RnActivity() {
     }, "rootnote-lab-play").also { it.start() }
 
     private fun impactRun() = launch { token ->
+        check(BuildConfig.ROOTLESS) { "root_effect_path_not_qualified" }
         val seed = SecureRandom().nextLong()
         val report = newReport("impact").put("seed", seed).put("trials", JSONArray()).put("complete", false)
             .put("system_volume_index", audio.getStreamVolume(AudioManager.STREAM_MUSIC))
