@@ -1,0 +1,40 @@
+name: R01 P1++ Track Protection Research
+
+on:
+  push:
+    branches:
+      - research/p1pp-track-protection-20261027
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  host-r01:
+    name: R01 single-case trace and deterministic policy checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Host research dependencies
+        run: pip install numpy scipy soundfile
+      - name: Compile policy and engine
+        run: |
+          g++ -std=c++17 -O2 -Wall -Wextra -Werror -Iapp/src/main/cpp/libpvb tools/pvb-harness/vb_quality/test_track_protection.cpp -o /tmp/pvb-track-protection
+          /tmp/pvb-track-protection
+          tools/pvb-harness/build_host.sh
+      - name: Compare locked track against unchanged baseline
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+        run: python3 tools/pvb-harness/research_p1pp_track_identity.py --report track-identity-report.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: r01-developer-case
+          path: track-identity-report.json
+          if-no-files-found: warn
