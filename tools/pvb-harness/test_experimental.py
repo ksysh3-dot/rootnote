@@ -160,13 +160,34 @@ def t_baseline(lib, base_path, label):
                 b.set(vb_algo=P1 if algo != P1 else D2, vb_level_db=4)
                 ya = np.concatenate([ya, a.process(x[:sr * 2])])
                 yb = np.concatenate([yb, b.process(x[:sr * 2])])
-            cases.append(dict(sr=sr, algo=-1 if algo is None else algo, equal=bool(np.array_equal(ya, yb)),
-                              max_diff=float(np.max(np.abs(ya - yb)))))
+            equal = bool(np.array_equal(ya, yb))
+            delta = np.abs(ya - yb)
+            case = dict(sr=sr, algo=-1 if algo is None else algo, equal=equal,
+                        max_diff=float(np.max(delta)))
+            if not equal:
+                # Preserve the strict bit-exact assertion. Report the failing
+                # rate/profile and location so runner-specific discrepancies can
+                # be localized instead of inferred from a single global maximum.
+                mismatch = ya != yb
+                first = tuple(int(i) for i in np.argwhere(mismatch)[0])
+                peak = tuple(int(i) for i in np.unravel_index(np.argmax(delta), delta.shape))
+                case.update(differing=int(np.count_nonzero(mismatch)),
+                            first_index=first, first_actual=float(ya[first]),
+                            first_baseline=float(yb[first]),
+                            peak_index=peak, peak_actual=float(ya[peak]),
+                            peak_baseline=float(yb[peak]))
+            cases.append(case)
             a.close()
             b.close()
     bad = [c for c in cases if not c['equal']]
+    for c in bad:
+        print(f"  MISMATCH sr={c['sr']} algo={c['algo']} differing={c['differing']} "
+              f"first={c['first_index']} actual={c['first_actual']:.17g} "
+              f"baseline={c['first_baseline']:.17g} peak={c['peak_index']} "
+              f"actual={c['peak_actual']:.17g} baseline={c['peak_baseline']:.17g} "
+              f"max_diff={c['max_diff']:.17g}")
     check(f'all options off = engine at {label} (bit exact; VB off and all 11 models, 44.1/48 kHz, switch + level)',
-          not bad, cases=len(cases), worst=max(c['max_diff'] for c in cases))
+          not bad, cases=len(cases), failing=len(bad), worst=max(c['max_diff'] for c in cases))
 
 
 def t_off_after_blend(lib, sr=48000):
