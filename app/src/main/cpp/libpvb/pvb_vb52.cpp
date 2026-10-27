@@ -710,10 +710,10 @@ void VbHpv::pvFrame52() {
             traceTrack52(np+lost-1,tr,HarmonicTrace::End,HarmonicTrace::Lost); continue;
         }
         const bool bornCut=!gen_.envelope?born:gen_.onsetMode==0?born:gen_.onsetMode==1?(born && ampOnset):false;
-        // A protected, already established note must not be killed by the
-        // passing kick's new-peak marker. Normal hold/release still applies.
-        const bool fast=(bornCut && !(protectIdentity && tr.protection.lockHops>0)) || tr.fastEnding;
-        tr.fastEnding=fast;
+        // A3 ablation: keep the *original* born-triggered fast release,
+        // including for protected ID tracks. Protection must not acquire a
+        // longer generated tail merely by changing the identity matcher.
+        const bool fast=bornCut || tr.fastEnding; tr.fastEnding=fast;
         tr.phi+=2*kPi*tr.f*kPvH/kFsd;
         if(fast || tr.missing>continuity_.hold)
             tr.life=std::max(0.,tr.life-1./std::max(1,fast?continuity_.fastRelease:continuity_.release));
