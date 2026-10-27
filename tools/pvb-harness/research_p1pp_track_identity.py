@@ -101,6 +101,9 @@ def main():
         scores, _ = score(measured, reference, source, source - bed, t, onset, duration, fs)
         assert np.isfinite(measured['stem']).all()
         assert len(measured['rows']) > 0
+        assert measured['stages'] is not None and len(measured['stages']) > 0
+        # Prevent a false comparison if a stage flag was silently ignored.
+        assert np.all(measured['stages'][:, 21] == stages), (label, stages)
         ident = track_identity(measured['rows'], fs, onset, duration, desc['bed_frequency'])
         row = dict(variant=label, impact_mode=mode, stage_flags=stages,
                    **ident,
