@@ -234,7 +234,7 @@ public:
     // grains are kept; when the track is released within three hops they are added back where they belonged.
     void setP1PPV04Research(unsigned flags) { p1ppV04Host_=flags&63; if(!p1PlusFixed_) p1ppV04_=p1ppV04Host_; reset(); }
     void setStageResearch(unsigned flags,StageCapture52::Sink sink=nullptr,void* user=nullptr) {
-        stageFlags_=flags&8191;stageSink_=sink;stageUser_=user;reset();
+        stageHostFlags_=flags&8191;stageFlags_=stageHostFlags_;stageSink_=sink;stageUser_=user;reset();
     }
     // App listening profiles, applied only by the audio owner while switching.
     // All use the same gentle24 placement. Legacy research setters remain separate.
@@ -434,6 +434,7 @@ private:
     int hpssLookahead() const { return p1PlusProfile_ && (p1PlusFlags_&4) ? 5*kHpHop : 0; }
     int outputDefer() const {
         return p1PlusProfile_ && (p1PlusFlags_&6)==6 && p1ppImpactMode_==8 && (p1ppV04_&32) ? kPvH*(kDeferHops+1) : 0; }
+    unsigned stageHostFlags_=0;  // explicit host stage choices survive first P1 profile activation
     StageCapture52::Sink stageSink_=nullptr;
     void* stageUser_=nullptr;
     double detailRing52_[kRing]={};
