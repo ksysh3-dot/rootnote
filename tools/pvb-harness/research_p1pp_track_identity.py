@@ -38,6 +38,9 @@ VARIANTS = (
     ('P1++ v0.3 global+linear', 8, STAGE_GLOBAL_TRACK | STAGE_TRACK_LINEAR, 0),
     ('R01 stable-track lock', 8, 0, 64),
     ('R01 stable lock + local peaks', 8, 0, 65),
+    ('R01 finite 4-hop release', 8, 0, 192),
+    ('R01 finite 8-hop release', 8, 0, 320),
+    ('R01 finite 12-hop release', 8, 0, 448),
 )
 
 
