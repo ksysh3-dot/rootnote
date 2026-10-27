@@ -30,7 +30,8 @@ def api(path):
     return lib
 
 
-def render(lib, x, fs=48000, flags=0, block=4096, algo=6, capture=True, impact_mode=0):
+def render(lib, x, fs=48000, flags=0, block=4096, algo=6, capture=True, impact_mode=0,
+           stage_flags=0):
     engine = T.Engine(lib, fs, vb_on=1, vb_algo=algo, vb_level_db=6,
                       out_db=-18, ramp_ms=0)
     if flags:
@@ -48,7 +49,7 @@ def render(lib, x, fs=48000, flags=0, block=4096, algo=6, capture=True, impact_m
         lib.pvb_set_p1pp_research_params.argtypes = [C.c_void_p, C.c_int, C.c_double, C.c_int, C.c_double, C.c_double]
         assert lib.pvb_set_p1pp_research_params(engine.h, int(hold), float(hist), int(hops), float(ratio), strength) == 1
     lib.pvb_set_diagnostic_capture(engine.h, int(capture))
-    stages = StageCapture(lib, engine.h, 0, int(len(x)/fs*3000)+16) if capture else None
+    stages = StageCapture(lib, engine.h, stage_flags, int(len(x)/fs*3000)+16) if capture else None
     source=np.asarray(x,np.float32)
     output=T.stereo(source) if source.ndim==1 else np.ascontiguousarray(source).copy()
     if output.ndim!=2 or output.shape[1]!=2:raise ValueError('Only mono or stereo input is supported')
