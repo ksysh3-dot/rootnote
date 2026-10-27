@@ -104,6 +104,10 @@ The full list of host tests that CI runs is in [.github/workflows/build.yml](.gi
 
 ### P1+ research baseline
 
+Opt-in acoustic measurements now connect UMIK-1 comparison to held-out calibration analysis, and run paired
+bed/impact trials for P1, P1+, P1++ v0.2 and v0.3. They keep band numbers and recording-path metadata only.
+See [measurement procedure and analysis](docs/ACOUSTIC_LAB.md). No new device measurements are claimed by the host tests.
+
 On 2026-10-26, the HQ refinement of P1 was provisionally named **P1+** as the fixed
 baseline for **P1++** research. It combines phase preservation with centered HPSS
 and adds 26.667 ms of algorithmic delay. The source, reproducible measurements and

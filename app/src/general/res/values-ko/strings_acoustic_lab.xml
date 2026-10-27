@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="lab_title">자동 음향 측정</string>
+    <string name="lab_entry">마이크 대조 · 타격 전후 변화</string>
+    <string name="lab_intro">폰을 받침에 고정하고 조용한 곳에서 재세요. 소리는 메모리에서 분석한 뒤 버리고, 숫자만 폰에 남겨요. 공유를 누르기 전에는 밖으로 나가지 않아요.</string>
+    <string name="lab_cal_title">UMIK-1 대조</string>
+    <string name="lab_cal_note">UMIK-1을 폰 마이크 옆에 두고 REW에서 같은 소리를 함께 재세요. 방 소음, PC의 보정용 소리, 별도의 확인용 소리 순서예요. 소리가 나올 때는 방식마다 10초씩 재요. 내보낸 결과와 REW의 대역별 값을 PC 분석 도구에 주면 보정값과 확인 오차를 자동 계산해요. 방 소음을 다시 재면 앞선 두 측정은 지워요.</string>
+    <string name="lab_room">1. 방 소음 재기</string>
+    <string name="lab_fit">2. 보정용 소리 재기</string>
+    <string name="lab_validation">3. 다른 소리로 확인하기</string>
+    <string name="lab_cal_export">마이크 대조 결과 내보내기</string>
+    <string name="lab_impact_title">타격 전후 변화</string>
+    <string name="lab_impact_note">현재 시스템 볼륨에서 약 4분 동안 P1·P1+·P1++·v0.3을 자동 비교해요. 지속음만 있는 소리와 같은 지속음에 타격을 더한 소리를 두 세기로 세 번씩 재요. 중간에 폰이나 볼륨을 움직이지 마세요. 시험용 출력과 배음 세기는 고정되며 저장한 설정은 바뀌지 않아요.</string>
+    <string name="lab_impact_start">48회 자동 측정 시작</string>
+    <string name="lab_root_not_qualified">타격 자동 측정은 현재 루트 없는 일반 앱에서 제공해요. 루팅용 앱은 전역 효과가 시험음을 다시 처리하는 경로를 먼저 확인해야 해요. 마이크 대조는 사용할 수 있어요.</string>
+    <string name="lab_impact_export">타격 측정 결과 내보내기</string>
+    <string name="lab_exported">선택한 파일에 결과를 저장했어요.</string>
+    <string name="lab_limits">녹음 경로를 기록하고 이상을 검사해요. 가공 없는 녹음이 없으면 다른 방식을 표시해 사용해요. 이 결과는 스피커·공간·몸체·마이크를 합친 변화이며, 잡음만의 양이나 들리는 우위를 확정하지 않아요. 설정에 자동 적용하지 않아요.</string>
+    <string name="lab_stop">측정 중지</string>
+    <string name="lab_clear">저장한 측정 숫자 지우기</string>
+    <string name="lab_cleared">측정 숫자를 지웠어요.</string>
+    <string name="lab_no_result">아직 저장한 결과가 없어요.</string>
+    <string name="lab_cancelled">중지했어요. 끝난 타격 측정은 미완료 결과로 남아요.</string>
+    <string name="lab_permission">마이크 권한을 허용한 뒤 다시 눌러 주세요.</string>
+    <string name="lab_running">측정 준비 중이에요.</string>
+    <string name="lab_cal_source">%1$s 측정 중 · REW에서도 이 구간을 함께 재세요.</string>
+    <string name="lab_failed">측정을 끝내지 못했어요: %1$s</string>
+    <string name="lab_cal_done">%1$s 측정 완료 · 녹음 방식 %2$d개. 다음 단계를 진행하거나 결과를 공유하세요.</string>
+    <string name="lab_progress">타격 비교 %1$d / %2$d회 완료</string>
+    <string name="lab_impact_done">%1$d회 측정 완료. 공유한 결과를 PC 분석 도구에서 비교하세요.</string>
+</resources>

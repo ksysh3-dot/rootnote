@@ -5,6 +5,11 @@
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 APP="$HERE/../../../app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb"
+python3 "$HERE/../test_acoustic_lab.py"
+OUTLAB="$HERE/../build/jvm-acoustic-lab"
+mkdir -p "$OUTLAB"
+$KOTLINC -classpath "$KOTLIN_STDLIB" "$APP/AcousticLab.kt" "$HERE/AcousticLabTest.kt" -d "$OUTLAB"
+java -cp "$OUTLAB:$KOTLIN_STDLIB" AcousticLabTestKt
 OUT="$HERE/../build/jvm"
 rm -rf "$OUT"; mkdir -p "$OUT"
 $KOTLINC -classpath "$KOTLIN_STDLIB" "$APP/PvbNative.kt" "$APP/PvbEngine.kt" "$APP/VolumeCompensation.kt" "$HERE/JniSmokeTest.kt" -d "$OUT"

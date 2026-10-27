@@ -413,6 +413,7 @@ class DevModeActivity : BaseActivity() {
             finish()
         },
         onBassFit = { startActivity(Intent(this, BassFitActivity::class.java)) },
+        onAcousticLab = { startActivity(Intent(this, AcousticLabActivity::class.java)) },
         onProbe = { on -> if (on) startProbe() else stopProbe() },
         onMicSpec = { on -> if (on) startMicSpec() else stopMicSpec() },
         onMicCorr = { on ->

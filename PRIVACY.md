@@ -2,6 +2,17 @@
 
 이 문서는 일반 배포 빌드 **Rootnote**(패키지 `kr.ksysh3.rootnote`)에 대한 것입니다. 개인용 S26U 빌드(`kr.ksysh3.pvb.s26u`)의 차이는 맨 아래에 적었습니다.
 
+개발자 모드의 **자동 음향 측정**을 직접 실행하면 보정 대조/타격 시험의 대역별 숫자와 기기·녹음 경로 정보가
+`files/acoustic_lab_calibration.json`, `files/acoustic_lab_impact.json`에 남습니다. 마이크 소리는 메모리에서
+분석 후 버리며 녹음 파일·곡 정보는 저장하지 않습니다. 공유 버튼으로만 내보내고 지우기로 삭제할 수 있습니다.
+두 파일은 백업에서 제외됩니다. 아래의 "설정만 저장" 요약에서 이 명시적 측정 숫자는 예외입니다.
+
+The opt-in **Automatic acoustic measurements** screen keeps calibration/impact band numbers and device/recording-path
+metadata in `files/acoustic_lab_calibration.json` and `files/acoustic_lab_impact.json`. Microphone PCM is analyzed in
+memory and discarded; no audio files or song metadata are saved. Results leave only through the share button, can be
+deleted on that screen, and are excluded from backup. These explicit measurement numbers are an exception to the
+"settings only" summary below.
+
 This document covers the general distribution build **Rootnote** (package `kr.ksysh3.rootnote`). The differences of the personal S26U build (`kr.ksysh3.pvb.s26u`) are at the end.
 
 ---
