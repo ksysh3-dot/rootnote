@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="lab_title">Automatic acoustic measurements</string>
+    <string name="lab_entry">Microphone comparison · impact response</string>
+    <string name="lab_intro">Keep the phone fixed on a stand in a quiet place. Audio is analyzed in memory and discarded. Only numbers stay on the phone, leaving it only when you share them.</string>
+    <string name="lab_cal_title">Compare with the UMIK-1</string>
+    <string name="lab_cal_note">Place the UMIK-1 beside the phone microphone and measure the same sound in REW. Measure the room, the PC calibration sound, then a separate validation sound. Each source records the sound for 10 seconds. The PC analyzer combines the export with REW band levels to calculate correction and validation error. Measuring the room again discards both previous sound measurements.</string>
+    <string name="lab_room">1. Measure the room</string>
+    <string name="lab_fit">2. Measure the calibration sound</string>
+    <string name="lab_validation">3. Check with a different sound</string>
+    <string name="lab_cal_export">Share microphone comparison</string>
+    <string name="lab_impact_title">Before and after an impact</string>
+    <string name="lab_impact_note">Automatically compares P1, P1+, P1++ and v0.3 at the current system volume for about four minutes. A steady sound and the same sound plus an impact are measured at two levels, three times each. Keep the phone and volume fixed. Test output and virtual bass level are fixed; saved settings stay as they were.</string>
+    <string name="lab_impact_start">Start 48 automatic measurements</string>
+    <string name="lab_impact_export">Share impact measurements</string>
+    <string name="lab_limits">The recording path is logged and checked. Another labeled source is used when unprocessed recording is unavailable. Results describe the combined speaker, room, body and microphone path, not isolated noise or audible superiority. Nothing is applied to settings.</string>
+    <string name="lab_stop">Stop measurement</string>
+    <string name="lab_clear">Delete saved measurement numbers</string>
+    <string name="lab_cleared">Measurement numbers deleted.</string>
+    <string name="lab_no_result">No saved result yet.</string>
+    <string name="lab_cancelled">Stopped. Finished impact trials remain marked as an incomplete run.</string>
+    <string name="lab_permission">Allow microphone access, then tap again.</string>
+    <string name="lab_running">Preparing the measurement.</string>
+    <string name="lab_cal_source">Measuring %1$s · capture this interval in REW too.</string>
+    <string name="lab_failed">Could not finish: %1$s</string>
+    <string name="lab_cal_done">%1$s completed · %2$d recording sources. Continue or share the result.</string>
+    <string name="lab_progress">Impact comparison %1$d / %2$d completed</string>
+    <string name="lab_impact_done">%1$d trials completed. Compare the shared result with the PC analyzer.</string>
+</resources>

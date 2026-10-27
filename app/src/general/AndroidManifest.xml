@@ -87,6 +87,12 @@
             android:theme="@style/Theme.RootlessJamesDSP" />
         <!-- "저음 맞추기" (bass fit, devmode/BassFitActivity.kt): listening tests opened from developer mode. -->
         <activity
+            android:name="me.timschneeberger.rootlessjamesdsp.devmode.AcousticLabActivity"
+            android:enableOnBackInvokedCallback="true"
+            android:exported="false"
+            android:label="@string/lab_title"
+            android:theme="@style/Theme.RootlessJamesDSP" />
+        <activity
             android:name="me.timschneeberger.rootlessjamesdsp.devmode.BassFitActivity"
             android:enableOnBackInvokedCallback="true"
             android:exported="false"

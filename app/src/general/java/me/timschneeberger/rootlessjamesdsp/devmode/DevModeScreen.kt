@@ -214,6 +214,7 @@ class DevActions(
     val onTurnOff: () -> Unit,
     /** Opens "저음 맞추기" (BassFitActivity). */
     val onBassFit: () -> Unit,
+    val onAcousticLab: () -> Unit,
     /** Starts or stops "스피커 확인 (마이크)". */
     val onProbe: (Boolean) -> Unit,
     /** Starts or stops "마이크 스펙트럼". */
@@ -385,6 +386,7 @@ private fun TopBar(actions: DevActions) {
 private fun BassFitEntry(actions: DevActions) {
     RnTheme {
         RnNavRow(stringResource(R.string.fit_title), line = stringResource(R.string.fit_entry_line), onClick = actions.onBassFit)
+        RnNavRow(stringResource(R.string.lab_title), line = stringResource(R.string.lab_entry), onClick = actions.onAcousticLab)
         RnDivider()
     }
 }
