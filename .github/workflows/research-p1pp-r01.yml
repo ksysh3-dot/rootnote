@@ -35,22 +35,31 @@ jobs:
       - name: Check no-impact controls and app-mode isolation
         env:
           OPENBLAS_NUM_THREADS: '1'
-        run: python3 tools/pvb-harness/research_p1pp_track_controls.py --report track-controls-report.json
+        run: |
+          for candidate in 64 192 320 448; do
+            python3 tools/pvb-harness/research_p1pp_track_controls.py --candidate "$candidate" --report "track-controls-$candidate.json"
+          done
       - name: Measure already-inspected 12-waveform development cohort
         env:
           OPENBLAS_NUM_THREADS: '1'
-        run: python3 tools/pvb-harness/research_p1pp_track_cohort.py --report track-cohort-report.json
+        run: |
+          for candidate in 64 192 320 448; do
+            python3 tools/pvb-harness/research_p1pp_track_cohort.py --candidate "$candidate" --report "track-cohort-$candidate.json"
+          done
       - name: Negative controls - bass ends and moving bass under kick
         env:
           OPENBLAS_NUM_THREADS: '1'
-        run: python3 tools/pvb-harness/research_p1pp_track_counterfactual.py --report track-counterfactual-report.json
+        run: |
+          for candidate in 64 192 320 448; do
+            python3 tools/pvb-harness/research_p1pp_track_counterfactual.py --candidate "$candidate" --report "track-counterfactual-$candidate.json"
+          done
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: r01-developer-case
           path: |
             track-identity-report.json
-            track-controls-report.json
-            track-cohort-report.json
-            track-counterfactual-report.json
+            track-controls-*.json
+            track-cohort-*.json
+            track-counterfactual-*.json
           if-no-files-found: warn
