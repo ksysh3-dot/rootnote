@@ -31,6 +31,7 @@ def main():
     ap=argparse.ArgumentParser(description=__doc__)
     ap.add_argument('--library',type=Path,default=default_library())
     ap.add_argument('--report',type=Path,required=True)
+    ap.add_argument('--candidate',type=int,choices=(64,192,320,448),default=64)
     args=ap.parse_args()
     lib=P.api(args.library.resolve())
     prior=os.environ.get('P1PP_V04')
@@ -42,7 +43,7 @@ def main():
                 os.environ['P1PP_V04']='0'
                 base=P.render(lib,x,fs=fs,flags=6,impact_mode=8,capture=False)
                 baseline_blocks=P.render(lib,x,fs=fs,flags=6,impact_mode=8,capture=False,block=1379)
-                os.environ['P1PP_V04']='64'
+                os.environ['P1PP_V04']=str(args.candidate)
                 guarded=P.render(lib,x,fs=fs,flags=6,impact_mode=8,capture=False)
                 blocks=P.render(lib,x,fs=fs,flags=6,impact_mode=8,capture=False,block=1379)
                 base_block_exact=bool(np.array_equal(base['output'],baseline_blocks['output']))
@@ -54,7 +55,7 @@ def main():
                 # Real app model 13 must ignore host R01 flags and remain bit exact.
                 os.environ['P1PP_V04']='0'
                 fixedbase=P.render(lib,x,fs=fs,algo=13,capture=False)
-                os.environ['P1PP_V04']='64'
+                os.environ['P1PP_V04']=str(args.candidate)
                 fixedguard=P.render(lib,x,fs=fs,algo=13,capture=False)
                 assert np.array_equal(fixedbase['output'],fixedguard['output']), (fs,name,'fixed app model')
                 records.append(dict(fs=fs,name=name,host_output_equal=equal,
@@ -73,7 +74,7 @@ def main():
     report=dict(schema='pvb.p1pp.r01.controls.v1',
                 status='predeclared_negative controls; differences do not establish audible error',
                 independent_synthetic_waveforms=4, rates=[44100,48000],
-                candidate='host V04 bit 64 only',device_or_listening_test=False,
+                candidate=f'host V04 flags {args.candidate}',device_or_listening_test=False,
                 library_sha256=hashlib.sha256(args.library.read_bytes()).hexdigest(),
                 records=records)
     args.report.parent.mkdir(parents=True,exist_ok=True)
