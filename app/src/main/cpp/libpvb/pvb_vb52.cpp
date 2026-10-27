@@ -442,7 +442,7 @@ void VbHpv::pvFrame52() {
         for(int t=0;t<nt52_;++t) {
             auto& tr=tr52_[t];
             const bool confirmed=tr.fade>=.5 && tr.missing==0;
-            mature |= confirmed && tr.protection.steadyHops>=56;
+            mature |= confirmed && tr.protection.recentlyMature();
             if(ampOnset && (diag&2))
                 armed |= tr.protection.arm(true,confirmed);
         }
