@@ -710,10 +710,17 @@ void VbHpv::pvFrame52() {
             traceTrack52(np+lost-1,tr,HarmonicTrace::End,HarmonicTrace::Lost); continue;
         }
         const bool bornCut=!gen_.envelope?born:gen_.onsetMode==0?born:gen_.onsetMode==1?(born && ampOnset):false;
-        // A3 ablation: keep the *original* born-triggered fast release,
-        // including for protected ID tracks. Protection must not acquire a
-        // longer generated tail merely by changing the identity matcher.
-        const bool fast=bornCut || tr.fastEnding; tr.fastEnding=fast;
+        // R01: measure ID protection separately from the lifespan of a
+        // *missing* pre-impact tone. Bit 64 alone uses the original immediate
+        // born-cut (A3). Bits 128/256 opt into 4/8 extra hops of grace
+        // (4, 8, or 12 total); expiry triggers the *original* fast-release
+        // rather than converting an old tone into an unbounded tail.
+        const int grace=((p1ppV04_&128)?4:0)+((p1ppV04_&256)?8:0);
+        if(protectIdentity && grace>0 && tr.protection.lockHops>0 && bornCut)
+            tr.protection.pendingBornCut=true;
+        const bool fast=tr.fastEnding || (grace>0 && tr.protection.pendingBornCut
+                                        ? tr.missing>grace : bornCut);
+        tr.fastEnding=fast;
         tr.phi+=2*kPi*tr.f*kPvH/kFsd;
         if(fast || tr.missing>continuity_.hold)
             tr.life=std::max(0.,tr.life-1./std::max(1,fast?continuity_.fastRelease:continuity_.release));
