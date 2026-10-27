@@ -181,7 +181,8 @@ public:
     static constexpr int kFsd = 3000;
     static constexpr int kHpN = 192, kHpHop = 16, kHpMedT = 11, kHpMedF = 7, kHpBins = kHpN / 2 + 1;
     static constexpr int kPvN = 384, kPvH = 16, kPvNfft = 2048, kMaxPeaks = 8;
-    static constexpr int kRtShift = kPvH - 1;  // the reference grain placement looks 15 core samples ahead
+    static constexpr int kRtShift = kPvH - 1;
+    static constexpr int kDeferHops = 3;  // P1++ v0.4 bit 32: hops a guarded track's grains wait (read one hop later)  // the reference grain placement looks 15 core samples ahead
     static constexpr int kKMax = 8;
 
     explicit VbHpv(bool masked = false, bool gentle = false, int upperMode = 0);
@@ -189,7 +190,7 @@ public:
     void reset() override;
     int latencyFrames() const override {
         return latency_ + (supported_ ? static_cast<int>(std::lround(
-            static_cast<double>(hpssLookahead())*M_/L_)) : 0);
+            static_cast<double>(hpssLookahead()+outputDefer())*M_/L_)) : 0);
     }
     bool inputAfterEq() const override { return false; }
     void tick(double inL, double inR, double& outL, double& outR) override;
@@ -225,6 +226,13 @@ public:
         impactHold52_=hold; histDbResearch_=historyDb; steadyHops52_=steadyHops; steadyA52_=steadyA;
         releaseStrength52_=releaseStrength; }
     void setP1PPImpactResearch(int mode) { p1ppHostImpact_=mode; if(!p1PlusFixed_) p1ppImpactMode_=mode; reset(); }
+    // Host-only P1++ v0.4 research on top of impact mode 8 (research/p1pp/2026-10-27-v04): 1 = a confirmed track
+    // whose peak is not among the six strongest keeps its own local peak (up to 8 peaks), 2 = steadiness from the
+    // phase-vocoder phase prediction instead of the amplitude ratio, 4 = no strength condition, 8 = a birth within
+    // 3 % of a confirmed track that ended in the last 250 ms is that track again, 16 = a guarded track still emits
+    // the harmonics the input already has at k f, 32 = the layer is read four hops later and a guarded track's
+    // grains are kept; when the track is released within three hops they are added back where they belonged.
+    void setP1PPV04Research(unsigned flags) { p1ppV04Host_=flags&63; if(!p1PlusFixed_) p1ppV04_=p1ppV04Host_; reset(); }
     void setStageResearch(unsigned flags,StageCapture52::Sink sink=nullptr,void* user=nullptr) {
         stageFlags_=flags&8191;stageSink_=sink;stageUser_=user;reset();
     }
@@ -386,6 +394,11 @@ private:
         double f=0, phi=0, off[7]={}, fade=0, a=0;
         bool impactRecoveryPending=false;
         int steadyHops=0;               // P1++ mode 8: hops of steady frequency and amplitude while unconfirmed
+        bool guarded=false;             // P1++ v0.4 bit 16: held back by the fit guard in this hop
+        double confF=0; int64_t confHop=-1000;  // P1++ v0.4 bit 8: frequency and hop when last confirmed (fade >= .5)
+        int confHops=0; bool inherited=false;   // hops confirmed so far; this track continues a long confirmed one
+        // P1++ v0.4 bit 32: grains this track would have emitted while the guard held it (oldest first)
+        double pend[kDeferHops][32]={}, pendNominal[kDeferHops]={}; int64_t pendCentre[kDeferHops]={}; int pendN=0;
         bool strong=false, fastEnding=false;
         uint32_t id=0, age=0;
         double dfdt=0, life=1, residual=-200, rawResidual=-200;
@@ -409,6 +422,9 @@ private:
     bool p1PlusFixed_=false;          // profile 11/12: flags fixed by the model, host values kept for profile 6
     unsigned p1PlusHostFlags_=0;
     int p1ppHostImpact_=0;
+    unsigned p1ppV04Host_=0, p1ppV04_=0;
+    // v0.4 bit 8: confirmed tracks that ended recently (frequency, hop of the end)
+    double grave52_[8]={}; int64_t graveHop52_[8]={}; int graveN52_=0; int64_t hop52_=0;
     // research impact modes 5/6: impact context and the tones playing when it began
     int impactCtx52_=0, preImpactN52_=0;
     double histDbResearch_=-6, percSlow52_=0;
@@ -416,6 +432,8 @@ private:
     double steadyA52_=.97, releaseStrength52_=.4;
     double preImpactF52_[12]={};
     int hpssLookahead() const { return p1PlusProfile_ && (p1PlusFlags_&4) ? 5*kHpHop : 0; }
+    int outputDefer() const {
+        return p1PlusProfile_ && (p1PlusFlags_&6)==6 && p1ppImpactMode_==8 && (p1ppV04_&32) ? kPvH*(kDeferHops+1) : 0; }
     StageCapture52::Sink stageSink_=nullptr;
     void* stageUser_=nullptr;
     double detailRing52_[kRing]={};
@@ -435,8 +453,9 @@ private:
     void addGrain52(int64_t centre, const double* grain, double nominalAmplitude);
     void takeGrain52(int64_t index, double& sample, double& nominalAmplitude);
     void missingFrame52(int reason, bool fast);
+    void grave52(const Track52& tr);   // P1++ v0.4 bit 8: remember a confirmed track that ended
     int nt52_=0, apkCount_=0, histCount_=0, holdCount_=0, holdPos_=0, onsetLeft_=0;
-    double apk52_[56]={}, hist52_[11][6]={};
+    double apk52_[56]={}, hist52_[11][8]={};
     int histN52_[11]={};
     double hold52_[28][190]={};
     double md52_[kRing]={}, md2_52_[kRing]={}, max52_[kRing]={}, polyT52_[kRing]={};

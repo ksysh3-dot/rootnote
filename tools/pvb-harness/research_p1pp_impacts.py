@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 import sys
 import numpy as np
-from scipy.signal import butter,sosfilt
+from scipy.signal import butter,sosfilt,hilbert
 
 ROOT=Path(__file__).resolve().parents[1]
 HERE=Path(__file__).resolve().parent
@@ -93,6 +93,19 @@ def score(r,base,source,impact,t,onset,duration,fs):
                 (np.cos(2*np.pi*k*bed_frequency*tt),np.sin(2*np.pi*k*bed_frequency*tt))])
             res=z-basis@np.linalg.lstsq(basis,z,rcond=1e-10)[0]
         metrics[label+'_stationary_residual_per_input_db']=db(energy(res),input_energy)
+        if label=='early_tail' and base is not None:
+            # Split the early-tail change: the part that is the bed's own generated layer (from the bed-only render)
+            # with a gain and a quadrature term varying piecewise linearly over 10 ms knots is a gap, step or phase
+            # slip of the legitimate bed (an upper bound of bed loss); the rest is generated energy that is not the
+            # bed (a lower bound). In an 80 ms window an extra tone near a bed harmonic cannot be told apart and is
+            # partly counted as bed: see check_p1pp_tail_split.py for the controls.
+            full=base['stem'][base['latency']:base['latency']+len(t),0].astype(float)
+            bs,bq=full[m],np.imag(hilbert(full))[m]
+            knots=np.arange(tt[0],tt[-1]+.01,.01);hats=np.clip(1-abs(tt[:,None]-knots[None,:])/.01,0,None)
+            mod=np.column_stack([bs[:,None]*hats,bq[:,None]*hats])
+            other=z-mod@np.linalg.lstsq(mod,z,rcond=1e-10)[0]
+            metrics['early_tail_bed_shaped_per_input_db']=db(max(energy(z)-energy(other),0),input_energy)
+            metrics['early_tail_nonbed_per_input_db']=db(energy(other),input_energy)
     event=masks['attack']|masks['early_tail'];peak=float(np.max(abs(y[event])))
     # Recovery relative to this event's generated peak; 30 ms consecutive quiet.
     bins=np.sqrt(np.mean(y[:len(y)//240*240].reshape(-1,240)**2,axis=1))

@@ -208,6 +208,13 @@ public:
         }
     }
     void setP1PPImpactResearch(int mode) { vbAlpha2_.setP1PPImpactResearch(mode); }
+    void setP1PPV04Research(unsigned flags) {
+        vbAlpha2_.setP1PPV04Research(flags);
+        if(vbCur_==VB_ALPHA2_P1) {
+            vbDelay_=clampv(vbAlpha2_.latencyFrames(),0,kVbDelayLen-1);
+            updateLatency();
+        }
+    }
     void setP1PPResearchParams(int hold, double historyDb, int steadyHops, double steadyA, double releaseStrength) {
         vbAlpha2_.setP1PPResearchParams(hold, historyDb, steadyHops, steadyA, releaseStrength); }
     void setContinuityResearch(const ContinuityParams& p) {

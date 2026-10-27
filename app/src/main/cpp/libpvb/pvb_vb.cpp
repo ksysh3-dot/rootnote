@@ -36,6 +36,7 @@ bool VbHpv::setAlpha2Profile(int algorithm) {
     p1PlusFlags_=p1PlusFixed_ ? 6u : p1PlusHostFlags_;
     p1ppImpactMode_=algorithm==VB_ALPHA2_P1PP_V03 ? 8 : algorithm==VB_ALPHA2_P1PP ? 4 :
                     algorithm==VB_ALPHA2_P1_PLUS ? 0 : p1ppHostImpact_;
+    p1ppV04_=p1PlusFixed_ ? 0u : p1ppV04Host_;
     modulationMode_=mode;tonalOnly_=false;continuity_=ContinuityParams{};continuity_.enabled=true;
     applyDevContinuity();
     stageFlags_=flags;reset();return true;
@@ -354,7 +355,7 @@ void VbHpv::reset() {
     envA_.b0 = envP_.b0 = 1.0 - al;
     envA_.z = envP_.z = 0.0;
     nt52_=apkCount_=histCount_=holdCount_=holdPos_=onsetLeft_=0;
-    impactCtx52_=preImpactN52_=0; percSlow52_=0;
+    impactCtx52_=preImpactN52_=0; percSlow52_=0; graveN52_=0; hop52_=0;
     for (auto& row : hold52_) std::fill(std::begin(row),std::end(row),-200.0);
     for (double* r : {md52_,md2_52_,max52_}) std::fill(r,r+kRing,0.0);
     std::fill(std::begin(polyT52_),std::end(polyT52_),1.0);

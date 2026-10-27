@@ -41,12 +41,12 @@ def feature(z,fs):
 
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--library',type=Path,default=default_library())
-    p.add_argument('--out',type=Path,required=True);p.add_argument('--set',choices=('inspected','new','confirm','holdout'),default='new')
+    p.add_argument('--out',type=Path,required=True);p.add_argument('--set',choices=('inspected','new','confirm','holdout','holdout2'),default='new')
     p.add_argument('--modes',type=int,nargs='+',default=[0,2,3,4]);a=p.parse_args()
     a.out.mkdir(parents=True,exist_ok=True);lib=P.api(a.library.resolve());fs=48000;rows=[];features=[]
-    seed={'confirm':2026102610,'new':2026102609,'holdout':2026102611}.get(a.set,2026102608)
-    if a.set in ('new','confirm','holdout'):
-        # holdout: generated after the P1++ v0.3 rule (mode 8) was fixed, evaluated once
+    seed={'confirm':2026102610,'new':2026102609,'holdout':2026102611,'holdout2':2026102613}.get(a.set,2026102608)
+    if a.set in ('new','confirm','holdout','holdout2'):
+        # holdout: made after the P1++ v0.3 rule (mode 8) was fixed; holdout2: after the v0.4 rule; each run once
         fixtures=new_fixtures(fs,seed,8 if a.set=='confirm' else 12);levels=(-12,-6,-1)
     else:
         fixtures=(tuple(v)+(dict(duration=v[6],kind='kick' if 'kick' in v[0] else 'broadband'),) for v in fresh_fixtures(fs))

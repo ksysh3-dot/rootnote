@@ -25,6 +25,8 @@ def api(path):
         lib.pvb_set_p1plus_research.argtypes = [C.c_void_p, C.c_uint]
     if hasattr(lib, 'pvb_set_p1pp_impact_research'):
         lib.pvb_set_p1pp_impact_research.argtypes = [C.c_void_p, C.c_int]
+    if hasattr(lib, 'pvb_set_p1pp_v04_research'):
+        lib.pvb_set_p1pp_v04_research.argtypes = [C.c_void_p, C.c_int]
     return lib
 
 
@@ -36,6 +38,9 @@ def render(lib, x, fs=48000, flags=0, block=4096, algo=6, capture=True, impact_m
     if impact_mode:
         assert lib.pvb_set_p1pp_impact_research(engine.h, impact_mode) == 1
     # P1++ research knobs (modes 5-8): "hold,historyDb,steadyHops,steadyA"; unset = the evaluated defaults
+    v04 = int(__import__('os').environ.get('P1PP_V04', '0'))
+    if v04:
+        assert lib.pvb_set_p1pp_v04_research(engine.h, v04) == 1
     params = __import__('os').environ.get('P1PP_PARAMS')
     if params:
         hold, hist, hops, ratio, *rest = params.split(',')
