@@ -8,11 +8,12 @@
     <string name="lab_room">1. Measure the room</string>
     <string name="lab_fit">2. Measure the calibration sound</string>
     <string name="lab_validation">3. Check with a different sound</string>
-    <string name="lab_cal_export">Share microphone comparison</string>
+    <string name="lab_cal_export">Export microphone comparison</string>
     <string name="lab_impact_title">Before and after an impact</string>
     <string name="lab_impact_note">Automatically compares P1, P1+, P1++ and v0.3 at the current system volume for about four minutes. A steady sound and the same sound plus an impact are measured at two levels, three times each. Keep the phone and volume fixed. Test output and virtual bass level are fixed; saved settings stay as they were.</string>
     <string name="lab_impact_start">Start 48 automatic measurements</string>
-    <string name="lab_impact_export">Share impact measurements</string>
+    <string name="lab_impact_export">Export impact measurements</string>
+    <string name="lab_exported">Saved the result to the selected file.</string>
     <string name="lab_limits">The recording path is logged and checked. Another labeled source is used when unprocessed recording is unavailable. Results describe the combined speaker, room, body and microphone path, not isolated noise or audible superiority. Nothing is applied to settings.</string>
     <string name="lab_stop">Stop measurement</string>
     <string name="lab_clear">Delete saved measurement numbers</string>

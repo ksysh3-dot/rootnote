@@ -1,7 +1,6 @@
 package me.timschneeberger.rootlessjamesdsp.devmode
 
 import android.Manifest
-import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.media.*
@@ -13,6 +12,7 @@ import android.view.WindowManager
 import androidx.compose.runtime.*
 import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
+import androidx.activity.result.contract.ActivityResultContracts
 import me.timschneeberger.rootlessjamesdsp.BuildConfig
 import me.timschneeberger.rootlessjamesdsp.R
 import me.timschneeberger.rootlessjamesdsp.pvb.*
@@ -41,12 +41,24 @@ class AcousticLabActivity : RnActivity() {
     private val calFile by lazy { File(filesDir, "acoustic_lab_calibration.json") }
     private val impactFile by lazy { File(filesDir, "acoustic_lab_impact.json") }
     private var calibration = JSONObject()
+    private var pendingExport: String? = null
+    private val export = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+        val text = pendingExport; pendingExport = null
+        if (uri != null && text != null) {
+            try {
+                checkNotNull(contentResolver.openOutputStream(uri)).bufferedWriter(Charsets.UTF_8).use { it.write(text) }
+                status = getString(R.string.lab_exported)
+            } catch (e: Exception) { status = getString(R.string.lab_failed, e.message ?: "export_failed") }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val flags = getSharedPreferences(PvbGeneral.FLAGS_PREFS, MODE_PRIVATE)
         if (!flags.getBoolean(PvbGeneral.KEY_DEV_CONSENT, false)) { finish(); return }
         calibration = try { JSONObject(calFile.readText()) } catch (_: Exception) { newReport("calibration") }
+        if (calibration.optString("model") != Build.MODEL || calibration.optString("os_build") != Build.DISPLAY ||
+            calibration.optString("app_version") != BuildConfig.VERSION_NAME) calibration = newReport("calibration")
         calibrationReady = calibration.optJSONObject("phases")?.has("room") == true
         fitReady = calibration.optJSONObject("phases")?.has("fit") == true
         setRnContent {
@@ -92,8 +104,8 @@ class AcousticLabActivity : RnActivity() {
 
     private fun share(file: File) {
         if (!file.exists()) { status = getString(R.string.lab_no_result); return }
-        startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("application/json")
-            .putExtra(Intent.EXTRA_SUBJECT, file.name).putExtra(Intent.EXTRA_TEXT, file.readText()), getString(R.string.lab_title)))
+        pendingExport = file.readText()
+        export.launch(file.name)
     }
 
     private fun cancel() {

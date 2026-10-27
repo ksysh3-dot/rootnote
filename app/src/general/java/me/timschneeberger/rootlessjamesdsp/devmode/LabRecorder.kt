@@ -50,6 +50,7 @@ internal class LabRecorder(context: Context, val source: Int) : AutoCloseable {
             .put("encoding", "PCM_16BIT").put("channels", 1).put("client_effect_requests", requests)
         try {
             val config = rec.activeRecordingConfiguration
+            if (config == null) o.put("configuration_unknown", true)
             o.put("actual_source", config?.audioSource ?: JSONObject.NULL).put("silenced", config?.isClientSilenced ?: false)
             o.put("stream_effects", JSONArray(config?.effects?.map { it.uuid.toString() }.orEmpty().sorted()))
             o.put("client_effects", JSONArray(config?.clientEffects?.map { it.uuid.toString() }.orEmpty().sorted()))
