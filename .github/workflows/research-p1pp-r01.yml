@@ -36,6 +36,10 @@ jobs:
         env:
           OPENBLAS_NUM_THREADS: '1'
         run: python3 tools/pvb-harness/research_p1pp_track_controls.py --report track-controls-report.json
+      - name: Measure already-inspected 12-waveform development cohort
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+        run: python3 tools/pvb-harness/research_p1pp_track_cohort.py --report track-cohort-report.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -43,4 +47,5 @@ jobs:
           path: |
             track-identity-report.json
             track-controls-report.json
+            track-cohort-report.json
           if-no-files-found: warn
