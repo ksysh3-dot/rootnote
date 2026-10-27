@@ -23,6 +23,7 @@ def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--library',type=Path,default=default_library())
     p.add_argument('--report',type=Path,required=True)
+    p.add_argument('--candidate',type=int,choices=(64,192,320,448),default=64)
     a=p.parse_args()
     lib=P.api(a.library.resolve());fs=48000
     old=os.environ.get('P1PP_V04')
@@ -30,7 +31,7 @@ def main():
     try:
         for name,_,t,bed,z,onset,duration,desc in new_fixtures(fs,seed=2026102609,count=12):
             ref={}
-            for flag in (0,64):
+            for flag in (0,a.candidate):
                 os.environ['P1PP_V04']=str(flag)
                 ref[flag]=P.render(lib,np.r_[bed,np.zeros(fs//2)],fs=fs,flags=6,impact_mode=8)
             for level in (-12,-6):
@@ -39,7 +40,7 @@ def main():
                 assert np.max(abs(source))<1
                 x=np.r_[source,np.zeros(fs//2)]
                 variant={}
-                for flag in (0,64):
+                for flag in (0,a.candidate):
                     os.environ['P1PP_V04']=str(flag)
                     render=P.render(lib,x,fs=fs,flags=6,impact_mode=8)
                     measured,_=score(render,ref[flag],source,impact,t,onset,duration,fs)
@@ -49,7 +50,7 @@ def main():
                                        armed=int(np.count_nonzero(flags&8)),
                                        stem=render['stem'],
                                        latency=int(render['latency']))
-                baseline=variant[0];candidate=variant[64]
+                baseline=variant[0];candidate=variant[a.candidate]
                 assert baseline['latency']==candidate['latency']
                 assert np.isfinite(candidate['stem']).all()
                 paired={}
@@ -77,7 +78,7 @@ def main():
     changed=[r for r in rows if not r['output_bit_identical']]
     worse=sorted(rows,key=lambda z:z['metrics']['early_tail_energy_per_input_db']['difference'],reverse=True)
     summary=dict(schema='pvb.p1pp.r01.devcohort.v1',
-                 seed=2026102609,independent_waveforms=12,
+                 seed=2026102609,candidate_flags=a.candidate,independent_waveforms=12,
                  repeated_levels_per_waveform=2,
                  total_settings=len(rows),changed_settings=len(changed),
                  armed_settings=sum(x['armed_hops']>0 for x in rows),
