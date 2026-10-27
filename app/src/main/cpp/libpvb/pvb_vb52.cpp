@@ -429,6 +429,17 @@ void VbHpv::pvFrame52() {
     const bool falling=apkCount_>0 && am<recent/1.19;
     const bool ampOnset=apkCount_>8 && am>1.41*past; // S1 research: amplitude onset for the true-onset test
     if(apkCount_<=8 || am>1.41*past || born) onsetLeft_=24;
+    // R01 host-only identity protection: arm only long, confirmed stationary
+    // tracks at a strong percussive onset. A transient peak crossing their
+    // previous frequency may not inherit their ID when it walks away.
+    const bool protectIdentity=v04 && (p1ppV04_&64);
+    if(protectIdentity && ampOnset && percEnv52_>.25*harmEnv52_) {
+        for(int t=0;t<nt52_;++t) {
+            auto& tr=tr52_[t];
+            if(tr.protection.arm(true,tr.fade>=.5 && tr.missing==0) && harmonicCapture_)
+                harmonicTrace_.data[27]+=64;
+        }
+    }
     if(apkCount_==56) { std::move(apk52_+1,apk52_+56,apk52_); --apkCount_; }
     apk52_[apkCount_++]=am;
     double* hm=hold52_[holdPos_]; std::fill(hm,hm+190,-200.0);
@@ -525,7 +536,8 @@ void VbHpv::pvFrame52() {
     for(int p=0;p<np;++p) {
         auto q=pk[p]; int best=-1;
         if(stageFlags_&StageGlobalTrack) best=global[p];
-        else for(int t=0;t<nt52_;++t) if(!used[t] && std::abs(tr52_[t].f-q.f)<.1*q.f &&
+        else for(int t=0;t<nt52_;++t) if(!used[t] && (!protectIdentity || tr52_[t].protection.allows(q.f)) &&
+            std::abs(tr52_[t].f-q.f)<.1*q.f &&
             (best<0 || std::abs(tr52_[t].f-q.f)<std::abs(tr52_[best].f-q.f))) best=t;
         // Require current evidence only until the track first earns permission.
         // A valid modulation model remains accepted by its own residual.
@@ -590,6 +602,7 @@ void VbHpv::pvFrame52() {
             // partial with a steady peak but a poor fit stays out)
             if(released && prev.fade<1e-6 && q.res<=-15) { tr.fade=1.; tr.impactRecoveryPending=false; }
             tr.id=prev.id; tr.age=prev.age+1; tr.dfdt=(q.f-prev.f)*kFsd/(kPvH*(prev.missing+1));
+            if(protectIdentity) {tr.protection=prev.protection;tr.protection.observe(q.f);}
             std::copy(std::begin(prev.permission),std::end(prev.permission),std::begin(tr.permission));
             if(stageFlags_&StageOscillator) tr.oscillator=prev.oscillator;
             tr.life=continuity_.enabled?std::min(1.,prev.life+1./std::max(1,continuity_.attack)):1.;
@@ -603,6 +616,7 @@ void VbHpv::pvFrame52() {
             tr.impactRecoveryPending=guard && p1ppImpactMode_>=4 && q.res>-15;
             if(resumed) tr.fade=1;
             tr.id=++nextTrackId_; tr.age=1;
+            if(protectIdentity) tr.protection.observe(q.f);
         }
         // A track admitted after quarantine should begin like any other valid
         // birth. Otherwise a fake slow attack survives into a recovered tone.
@@ -677,11 +691,15 @@ void VbHpv::pvFrame52() {
     for(int oi=0;oi<nt52_;++oi) if(!used[order[oi]]) {
         const int t=order[oi];
         ++lost; auto tr=tr52_[t]; ++tr.age; ++tr.missing;
+        if(protectIdentity) tr.protection.missing();
         if(!continuity_.enabled && !(stageFlags_&StageOscillator)) {
             traceTrack52(np+lost-1,tr,HarmonicTrace::End,HarmonicTrace::Lost); continue;
         }
         const bool bornCut=!gen_.envelope?born:gen_.onsetMode==0?born:gen_.onsetMode==1?(born && ampOnset):false;
-        const bool fast=bornCut || tr.fastEnding; tr.fastEnding=fast;
+        // A protected, already established note must not be killed by the
+        // passing kick's new-peak marker. Normal hold/release still applies.
+        const bool fast=(bornCut && !(protectIdentity && tr.protection.lockHops>0)) || tr.fastEnding;
+        tr.fastEnding=fast;
         tr.phi+=2*kPi*tr.f*kPvH/kFsd;
         if(fast || tr.missing>continuity_.hold)
             tr.life=std::max(0.,tr.life-1./std::max(1,fast?continuity_.fastRelease:continuity_.release));
