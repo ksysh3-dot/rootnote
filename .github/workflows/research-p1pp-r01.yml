@@ -32,9 +32,15 @@ jobs:
         env:
           OPENBLAS_NUM_THREADS: '1'
         run: python3 tools/pvb-harness/research_p1pp_track_identity.py --report track-identity-report.json
+      - name: Check no-impact controls and app-mode isolation
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+        run: python3 tools/pvb-harness/research_p1pp_track_controls.py --report track-controls-report.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: r01-developer-case
-          path: track-identity-report.json
+          path: |
+            track-identity-report.json
+            track-controls-report.json
           if-no-files-found: warn
