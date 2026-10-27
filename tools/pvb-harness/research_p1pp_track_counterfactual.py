@@ -22,6 +22,7 @@ def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--library',type=Path,default=default_library())
     p.add_argument('--report',type=Path,required=True)
+    p.add_argument('--candidate',type=int,choices=(64,192,320,448),default=64)
     a=p.parse_args()
     lib=P.api(a.library.resolve());fs=48000
     inspected={x[0]:x for x in new_fixtures(fs,seed=2026102609,count=12)}
@@ -41,7 +42,7 @@ def main():
                     impact=z*10**(level/20)
                     assert np.max(abs(b+impact))<1
                     output={}
-                    for v04 in (0,64):
+                    for v04 in (0,a.candidate):
                         os.environ['P1PP_V04']=str(v04)
                         base=P.render(lib,np.r_[b,np.zeros(fs//2)],fs=fs,flags=6,impact_mode=8)
                         event=P.render(lib,np.r_[b+impact,np.zeros(fs//2)],fs=fs,flags=6,impact_mode=8)
@@ -54,10 +55,10 @@ def main():
                         output[v04]=(db(energy(gen[early]),energy(impact)),
                                      db(energy(gen[late]),energy(impact)))
                     row=dict(name=name,kind=desc['kind'],level_db=level,bed_mode=bed_mode,
-                             early_baseline_db=output[0][0],early_candidate_db=output[64][0],
-                             early_delta_db=output[64][0]-output[0][0],
-                             late_baseline_db=output[0][1],late_candidate_db=output[64][1],
-                             late_delta_db=output[64][1]-output[0][1])
+                             early_baseline_db=output[0][0],early_candidate_db=output[a.candidate][0],
+                             early_delta_db=output[a.candidate][0]-output[0][0],
+                             late_baseline_db=output[0][1],late_candidate_db=output[a.candidate][1],
+                             late_delta_db=output[a.candidate][1]-output[0][1])
                     rows.append(row)
                     print(name,bed_mode,level,'early delta',round(row['early_delta_db'],5),
                           'late delta',round(row['late_delta_db'],5),flush=True)
@@ -67,7 +68,7 @@ def main():
     result=dict(schema='pvb.p1pp.r01.counterfactual.v1',
                 independent_source_waveforms=3, levels_per_waveform=2,
                 bed_conditions_per_waveform=3,
-                already_inspected_seed=2026102609,
+                already_inspected_seed=2026102609,candidate_flags=a.candidate,
                 note='Synthetic counterfactuals; do not call increases noise without separated ground truth',
                 device_validation=False,listening_validation=False,
                 library_sha256=hashlib.sha256(a.library.read_bytes()).hexdigest(),
