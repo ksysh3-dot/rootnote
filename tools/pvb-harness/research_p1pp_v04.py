@@ -35,14 +35,26 @@ def compare(a,b):
 
 
 def run_cohort(lib,out,cohort,mode,flags):
+    """Reuses a cached cohort only when the native library, cohort, mode, flags and the generating and scoring
+    scripts are all the same; anything else is computed again."""
     d=out/f'{cohort}-{mode}-{flags}'
-    if not (d/'results.json').is_file():
+    key=dict(library_sha256=hashlib.sha256(Path(lib).read_bytes()).hexdigest(),cohort=cohort,mode=mode,v04_flags=flags,
+             scripts={n:hashlib.sha256((HERE/n).read_bytes()).hexdigest()
+                      for n in ('research_p1pp_recovery.py','research_p1pp_impacts.py','research_p1plus.py')})
+    meta=d/'cache_key.json'
+    if (d/'results.json').is_file() and meta.is_file() and json.loads(meta.read_text())==key:
+        pass
+    else:
+        if d.exists():
+            for f in d.iterdir():f.unlink()
         env=dict(os.environ,P1PP_V04=str(flags),OPENBLAS_NUM_THREADS='1')
         subprocess.run([sys.executable,str(HERE/'research_p1pp_recovery.py'),'--library',str(lib),'--out',str(d),
                         '--set',cohort,'--modes',str(mode)],check=True,stdout=subprocess.DEVNULL,env=env)
         for f in d.glob('*.npz'):f.unlink()
+        meta.write_text(json.dumps(key,indent=1))
     r=json.loads((d/'results.json').read_text())
-    return r,{(c['name'],c['input_level_dbfs']):c for c in r['cases']}
+    assert r['cohort']==cohort,(r['cohort'],cohort)
+    return r,{(c['name'],c['input_level_dbfs']):c for c in r['cases'] if c['mode']==mode}
 
 
 def main():
