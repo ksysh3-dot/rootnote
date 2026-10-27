@@ -67,7 +67,7 @@ int pvb_set_p1pp_research_params(void* e,int hold,double historyDb,int steadyHop
 }
 
 int pvb_set_p1pp_v04_research(void* e,int flags) {
-    if(!e || flags<0 || flags>127) return 0;
+    if(!e || flags<0 || flags>511) return 0;
     static_cast<pvb::Engine*>(e)->setP1PPV04Research(static_cast<unsigned>(flags));return 1;
 }
 
