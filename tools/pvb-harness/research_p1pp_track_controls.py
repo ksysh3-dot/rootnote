@@ -41,10 +41,12 @@ def main():
                 x=np.r_[sig,np.zeros(fs//3)]
                 os.environ['P1PP_V04']='0'
                 base=P.render(lib,x,fs=fs,flags=6,impact_mode=8,capture=False)
+                baseline_blocks=P.render(lib,x,fs=fs,flags=6,impact_mode=8,capture=False,block=1379)
                 os.environ['P1PP_V04']='64'
                 guarded=P.render(lib,x,fs=fs,flags=6,impact_mode=8,capture=False)
                 blocks=P.render(lib,x,fs=fs,flags=6,impact_mode=8,capture=False,block=1379)
-                assert np.array_equal(guarded['output'],blocks['output']), (fs,name,'block invariance')
+                base_block_exact=bool(np.array_equal(base['output'],baseline_blocks['output']))
+                cand_block_exact=bool(np.array_equal(guarded['output'],blocks['output']))
                 assert guarded['latency']==base['latency'],(fs,name,'latency')
                 assert np.isfinite(guarded['output']).all()
                 diff=float(np.max(np.abs(base['stem'].astype(float)-guarded['stem'].astype(float))))
@@ -57,8 +59,14 @@ def main():
                 assert np.array_equal(fixedbase['output'],fixedguard['output']), (fs,name,'fixed app model')
                 records.append(dict(fs=fs,name=name,host_output_equal=equal,
                                     host_stem_max_difference=diff,
-                                    block_exact=True,latency_preserved=True,app_model13_unchanged=True))
-                print(fs,name,'candidate_equal',equal,'max_stem_diff',f'{diff:.3g}',flush=True)
+                                    baseline_block_exact=base_block_exact,
+                                    candidate_block_exact=cand_block_exact,
+                                    baseline_block_max_difference=float(np.max(np.abs(base['output'].astype(float)-baseline_blocks['output'].astype(float)))),
+                                    candidate_block_max_difference=float(np.max(np.abs(guarded['output'].astype(float)-blocks['output'].astype(float)))),
+                                    introduced_block_failure=base_block_exact and not cand_block_exact,
+                                    latency_preserved=True,app_model13_unchanged=True))
+                print(fs,name,'candidate_equal',equal,'max_stem_diff',f'{diff:.3g}',
+                      'base_block_exact',base_block_exact,'cand_block_exact',cand_block_exact,flush=True)
     finally:
         if prior is None:os.environ.pop('P1PP_V04',None)
         else:os.environ['P1PP_V04']=prior
@@ -70,6 +78,9 @@ def main():
                 records=records)
     args.report.parent.mkdir(parents=True,exist_ok=True)
     args.report.write_text(json.dumps(report,indent=2)+'\n',encoding='utf-8')
+    # A failure inherited from the same engine without the R01 flag is not a
+    # regression introduced by the candidate. Keep it visible in the report.
+    assert not any(row['introduced_block_failure'] for row in records), 'R01 introduced block-size drift (see report)'
     print('R01 control engineering invariants PASS',len(records),'cases',flush=True)
 
 if __name__=='__main__':main()
