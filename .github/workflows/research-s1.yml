@@ -1,0 +1,40 @@
+name: Study 1 impact attribution (host only)
+
+on:
+  push:
+    branches:
+      - research/impact-attribution-20261028
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  phase-a:
+    name: Phase A non-additive stage interaction (development cohort)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Host research dependencies
+        run: pip install numpy scipy soundfile
+      - name: Build host engine
+        run: |
+          gcc --version | head -1
+          tools/pvb-harness/build_host.sh
+      - name: Phase A (P1+ and P1++ v0.3, 10 waveforms x 3 levels, floor controls)
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+        run: |
+          cd tools/pvb-harness
+          python3 research_s1_interaction.py --floor --report ../../s1-phaseA.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: study1-phaseA
+          path: s1-phaseA.json
