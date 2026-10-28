@@ -1,0 +1,40 @@
+name: Study 2 envelope target (host only)
+
+on:
+  push:
+    branches:
+      - research/envelope-target-20261028
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  study2:
+    name: Study 2 development (envelope target split and candidates; development + preservation cohorts only)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Host research dependencies
+        run: pip install numpy scipy soundfile
+      - name: Build host engine
+        run: |
+          gcc --version | head -1
+          tools/pvb-harness/build_host.sh
+      - name: Envelope target split (B2 / B2a / B2p)
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+        run: |
+          cd tools/pvb-harness
+          python3 research_s2_envelope.py --report ../../s2-envelope-split.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: study2-envelope
+          path: s2-*.json
