@@ -139,13 +139,64 @@ def verdicts(cases, variants):
     return out
 
 
+CONFIRM_SEED = 2026102801
+
+
+def confirm_fixtures(fs=FS, seed=CONFIRM_SEED):
+    """Confirmation cohort (#4 v2): the fresh_fixtures generator rule with a new seed, 8 kicks + 4 broadband."""
+    from scipy.signal import butter, sosfilt
+    rng = np.random.default_rng(seed); t = np.arange(round(3.2 * fs)) / fs; onset = 1.25; u = t - onset
+    for j in range(12):
+        duration = float(rng.uniform(.08, .22) if j < 8 else rng.uniform(.02, .08))
+        active = (u >= 0) & (u < duration); z = np.zeros_like(t)
+        if j < 8:
+            end = float(rng.uniform(41, 70)); jump = float(rng.uniform(65, 155))
+            tau = float(rng.uniform(.015, .035)); decay = float(rng.uniform(.02, .06))
+            ph = 2 * np.pi * (end * u + jump * tau * (1 - np.exp(-np.maximum(u, 0) / tau)))
+            env = (1 - np.exp(-np.maximum(u, 0) / .001)) * np.exp(-np.maximum(u, 0) / decay)
+            env *= np.minimum(1, np.maximum(0, (duration - u) / .01))
+            z[active] = env[active] * np.cos(ph[active])
+            z[active] += .12 * rng.normal(size=len(t))[active] * np.exp(-u[active] / .004)
+            kind = 'kick'
+        else:
+            noise = sosfilt(butter(2, [30, 4000], btype='bandpass', fs=fs, output='sos'), rng.normal(size=len(t)))
+            z[active] = noise[active] * np.sin(np.pi * u[active] / duration) ** 2; kind = 'noise'
+        z /= np.max(abs(z)); bf = float(rng.uniform(43, 103)); phase = float(rng.uniform(-np.pi, np.pi))
+        b = .018 * np.cos(2 * np.pi * bf * t + phase) * np.minimum(1, t / .05)
+        yield f'confirm_{kind}_{j}', True, t, b, z, onset, duration
+
+
+def preserve_fixtures(fs=FS):
+    """Preservation cohort (#4 v2): R01 regression fixtures with a bed that truly ends at the kick, or travels."""
+    from research_p1pp_recovery import new_fixtures
+    inspected = {x[0]: x for x in new_fixtures(fs, seed=2026102609, count=12)}
+    for name in ('new_kick_2', 'new_kick_3', 'new_broadband_7'):
+        _, _, t, bed, z, onset, duration, desc = inspected[name]
+        kind = 'noise' if 'broadband' in name else 'kick'
+        yield f'preserve_{kind}_{name}_ends', True, t, bed * np.clip((onset + .01 - t) / .01, 0, 1), z, onset, duration
+        yield (f'preserve_{kind}_{name}_travels', True, t,
+               .018 * np.minimum(1, t / .05) * np.cos(2 * np.pi * (65 * t + 6 * t * t) + desc['bed_phase']), z, onset,
+               duration)
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--library', type=Path, default=default_library())
     p.add_argument('--report', type=Path, required=True)
+    p.add_argument('--cohort', choices=('development', 'preserve', 'confirm'), default='development')
+    p.add_argument('--frozen', default='', help='must name the frozen pre-registration (e.g. v2-final) to run confirm')
+    p.add_argument('--with-b3', action='store_true', help='also render B3 combinations (excluded from #4 verdicts)')
     a = p.parse_args()
+    if a.cohort == 'confirm' and not a.frozen:
+        raise SystemExit('the confirmation cohort opens only after the pre-registration is frozen (--frozen <tag>)')
     lib = P.api(a.library.resolve()); bind(lib)
-    fixtures = [f for f in I.fixtures(FS) if f[1]] + list(I.fresh_fixtures(FS))
+    if a.cohort == 'development':
+        fixtures = [f for f in I.fixtures(FS) if f[1]] + list(I.fresh_fixtures(FS)); levels = S.LEVELS
+    elif a.cohort == 'preserve':
+        fixtures = list(preserve_fixtures()); levels = (-12, -6)
+    else:
+        fixtures = list(confirm_fixtures()); levels = (-12, -6)
+    combos = {k: v for k, v in COMBOS.items() if a.with_b3 or not v[2]}
     pad = np.zeros(FS // 2)
     cases, integrity = [], []
     for shape, _bed, t, b, z, onset, duration in fixtures:
@@ -154,7 +205,7 @@ def main():
             tape_bed = Tape(lib, len(xb))
             rb = render(lib, xb, flags, mode, tape=(tape_bed, 1, 0, 0))
             cb, nb = columns(rb)
-            for level in S.LEVELS:
+            for level in levels:
                 impact = z * 10 ** (level / 20); x = np.r_[b + impact, pad]
                 rx = render(lib, x, flags, mode)
                 ri = render(lib, np.r_[impact, pad], flags, mode)
@@ -190,7 +241,7 @@ def main():
                            base_energy=e_base, rounding_energy=e_round,
                            base_db_per_input={k: S.db(v, S.energy(impact)) for k, v in e_base.items()})
                 attack_mix = window_energy(S.aligned(rx, n, 'stem'), t, onset, duration, ('attack',))['attack']
-                for name, (u1, u2, u3) in COMBOS.items():
+                for name, (u1, u2, u3) in combos.items():
                     mask = (1 if u1 else 0) | (2 if u2 else 0)
                     tape = (tape_bed, 2, *hop_window) if u3 else None
                     if u3:
@@ -199,6 +250,8 @@ def main():
                                 env_bed if u2 else None, (e0, m), tape)
                     y = S.aligned(rv, n, 'stem') - S.aligned(rb, n, 'stem') - S.aligned(ri, n, 'stem')
                     ev = window_energy(y, t, onset, duration)
+                    row[name + '_attack_change_db'] = S.db(window_energy(S.aligned(rv, n, 'stem'), t, onset, duration,
+                                                                         ('attack',))['attack'], attack_mix)
                     row[name] = {k: dict(energy=ev[k],
                                          change_db=(10 * np.log10(ev[k] / e_base[k])) if ev[k] > 0 and e_base[k] > 0 else None,
                                          reduction=float(1 - ev[k] / e_base[k]) if e_base[k] > 0 else None)
@@ -220,25 +273,31 @@ def main():
                         row['b3_preconditions'] = d
                         row['b3_valid'] = bool(d['dup_ids'] == 0 and d['overflow'] == 0 and d['window_hops'] > 0
                                                and d['impact_only_change_db'] <= -20)
+                import test_engine as T
+                row['limiter_gr_db'] = {k: float(r['meters'][T.M['LIM_GR_DB']]) for k, r in (('mixture', rx), ('bed', rb), ('impact', ri))}
+                if a.cohort != 'development':
+                    row['limiter_gr_db_out3'] = {k: float(P.render(lib, v, FS, flags, impact_mode=mode, out_db=-3)['meters'][T.M['LIM_GR_DB']])
+                                                 for k, v in (('mixture', x), ('bed', xb), ('impact', np.r_[impact, pad]))}
                 cases.append(row)
-                pc = row['b3_preconditions']
-                print(shape, model, level, 'B3 rep/add/kept', pc['replaced'], pc['added'], pc['kept'], 'dup', pc['dup_ids'],
-                      'ovf', pc['overflow'], 'attack', f"{pc['attack_generated_change_db']:+.2f}", 'impOnly', f"{pc['impact_only_change_db']:+.1f}", 'valid', row['b3_valid'],
+                pc = row.get('b3_preconditions')
+                print(shape, model, level, '' if pc is None else f"B3 dup {pc['dup_ids']} impOnly {pc['impact_only_change_db']:+.1f} valid {row['b3_valid']}",
                       ' '.join(f"{v}:{(row[v]['early']['change_db'] or 0):+.1f}/{(row[v]['late']['change_db'] or 0):+.1f}"
-                               for v in COMBOS), flush=True)
+                               for v in combos), flush=True)
             tape_bed.close()
-    summary = verdicts(cases, list(COMBOS))
+    summary = verdicts(cases, list(combos))
+    secondary = verdicts([c for c in cases if c['impact_peak_dbfs'] == -6], list(combos))  # pre-registered subgroup
     for s in summary:
         print('VERDICT', s['model'], s['type'], s['oracle'], s['window'], s['verdict'],
               'G', None if s['G_db'] is None else round(s['G_db'], 2), 'L', None if s['L_db'] is None else round(s['L_db'], 2),
               f"red {s['reducing_waveforms']}/{s['valid_waveforms']} need {s['needed']} excl {s['excluded_settings']}",
               flush=True)
-    result = dict(schema='rootnote.study1.phaseB.v3', issue=4, cohort='development', confirmation_opened=False,
+    result = dict(schema='rootnote.study1.phaseB.v4', issue=4, cohort=a.cohort, frozen=a.frozen or None,
+                  confirmation_opened=a.cohort == 'confirm', levels=list(levels), oracles=list(combos),
                   library_sha256=hashlib.sha256(a.library.read_bytes()).hexdigest(),
                   source_sha256=S.source_hashes(), integrity=integrity,
                   definition='change_db = 10 log10(E(variant)/E(mixture)) per window, raw energies kept; '
                              'verdicts per pre-registration v2 (G/L, waveform medians over levels, rounding mask)',
-                  verdicts=summary, cases=cases)
+                  verdicts=summary, secondary_minus6_verdicts=secondary, cases=cases)
     a.report.parent.mkdir(parents=True, exist_ok=True)
     a.report.write_text(json.dumps(result, indent=2) + '\n', encoding='utf-8')
 

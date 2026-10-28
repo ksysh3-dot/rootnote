@@ -5,15 +5,20 @@ on:
     branches:
       - research/impact-attribution-20261028
   workflow_dispatch:
+    inputs:
+      frozen:
+        description: 'Frozen pre-registration tag. Non-empty opens the confirmation cohort (#4), once.'
+        required: false
+        default: ''
 
 permissions:
   contents: read
 
 jobs:
-  phase-a:
-    name: Phase A non-additive stage interaction (development cohort)
+  study1:
+    name: Study 1 phase B (development + preservation; confirmation only when dispatched with a frozen tag)
     runs-on: ubuntu-24.04
-    timeout-minutes: 40
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
         with:
@@ -27,28 +32,25 @@ jobs:
         run: |
           gcc --version | head -1
           tools/pvb-harness/build_host.sh
-      - name: Phase A.1 (state deviation; output -18 dB test level and -3 dB app ceiling)
+      - name: Development and preservation cohorts (B1, B2, B12)
+        if: ${{ github.event_name == 'push' || inputs.frozen == '' }}
         env:
           OPENBLAS_NUM_THREADS: '1'
         run: |
           cd tools/pvb-harness
-          python3 research_s1_interaction.py --out-db -18 --report ../../s1-phaseA1-out18.json
-          python3 research_s1_interaction.py --out-db -3 --report ../../s1-phaseA1-out3.json
-      - name: Phase A.2 controls (input-rounding sensitivity, limiter gain of all three renders)
+          python3 research_s1_counterfactual.py --cohort development --report ../../s1-phaseB-dev.json
+          python3 research_s1_counterfactual.py --cohort preserve --report ../../s1-phaseB-preserve.json
+      - name: Confirmation cohort (opened once, after the freeze)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.frozen != '' }}
         env:
           OPENBLAS_NUM_THREADS: '1'
+          FROZEN: ${{ inputs.frozen }}
         run: |
           cd tools/pvb-harness
-          python3 research_s1_interaction.py --controls --out-db -18 --report ../../s1-phaseA2-out18.json
-          python3 research_s1_interaction.py --controls --out-db -3 --report ../../s1-phaseA2-out3.json
-      - name: Phase B (development cohort; self-injection integrity, then B1/B2/B12)
-        env:
-          OPENBLAS_NUM_THREADS: '1'
-        run: |
-          cd tools/pvb-harness
-          python3 research_s1_counterfactual.py --report ../../s1-phaseB-dev.json
+          python3 research_s1_counterfactual.py --cohort confirm --frozen "$FROZEN" --report ../../s1-phaseB-confirm.json
+          python3 research_s1_counterfactual.py --cohort preserve --report ../../s1-phaseB-preserve.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: study1-phaseA1-B
-          path: s1-phase*.json
+          name: study1-phaseB
+          path: s1-phaseB-*.json
