@@ -88,6 +88,21 @@ int pvb_set_stage_inject(void* e,unsigned mask,const double* bh,const double* bp
     v.hStart=hStart; v.hEnd=hEnd; v.eStart=eStart; v.eEnd=eEnd;
     static_cast<pvb::Engine*>(e)->setStageInject(v); return 1;
 }
+// Study 1 (#4) B3 track tape (P1 research profile only). mode 1 records, 2 replays inside [startHop,endHop) with a
+// relative frequency tolerance; 0 detaches. Stats: recorded, replaced, added, kept, duplicate ids, overflow, hops.
+void* pvb_track_tape_create(int hops) {
+    return hops>0 && hops<=200000 ? pvb::VbHpv::createTrackTape(hops) : nullptr;
+}
+void pvb_track_tape_destroy(void* t) { pvb::VbHpv::destroyTrackTape(static_cast<pvb::VbHpv::TrackTape52*>(t)); }
+int pvb_set_track_tape(void* e,void* t,int mode,long long startHop,long long endHop,double tol) {
+    if(!e || mode<0 || mode>2 || (mode && !t) || startHop<0 || endHop<startHop || !(tol>0 && tol<.5)) return 0;
+    static_cast<pvb::Engine*>(e)->setTrackTape(mode?static_cast<pvb::VbHpv::TrackTape52*>(t):nullptr,mode,
+                                               startHop,endHop,tol);
+    return 1;
+}
+int pvb_track_tape_stats(void* t,long long* out,int n) {
+    return pvb::VbHpv::trackTapeStats(static_cast<pvb::VbHpv::TrackTape52*>(t),out,n);
+}
 int pvb_stage_fields() {return pvb::StageCapture52::kFields;}
 // Attach before process and detach before destroying the engine. Allocation and
 // copying happen outside the audio call. Overflow is explicit, never truncated.

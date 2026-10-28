@@ -255,6 +255,18 @@ public:
         }
     };
     void setStageInject(const StageInject52& v) { inject_=v; reset(); }
+    // Host-only study 1 (#4) B3 oracle: a tape of the track list after every hop. Mode 1 records (bed-only render);
+    // mode 2 replays inside hops [startHop,endHop): a track within tol (relative) of a taped track takes the taped
+    // state, a taped track with no counterpart is added while there is room, every other (impact) track is kept.
+    // Allocation happens here, outside the audio call. nullptr / mode 0 (the app) leaves the path as is.
+    struct TrackTape52;
+    static TrackTape52* createTrackTape(int hops);
+    static void destroyTrackTape(TrackTape52* t);
+    // recorded hops, replaced, added, kept, duplicate ids, overflow, replay hops in the window
+    static int trackTapeStats(const TrackTape52* t,long long* out,int n);
+    void setTrackTape(TrackTape52* t,int mode,int64_t startHop,int64_t endHop,double tol) {
+        tape_=t; tapeMode_=t?mode:0; tapeStart_=startHop; tapeEnd_=endHop; tapeTol_=tol; reset();
+    }
     // Host research only; survives setAlpha2Profile (see GenResearch52).
     void setGenResearch(const GenResearch52& g) { gen_=g; reset(); }
     // App option "배음별 단일 포락선" (S1m, P1 only): the S1 envelope with the research defaults. No reset here: the
@@ -454,6 +466,8 @@ private:
     StageCapture52::Sink stageSink_=nullptr;
     void* stageUser_=nullptr;
     StageInject52 inject_;
+    TrackTape52* tape_=nullptr; int tapeMode_=0; int64_t tapeStart_=0, tapeEnd_=0; double tapeTol_=.03;
+    void trackTape52();
     double detailRing52_[kRing]={};
     bool detailApplied52_=false, familyApplied52_=false;
     AmFamily52 family52_;

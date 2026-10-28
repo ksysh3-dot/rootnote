@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cmath>
 #include <complex>
+#include <vector>
 namespace pvb {
 namespace {
 double interp52(const double* a, int n, double idx) {
@@ -747,7 +748,9 @@ void VbHpv::pvFrame52() {
         if(h[21]>0) h[13]=static_cast<float>(static_cast<int>(h[13])|HarmonicTrace::Capacity);
         double power=0; for(double v:grain) power+=v*v; h[20]=static_cast<float>(std::sqrt(power/32));
     }
-    std::copy(next,next+nextCount,tr52_); nt52_=nextCount; ++hop52_;
+    std::copy(next,next+nextCount,tr52_); nt52_=nextCount;
+    if(tape_) trackTape52();
+    ++hop52_;
     if(histCount_==11) {
         for(int h=0;h<10;++h) { std::copy(hist52_[h+1],hist52_[h+1]+6,hist52_[h]); histN52_[h]=histN52_[h+1]; }
         --histCount_;
@@ -756,6 +759,47 @@ void VbHpv::pvFrame52() {
     histN52_[histCount_++]=n;
     addGrain52(centre,grain,agrain);
     if(devMeter_) devEndFrame();
+}
+
+struct VbHpv::TrackTape52 {
+    struct Hop { int n=0; Track52 tr[12]; };
+    std::vector<Hop> hops;
+    long long recorded=0, replaced=0, added=0, kept=0, dupIds=0, overflow=0, windowHops=0;
+};
+VbHpv::TrackTape52* VbHpv::createTrackTape(int hops) {
+    auto* t=new TrackTape52; t->hops.resize(static_cast<size_t>(hops)); return t;
+}
+void VbHpv::destroyTrackTape(TrackTape52* t) { delete t; }
+int VbHpv::trackTapeStats(const TrackTape52* t,long long* out,int n) {
+    if(!t || !out || n<7) return -1;
+    const long long v[7]={t->recorded,t->replaced,t->added,t->kept,t->dupIds,t->overflow,t->windowHops};
+    std::copy(v,v+7,out); return 7;
+}
+// Study 1 B3 (host only): record the track list after this hop, or replace the bed-corresponding tracks by the
+// recorded bed-only state inside the window. Runs after the hop's grains were rendered, so it acts from the next hop.
+void VbHpv::trackTape52() {
+    auto& t=*tape_; const int64_t h=hop52_;
+    if(tapeMode_==1) {
+        if(h<static_cast<int64_t>(t.hops.size())) {
+            auto& s=t.hops[static_cast<size_t>(h)]; s.n=nt52_; std::copy(tr52_,tr52_+nt52_,s.tr); t.recorded=h+1;
+        } else ++t.overflow;
+        return;
+    }
+    if(tapeMode_!=2 || h<tapeStart_ || h>=tapeEnd_ || h>=t.recorded) return;
+    ++t.windowHops;
+    const auto& s=t.hops[static_cast<size_t>(h)]; bool taken[12]={};
+    for(int k=0;k<nt52_;++k) {
+        int best=-1; double bd=1e300;
+        for(int j=0;j<s.n;++j) if(!taken[j]) {
+            const double d=std::abs(s.tr[j].f-tr52_[k].f);
+            if(d<=tapeTol_*s.tr[j].f && d<bd) {bd=d;best=j;}
+        }
+        if(best>=0) {tr52_[k]=s.tr[best]; taken[best]=true; ++t.replaced;} else ++t.kept;
+    }
+    for(int j=0;j<s.n;++j) if(!taken[j]) {
+        if(nt52_<12) {tr52_[nt52_++]=s.tr[j]; ++t.added;} else ++t.overflow;
+    }
+    for(int a=0;a<nt52_;++a) for(int b=a+1;b<nt52_;++b) if(tr52_[a].id==tr52_[b].id) ++t.dupIds;
 }
 
 void VbHpv::addGrain52(int64_t centre,const double* grain,double nominalAmplitude) {

@@ -222,6 +222,8 @@ public:
     }
     // Host-only study 1 (#4): counterfactual injection on the P1 research profile (ID 6) only.
     void setStageInject(const VbHpv::StageInject52& v) { vbAlpha2_.setStageInject(v); }
+    void setTrackTape(VbHpv::TrackTape52* t,int mode,int64_t startHop,int64_t endHop,double tol) {
+        vbAlpha2_.setTrackTape(t,mode,startHop,endHop,tol); }
     void setStageResearch(unsigned flags,StageCapture52::Sink sink=nullptr,void* user=nullptr) {
         for(VbHpv* m : {&vb52_, &vbGentle_, &vbGentleStrong_, &vbGentleAdaptive_}) m->setStageResearch(flags,sink,user);
         // P1 (ID 6) is the host research profile: allow an explicit stage probe
