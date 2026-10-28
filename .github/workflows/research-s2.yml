@@ -32,6 +32,7 @@ jobs:
           OPENBLAS_NUM_THREADS: '1'
         run: |
           cd tools/pvb-harness
+          python3 research_s2_tracks.py --report ../../s2-tracks.json
           python3 research_s2_envelope.py --report ../../s2-envelope-split.json
       - uses: actions/upload-artifact@v4
         if: always()
