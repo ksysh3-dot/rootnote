@@ -5,19 +5,29 @@ on:
     branches:
       - research/envelope-target-20261028
   workflow_dispatch:
+    inputs:
+      frozen:
+        description: 'Frozen study 2 pre-registration tag. Non-empty opens the study 2 confirmation cohort, once.'
+        required: false
+        default: ''
+      frozen_sha:
+        description: 'Full commit SHA the frozen tag must name (required with frozen).'
+        required: false
+        default: ''
 
 permissions:
   contents: read
 
 jobs:
   study2:
-    name: Study 2 development (envelope target split and candidates; development + preservation cohorts only)
+    name: Study 2 candidate C1 (development + preservation + regression; confirmation only from a frozen tag)
     runs-on: ubuntu-24.04
-    timeout-minutes: 90
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: true
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.frozen != '' && format('refs/tags/{0}', inputs.frozen) || '' }}
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -27,14 +37,28 @@ jobs:
         run: |
           gcc --version | head -1
           tools/pvb-harness/build_host.sh
-      - name: Candidate C1 against the unmodified models
+      - name: Preservation, development and regression cohorts
         env:
           OPENBLAS_NUM_THREADS: '1'
         run: |
           cd tools/pvb-harness
-          python3 research_s2_candidate.py --report ../../s2-candidate.json
+          python3 research_s2_candidate.py --cohort preserve --report ../../s2-preserve.json
+          python3 research_s2_candidate.py --cohort development --budget-from ../../s2-preserve.json --report ../../s2-dev.json
+          python3 research_s2_candidate.py --cohort regression --budget-from ../../s2-dev.json ../../s2-preserve.json \
+            --report ../../s2-regression.json
+      - name: Study 2 confirmation cohort (opened once, after the freeze)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.frozen != '' }}
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          FROZEN: ${{ inputs.frozen }}
+          FROZEN_SHA: ${{ inputs.frozen_sha }}
+        run: |
+          git fetch --no-tags origin "+refs/tags/$FROZEN:refs/tags/$FROZEN"
+          cd tools/pvb-harness
+          python3 research_s2_candidate.py --cohort confirm --frozen "$FROZEN" --frozen-sha "$FROZEN_SHA" \
+            --budget-from ../../s2-dev.json ../../s2-preserve.json --report ../../s2-confirm.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: study2-envelope
+          name: study2-candidate
           path: s2-*.json
