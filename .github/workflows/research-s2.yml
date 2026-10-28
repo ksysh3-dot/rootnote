@@ -1,4 +1,4 @@
-name: Study 2 envelope target (host only)
+﻿name: Study 2 envelope target (host only)
 
 on:
   push:
@@ -27,13 +27,12 @@ jobs:
         run: |
           gcc --version | head -1
           tools/pvb-harness/build_host.sh
-      - name: Envelope target split (B2 / B2a / B2p)
+      - name: Candidate C1 against the unmodified models
         env:
           OPENBLAS_NUM_THREADS: '1'
         run: |
           cd tools/pvb-harness
-          python3 research_s2_tracks.py --report ../../s2-tracks.json
-          python3 research_s2_envelope.py --report ../../s2-envelope-split.json
+          python3 research_s2_candidate.py --report ../../s2-candidate.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:

@@ -229,7 +229,7 @@ void VbHpv::renderTrack52(Track52& tr,const double src[2][256],const int ns[2],
         tr.a*std::max(tr.fade,ampHeld>0 && allW>0 ? heldW/allW : 0.)*tr.life;
     if(oscillator) tr.oscillator.add(tr.f,targetAmplitude,targetPhase,nominal,
         stageFlags_&StageOscillatorCorrect,grain,oscillatorNominal52_);
-    agrain+=nominal;
+    agrain+=(stageFlags_&StageNominalPower)?nominal*nominal:nominal;
 }
 void VbHpv::missingFrame52(int reason,bool fast) {
     std::fill(std::begin(oscillatorNominal52_),std::end(oscillatorNominal52_),0.);
@@ -815,6 +815,7 @@ void VbHpv::addGrain52(int64_t centre,const double* grain,double nominalAmplitud
         }
         return;
     }
+    if(stageFlags_&StageNominalPower) nominalAmplitude=std::sqrt(nominalAmplitude);
     for(int g=0;g<32;++g) {
         const int slot=(centre-16+g)&(kRing-1);
         pvOut_[slot]+=grain[g]*gw_[g];pvApv_[slot]+=nominalAmplitude*gw_[g];
