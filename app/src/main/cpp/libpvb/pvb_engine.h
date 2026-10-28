@@ -330,7 +330,8 @@ private:
     // The five exclusive Alpha2 profiles share one allocation; only the selected model ticks.
     VbHpv vbAlpha2_{true, true, 1};
     VbModule* vbMods_[VB_ALGO_COUNT] = {&vbHpv_, &vbBank_, &vb52_, &vbGentle_, &vbGentleStrong_, &vbGentleAdaptive_,
-                                     &vbAlpha2_, &vbAlpha2_, &vbAlpha2_, &vbAlpha2_, &vbAlpha2_, &vbAlpha2_, &vbAlpha2_, &vbAlpha2_};
+                                     &vbAlpha2_, &vbAlpha2_, &vbAlpha2_, &vbAlpha2_, &vbAlpha2_, &vbAlpha2_, &vbAlpha2_, &vbAlpha2_,
+                                     &vbAlpha2_};
     bool vbOk_[VB_ALGO_COUNT] = {};   // available at the current rate
     int vbCur_ = -1;                  // algorithm in the signal path, -1 = none
     bool genCur_ = false;             // S1m running in vbAlpha2_ (P1 only); switched like an algorithm (faded)

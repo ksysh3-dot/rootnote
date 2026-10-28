@@ -13,6 +13,7 @@ object PvbModels {
     const val P1_PLUS = 11
     const val P1PP = 12
     const val P1PP_V03 = 13
+    const val P1_C1 = 14
     const val REFERENCE_KEY = "alpha2_reference"
     const val P1_KEY = "alpha2_p1"
     const val GENTLE12_KEY = "alpha3_gentle12"
@@ -21,6 +22,7 @@ object PvbModels {
 
     val models: List<Model> = listOf(
         Model(P1_KEY, P1, "연결형 (P1)", "음이 잠깐 약해질 때도 배음을 이어가며, 강약과 음정 변화를 함께 따라갑니다. 기본 모델입니다."),
+        Model("alpha2_p1_c1", P1_C1, "연결형 P1 · 킥 뒤 보정 (실험)", "P1과 같지만, 킥 뒤에 남는 킥의 저음 꼬리 때문에 저음층이 잘못 깎이던 것을 줄였습니다(합성 신호 확인군에서 킥 뒤 잔여 지표 8.2 dB 감소). 저음이 끝날 때 저음층이 조금 더 남을 수 있습니다. 지연은 P1과 같습니다."),
         Model("alpha2_p1plus", P1_PLUS, "연결형 P1+ (실험)", "연결형에 위상 유지와 앞뒤를 함께 보는 분리를 더했습니다. 짧은 음의 강약 윤곽이 원음에 더 가깝습니다(합성 신호 시험). 지연이 약 0.18초로 늘어납니다."),
         Model("alpha2_p1pp", P1PP, "연결형 P1++ (실험)", "P1+에 강한 타격 뒤에 남는 잔여를 줄이는 처리를 더했습니다(합성 신호 시험). 타격 직후 80 ms 잔여는 조금 늘 수 있습니다. 지연은 P1+와 같은 약 0.18초입니다."),
         Model("alpha2_p1pp_v03", P1PP_V03, "연결형 P1++ v0.3 (실험)", "P1++에서 새 음을 붙잡아 두는 규칙을 고쳤습니다. 주파수와 세기가 안정된 음은 붙잡지 않아 짧은 음의 시작이 P1+에 가깝게 돌아왔고, 타격 뒤 잔여 감소는 P1++와 거의 같습니다(합성 신호 시험). 타격 직후 잠깐의 잔여 증가는 그대로이고, 지연은 약 0.18초입니다."),

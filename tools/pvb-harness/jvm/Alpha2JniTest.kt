@@ -39,6 +39,6 @@ fun main(args: Array<String>) {
             }
         }
     }
-    check(PvbModels.models.size == 10)
-    println("Alpha2/3 JNI: ten selectable models (incl. gentle12 ID3, P1+ ID11, P1++ ID12, P1++ v0.3 ID13) at 44.1/48kHz, finite audio, IDs and latency passed")
+    check(PvbModels.models.size == 11)
+    println("Alpha2/3 JNI: eleven selectable models (incl. gentle12 ID3, P1+ ID11, P1++ ID12, P1++ v0.3 ID13, P1+C1 ID14) at 44.1/48kHz, finite audio, IDs and latency passed")
 }

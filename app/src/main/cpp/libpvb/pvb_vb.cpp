@@ -22,6 +22,7 @@ bool VbHpv::setAlpha2Profile(int algorithm) {
     unsigned flags=0;int mode=3;
     switch(algorithm) {
         case VB_ALPHA2_P1: case VB_ALPHA2_P1_PLUS: case VB_ALPHA2_P1PP: case VB_ALPHA2_P1PP_V03: break;
+        case VB_ALPHA2_P1_C1: flags=StageNominalPower;break;
         case VB_ALPHA2_D2: flags=StageShortDetail|StageConditionalGain;break;
         case VB_ALPHA2_J2: flags=StageShortDetail|StageConditionalGain|StageAmFamily|StageFamilyFilterComp;break;
         case VB_ALPHA2_OSC: mode=0;flags=StageOscillator;break;
@@ -29,13 +30,14 @@ bool VbHpv::setAlpha2Profile(int algorithm) {
         default:return false;
     }
     p1PlusProfile_=algorithm==VB_ALPHA2_P1 || algorithm==VB_ALPHA2_P1_PLUS || algorithm==VB_ALPHA2_P1PP ||
-                   algorithm==VB_ALPHA2_P1PP_V03;
+                   algorithm==VB_ALPHA2_P1PP_V03 || algorithm==VB_ALPHA2_P1_C1;
     // 6: the original P1 (or the host's research flags); 11: P1+ (flags 6); 12: P1++ v0.2 (flags 6, impact 4);
-    // 13: P1++ v0.3 (flags 6, impact 8)
-    p1PlusFixed_=algorithm==VB_ALPHA2_P1_PLUS || algorithm==VB_ALPHA2_P1PP || algorithm==VB_ALPHA2_P1PP_V03;
-    p1PlusFlags_=p1PlusFixed_ ? 6u : p1PlusHostFlags_;
+    // 13: P1++ v0.3 (flags 6, impact 8); 14: P1 + C1 (no P1+ flags, impact 0, power-sum nominal amplitude)
+    p1PlusFixed_=algorithm==VB_ALPHA2_P1_PLUS || algorithm==VB_ALPHA2_P1PP || algorithm==VB_ALPHA2_P1PP_V03 ||
+                 algorithm==VB_ALPHA2_P1_C1;
+    p1PlusFlags_=algorithm==VB_ALPHA2_P1_C1 ? 0u : p1PlusFixed_ ? 6u : p1PlusHostFlags_;
     p1ppImpactMode_=algorithm==VB_ALPHA2_P1PP_V03 ? 8 : algorithm==VB_ALPHA2_P1PP ? 4 :
-                    algorithm==VB_ALPHA2_P1_PLUS ? 0 : p1ppHostImpact_;
+                    algorithm==VB_ALPHA2_P1_PLUS || algorithm==VB_ALPHA2_P1_C1 ? 0 : p1ppHostImpact_;
     p1ppV04_=p1PlusFixed_ ? 0u : p1ppV04Host_;
     modulationMode_=mode;tonalOnly_=false;continuity_=ContinuityParams{};continuity_.enabled=true;
     applyDevContinuity();

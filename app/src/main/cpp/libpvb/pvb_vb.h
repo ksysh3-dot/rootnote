@@ -50,7 +50,10 @@ enum VbAlgo : int { VB_HPV = 0, VB_BANKSTOWN = 1, VB_HPV52M = 2, VB_GENTLE = 3,
                    // (flags 6, impact mode 4): app models, "실험" (research/p1pp, docs/P1PP_RESEARCH.md)
                    VB_ALPHA2_P1_PLUS = 11, VB_ALPHA2_P1PP = 12,
                    // P1++ v0.3: flags 6, impact mode 8 (research/p1pp/2026-10-26-v03)
-                   VB_ALPHA2_P1PP_V03 = 13, VB_ALGO_COUNT };
+                   VB_ALPHA2_P1PP_V03 = 13,
+                   // P1 + C1: P1 (no research flags) with the power-sum nominal amplitude of the envelope target
+                   // (study 2, #4, tag s2-v1-final)
+                   VB_ALPHA2_P1_C1 = 14, VB_ALGO_COUNT };
 
 // Scene observations are unvalidated. Only the opt-in adaptive profile uses
 // them to select a harmonic attenuation budget; they are not buzz labels.
