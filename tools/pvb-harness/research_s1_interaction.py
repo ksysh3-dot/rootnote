@@ -113,6 +113,7 @@ def output_interaction(rx, rb, ri, n, t, onset, duration, impact_energy):
             res[key]['early_bed_shaped_db_per_input'] = db(max(energy(z) - energy(other), 0), impact_energy)
             res[key]['early_nonbed_db_per_input'] = db(energy(other), impact_energy)
     # what the limiter/mix adds on top of the generated layer
+    # difference of two dB values, not the energy of the limiter's difference waveform (see limiter_gr_db, A.2)
     res['limiter_minus_stem_early_db'] = res['output']['early_db_per_input'] - res['stem']['early_db_per_input']
     return res
 
@@ -123,6 +124,8 @@ def main():
     p.add_argument('--report', type=Path, required=True)
     p.add_argument('--floor', action='store_true', help='also render the numeric-floor controls')
     p.add_argument('--out-db', type=float, default=-18, help='engine output level (app general build allows up to -3)')
+    p.add_argument('--controls', action='store_true',
+                   help='phase A.2: input-rounding sensitivity of I and the limiter gain of all three renders')
     a = p.parse_args()
     render = lambda *args, **kw: P.render(*args, out_db=a.out_db, **kw)
     lib = P.api(a.library.resolve())
@@ -143,6 +146,25 @@ def main():
                 row = dict(shape=shape, model=model, flags=flags, impact_mode=mode, impact_peak_dbfs=level,
                            output=output_interaction(rx, rb, ri, n, t, onset, duration, e),
                            stages=stage_interaction(rx, rb, ri, onset, duration, e))
+                if a.controls:
+                    # Rounding: the three renders take float32(bed+impact), float32(bed) and float32(impact). Render
+                    # the float32 sum of the two separate inputs and compare with the mixture: the stem difference is
+                    # the part of I that input rounding alone can produce. Raw energies, no 1e-30 clamp.
+                    w = windows(t, onset, duration)
+                    x32 = b.astype(np.float32) + impact.astype(np.float32)
+                    rr = render(lib, np.r_[x32.astype(np.float64), pad], FS, flags, impact_mode=mode)
+                    dstem = aligned(rx, n, 'stem') - aligned(rr, n, 'stem')
+                    inter = aligned(rx, n, 'stem') - aligned(rb, n, 'stem') - aligned(ri, n, 'stem')
+                    row['rounding'] = dict(
+                        input_mismatch_energy=energy(x.astype(np.float32).astype(np.float64) - x32.astype(np.float64)),
+                        impact_energy=e,
+                        **{k + '_I_energy': energy(inter[m]) for k, m in w.items()},
+                        **{k + '_rounding_energy': energy(dstem[m]) for k, m in w.items()})
+                    # Limiter: LIM_GR_DB holds the minimum limiter gain since the previous meters() read, and render()
+                    # reads the meters once at the end, so 0 means the gain stayed 1 for the whole render.
+                    import test_engine as T
+                    row['limiter_gr_db'] = {name: float(r['meters'][T.M['LIM_GR_DB']])
+                                            for name, r in (('mixture', rx), ('bed', rb), ('impact', ri))}
                 if a.floor and level == LEVELS[0]:
                     # block-size drift control: same mixture at block 1379
                     rx2 = render(lib, np.r_[x, pad], FS, flags, block=1379, impact_mode=mode)
