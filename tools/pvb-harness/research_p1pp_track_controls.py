@@ -17,8 +17,9 @@ import numpy as np
 import research_p1plus as P
 from p1plus_paths import default_library
 
-def signals(fs):
-    t=np.arange(round(2.0*fs))/fs
+def signals(fs,n=None):
+    # n: sample count (default 2 s); Study 1 (#4) reuses these notes as preservation beds
+    t=np.arange(round(2.0*fs) if n is None else n)/fs
     ramp=np.minimum(1.,t/.07)
     return {
         'steady_65hz':.02*ramp*np.cos(2*np.pi*65*t),

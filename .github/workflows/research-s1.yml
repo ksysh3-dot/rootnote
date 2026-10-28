@@ -10,6 +10,10 @@ on:
         description: 'Frozen pre-registration tag. Non-empty opens the confirmation cohort (#4), once.'
         required: false
         default: ''
+      frozen_sha:
+        description: 'Full commit SHA the frozen tag must name (required with frozen).'
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -18,11 +22,13 @@ jobs:
   study1:
     name: Study 1 phase B (development + preservation; confirmation only when dispatched with a frozen tag)
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: true
+          # a confirmation run executes the frozen tag itself; the script checks it against frozen_sha
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.frozen != '' && format('refs/tags/{0}', inputs.frozen) || '' }}
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -32,23 +38,25 @@ jobs:
         run: |
           gcc --version | head -1
           tools/pvb-harness/build_host.sh
-      - name: Development and preservation cohorts (B1, B2, B12)
-        if: ${{ github.event_name == 'push' || inputs.frozen == '' }}
+      - name: Preservation and development cohorts (B1, B2, B12; outputs -18 and -3 dB)
         env:
           OPENBLAS_NUM_THREADS: '1'
         run: |
           cd tools/pvb-harness
-          python3 research_s1_counterfactual.py --cohort development --report ../../s1-phaseB-dev.json
           python3 research_s1_counterfactual.py --cohort preserve --report ../../s1-phaseB-preserve.json
+          python3 research_s1_counterfactual.py --cohort development --budget-from ../../s1-phaseB-preserve.json \
+            --report ../../s1-phaseB-dev.json
       - name: Confirmation cohort (opened once, after the freeze)
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.frozen != '' }}
         env:
           OPENBLAS_NUM_THREADS: '1'
           FROZEN: ${{ inputs.frozen }}
+          FROZEN_SHA: ${{ inputs.frozen_sha }}
         run: |
+          git fetch --no-tags origin "+refs/tags/$FROZEN:refs/tags/$FROZEN"
           cd tools/pvb-harness
-          python3 research_s1_counterfactual.py --cohort confirm --frozen "$FROZEN" --report ../../s1-phaseB-confirm.json
-          python3 research_s1_counterfactual.py --cohort preserve --report ../../s1-phaseB-preserve.json
+          python3 research_s1_counterfactual.py --cohort confirm --frozen "$FROZEN" --frozen-sha "$FROZEN_SHA" \
+            --budget-from ../../s1-phaseB-dev.json ../../s1-phaseB-preserve.json --report ../../s1-phaseB-confirm.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:

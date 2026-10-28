@@ -18,7 +18,8 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 # scripts whose content defines the measurement; recorded in every report (#4 gate 1)
 SOURCES = ('research_s1_interaction.py', 'research_s1_counterfactual.py', 'research_p1pp_impacts.py',
-           'research_p1plus.py', 'test_engine.py', 'vb_quality/stage_capture.py')
+           'research_p1plus.py', 'test_engine.py', 'vb_quality/stage_capture.py', 'research_p1pp_recovery.py',
+           'research_p1pp_track_controls.py', '../../docs/STUDY1_PREREG.md')
 
 
 def source_hashes():
