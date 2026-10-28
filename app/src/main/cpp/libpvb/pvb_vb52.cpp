@@ -794,10 +794,13 @@ void VbHpv::trackTape52() {
             const double d=std::abs(s.tr[j].f-tr52_[k].f);
             if(d<=tapeTol_*s.tr[j].f && d<bd) {bd=d;best=j;}
         }
-        if(best>=0) {tr52_[k]=s.tr[best]; taken[best]=true; ++t.replaced;} else ++t.kept;
+        // the mixture's track slot keeps its own id (ids of the two renders are allocated independently)
+        if(best>=0) {const uint32_t id=tr52_[k].id; tr52_[k]=s.tr[best]; tr52_[k].id=id; taken[best]=true; ++t.replaced;}
+        else ++t.kept;
     }
     for(int j=0;j<s.n;++j) if(!taken[j]) {
-        if(nt52_<12) {tr52_[nt52_++]=s.tr[j]; ++t.added;} else ++t.overflow;
+        // an added bed track is marked so its id cannot collide with the mixture's ids
+        if(nt52_<12) {tr52_[nt52_]=s.tr[j]; tr52_[nt52_++].id|=0x80000000u; ++t.added;} else ++t.overflow;
     }
     for(int a=0;a<nt52_;++a) for(int b=a+1;b<nt52_;++b) if(tr52_[a].id==tr52_[b].id) ++t.dupIds;
 }

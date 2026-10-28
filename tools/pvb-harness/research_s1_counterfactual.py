@@ -13,7 +13,8 @@ is compared with the unmodified mixture.
 All seven combinations (leave-one-out / leave-one-in) are rendered. Integrity: self-injection and a self-recorded
 track tape must reproduce the mixture bit for bit, otherwise the run stops. B3 preconditions are reported per case:
 the correspondence counts (replaced/added/kept), state consistency (duplicate ids, overflow) and normal-impact
-preservation (attack-window generated energy of the B3 render against the mixture). Windows whose input-rounding
+preservation (the same B3 applied to the impact-only render must change its generated layer by <= -20 dB).
+A replaced track keeps the mixture's id; an added bed track gets a marked id. Windows whose input-rounding
 sensitivity R exceeds E - 20 dB (decided once on the unmodified mixture) are excluded from the verdicts.
 """
 import argparse
@@ -208,12 +209,21 @@ def main():
                                                                'window_hops')}
                         att = window_energy(S.aligned(rv, n, 'stem'), t, onset, duration, ('attack',))['attack']
                         d['attack_generated_change_db'] = S.db(att, attack_mix)
+                        # normal-impact preservation (pre-registration v2): the same B3 on the impact-only render
+                        # must leave its generated layer (attack + 80 ms) essentially unchanged
+                        rc = render(lib, np.r_[impact, pad], flags, mode, tape=(tape_bed, 2, *hop_window))
+                        seg = S.windows(t, onset, duration); keep_m = seg['attack'] | seg['early']
+                        yi = S.aligned(ri, n, 'stem'); yc = S.aligned(rc, n, 'stem')
+                        d['impact_only_change_db'] = S.db(S.energy((yc - yi)[keep_m]), S.energy(yi[keep_m]))
+                        after2 = tape_bed.stats()
+                        d['impact_only_replaced'] = after2['replaced'] - after['replaced']
                         row['b3_preconditions'] = d
-                        row['b3_valid'] = bool(d['dup_ids'] == 0 and d['overflow'] == 0 and d['window_hops'] > 0)
+                        row['b3_valid'] = bool(d['dup_ids'] == 0 and d['overflow'] == 0 and d['window_hops'] > 0
+                                               and d['impact_only_change_db'] <= -20)
                 cases.append(row)
                 pc = row['b3_preconditions']
                 print(shape, model, level, 'B3 rep/add/kept', pc['replaced'], pc['added'], pc['kept'], 'dup', pc['dup_ids'],
-                      'ovf', pc['overflow'], 'attack', f"{pc['attack_generated_change_db']:+.2f}",
+                      'ovf', pc['overflow'], 'attack', f"{pc['attack_generated_change_db']:+.2f}", 'impOnly', f"{pc['impact_only_change_db']:+.1f}", 'valid', row['b3_valid'],
                       ' '.join(f"{v}:{(row[v]['early']['change_db'] or 0):+.1f}/{(row[v]['late']['change_db'] or 0):+.1f}"
                                for v in COMBOS), flush=True)
             tape_bed.close()
