@@ -12,8 +12,11 @@ Each model is rendered as a whole with and without C1 (mixture, bed-only and imp
                rounding mask decided once on the unmodified mixture), judged with the study 1 G/L rule
   attack       attack-window generated energy change of the mixture; budget from the development and
                preservation cohorts (median >= -1 dB, worst >= -3 dB) lowers near-adoption to hold-option
-  notes        ordinary notes alone (R01 controls and every cohort bed): generated-layer energy change, the largest
-               sample difference, and whether block-size exactness (4096 vs 1379) is kept
+  notes        ordinary notes alone (R01 controls, run in every cohort, and the cohort's beds): generated-layer total
+               energy ratio change (not a waveform-difference energy; the largest sample difference is reported only),
+               and for the R01 controls whether block-size exactness (4096 vs 1379) is kept
+  limiter      LIM_GR_DB of the mixture, bed-only and impact-only renders, unmodified and with C1
+  direct       descriptive only: each model unmodified and with C1 against the unmodified original P1
 Cohorts: development, preservation, regression (study 1 confirmation fixtures, seed 2026102801; regression only, per
 GPT gate 2) and confirmation (seed 2026102802, opened once from a frozen tag, like study 1). Output -18 dB.
 """
@@ -27,6 +30,7 @@ import research_p1pp_impacts as I
 import research_p1plus as P
 import research_s1_counterfactual as CF
 import research_s1_interaction as S
+import test_engine as T
 from p1plus_paths import default_library
 from research_p1pp_track_controls import signals
 
@@ -100,6 +104,27 @@ def decide(summary, note_rows):
     return out
 
 
+DIRECT = ('vsP1_unmodified', 'vsP1_C1')
+
+
+def direct_vs_p1(cases):
+    """D2, descriptive: each model unmodified and with C1 against the unmodified original P1 (flags 0) on the same
+    fixture and level, change_db = 10 log10(E_model / E_P1); a window is left out when either side is masked."""
+    p1 = {(c['shape'], c['impact_peak_dbfs']): c for c in cases if c['model'] == 'p1'}
+    out = []
+    for c in cases:
+        q = p1.get((c['shape'], c['impact_peak_dbfs']))
+        if q is None: continue
+        ch = lambda e, w: (10 * np.log10(e / q['base_energy'][w])) if e > 0 and q['base_energy'][w] > 0 else None
+        out.append(dict(shape=c['shape'], type=c['type'], model=c['model'], out_db=c['out_db'],
+                        impact_peak_dbfs=c['impact_peak_dbfs'], b3_valid=True,
+                        masked={w: q['masked'][w] or c['masked'][w] for w in CF.WINDOWS},
+                        vsP1_unmodified={w: dict(change_db=ch(c['base_energy'][w], w)) for w in CF.WINDOWS},
+                        vsP1_C1={w: dict(change_db=ch(c['C1'][w]['energy'], w)) for w in CF.WINDOWS},
+                        vsP1_unmodified_attack_change_db=0.0, vsP1_C1_attack_change_db=0.0))
+    return out
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--library', type=Path, default=default_library())
@@ -110,11 +135,12 @@ def main():
     p.add_argument('--budget-from', type=Path, nargs='*', default=[])
     a = p.parse_args()
     ident = CF.checkout_identity(a.frozen)
-    budget_rows, budget_sources = [], []
+    budget_rows, budget_sources, imported_notes = [], [], []
     for f in a.budget_from:
         r = json.loads(f.read_text(encoding='utf-8'))
         if r.get('cohort') not in CF.BUDGET_COHORTS: raise SystemExit(f'{f}: not a development/preservation report')
         budget_rows += [b for b in r['attack_budget'] if b['cohort'] == r['cohort']]
+        imported_notes += [dict(n, source=r['cohort']) for n in r['notes']]
         budget_sources.append(dict(cohort=r['cohort'], file=f.name, checkout_sha=r['checkout']['checkout_sha']))
     if a.cohort == 'confirm':
         problems = []
@@ -137,7 +163,9 @@ def main():
         fixtures = list(CF.confirm_fixtures(seed=CF.CONFIRM_SEED)); levels = (-12, -6)
     else:
         fixtures = list(CF.confirm_fixtures(seed=CONFIRM_SEED)); levels = (-12, -6)
-    note_rows = notes(lib, a.cohort, fixtures) + (notes(lib, 'controls', None) if a.cohort == 'development' else [])
+    # D1: the R01 controls (with the block-size check) run in every cohort; the decision also uses the notes of the
+    # development and preservation reports given with --budget-from (same commit, checked for confirm)
+    note_rows = [dict(n, source=a.cohort) for n in notes(lib, a.cohort, fixtures) + notes(lib, 'controls', None)]
     pad = np.zeros(FS // 2); cases = []
     for shape, _bed, t, b, z, onset, duration in fixtures:
         kind = next((k for k in ('kick', 'noise') if k in shape), None)
@@ -152,13 +180,15 @@ def main():
                     rx, ri = render(lib, x, flags, mode, s), render(lib, xi, flags, mode, s)
                     inter = S.aligned(rx, n, 'stem') - S.aligned(rb[s], n, 'stem') - S.aligned(ri, n, 'stem')
                     e[s] = (CF.window_energy(inter, t, onset, duration),
-                            CF.window_energy(S.aligned(rx, n, 'stem'), t, onset, duration, ('attack',))['attack'], rx)
+                            CF.window_energy(S.aligned(rx, n, 'stem'), t, onset, duration, ('attack',))['attack'], rx,
+                            {k: float(r_['meters'][T.M['LIM_GR_DB']]) for k, r_ in (('mixture', rx), ('bed', rb[s]), ('impact', ri))})
                 x32 = (b.astype(np.float32) + impact.astype(np.float32)).astype(np.float64)
                 rr = render(lib, np.r_[x32, pad], flags, mode, 0)
                 e_round = CF.window_energy(S.aligned(e[0][2], n, 'stem') - S.aligned(rr, n, 'stem'), t, onset, duration)
                 base = e[0][0]
                 row = dict(shape=shape, type=kind, model=model, out_db=OUT_DB, impact_peak_dbfs=level, b3_valid=True,
                            base_energy=base, rounding_energy=e_round,
+                           limiter_gr_db=dict(unmodified=e[0][3], **{c: e[s_][3] for c, s_ in CANDIDATES.items()}),
                            masked={w: bool(base[w] <= 0 or e_round[w] > base[w] * 10 ** (-20 / 10)) for w in CF.WINDOWS})
                 for cand, stage in CANDIDATES.items():
                     row[cand] = {w: dict(energy=e[stage][0][w],
@@ -177,9 +207,17 @@ def main():
         print('VERDICT', s['model'], s['type'], s['oracle'], s['window'], s['verdict'], f"(raw {s['raw_verdict']})",
               'G', None if s['G_db'] is None else round(s['G_db'], 2), 'L', None if s['L_db'] is None else round(s['L_db'], 2),
               f"red {s['reducing_waveforms']}/{s['valid_waveforms']} need {s['needed']} excl {s['excluded_settings']}", flush=True)
-    decisions = decide(summary, note_rows)
+    decisions = decide(summary, note_rows + imported_notes)
     for d in decisions:
         print('DECISION', json.dumps(d), flush=True)
+    direct = direct_vs_p1(cases)
+    direct_verdicts = [dict(v, verdict=None) for v in CF.verdicts(direct, list(DIRECT), [])]  # descriptive: raw only
+    for s in direct_verdicts:
+        if (s['type'], s['window']) == ('kick', 'late'):
+            print('DIRECT', s['model'], s['oracle'], s['raw_verdict'], 'G', None if s['G_db'] is None else round(s['G_db'], 2),
+                  'L', None if s['L_db'] is None else round(s['L_db'], 2), f"red {s['reducing_waveforms']}/{s['valid_waveforms']}", flush=True)
+    gr = [v for c in cases for d_ in c['limiter_gr_db'].values() for v in d_.values()]
+    print('LIMITER', 'min', min(gr), 'max', max(gr), flush=True)
     for b_ in own_budget:
         print('BUDGET', b_['model'], b_['type'], 'within' if b_['within'] else 'OVER', round(b_['median_db'], 3),
               round(b_['worst_setting_db'], 3), flush=True)
@@ -189,7 +227,8 @@ def main():
                   levels=list(levels), out_db=OUT_DB, source_sha256=S.source_hashes(),
                   library_sha256=hashlib.sha256(a.library.read_bytes()).hexdigest(),
                   budget=dict(sources=budget_sources), attack_budget=own_budget, decisions=decisions, verdicts=summary,
-                  secondary_minus6_verdicts=secondary, notes=note_rows, cases=cases)
+                  secondary_minus6_verdicts=secondary, direct_vs_p1_verdicts=direct_verdicts,
+                  notes=note_rows, imported_notes=imported_notes, cases=cases)
     a.report.parent.mkdir(parents=True, exist_ok=True)
     a.report.write_text(json.dumps(result, indent=2) + '\n', encoding='utf-8')
 
