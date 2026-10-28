@@ -88,7 +88,7 @@ def decide(summary, note_rows):
             single_worst = max([abs(n['layer_change_db']) for n in mine if n['signal'] in SINGLE_NOTES], default=0.)
             block_lost = [n['signal'] for n in mine if n.get('baseline_block_exact') and not n.get('candidate_block_exact', True)]
             reasons = []
-            if sec_worst > G / 2: reasons.append(f'secondary L {sec_worst:.2f} > G/2')
+            if G > 0 and sec_worst > G / 2: reasons.append(f'secondary L {sec_worst:.2f} > G/2')
             if note_worst > NOTE_ANY_DB: reasons.append(f'note {note_worst:.2f} dB')
             if single_worst > NOTE_SINGLE_DB: reasons.append(f'single-track note {single_worst:.3f} dB')
             if block_lost: reasons.append('block exactness lost: ' + ','.join(block_lost))
