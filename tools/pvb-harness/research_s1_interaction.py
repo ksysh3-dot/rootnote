@@ -5,14 +5,24 @@ Every case is rendered three times with identical settings: the mixture x = bed 
 impact alone. For the generated layer, the output and each captured internal stage s,
     I_s = S_s(x) - S_s(bed) - S_s(impact)
 keeps only what exists because the two sounds met (bed gaps, track stealing, leftovers, limiter interaction, but
-also legitimate interaction of nonlinear stages such as HPSS). It is an upper-bound candidate for impact error,
-not noise truth. No DSP is changed: P1+ (flags 6) and P1++ v0.3 (impact mode 8) are frozen; this is the
-development cohort only (the confirmation seed 2026102801 is not opened here).
+also legitimate interaction of nonlinear stages such as HPSS). It is the non-additive interaction energy: not an
+upper bound of impact error (legitimate and erroneous parts can cancel) and not noise truth. Time zero of the
+early/late windows is the end of the impact (onset + duration). No DSP is changed: P1+ (flags 6) and P1++ v0.3
+(impact mode 8) are frozen; this is the development cohort only (the confirmation seed 2026102801 is not opened).
 """
 import argparse
 import hashlib
 import json
 from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+# scripts whose content defines the measurement; recorded in every report (#4 gate 1)
+SOURCES = ('research_s1_interaction.py', 'research_s1_counterfactual.py', 'research_p1pp_impacts.py',
+           'research_p1plus.py', 'test_engine.py', 'vb_quality/stage_capture.py')
+
+
+def source_hashes():
+    return {s: hashlib.sha256((HERE / s).read_bytes()).hexdigest() for s in SOURCES if (HERE / s).is_file()}
 import numpy as np
 from scipy.signal import hilbert
 import research_p1pp_impacts as I
@@ -181,9 +191,12 @@ def main():
                   seeds=dict(fixtures=2026102607, fresh=2026102608), sample_rate=FS, core_rate=CORE,
                   models=[dict(name=m, flags=f, impact_mode=i) for m, f, i in MODELS],
                   definition='I = S(bed+impact) - S(bed) - S(impact), engine-reported latency, no fitted shift/gain',
-                  caveat='Nonlinear stages (HPSS, limiter) also produce legitimate interaction; I is an upper-bound '
-                         'candidate, not noise truth. Stage times are core-clock positions without a per-stage '
-                         'delay model, so first-exceedance order across stages is indicative only.',
+                  source_sha256=source_hashes(),
+                  caveat='Non-additive interaction energy: nonlinear stages (HPSS, limiter) also produce legitimate '
+                         'interaction and it can cancel errors, so I is not an upper bound of impact error. Stage '
+                         'times are core-clock positions without a per-stage delay model, so first-exceedance order '
+                         'across stages is indicative only. The rounding control R is the sensitivity to input '
+                         'rounding only, not a bound over all numeric paths.',
                   cases=cases)
     a.report.parent.mkdir(parents=True, exist_ok=True)
     a.report.write_text(json.dumps(result, indent=2) + '\n', encoding='utf-8')
