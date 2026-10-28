@@ -31,9 +31,9 @@ def api(path):
 
 
 def render(lib, x, fs=48000, flags=0, block=4096, algo=6, capture=True, impact_mode=0,
-           stage_flags=0):
+           stage_flags=0, out_db=-18):
     engine = T.Engine(lib, fs, vb_on=1, vb_algo=algo, vb_level_db=6,
-                      out_db=-18, ramp_ms=0)
+                      out_db=out_db, ramp_ms=0)
     if flags:
         assert lib.pvb_set_p1plus_research(engine.h, flags) == 1
     if impact_mode:

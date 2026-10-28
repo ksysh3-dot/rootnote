@@ -27,14 +27,15 @@ jobs:
         run: |
           gcc --version | head -1
           tools/pvb-harness/build_host.sh
-      - name: Phase A (P1+ and P1++ v0.3, 10 waveforms x 3 levels, floor controls)
+      - name: Phase A.1 (state deviation; output -18 dB test level and -3 dB app ceiling)
         env:
           OPENBLAS_NUM_THREADS: '1'
         run: |
           cd tools/pvb-harness
-          python3 research_s1_interaction.py --floor --report ../../s1-phaseA.json
+          python3 research_s1_interaction.py --out-db -18 --report ../../s1-phaseA1-out18.json
+          python3 research_s1_interaction.py --out-db -3 --report ../../s1-phaseA1-out3.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: study1-phaseA
-          path: s1-phaseA.json
+          name: study1-phaseA1
+          path: s1-phaseA1-*.json

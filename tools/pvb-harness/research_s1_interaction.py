@@ -77,6 +77,20 @@ def stage_interaction(rx, rb, ri, onset, duration, impact_energy):
         hit = np.where((tb >= onset - .15) & (ri_ > .1 * rr_) & (rr_ > 0))[0]
         row['first_exceed_ms_from_onset'] = float((tb[hit[0]] - onset) * 1000) if len(hit) else None
         row['peak_abs_interaction'] = float(np.max(np.abs(inter))) if len(inter) else 0.0
+        # phase A.1: state view. Gains, envelopes and blend ratios are not additive; measure how far the
+        # mixture's state departs from the bed-only state, and when it comes back after the impact.
+        dev = a - b
+        for k in ('pre', 'early', 'late'):
+            m = w[k]
+            row[k + '_state_dev_db'] = db(energy(dev[m]), energy(b[m]) + 1e-30)
+        rd = np.sqrt(np.mean(dev[:n].reshape(-1, hop) ** 2, axis=1))
+        rb_ = np.sqrt(np.mean(b[:n].reshape(-1, hop) ** 2, axis=1))
+        end = onset + duration
+        back = None
+        for j in np.where(tb >= end)[0]:
+            if j + 3 <= len(rd) and np.all(rd[j:j + 3] <= .1 * np.maximum(rb_[j:j + 3], 1e-12)):
+                back = float((tb[j] - end) * 1000); break
+        row['state_recover_ms_after_impact'] = back
         out[name] = row
     return out
 
@@ -108,7 +122,9 @@ def main():
     p.add_argument('--library', type=Path, default=default_library())
     p.add_argument('--report', type=Path, required=True)
     p.add_argument('--floor', action='store_true', help='also render the numeric-floor controls')
+    p.add_argument('--out-db', type=float, default=-18, help='engine output level (app general build allows up to -3)')
     a = p.parse_args()
+    render = lambda *args, **kw: P.render(*args, out_db=a.out_db, **kw)
     lib = P.api(a.library.resolve())
     fixtures = [f for f in I.fixtures(FS) if f[1]] + list(I.fresh_fixtures(FS))
     cases = []
@@ -116,20 +132,20 @@ def main():
     for shape, _bed, t, b, z, onset, duration in fixtures:
         n = len(t)
         for model, flags, mode in MODELS:
-            rb = P.render(lib, np.r_[b, pad], FS, flags, impact_mode=mode)
+            rb = render(lib, np.r_[b, pad], FS, flags, impact_mode=mode)
             levels = LEVELS + ((-60,) if a.floor else ())
             for level in levels:
                 impact = z * 10 ** (level / 20); x = b + impact
                 assert np.max(abs(x)) < 1, 'no input clipping'
-                rx = P.render(lib, np.r_[x, pad], FS, flags, impact_mode=mode)
-                ri = P.render(lib, np.r_[impact, pad], FS, flags, impact_mode=mode)
+                rx = render(lib, np.r_[x, pad], FS, flags, impact_mode=mode)
+                ri = render(lib, np.r_[impact, pad], FS, flags, impact_mode=mode)
                 e = energy(impact)
                 row = dict(shape=shape, model=model, flags=flags, impact_mode=mode, impact_peak_dbfs=level,
                            output=output_interaction(rx, rb, ri, n, t, onset, duration, e),
                            stages=stage_interaction(rx, rb, ri, onset, duration, e))
                 if a.floor and level == LEVELS[0]:
                     # block-size drift control: same mixture at block 1379
-                    rx2 = P.render(lib, np.r_[x, pad], FS, flags, block=1379, impact_mode=mode)
+                    rx2 = render(lib, np.r_[x, pad], FS, flags, block=1379, impact_mode=mode)
                     d = aligned(rx, n, 'stem') - aligned(rx2, n, 'stem')
                     row['block_drift_stem_db_per_input'] = db(energy(d), e)
                 cases.append(row)
@@ -138,7 +154,7 @@ def main():
                                 if v['first_exceed_ms_from_onset'] is not None))[:3]
                 print(shape, model, level, 'early', round(o['early_db_per_input'], 2),
                       'late', round(o['late_db_per_input'], 2), 'first', first, flush=True)
-    result = dict(schema='rootnote.study1.phaseA.v1', issue=4, dsp_changed=False, confirmation_opened=False,
+    result = dict(schema='rootnote.study1.phaseA.v2', issue=4, out_db=a.out_db, dsp_changed=False, confirmation_opened=False,
                   library_sha256=hashlib.sha256(a.library.read_bytes()).hexdigest(),
                   seeds=dict(fixtures=2026102607, fresh=2026102608), sample_rate=FS, core_rate=CORE,
                   models=[dict(name=m, flags=f, impact_mode=i) for m, f, i in MODELS],
