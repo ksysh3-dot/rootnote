@@ -793,6 +793,7 @@ double VbHpv::core52(double d) {
     const double originalH=bh,originalP=bp,bandDelayed=i>=hpssDelay?bRing_[(i-hpssDelay)&(kRing-1)]:0.;
     detailRing52_[slot]=bandDelayed;
     if(stageFlags_&StageBypassHpss) {bh=bandDelayed;bp=0.;}
+    if(inject_.active(StageInject52::InjectHpss,i)) {bh=inject_.bh[i];bp=inject_.bp[i];}
     double hr,hi,pr,pi; hilH_.tick(bh,hr,hi); hilP_.tick(bp,pr,pi);
     bhRing_[slot]=bh; aRing_[slot]=std::hypot(hr,hi);
     const double att=std::exp(-1./6),rel=std::exp(-1./120);
@@ -829,7 +830,8 @@ double VbHpv::core52(double d) {
         for(int64_t j=std::max<int64_t>(0,t-90);j<=t+90;++j) ac=std::min(ac,max52_[j&(kRing-1)]);
     }
     double out=0,apv=0; if(i>=defer) takeGrain52(i-defer,out,apv);
-    const double as=envA_.tick(ac),ps=envP_.tick(apv);
+    double as=envA_.tick(ac),ps=envP_.tick(apv);
+    if(inject_.active(StageInject52::InjectEnvelope,i)) {as=inject_.as[i];ps=inject_.ps[i];}
     const double gain=apv>0?clampv(as/(ps+1e-9),0.,1.):0;
     const double gainTarget=(familyApplied52_ || detailApplied52_)?1.:0.;
     if(stageFlags_&StageConditionalGain) {

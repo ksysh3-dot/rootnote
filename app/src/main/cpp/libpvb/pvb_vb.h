@@ -241,6 +241,20 @@ public:
     // All use the same gentle24 placement. Legacy research setters remain separate.
     bool setAlpha2Profile(int algorithm);
     void setStageCapture(StageCapture52::Sink sink,void* user) {stageSink_=sink;stageUser_=user;}
+    // Host-only study 1 (#4) counterfactuals: replace the selected HPSS outputs (InjectHpss, inside [hStart,hEnd)
+    // of the core clock) and/or the envelope targets (InjectEnvelope, inside [eStart,eEnd)) by host buffers indexed
+    // by core sample. The buffers belong to the host and must outlive processing. mask 0 (default, the app) leaves
+    // the path as is.
+    struct StageInject52 {
+        enum : unsigned { InjectHpss=1, InjectEnvelope=2 };
+        unsigned mask=0; const double* bh=nullptr; const double* bp=nullptr; const double* as=nullptr;
+        const double* ps=nullptr; int64_t n=0, hStart=0, hEnd=0, eStart=0, eEnd=0;
+        bool active(unsigned bit,int64_t i) const {
+            if(!(mask&bit) || i>=n) return false;
+            return bit==InjectHpss ? i>=hStart && i<hEnd : i>=eStart && i<eEnd;
+        }
+    };
+    void setStageInject(const StageInject52& v) { inject_=v; reset(); }
     // Host research only; survives setAlpha2Profile (see GenResearch52).
     void setGenResearch(const GenResearch52& g) { gen_=g; reset(); }
     // App option "배음별 단일 포락선" (S1m, P1 only): the S1 envelope with the research defaults. No reset here: the
@@ -439,6 +453,7 @@ private:
     unsigned stageHostFlags_=0;  // explicit host stage choices survive first P1 profile activation
     StageCapture52::Sink stageSink_=nullptr;
     void* stageUser_=nullptr;
+    StageInject52 inject_;
     double detailRing52_[kRing]={};
     bool detailApplied52_=false, familyApplied52_=false;
     AmFamily52 family52_;

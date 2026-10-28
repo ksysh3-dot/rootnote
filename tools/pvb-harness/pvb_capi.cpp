@@ -76,6 +76,18 @@ int pvb_set_p1pp_impact_research(void* e,int mode) {
     static_cast<pvb::Engine*>(e)->setP1PPImpactResearch(mode);return 1;
 }
 
+// Study 1 (#4) counterfactual injection, P1 research profile only. mask 1 = selected HPSS outputs (bh, bp),
+// 2 = envelope targets (as, ps); buffers are indexed by core sample and must outlive processing. Set before
+// the first block (it resets the module). mask 0 clears it. Windows are [hStart,hEnd) and [eStart,eEnd).
+int pvb_set_stage_inject(void* e,unsigned mask,const double* bh,const double* bp,long long hStart,long long hEnd,
+                         const double* as,const double* ps,long long eStart,long long eEnd,long long n) {
+    using I=pvb::VbHpv::StageInject52;
+    if(!e || mask>3 || n<0 || hStart<0 || hEnd<hStart || eStart<0 || eEnd<eStart) return 0;
+    if(((mask&I::InjectHpss) && (!bh || !bp)) || ((mask&I::InjectEnvelope) && (!as || !ps))) return 0;
+    I v; v.mask=mask; v.bh=bh; v.bp=bp; v.as=as; v.ps=ps; v.n=n;
+    v.hStart=hStart; v.hEnd=hEnd; v.eStart=eStart; v.eEnd=eEnd;
+    static_cast<pvb::Engine*>(e)->setStageInject(v); return 1;
+}
 int pvb_stage_fields() {return pvb::StageCapture52::kFields;}
 // Attach before process and detach before destroying the engine. Allocation and
 // copying happen outside the audio call. Overflow is explicit, never truncated.

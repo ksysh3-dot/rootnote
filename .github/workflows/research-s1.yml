@@ -34,8 +34,14 @@ jobs:
           cd tools/pvb-harness
           python3 research_s1_interaction.py --out-db -18 --report ../../s1-phaseA1-out18.json
           python3 research_s1_interaction.py --out-db -3 --report ../../s1-phaseA1-out3.json
+      - name: Phase B (development cohort; self-injection integrity, then B1/B2/B12)
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+        run: |
+          cd tools/pvb-harness
+          python3 research_s1_counterfactual.py --report ../../s1-phaseB-dev.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: study1-phaseA1
-          path: s1-phaseA1-*.json
+          name: study1-phaseA1-B
+          path: s1-phase*.json
