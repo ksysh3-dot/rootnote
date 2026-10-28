@@ -209,9 +209,12 @@ def stream(lib):
             assert Q.aggregate_am(metrics)=='pass',('AM family regression',fs,name)
             checks.append(dict(fs=fs,mode=name,am_family_depth_rate_phase='pass'))
     e=T.Engine(lib,48000)
-    #2048 is now the valid P2-O flag; retain invalid combinations and test
-    # the new upper boundary plus correction-without-oscillator rejection.
-    for flags in (512,1024,1792,4096,8192):assert not lib.pvb_stage_attach(e.h,flags,100)
+    #2048 is now the valid P2-O flag and 8192 the study 2 (#4) C1 flag; retain invalid combinations and test
+    # the new upper boundary (16384) plus correction-without-oscillator rejection.
+    for flags in (512,1024,1792,4096,8192|4096,16384):assert not lib.pvb_stage_attach(e.h,flags,100)
+    lib.pvb_stage_attach.argtypes=[C.c_void_p,C.c_uint,C.c_int];lib.pvb_stage_attach.restype=C.c_void_p
+    lib.pvb_stage_detach.argtypes=[C.c_void_p]
+    handle=lib.pvb_stage_attach(e.h,8192,100);assert handle;lib.pvb_stage_detach(handle)
     e.close()
     # Reset the actual engine after predictor history is populated. The output
     # must equal a clean run; this is independent of diagnostic track ID epochs.
