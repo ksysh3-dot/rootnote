@@ -1,6 +1,9 @@
-checkout 6b5e6aed074f2f25aa50dd96853d1f347aa3cf18
+checkout 6f560db40b6bf912501038655ba284aac596c052
+tag 6f560db40b6bf912501038655ba284aac596c052
 status:
+source_commit 6f560db40b6b
+8e369edfa6b95ebed7fafe922345f195a6d8b2d732dd1862c85c561b2f928bfb  tools/pvb-harness/build/libpvbcapi.so
 c5142e8860ec4c664fe5482f6d62f9fcd4b8520f241285f3d702591cfd9918e2  tools/pvb-harness/research_gt_bass.py
 tracks 151
-started 2026-10-30T00:45:14+09:00
-done 2026-10-30T00:53:39+09:00
+started 2026-10-30T07:12:09+09:00
+done 2026-10-30T07:39:13+09:00
