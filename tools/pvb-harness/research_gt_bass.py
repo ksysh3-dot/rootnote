@@ -7,11 +7,11 @@ Reference (--reference):
   yin   the isolated bass stem(s), mono, 3 kHz, low-passed at 400 Hz; YIN f0 (28-300 Hz, 85 ms frames, hop 10 ms,
         CMNDF threshold 0.15) within 35 dB of the stem's loudest frame. An estimate, not an annotation: a fundamental
         or octave error of YIN, and the sum of several bass stems, can still bias it.
-  midi  BabySlakh only: the lowest sounding note of the bass stems' MIDI files at each frame time (tempo map applied),
-        on the same frame grid, moved by --midi-transpose semitones. BabySlakh renders its bass an octave below the
-        written MIDI (stem check without YIN: MIDI / 2 within 20 dB of MIDI in 100 % of note frames, an odd partial at
-        1.5 x MIDI in 92 %; with -12 the YIN estimate agrees in 100 % of frames, track median), so -12 is the sounding
-        pitch there.
+  midi  Slakh only (BabySlakh, Slakh2100): the lowest sounding note of the bass stems' MIDI files at each frame time
+        (tempo map applied), on the same frame grid, moved by --midi-transpose semitones. BabySlakh renders its bass an
+        octave below the written MIDI (stem check without YIN: MIDI / 2 within 20 dB of MIDI in 100 % of note frames, an
+        odd partial at 1.5 x MIDI in 92 %; with -12 the YIN estimate agrees in 100 % of frames, track median), so -12 is
+        the sounding pitch there. --midi-transpose auto picks the octave per item from the bass stem (midi_octave).
 Each mix (48 kHz) is rendered by each model; the first 1 s (warm-up) and the last 0.2 s are left out.
 Per model and item:
   tracked       share of reference frames where a live model track (amplitude >= 10 % of the hop's strongest) lies
@@ -145,6 +145,19 @@ def midi_f0(tt, notes, offset, transpose=0):
     return f0
 
 
+def midi_octave(tt, notes, offset, bz):
+    """Per-item octave of the MIDI reference, from the bass stem alone (no model): the transpose of -24, -12, 0, +12
+    whose f0 lies within 50 cents of the stem's YIN in the largest share of frames where both have a value. None
+    (item excluded) when fewer than 20 such frames, the best share is under 50 %, or it leads the next by under 20 pp."""
+    fy = yin(bz)[1]; agree = {}
+    for t in (-24, -12, 0, 12):
+        fm = midi_f0(tt, notes, offset, t); both = np.isfinite(fm) & np.isfinite(fy)
+        agree[t] = float(np.mean(np.abs(1200 * np.log2(fm[both] / fy[both])) < 50)) if both.sum() >= 20 else None
+    ranked = sorted((v, t) for t, v in agree.items() if v is not None)[::-1]
+    ok = ranked and ranked[0][0] >= .5 and (len(ranked) < 2 or ranked[0][0] - ranked[1][0] >= .2)
+    return (ranked[0][1] if ok else None), agree
+
+
 def items(root):
     """(name, mix stereo, bass mono, rate, bass MIDI paths, source files) from MUSDB-style or Slakh-style folders."""
     for d in sorted(p for p in root.rglob('*') if p.is_dir()):
@@ -156,7 +169,8 @@ def items(root):
             parts = re.split(r'\n\s{2}(S\d+):\s*\n', meta)   # [head, id, block, id, block, ...]
             ids = [parts[i] for i in range(1, len(parts) - 1, 2) if re.search(r'inst_class:\s*Bass\b', parts[i + 1])]
             mixf = next((d / n for n in ('mix.wav', 'mix.flac') if (d / n).exists()), None)
-            stems = [d / 'stems' / f'{i}.wav' for i in ids]; stems = [s for s in stems if s.exists()]
+            stems = [next((d / 'stems' / f'{i}{x}' for x in ('.wav', '.flac') if (d / 'stems' / f'{i}{x}').exists()), None) for i in ids]
+            stems = [s for s in stems if s]
             if mixf is None or not stems: continue
             midis = [d / 'MIDI' / f'{s.stem}.mid' for s in stems]; midis = [m for m in midis if m.exists()]
             mix, fs = sf.read(str(mixf), always_2d=True)
@@ -301,30 +315,43 @@ def main():
     p.add_argument('--library', type=Path, default=default_library())
     p.add_argument('--models', default='p1,p1_c1,p1_s3,p1plus')
     p.add_argument('--reference', choices=('yin', 'midi'), default='yin')
-    p.add_argument('--midi-transpose', type=int, default=0)
+    p.add_argument('--midi-transpose', default='0', help="semitones, or 'auto' for the per-item octave of midi_octave")
     p.add_argument('--limit', type=int, default=0)
     p.add_argument('--crop', default='', help='start,seconds: evaluate only this part of each item (long songs)')
+    p.add_argument('--min-seconds', type=float, default=5, help='exclude items whose (cropped) bass is shorter')
+    p.add_argument('--inventory-only', action='store_true', help='files, hashes and reference checks; no model is run')
     p.add_argument('--decide', action='store_true')
     p.add_argument('--rule', choices=('v2d', 'v3'), default='v2d', help='v2d: the frozen R3 rule; v3: the R3-a draft')
     p.add_argument('--report', type=Path, required=True)
     a = p.parse_args()
-    lib = P.api(a.library.resolve()); rows = []; frames = {}; inventory = []
+    lib = None if a.inventory_only else P.api(a.library.resolve()); rows = []; frames = {}; inventory = []
     models = a.models.split(',')
+    if a.midi_transpose != 'auto': int(a.midi_transpose)
     for j, (name, mix, bass, fs, midis, sources) in enumerate(items(a.root)):
         if a.limit and j >= a.limit: break
         s0 = 0.
         if a.crop:
             s0, du = (float(v) for v in a.crop.split(',')); sl = slice(int(s0 * fs), int((s0 + du) * fs))
             mix, bass = mix[sl], bass[sl]
-            if len(bass) < 5 * fs: inventory.append(dict(item=j, excluded='shorter than the crop')); continue
-        bz = sosfiltfilt(LP, to_rate(bass, fs, CORE))
+        if len(bass) < a.min_seconds * fs: inventory.append(dict(item=j, excluded='shorter than the crop')); continue
+        bz = sosfiltfilt(LP, to_rate(bass, fs, CORE)); octave = None
         if a.reference == 'midi':
             if not midis: inventory.append(dict(item=j, excluded='no bass MIDI')); continue
-            notes = [n for m in midis for n in midi_notes(m)]; tt = grid(len(bz)); f0 = midi_f0(tt, notes, s0, a.midi_transpose)
+            notes = [n for m in midis for n in midi_notes(m)]; tt = grid(len(bz))
+            if a.midi_transpose == 'auto': tr, agree = midi_octave(tt, notes, s0, bz); octave = dict(transpose=tr, agree=agree)
+            else: tr = int(a.midi_transpose)
+            f0 = midi_f0(tt, notes, s0, tr) if tr is not None else np.full(len(tt), np.nan)
         else: tt, f0 = yin(bz)
         inventory.append(dict(item=j, sha256={f.name if f.parent.name != 'stems' and f.parent.name != 'MIDI' else f'{f.parent.name}/{f.name}':
                                                 hashlib.sha256(f.read_bytes()).hexdigest()[:16] for f in sources}))
+        if octave: inventory[-1]['midi_octave'] = octave
+        inventory[-1]['reference_frames'] = int(np.sum(np.isfinite(f0)))
+        if octave and octave['transpose'] is None: inventory[-1]['excluded'] = 'MIDI octave unclear'; continue
         if np.sum(np.isfinite(f0)) < 20: inventory[-1]['excluded'] = 'under 20 reference frames'; continue
+        if a.inventory_only:
+            print('ITEM', j, name, f"frames={inventory[-1]['reference_frames']} f0~{np.nanmedian(f0):.0f}Hz",
+                  '' if not octave else f"transpose={octave['transpose']} " + json.dumps(octave['agree']), flush=True)
+            continue
         mix48 = to_rate(mix, fs, FS).astype(np.float32)
         for m in models:
             fl, st = model_spec(m); res, fr = evaluate(lib, fl, st, mix48, bz, tt, f0)
@@ -332,6 +359,14 @@ def main():
         q = [x for x in rows if x['item'] == j]
         print('ROW', j, f"f0~{np.nanmedian(f0):.0f}Hz", ' '.join(
             f"{x['model']}:{'-' if x['tracked'] is None else round(100 * x['tracked'])}%" for x in q), flush=True)
+    transpose = a.midi_transpose if a.midi_transpose == 'auto' else int(a.midi_transpose)
+    if a.inventory_only:
+        a.report.parent.mkdir(parents=True, exist_ok=True)
+        a.report.write_text(json.dumps(dict(schema='rootnote.gt_bass.inventory.v1', issue=4, root_name=a.root.name, reference=a.reference,
+                                            midi_transpose=transpose, crop=a.crop, min_seconds=a.min_seconds,
+                                            source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+                                            inventory=inventory), indent=2) + '\n', encoding='utf-8')
+        return
     summary = {}
     for m in models:
         sub = [x for x in rows if x['model'] == m]
@@ -354,7 +389,7 @@ def main():
     if decision: print('DECISION', models[1], json.dumps(decision), flush=True)
     a.report.parent.mkdir(parents=True, exist_ok=True)
     a.report.write_text(json.dumps(dict(schema='rootnote.gt_bass.v2', issue=4, root_name=a.root.name, reference=a.reference,
-                                        midi_transpose=a.midi_transpose, crop=a.crop, models=models,
+                                        midi_transpose=transpose, crop=a.crop, min_seconds=a.min_seconds, models=models,
                                         library_sha256=hashlib.sha256(a.library.read_bytes()).hexdigest(),
                                         source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(), inventory=inventory, summary=summary, paired=pairs,
                                         decision=decision, rows=rows), indent=2) + '\n', encoding='utf-8')
