@@ -202,7 +202,7 @@ private fun catalogue() {
     val lower = C.byId("p1_vs_p1_minus3")!!
     check(lower.sides[0].apply(user).vbLevelDb == 7f && lower.sides[1].apply(user).vbLevelDb == 4f)
     check(lower.sides[0].apply(user).vbAlgo == PvbModels.P1 && lower.sides[1].apply(user).vbAlgo == PvbModels.P1)
-    check(lower.sides.map { it.label(user) } == listOf("P1 +7 dB", "P1 +4 dB (3 dB 작게)"))
+    check(lower.sides.map { it.label(user) } == listOf("Legato 1.0 +7 dB", "Legato 1.0 +4 dB (3 dB 작게)"))
     check(lower.sides[1].apply(user.copy(vbLevelDb = 0f)).vbLevelDb == -3f)
     check(C.byId("p1_vs_d2")!!.sides.map { it.apply(user).vbAlgo } == listOf(PvbModels.P1, PvbModels.D2))
     check(C.byId("p1_vs_id4")!!.sides.map { it.apply(user).vbAlgo } == listOf(PvbModels.P1, PvbModels.REFERENCE))

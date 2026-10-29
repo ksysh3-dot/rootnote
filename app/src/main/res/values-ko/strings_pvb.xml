@@ -85,7 +85,7 @@
     <string name="title_activity_live_ab">실청 블라인드 비교</string>
     <string name="title_activity_live_ab_results">실청 비교 기록</string>
     <string name="pvb_vb_live_ab">실청 블라인드 비교</string>
-    <string name="pvb_vb_live_ab_summary">내 음악을 실제 엔진으로 들으며 P1 크기, 볼륨 연동, 모델(D2, 기준형)을 블라인드로 비교하고 회차마다 판정을 저장해 내보냅니다.</string>
+    <string name="pvb_vb_live_ab_summary">내 음악을 실제 엔진으로 들으며 Legato 1.0 크기, 볼륨 연동, 모델(Staccato, Primo)을 블라인드로 비교하고 회차마다 판정을 저장해 내보냅니다.</string>
     <string name="pvb_live_ab_export">내보내기</string>
     <string name="pvb_live_ab_empty">아직 저장된 판정이 없습니다. 실청 블라인드 비교에서 회차마다 판정을 저장하면 여기에 쌓입니다.</string>
     <string name="pvb_live_ab_share">공유 (JSON + CSV)</string>

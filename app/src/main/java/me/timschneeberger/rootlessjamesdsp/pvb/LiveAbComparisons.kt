@@ -59,22 +59,22 @@ object LiveAbComparisons {
 
     private const val UNMEASURED = 0f
 
-    val P1 = Side("p1", UNMEASURED, false, { "P1 ${dbText(userLevel(it))}" }) {
+    val P1 = Side("p1", UNMEASURED, false, { "Legato 1.0 ${dbText(userLevel(it))}" }) {
         PvbAbConditions.v11vb(it, PvbModels.P1, userLevel(it))
     }
-    val P1_LOWER = Side("p1_minus3", UNMEASURED, false, { "P1 ${dbText(loweredLevel(it))} (3 dB 작게)" }) {
+    val P1_LOWER = Side("p1_minus3", UNMEASURED, false, { "Legato 1.0 ${dbText(loweredLevel(it))} (3 dB 작게)" }) {
         PvbAbConditions.v11vb(it, PvbModels.P1, loweredLevel(it))
     }
-    val P1_LINK_ON = Side("p1_link_on", UNMEASURED, false, { "P1 ${dbText(userLevel(it))} · 볼륨 연동 켬" }) {
+    val P1_LINK_ON = Side("p1_link_on", UNMEASURED, false, { "Legato 1.0 ${dbText(userLevel(it))} · 볼륨 연동 켬" }) {
         PvbAbConditions.v11vb(it, PvbModels.P1, userLevel(it)).copy(vbVolLink = true)   // the user's link sliders
     }
-    val P1_LINK_OFF = Side("p1_link_off", UNMEASURED, false, { "P1 ${dbText(userLevel(it))} · 볼륨 연동 끔" }) {
+    val P1_LINK_OFF = Side("p1_link_off", UNMEASURED, false, { "Legato 1.0 ${dbText(userLevel(it))} · 볼륨 연동 끔" }) {
         PvbAbConditions.v11vb(it, PvbModels.P1, userLevel(it))
     }
-    val D2 = Side("d2", UNMEASURED, false, { "D2 (ID 7) ${dbText(userLevel(it))}" }) {
+    val D2 = Side("d2", UNMEASURED, false, { "Staccato (ID 7) ${dbText(userLevel(it))}" }) {
         PvbAbConditions.v11vb(it, PvbModels.D2, userLevel(it))
     }
-    val ID4 = Side("id4", UNMEASURED, false, { "기준형 (ID 4) ${dbText(userLevel(it))}" }) {
+    val ID4 = Side("id4", UNMEASURED, false, { "Primo (ID 4) ${dbText(userLevel(it))}" }) {
         PvbAbConditions.v11vb(it, PvbModels.REFERENCE, userLevel(it))
     }
 
@@ -107,20 +107,20 @@ object LiveAbComparisons {
         "그 자체로는 구분되지 않습니다."
 
     val ALL: List<Comparison> = listOf(
-        Comparison("p1_vs_p1_minus3", "P1 vs P1 3 dB 작게 (크기)",
-            "같은 P1에서 가상 저음 크기만 3 dB 다릅니다(지금 슬라이더 값 기준). $TRIM_NOTE",
+        Comparison("p1_vs_p1_minus3", "Legato 1.0 vs 3 dB 작게 (크기)",
+            "같은 Legato 1.0에서 가상 저음 크기만 3 dB 다릅니다(지금 슬라이더 값 기준). $TRIM_NOTE",
             PvbAbConditions.HEADROOM_DB, listOf(P1, P1_LOWER)),
-        Comparison("p1_link_on_vs_off", "P1 볼륨 연동 켬 vs 끔",
+        Comparison("p1_link_on_vs_off", "Legato 1.0 볼륨 연동 켬 vs 끔",
             "한쪽만 「볼륨 연동 세기」를 켭니다(내 설정의 시작 볼륨·감소 기울기·최대 감소). 이 비교만 출력을 낮추지 않으니 " +
                 "평소 듣는 볼륨 그대로 들으세요. 볼륨이 시작 볼륨보다 높아야 차이가 생깁니다. $TRIM_NOTE",
             0f, listOf(P1_LINK_ON, P1_LINK_OFF)),
-        Comparison("p1_vs_d2", "P1 vs D2 (ID 7)",
+        Comparison("p1_vs_d2", "Legato 1.0 vs Staccato (ID 7)",
             "같은 크기에서 모델만 다릅니다. $MODEL_NOTE $TRIM_NOTE",
             PvbAbConditions.HEADROOM_DB, listOf(P1, D2)),
-        Comparison("p1_vs_id4", "P1 vs 기준형 (ID 4)",
+        Comparison("p1_vs_id4", "Legato 1.0 vs Primo (ID 4)",
             "같은 크기에서 모델만 다릅니다. $MODEL_NOTE $TRIM_NOTE",
             PvbAbConditions.HEADROOM_DB, listOf(P1, ID4)),
-        Comparison("p1_vs_d2_vs_id4", "P1 vs D2 vs 기준형 (셋)",
+        Comparison("p1_vs_d2_vs_id4", "Legato 1.0 vs Staccato vs Primo (셋)",
             "같은 크기에서 세 모델을 A·B·C로 비교합니다. $MODEL_NOTE $TRIM_NOTE",
             PvbAbConditions.HEADROOM_DB, listOf(P1, D2, ID4)),
         Comparison("xtc_centre_vs_ms", "공간감 중앙 보존 vs 같은 크기 좌우 넓히기",

@@ -85,7 +85,7 @@
     <string name="title_activity_live_ab">Live blind comparison</string>
     <string name="title_activity_live_ab_results">Live comparison records</string>
     <string name="pvb_vb_live_ab">Live blind comparison</string>
-    <string name="pvb_vb_live_ab_summary">Compare P1 strength, volume link and models (D2, reference) blind with your own music through the real engine, and save and export a verdict for each round.</string>
+    <string name="pvb_vb_live_ab_summary">Compare Legato 1.0 strength, volume link and models (Staccato, Primo) blind with your own music through the real engine, and save and export a verdict for each round.</string>
     <string name="pvb_live_ab_export">Export</string>
     <string name="pvb_live_ab_empty">No saved verdicts yet. Verdicts saved in the live blind comparison collect here.</string>
     <string name="pvb_live_ab_share">Share (JSON + CSV)</string>

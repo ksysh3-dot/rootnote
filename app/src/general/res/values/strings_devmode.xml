@@ -135,7 +135,7 @@
     <string name="dev_turn_off">Turn off developer mode</string>
     <string name="dev_turn_off_summary">Resets every value and turns developer mode off.</string>
     <string name="dev_time_s1m_note">With per-harmonic envelope on, its own envelope (10/70 ms) is used instead of attack and release.</string>
-    <string name="dev_time_model_note">Attack and release only act on the P1-family models.</string>
+    <string name="dev_time_model_note">Attack and release only act on the Legato (P1) family models.</string>
     <string name="dev_unit_hz">%1$s Hz</string>
     <string name="dev_unit_db">%1$s dB</string>
     <string name="dev_unit_db_oct">%1$s dB/oct</string>
@@ -217,7 +217,7 @@
     <string name="dev_p_x_s1m_name">Per-harmonic envelope (experimental)</string>
     <string name="dev_p_x_s1m_line">Joins the level changes of each harmonic into one, so they cut out and back in less often.</string>
     <string name="dev_p_x_s1m_up">The virtual bass is 2 dB lower to make up for it. Switching it briefly interrupts the sound.</string>
-    <string name="dev_p_x_s1m_note">Works only with the P1 model.</string>
+    <string name="dev_p_x_s1m_note">Works only with the Legato 1.0 (P1) model.</string>
     <string name="dev_p_strength_name">Strength</string>
     <string name="dev_p_strength_line">The level of all generated harmonics.</string>
     <string name="dev_p_strength_up">The bass gets richer, but past a point it does not get louder; only buzz and pushed-down mids grow.</string>

@@ -20,18 +20,21 @@ object PvbModels {
     /** Alpha 3: P1 is the default (2026-10-19/20 phone listening: less noise than the reference, kept the gains). */
     const val DEFAULT_KEY = P1_KEY
 
+    // Display names (2026-10-29): musical articulation marks for the character of each model, a version number for
+    // confirmed changes within it (x.1 a confirmed local fix, x.5 a broad listening-confirmed gain, 2.0 a structural
+    // step). Saved keys and engine IDs are unchanged; research codes (P1, D2, ...) stay in the descriptions.
     val models: List<Model> = listOf(
-        Model(P1_KEY, P1, "연결형 (P1)", "음이 잠깐 약해질 때도 배음을 이어가며, 강약과 음정 변화를 함께 따라갑니다. 기본 모델입니다."),
-        Model("alpha2_p1_c1", P1_C1, "연결형 P1 · 킥 뒤 보정 (실험)", "P1과 같지만, 킥 뒤에 남는 킥의 저음 꼬리 때문에 저음층이 잘못 깎이던 것을 줄였습니다(합성 신호 확인군에서 킥 뒤 잔여 지표 8.2 dB 감소). 저음이 끝날 때 저음층이 조금 더 남을 수 있습니다. 지연은 P1과 같습니다."),
-        Model("alpha2_p1plus", P1_PLUS, "연결형 P1+ (실험)", "연결형에 위상 유지와 앞뒤를 함께 보는 분리를 더했습니다. 짧은 음의 강약 윤곽이 원음에 더 가깝습니다(합성 신호 시험). 지연이 약 0.18초로 늘어납니다."),
-        Model("alpha2_p1pp", P1PP, "연결형 P1++ (실험)", "P1+에 강한 타격 뒤에 남는 잔여를 줄이는 처리를 더했습니다(합성 신호 시험). 타격 직후 80 ms 잔여는 조금 늘 수 있습니다. 지연은 P1+와 같은 약 0.18초입니다."),
-        Model("alpha2_p1pp_v03", P1PP_V03, "연결형 P1++ v0.3 (실험)", "P1++에서 새 음을 붙잡아 두는 규칙을 고쳤습니다. 주파수와 세기가 안정된 음은 붙잡지 않아 짧은 음의 시작이 P1+에 가깝게 돌아왔고, 타격 뒤 잔여 감소는 P1++와 거의 같습니다(합성 신호 시험). 타격 직후 잠깐의 잔여 증가는 그대로이고, 지연은 약 0.18초입니다."),
-        Model(REFERENCE_KEY, REFERENCE, "기준형", "상부 배음을 완화한 알파 2 기준 방식입니다 (24 dB/oct). 다른 모델과 비교할 때 기준으로 사용하세요."),
-        Model("alpha2_d2", D2, "세부 추적 (D2)", "빠른 강약·음정 변화를 짧게 다시 읽습니다. 조건이 맞지 않으면 연결형으로 동작합니다."),
-        Model("alpha2_j2", J2, "변조 추적 (J2)", "규칙적으로 울렁이는 저음을 추적합니다. 조건이 맞지 않으면 세부 추적으로 동작합니다."),
-        Model("alpha2_osc", OSC, "연속 합성", "위상을 이어서 배음을 만듭니다. 연결형·세부 추적과 질감을 비교해 보세요."),
-        Model("alpha2_osc_correct", OSC_CORRECT, "연속 합성 · 위상 보정", "연속 합성에 작은 위상 보정을 더합니다. 보정 없는 연속 합성과 비교해 보세요."),
-        Model(GENTLE12_KEY, GENTLE12, "부드러운 저음 (12 dB/oct)", "위쪽 배음을 덜 줄여(12 dB/oct) 효과가 더 잘 들립니다. 대신 버즈음이 생길 가능성이 큽니다."),
+        Model(P1_KEY, P1, "Legato 1.0 · 연결형", "레가토(끊김 없이 이어서). 음이 잠깐 약해질 때도 배음을 이어가며, 강약과 음정 변화를 함께 따라갑니다. 기본 모델입니다(연구 이름 P1)."),
+        Model("alpha2_p1_c1", P1_C1, "Legato 1.1 · 킥 뒤 보정 (실험)", "Legato 1.0과 같지만, 킥 뒤에 남는 킥의 저음 꼬리 때문에 저음층이 잘못 깎이던 것을 줄였습니다(합성 신호 확인군에서 킥 뒤 잔여 지표 8.2 dB 감소). 저음이 끝날 때 저음층이 조금 더 남을 수 있습니다. 지연은 Legato 1.0과 같습니다(연구 이름 P1 + C1)."),
+        Model("alpha2_p1plus", P1_PLUS, "Preciso 1.0 · 정밀 분리 (실험)", "프레치소(정확하게). Legato에 위상 유지와 앞뒤를 함께 보는 분리를 더했습니다. 짧은 음의 강약 윤곽이 원음에 더 가깝습니다(합성 신호 시험). 지연이 약 0.18초로 늘어납니다(연구 이름 P1+)."),
+        Model("alpha2_p1pp", P1PP, "Preciso 1.1 · 타격 잔여 감소 (실험)", "Preciso 1.0에 강한 타격 뒤에 남는 잔여를 줄이는 처리를 더했습니다(합성 신호 시험). 타격 직후 80 ms 잔여는 조금 늘 수 있습니다. 지연은 Preciso 1.0과 같은 약 0.18초입니다(연구 이름 P1++)."),
+        Model("alpha2_p1pp_v03", P1PP_V03, "Preciso 1.2 · 짧은 음 회복 (실험)", "Preciso 1.1에서 새 음을 붙잡아 두는 규칙을 고쳤습니다. 주파수와 세기가 안정된 음은 붙잡지 않아 짧은 음의 시작이 Preciso 1.0에 가깝게 돌아왔고, 타격 뒤 잔여 감소는 Preciso 1.1과 거의 같습니다(합성 신호 시험). 타격 직후 잠깐의 잔여 증가는 그대로이고, 지연은 약 0.18초입니다(연구 이름 P1++ v0.3)."),
+        Model(REFERENCE_KEY, REFERENCE, "Primo · 기준형", "프리모(원래대로). 상부 배음을 완화한 알파 2 기준 방식입니다 (24 dB/oct). 다른 모델과 비교할 때 기준으로 사용하세요."),
+        Model("alpha2_d2", D2, "Staccato · 세부 추적", "스타카토(짧고 또렷하게). 빠른 강약·음정 변화를 짧게 다시 읽습니다. 조건이 맞지 않으면 Legato로 동작합니다(연구 이름 D2)."),
+        Model("alpha2_j2", J2, "Tremolo · 변조 추적", "트레몰로(규칙적인 떨림). 규칙적으로 울렁이는 저음을 추적합니다. 조건이 맞지 않으면 Staccato로 동작합니다(연구 이름 J2)."),
+        Model("alpha2_osc", OSC, "Sostenuto 1.0 · 연속 합성", "소스테누토(음을 지속해서). 위상을 이어서 배음을 만듭니다. Legato·Staccato와 질감을 비교해 보세요."),
+        Model("alpha2_osc_correct", OSC_CORRECT, "Sostenuto 1.1 · 위상 보정", "Sostenuto 1.0에 작은 위상 보정을 더합니다. 보정 없는 Sostenuto 1.0과 비교해 보세요."),
+        Model(GENTLE12_KEY, GENTLE12, "Dolce · 부드러운 저음 (12 dB/oct)", "돌체(부드럽게). 위쪽 배음을 덜 줄여(12 dB/oct) 효과가 더 잘 들립니다. 대신 버즈음이 생길 가능성이 큽니다."),
     )
 
     val defaultModel: Model get() = models.first { it.key == DEFAULT_KEY }

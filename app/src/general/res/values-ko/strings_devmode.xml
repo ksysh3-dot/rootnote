@@ -135,7 +135,7 @@
     <string name="dev_turn_off">개발자 모드 끄기</string>
     <string name="dev_turn_off_summary">모든 값을 기본값으로 돌리고 개발자 모드를 꺼요.</string>
     <string name="dev_time_s1m_note">배음별 단일 포락선이 켜져 있으면 어택·릴리즈 대신 그 포락선(10/70 ms)이 쓰여요.</string>
-    <string name="dev_time_model_note">어택·릴리즈는 연결형(P1) 계열 모델에서만 작동해요.</string>
+    <string name="dev_time_model_note">어택·릴리즈는 Legato(P1) 계열 모델에서만 작동해요.</string>
     <string name="dev_unit_hz">%1$s Hz</string>
     <string name="dev_unit_db">%1$s dB</string>
     <string name="dev_unit_db_oct">%1$s dB/oct</string>
@@ -217,7 +217,7 @@
     <string name="dev_p_x_s1m_name">배음별 단일 포락선 (실험 기능)</string>
     <string name="dev_p_x_s1m_line">배음마다 크기 변화를 하나로 이어, 갑자기 끊겼다 이어지는 일을 줄여요.</string>
     <string name="dev_p_x_s1m_up">그만큼 커지는 가상 저음을 2 dB 낮춰요. 켜고 끌 때 소리가 잠깐 끊겨요.</string>
-    <string name="dev_p_x_s1m_note">\"연결형(P1)\" 모델에서만 작동해요.</string>
+    <string name="dev_p_x_s1m_note">\"Legato 1.0(P1)\" 모델에서만 작동해요.</string>
     <string name="dev_p_strength_name">세기</string>
     <string name="dev_p_strength_line">만든 배음 전체의 크기예요.</string>
     <string name="dev_p_strength_up">저음이 진해지지만, 일정 이상에서는 더 커지지 않고 지직거림과 중고음 눌림만 늘어요.</string>
