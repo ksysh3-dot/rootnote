@@ -238,7 +238,7 @@ def decide(pr):
                   octave=pr['octave_change'] is not None and pr['octave_change'] < 0,
                   high_band=hi is not None and hi >= -.05,
                   cents=None not in cc[:2] and cc[1] - cc[0] <= 2)
-    verdict = 'adopt' if all(checks.values()) else 'fail' if not checks['primary'] else 'hold'
+    verdict = 'adopt' if all(checks.values()) else 'fail' if pr['primary'] is not None and not checks['primary'] else 'hold'
     return dict(verdict=verdict, checks=checks)
 
 
