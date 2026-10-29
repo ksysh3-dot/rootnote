@@ -327,8 +327,10 @@ def main():
     lib = None if a.inventory_only else P.api(a.library.resolve()); rows = []; frames = {}; inventory = []
     models = a.models.split(',')
     if a.midi_transpose != 'auto': int(a.midi_transpose)
+    names = []   # item names, written only by --inventory-only (dataset track ids for the public file list)
     for j, (name, mix, bass, fs, midis, sources) in enumerate(items(a.root)):
         if a.limit and j >= a.limit: break
+        names.append(name)
         s0 = 0.
         if a.crop:
             s0, du = (float(v) for v in a.crop.split(',')); sl = slice(int(s0 * fs), int((s0 + du) * fs))
@@ -365,7 +367,7 @@ def main():
         a.report.write_text(json.dumps(dict(schema='rootnote.gt_bass.inventory.v1', issue=4, root_name=a.root.name, reference=a.reference,
                                             midi_transpose=transpose, crop=a.crop, min_seconds=a.min_seconds,
                                             source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
-                                            inventory=inventory), indent=2) + '\n', encoding='utf-8')
+                                            item_names=names, inventory=inventory), indent=2) + '\n', encoding='utf-8')
         return
     summary = {}
     for m in models:
