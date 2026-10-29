@@ -10,6 +10,7 @@ the spread of L(T/2) over t - 60, t, t + 60 ms, the T/2 peak over its +-5..15 % 
 (diagnosis only, not available to the engine) the stem's own L(T/2) - L(T) and mix minus stem at T/2.
 """
 import argparse
+import json
 from pathlib import Path
 import numpy as np
 from scipy.signal import sosfiltfilt
@@ -19,7 +20,10 @@ import test_harmonic_continuity as H
 
 N, PAD = 1024, 8192
 WIN = np.hanning(N); FR = np.fft.rfftfreq(PAD, 1 / G.CORE)
-FEATS = ('half', 'x15', 'x25', 'half_spread', 'half_peak', 'stem_half', 'mix_minus_stem_half', 'T')
+FEATS = ('half', 'x15', 'x25', 'half_spread', 'half_peak', 'stem_half', 'mix_minus_stem_half', 'T',
+         # R3-b cue screen (ideas from a Gemini Argon brainstorm, measured here): odd ladder of T/2, its side/mid
+         # stereo ratio, the past 240 ms mean of half, T/2 level 300 ms earlier, T/2 against the item's causal median
+         'ladder', 'side_half', 'half_avg', 'half_pre', 'reg')
 
 
 def spec(z, t):
@@ -44,15 +48,20 @@ def near(fl, f):
     c = 1200 * np.abs(np.log2(fl / f)); i = int(np.argmin(c)); return float(fl[i]) if c[i] <= 50 else None
 
 
-def features(zm, zs, t, T):
+def features(zm, zs, t, T, zside=None, fmed=np.nan):
     S = spec(zm, t); Ss = spec(zs, t)
     if S is None or Ss is None: return None
     lT, lh = level(S, T), level(S, T / 2)
     sp = [level(x, T / 2) for x in (spec(zm, t - .06), spec(zm, t + .06)) if x is not None] + [lh]
     ring = (np.abs(FR / (T / 2) - 1) >= .05) & (np.abs(FR / (T / 2) - 1) <= .15)
+    past = [level(x, T / 2) - level(x, T) for x in (spec(zm, t - .06 * k) for k in range(5)) if x is not None]
+    pre = spec(zm, t - .3); Sd = spec(zside, t) if zside is not None else None
     return dict(half=lh - lT, x15=level(S, 1.5 * T) - lT, x25=level(S, 2.5 * T) - lT, half_spread=float(np.ptp(sp)),
                 half_peak=lh - 20 * np.log10(np.median(S[ring])), stem_half=level(Ss, T / 2) - level(Ss, T),
-                mix_minus_stem_half=lh - level(Ss, T / 2), T=T)
+                mix_minus_stem_half=lh - level(Ss, T / 2), T=T,
+                ladder=(level(S, 2.5 * T) + level(S, 3.5 * T) - level(S, 2.25 * T) - level(S, 2.75 * T)) / 2,
+                side_half=level(Sd, T / 2) - lh if Sd is not None else np.nan, half_avg=float(np.mean(past)),
+                half_pre=level(pre, T / 2) - lh if pre is not None else np.nan, reg=float(np.log2(T / 2 / fmed)))
 
 
 def auc(a, b):
@@ -69,6 +78,7 @@ def main():
     p.add_argument('--reference', choices=('yin', 'midi'), default='yin'); p.add_argument('--midi-transpose', type=int, default=0)
     p.add_argument('--crop', default=''); p.add_argument('--per-class', type=int, default=300)
     p.add_argument('--candidate', default='p1_r3', help='model compared with p1 (e.g. p1_r3a for the R3-b question)')
+    p.add_argument('--dump', type=Path, help='write the sampled frame features and the frame totals (JSON)')
     a = p.parse_args(); lib = P.api(a.library.resolve()); rng = np.random.default_rng(0)
     cls = {'good': [], 'bad': [], 'kept': []}; per_item = []
     for j, (name, mix, bass, fs, midis, _) in enumerate(G.items(a.root)):
@@ -102,10 +112,13 @@ def main():
             elif pb is not None and pc is None and near(c, f / 2) is not None: hits['bad'].append((t, pb))
             elif pb is not None and pc is not None and f >= 82: hits['kept'].append((t, pb))
         per_item.append((name, {**{k: len(v) for k, v in hits.items()}, **{'hi_' + k: v for k, v in hi.items()}}))
+        zside = G.to_rate((mix[:, 0] - mix[:, 1]) / 2, fs, G.CORE) if mix.shape[1] == 2 else None
+        lows = np.array([min(b) if len(b) else np.nan for b in (strong(*tk['p1'], t) for t in tt)])   # P1's lowest strong track
         for k, v in hits.items():
             take = v if len(v) <= a.per_class else [v[i] for i in sorted(rng.choice(len(v), a.per_class, replace=False))]
             for t, T in take:
-                ft = features(zm, zs, t, T)
+                past = lows[:np.searchsorted(tt, t)]; fmed = np.nanmedian(past) if np.sum(np.isfinite(past)) >= 20 else np.nan
+                ft = features(zm, zs, t, T, zside, fmed)
                 if ft: cls[k].append(dict(item=name, **ft))
         print('ITEM', j, name, per_item[-1][1], flush=True)
     print('\nfeature quantiles (25 / 50 / 75), dB unless T (Hz)')
@@ -121,6 +134,7 @@ def main():
     tot = {k: sum(c[k] for _, c in per_item) for k in per_item[0][1]} if per_item else {}
     print('\nframes (all, before sampling):', tot)
     print('items with most bad frames:', sorted(((c['bad'], n) for n, c in per_item), reverse=True)[:6])
+    if a.dump: a.dump.write_text(json.dumps(dict(candidate=a.candidate, totals=tot, frames=cls)), encoding='utf-8')
 
 
 if __name__ == '__main__':
