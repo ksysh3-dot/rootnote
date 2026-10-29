@@ -1,0 +1,2767 @@
+{
+  "schema": "rootnote.gt_bass.inventory.v1",
+  "issue": 4,
+  "root_name": "test",
+  "reference": "midi",
+  "midi_transpose": "auto",
+  "crop": "30,60",
+  "min_seconds": 5,
+  "source_sha256": "c5142e8860ec4c664fe5482f6d62f9fcd4b8520f241285f3d702591cfd9918e2",
+  "item_names": [
+    "Track01876",
+    "Track01877",
+    "Track01878",
+    "Track01881",
+    "Track01883",
+    "Track01884",
+    "Track01886",
+    "Track01887",
+    "Track01888",
+    "Track01889",
+    "Track01891",
+    "Track01892",
+    "Track01893",
+    "Track01895",
+    "Track01896",
+    "Track01897",
+    "Track01898",
+    "Track01899",
+    "Track01900",
+    "Track01901",
+    "Track01902",
+    "Track01903",
+    "Track01904",
+    "Track01905",
+    "Track01906",
+    "Track01907",
+    "Track01908",
+    "Track01911",
+    "Track01913",
+    "Track01916",
+    "Track01917",
+    "Track01918",
+    "Track01920",
+    "Track01925",
+    "Track01927",
+    "Track01928",
+    "Track01929",
+    "Track01930",
+    "Track01931",
+    "Track01932",
+    "Track01934",
+    "Track01935",
+    "Track01936",
+    "Track01937",
+    "Track01940",
+    "Track01943",
+    "Track01945",
+    "Track01947",
+    "Track01948",
+    "Track01950",
+    "Track01951",
+    "Track01952",
+    "Track01954",
+    "Track01955",
+    "Track01956",
+    "Track01957",
+    "Track01959",
+    "Track01960",
+    "Track01961",
+    "Track01962",
+    "Track01963",
+    "Track01965",
+    "Track01967",
+    "Track01968",
+    "Track01972",
+    "Track01973",
+    "Track01974",
+    "Track01975",
+    "Track01976",
+    "Track01977",
+    "Track01978",
+    "Track01980",
+    "Track01981",
+    "Track01982",
+    "Track01985",
+    "Track01986",
+    "Track01987",
+    "Track01989",
+    "Track01990",
+    "Track01993",
+    "Track01994",
+    "Track01995",
+    "Track01996",
+    "Track01997",
+    "Track01998",
+    "Track02000",
+    "Track02001",
+    "Track02002",
+    "Track02003",
+    "Track02004",
+    "Track02005",
+    "Track02007",
+    "Track02008",
+    "Track02010",
+    "Track02013",
+    "Track02014",
+    "Track02017",
+    "Track02018",
+    "Track02020",
+    "Track02023",
+    "Track02024",
+    "Track02026",
+    "Track02029",
+    "Track02030",
+    "Track02031",
+    "Track02032",
+    "Track02036",
+    "Track02037",
+    "Track02038",
+    "Track02040",
+    "Track02042",
+    "Track02044",
+    "Track02046",
+    "Track02047",
+    "Track02048",
+    "Track02049",
+    "Track02050",
+    "Track02051",
+    "Track02052",
+    "Track02054",
+    "Track02056",
+    "Track02061",
+    "Track02062",
+    "Track02063",
+    "Track02064",
+    "Track02067",
+    "Track02069",
+    "Track02070",
+    "Track02074",
+    "Track02079",
+    "Track02081",
+    "Track02082",
+    "Track02083",
+    "Track02084",
+    "Track02086",
+    "Track02088",
+    "Track02090",
+    "Track02092",
+    "Track02093",
+    "Track02094",
+    "Track02095",
+    "Track02096",
+    "Track02098"
+  ],
+  "inventory": [
+    {
+      "item": 0,
+      "sha256": {
+        "mix.flac": "74044d64f7e155b3",
+        "stems/S00.flac": "5ab35ca0acd54933",
+        "MIDI/S00.mid": "4119905e6dfbbdb6"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0036093418259023355,
+          "-12": 0.9949044585987261,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5257
+    },
+    {
+      "item": 1,
+      "sha256": {
+        "mix.flac": "da77b67eaf89ad5f",
+        "stems/S01.flac": "6f8b2cf53e8a08f1",
+        "MIDI/S01.mid": "11578205b1087ef8"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.029350104821802937,
+          "-12": 0.9633123689727463,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 2866
+    },
+    {
+      "item": 2,
+      "sha256": {
+        "mix.flac": "6200c179cd0df623",
+        "stems/S02.flac": "b256ee5639e1cc20",
+        "MIDI/S02.mid": "9e7c4703f3317915"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0,
+          "-12": 0.8570157883033134,
+          "0": 0.016010673782521682,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 4726
+    },
+    {
+      "item": 3,
+      "sha256": {
+        "mix.flac": "55fe50e97db9976c",
+        "stems/S03.flac": "734bedf6817e2191",
+        "MIDI/S03.mid": "29f5563220af87de"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.012807881773399015,
+          "-12": 0.6839901477832512,
+          "0": 0.2960591133004926,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5036
+    },
+    {
+      "item": 4,
+      "sha256": {
+        "mix.flac": "aea114081eabf11d",
+        "stems/S02.flac": "b2aad24418473106",
+        "MIDI/S02.mid": "6eda2f531c85f9a6"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0,
+          "-12": 1.0,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 3645
+    },
+    {
+      "item": 5,
+      "sha256": {
+        "mix.flac": "d6103b3a8d7d3104",
+        "stems/S01.flac": "6a0e0e5a5fa92a84",
+        "MIDI/S01.mid": "e78ade58527f34b3"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0,
+          "-12": 0.9983443708609272,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 2141
+    },
+    {
+      "item": 6,
+      "sha256": {
+        "mix.flac": "93a15e5772145907",
+        "stems/S00.flac": "a1f2079e3d7d2ac7",
+        "MIDI/S00.mid": "6f18228565a49f31"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.00703037120359955,
+          "-12": 0.9850956130483689,
+          "0": 0.003655793025871766,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 3724
+    },
+    {
+      "item": 7,
+      "sha256": {
+        "mix.flac": "37f6d075936bcd16",
+        "stems/S04.flac": "fc6d729ff7bb5d3a",
+        "MIDI/S04.mid": "9fc4c9de53081ab2"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0009332711152589828,
+          "-12": 0.998133457769482,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 4854
+    },
+    {
+      "item": 8,
+      "sha256": {
+        "mix.flac": "3eb0170db6a32fb0",
+        "stems/S01.flac": "1b9191776b58464b",
+        "MIDI/S01.mid": "d77743d8ee2c3d98"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.006149791346365034,
+          "-12": 0.9661761475949923,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 4970
+    },
+    {
+      "item": 9,
+      "sha256": {
+        "mix.flac": "65fde35868d4f42d",
+        "stems/S01.flac": "273ce55ac210cfce",
+        "MIDI/S01.mid": "adce34f9182032f3"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.00022588660492432798,
+          "-12": 0.9728936074090806,
+          "0": 0.02688050598599503,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 4629
+    },
+    {
+      "item": 10,
+      "sha256": {
+        "mix.flac": "7d18fbb24a356bd6",
+        "stems/S11.flac": "d15aa08a269a1fcf",
+        "MIDI/S11.mid": "96b5bbb7e05b7e8f"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.00029239766081871346,
+          "-12": 0.9921052631578947,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 3594
+    },
+    {
+      "item": 11,
+      "sha256": {
+        "mix.flac": "5a9ce91f145710f9",
+        "stems/S02.flac": "00f2538e688a685d",
+        "MIDI/S02.mid": "1eb2f021fadd544d"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.015867978419549348,
+          "-12": 0.9825452237384957,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 4788
+    },
+    {
+      "item": 12,
+      "sha256": {
+        "mix.flac": "06f48c610dc05534",
+        "stems/S01.flac": "d7576a0bdcdacf87",
+        "MIDI/S01.mid": "0844d3329f09e8cf"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0,
+          "-12": 0.9782036828260052,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 3566
+    },
+    {
+      "item": 13,
+      "sha256": {
+        "mix.flac": "a8e36e17e6517d31",
+        "stems/S01.flac": "9adf42498dcb4ba4",
+        "MIDI/S01.mid": "16ead181ec1e1bd4"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0005688282138794084,
+          "-12": 0.9980091012514221,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 4521
+    },
+    {
+      "item": 14,
+      "sha256": {
+        "mix.flac": "fdfbd4e54dcaadff",
+        "stems/S03.flac": "108a49ed5f6d356d",
+        "MIDI/S03.mid": "21b29343a39df43d"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0064754856614246065,
+          "-12": 0.8538390379278445,
+          "0": 0.13829787234042554,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 2529
+    },
+    {
+      "item": 15,
+      "sha256": {
+        "mix.flac": "948a561269ac9e6c",
+        "stems/S01.flac": "12ae2a0e77d6df92",
+        "MIDI/S01.mid": "cf4c4e93782fe739"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0,
+          "-12": 1.0,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 227
+    },
+    {
+      "item": 16,
+      "sha256": {
+        "mix.flac": "5315d554ab290263",
+        "stems/S03.flac": "51d633944d21c70d",
+        "stems/S04.flac": "466a303b8aa27cac",
+        "MIDI/S03.mid": "7e7e2e5825fb85ff",
+        "MIDI/S04.mid": "266b2c24f75b9fef"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.014773776546629732,
+          "-12": 0.9259002770083102,
+          "0": 0.0376269621421976,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 4754
+    },
+    {
+      "item": 17,
+      "sha256": {
+        "mix.flac": "46d344c36b0f797a",
+        "stems/S00.flac": "a5e69f923d9aade7",
+        "MIDI/S00.mid": "d8c0665c181486d4"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.010972461273666093,
+          "-12": 0.9860154905335629,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5320
+    },
+    {
+      "item": 18,
+      "sha256": {
+        "mix.flac": "869b908d5e4960dc",
+        "stems/S02.flac": "3f5e1384de92df7b",
+        "MIDI/S02.mid": "2ab00f18e5a19599"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.013253810470510271,
+          "-12": 0.9642147117296223,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 1906
+    },
+    {
+      "item": 19,
+      "sha256": {
+        "mix.flac": "e8d4bff87ec7fe51",
+        "stems/S05.flac": "2e501e9a4434033a",
+        "MIDI/S05.mid": "34db7451635a7272"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.005973451327433628,
+          "-12": 0.9758849557522123,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5742
+    },
+    {
+      "item": 20,
+      "sha256": {
+        "mix.flac": "a3d10f65ef3b8ba5",
+        "stems/S01.flac": "4e2abc410779d713",
+        "MIDI/S01.mid": "d83c489fc093dde7"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.000514668039114771,
+          "-12": 0.9989706639217705,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 2222
+    },
+    {
+      "item": 21,
+      "sha256": {
+        "mix.flac": "94c0a2be81e6e34d",
+        "stems/S04.flac": "fa4ee07eef7d39cb",
+        "MIDI/S04.mid": "7434686609ba7b74"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.004972155926809865,
+          "-12": 0.8229912490055689,
+          "0": 0.17064439140811455,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5811
+    },
+    {
+      "item": 22,
+      "sha256": {
+        "mix.flac": "2447bf9233950e1f",
+        "stems/S05.flac": "f7448afadd541053",
+        "MIDI/S05.mid": "04e4a42e6b82b786"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0,
+          "-12": 0.8981912144702843,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 1979
+    },
+    {
+      "item": 23,
+      "sha256": {
+        "mix.flac": "01fd4b27ed5dde48",
+        "stems/S01.flac": "594a87267d234dd6",
+        "MIDI/S01.mid": "e3b581c1e0076913"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.007930513595166163,
+          "-12": 0.9909365558912386,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 4039
+    },
+    {
+      "item": 24,
+      "sha256": {
+        "mix.flac": "0fbf3ff7f5531dc4",
+        "stems/S03.flac": "c8238c7b867f0eab",
+        "MIDI/S03.mid": "8c58dc6d1bcaa46b"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0,
+          "-12": 0.9992473657802308,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 4272
+    },
+    {
+      "item": 25,
+      "sha256": {
+        "mix.flac": "b8a94efa432b1428",
+        "stems/S01.flac": "50c657a86a0b99ef",
+        "MIDI/S01.mid": "51366ce01b2d654c"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0008371703641691084,
+          "-12": 0.9928840519045625,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 2572
+    },
+    {
+      "item": 26,
+      "sha256": {
+        "mix.flac": "30605e6075b36d7b",
+        "stems/S01.flac": "cb38403fa148e2d8",
+        "MIDI/S01.mid": "90b8b6e55a0f0e14"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.00039643211100099106,
+          "-12": 0.998810703666997,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5542
+    },
+    {
+      "item": 27,
+      "sha256": {
+        "mix.flac": "75b0ee7022f27e94",
+        "stems/S01.flac": "31d9025d67e6a81e",
+        "MIDI/S01.mid": "659551cace54b8d7"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.001332001332001332,
+          "-12": 0.993006993006993,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 3358
+    },
+    {
+      "item": 28,
+      "sha256": {
+        "mix.flac": "61dc85e051141ed0",
+        "stems/S02.flac": "4f0c7b98e0d185f0",
+        "MIDI/S02.mid": "e6c5cf1442fdc658"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0007723498744931454,
+          "-12": 0.9988414751882603,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5492
+    },
+    {
+      "item": 29,
+      "sha256": {
+        "mix.flac": "f0d1d3b1f6793f4f",
+        "stems/S01.flac": "b156bfae34e422b3",
+        "MIDI/S01.mid": "c6c2fb9cdcebf1bc"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0007878668505022651,
+          "-12": 0.9913334646444751,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5486
+    },
+    {
+      "item": 30,
+      "sha256": {
+        "mix.flac": "f1288d879a6a82e6",
+        "stems/S00.flac": "d50634712d8e4e65",
+        "MIDI/S00.mid": "c73f1f41c8bcfc1f"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0,
+          "-12": 0.9998268098372013,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5940
+    },
+    {
+      "item": 31,
+      "sha256": {
+        "mix.flac": "69d1528a79481b01",
+        "stems/S10.flac": "ff49f4213f894abc",
+        "MIDI/S10.mid": "ab87c5cdffbfaac7"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.035830618892508145,
+          "-12": 0.9185667752442996,
+          "0": 0.04234527687296417,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 2716
+    },
+    {
+      "item": 32,
+      "sha256": {
+        "mix.flac": "0ba6fb76855612b4",
+        "stems/S05.flac": "be63b243b6a1b428",
+        "MIDI/S05.mid": "5633f65b1a48f311"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0,
+          "-12": 0.9998202085580726,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5862
+    },
+    {
+      "item": 33,
+      "sha256": {
+        "mix.flac": "6dfdf35fbcef0fee",
+        "stems/S00.flac": "e2dfcefd3b6eb44a",
+        "MIDI/S00.mid": "de6f8a3c6a0a7939"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.00044159858688452196,
+          "-12": 0.9995584014131155,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 4877
+    },
+    {
+      "item": 34,
+      "sha256": {
+        "mix.flac": "7e8df65dc63108f9",
+        "stems/S01.flac": "191a8fc3d9f1336b",
+        "MIDI/S01.mid": "edf55d583a97664e"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0,
+          "-12": 1.0,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5099
+    },
+    {
+      "item": 35,
+      "sha256": {
+        "mix.flac": "4f8566ca9a02f676",
+        "stems/S05.flac": "a3c1bc4cbe67f691",
+        "MIDI/S05.mid": "98dc79b6dd08925e"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.005679592636114375,
+          "-12": 0.9923619271445359,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5591
+    },
+    {
+      "item": 36,
+      "sha256": {
+        "mix.flac": "39f73d7abd4be87c",
+        "stems/S01.flac": "69f03c427c68ce11",
+        "MIDI/S01.mid": "8b5bc2d5469a91ce"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.004189944134078212,
+          "-12": 0.9908220271348763,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5903
+    },
+    {
+      "item": 37,
+      "sha256": {
+        "mix.flac": "e1dbdbe4c8c881bd",
+        "stems/S07.flac": "7fb55919148fdf4e",
+        "MIDI/S07.mid": "4d5f3fbbef834c78"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0007501875468867217,
+          "-12": 0.9977494373593399,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 2828
+    },
+    {
+      "item": 38,
+      "sha256": {
+        "mix.flac": "fec8e5b1ea6e22a7",
+        "stems/S01.flac": "0739dd29bd81f475",
+        "MIDI/S01.mid": "6996a453886f86aa"
+      },
+      "midi_octave": {
+        "transpose": null,
+        "agree": {
+          "-24": 0.0,
+          "-12": 0.0,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 0,
+      "excluded": "MIDI octave unclear"
+    },
+    {
+      "item": 39,
+      "sha256": {
+        "mix.flac": "411182f3f3746de6",
+        "stems/S00.flac": "510b614398f81ecd",
+        "MIDI/S00.mid": "e9a3b6bd9fa3b016"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0016420361247947454,
+          "-12": 0.9976281700419631,
+          "0": 0.0007297938332421091,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5875
+    },
+    {
+      "item": 40,
+      "sha256": {
+        "mix.flac": "9e128a6bdb4bed48",
+        "stems/S07.flac": "b3aa93670f3083b8",
+        "MIDI/S07.mid": "2a37e06e836cd62b"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.027968596663395486,
+          "-12": 0.880765456329735,
+          "0": 0.09126594700686948,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 2101
+    },
+    {
+      "item": 41,
+      "sha256": {
+        "mix.flac": "759b77da05aeba99",
+        "stems/S00.flac": "3eae8df05151ba86",
+        "MIDI/S00.mid": "aeefed355d5bc1dd"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0006548788474132286,
+          "-12": 0.9112639161755075,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 4873
+    },
+    {
+      "item": 42,
+      "sha256": {
+        "mix.flac": "f69c93ad196462f6",
+        "stems/S05.flac": "8294f1392d7c8517",
+        "MIDI/S05.mid": "bdbc51413bf34724"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0004505519261094841,
+          "-12": 0.9963955845911241,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 4961
+    },
+    {
+      "item": 43,
+      "sha256": {
+        "mix.flac": "d763c6cced0db0a2",
+        "stems/S03.flac": "5278f6c071f9ae7c",
+        "MIDI/S03.mid": "b5c6ef00e38e4d0c"
+      },
+      "midi_octave": {
+        "transpose": null,
+        "agree": {
+          "-24": 0.0,
+          "-12": 0.001343183344526528,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 0,
+      "excluded": "MIDI octave unclear"
+    },
+    {
+      "item": 44,
+      "sha256": {
+        "mix.flac": "41e4e18d6fbc6ad4",
+        "stems/S02.flac": "9aa375859651f147",
+        "MIDI/S02.mid": "40efb6df3e009bd5"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.03451966818303452,
+          "-12": 0.8918918918918919,
+          "0": 0.06422263848006422,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 4739
+    },
+    {
+      "item": 45,
+      "sha256": {
+        "mix.flac": "8608130e84fdcf7a",
+        "stems/S03.flac": "0faa07fbcfbe68d3",
+        "MIDI/S03.mid": "1575d379d6fdce68"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0003068425897514575,
+          "-12": 0.996011046333231,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 3400
+    },
+    {
+      "item": 46,
+      "sha256": {
+        "mix.flac": "734297e2e75376d2",
+        "stems/S00.flac": "575eb392678cf609",
+        "MIDI/S00.mid": "4028328060fbab35"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.003031834259727135,
+          "-12": 0.9959575543203638,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 4535
+    },
+    {
+      "item": 47,
+      "sha256": {
+        "mix.flac": "5635164c66e9d273",
+        "stems/S01.flac": "6d44a9e9e3454e3a",
+        "stems/S05.flac": "bf765906870b606a",
+        "stems/S06.flac": "7779a51c5f2245c3",
+        "MIDI/S01.mid": "6c0b5b89612c6fbd",
+        "MIDI/S05.mid": "af7aab14eb2df1c0",
+        "MIDI/S06.mid": "a9731644abf997b9"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.02607781282860147,
+          "-12": 0.9598317560462671,
+          "0": 0.008832807570977918,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5400
+    },
+    {
+      "item": 48,
+      "sha256": {
+        "mix.flac": "16bdefe4bde80644",
+        "stems/S01.flac": "7b2ca8de477ca831",
+        "MIDI/S01.mid": "a3746f7eb7a05c3c"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0,
+          "-12": 0.9693430656934306,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 2137
+    },
+    {
+      "item": 49,
+      "sha256": {
+        "mix.flac": "2eacc4d73c316acf",
+        "stems/S02.flac": "d776e96dc0a3fb33",
+        "MIDI/S02.mid": "7b852f9f27b59fff"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.004899078973153047,
+          "-12": 0.9902018420536939,
+          "0": 0.001763668430335097,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5615
+    },
+    {
+      "item": 50,
+      "sha256": {
+        "mix.flac": "805276522ea56e8d",
+        "stems/S01.flac": "1413ed147b12f7c5",
+        "MIDI/S01.mid": "1178110f4eca7738"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0,
+          "-12": 0.9717142857142858,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 4635
+    },
+    {
+      "item": 51,
+      "sha256": {
+        "mix.flac": "2d75768d36dfde39",
+        "stems/S04.flac": "dabdb26504a0fe80",
+        "MIDI/S04.mid": "41035b3f2c0e1d0e"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0065606361829025845,
+          "-12": 0.9846918489065606,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5591
+    },
+    {
+      "item": 52,
+      "sha256": {
+        "mix.flac": "876cbab217f693cc",
+        "stems/S00.flac": "c4967130b6148f14",
+        "MIDI/S00.mid": "dc49267655715309"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0,
+          "-12": 0.9887855579868708,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 3724
+    },
+    {
+      "item": 53,
+      "sha256": {
+        "mix.flac": "6f1105b73e65d4b7",
+        "stems/S00.flac": "e06408862e18c7ff",
+        "MIDI/S00.mid": "15f9d6ddfca297e0"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0,
+          "-12": 0.9889997962925239,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5014
+    },
+    {
+      "item": 54,
+      "sha256": {
+        "mix.flac": "10fe5456bca6ede2",
+        "stems/S00.flac": "4f6a4c63a4fe7c40",
+        "MIDI/S00.mid": "322c069a03f89c9e"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.00043393360815795185,
+          "-12": 0.9991321327836841,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5012
+    },
+    {
+      "item": 55,
+      "sha256": {
+        "mix.flac": "d9f21ac6cd4fb1d4",
+        "stems/S05.flac": "5e2a9f5f88cee9f1",
+        "MIDI/S05.mid": "4157eab7b23a05e2"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0007955449482895784,
+          "-12": 0.9978122513922036,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5865
+    },
+    {
+      "item": 56,
+      "sha256": {
+        "mix.flac": "06b34d7b419a9add",
+        "stems/S00.flac": "d409bf5d290ae2be",
+        "MIDI/S00.mid": "9631f398c32bce61"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0,
+          "-12": 0.9814261315115286,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5024
+    },
+    {
+      "item": 57,
+      "sha256": {
+        "mix.flac": "c475ab9229a7b7df",
+        "stems/S03.flac": "99ef327d380f93e4",
+        "MIDI/S03.mid": "8476faa589c0da92"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0,
+          "-12": 0.9885558583106268,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 1901
+    },
+    {
+      "item": 58,
+      "sha256": {
+        "mix.flac": "ae76be22efe35d71",
+        "stems/S05.flac": "15995f30eb72f241",
+        "MIDI/S05.mid": "2d7daea417dbc3a1"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.005743317870554451,
+          "-12": 0.943229511817981,
+          "0": 0.049480892423238346,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 4816
+    },
+    {
+      "item": 59,
+      "sha256": {
+        "mix.flac": "33e684c5c56bbfcd",
+        "stems/S00.flac": "8f62c0017aaeae63",
+        "stems/S01.flac": "25ddde46a7bdaab6",
+        "MIDI/S00.mid": "80f637414f27a90b",
+        "MIDI/S01.mid": "cbf665941628706e"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.061155913978494625,
+          "-12": 0.9338037634408602,
+          "0": 0.0006720430107526882,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 4357
+    },
+    {
+      "item": 60,
+      "sha256": {
+        "mix.flac": "b8959bc81335a014",
+        "stems/S01.flac": "b8f48cdd50befe7e",
+        "MIDI/S01.mid": "8f3c2189d3d5dd7e"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.017810880829015545,
+          "-12": 0.9773316062176166,
+          "0": 0.0029145077720207253,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 3968
+    },
+    {
+      "item": 61,
+      "sha256": {
+        "mix.flac": "eb6af4007bd9d2a5",
+        "stems/S06.flac": "45e459d364a6fde5",
+        "MIDI/S06.mid": "b688cb40a95fb369"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.03431872239211689,
+          "-12": 0.9592252803261978,
+          "0": 0.0013591573224600749,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 3861
+    },
+    {
+      "item": 62,
+      "sha256": {
+        "mix.flac": "48ea15db4a9f91f2",
+        "stems/S04.flac": "f9399833ca738424",
+        "MIDI/S04.mid": "ce3b57cbc77ebcb0"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0,
+          "-12": 0.9980582524271845,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 2816
+    },
+    {
+      "item": 63,
+      "sha256": {
+        "mix.flac": "a917c074803c1b58",
+        "stems/S04.flac": "0820a095dcf67cef",
+        "MIDI/S04.mid": "7e51bef46caf9db0"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0024855012427506215,
+          "-12": 0.9960646230323115,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5913
+    },
+    {
+      "item": 64,
+      "sha256": {
+        "mix.flac": "d397f57b32e52822",
+        "stems/S00.flac": "70eeb5540f4ce887",
+        "MIDI/S00.mid": "6ccce53d9c82209c"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.01090767432800935,
+          "-12": 0.9372808726139462,
+          "0": 0.021425788858589794,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 4504
+    },
+    {
+      "item": 65,
+      "sha256": {
+        "mix.flac": "9a74d9017aab51ad",
+        "stems/S05.flac": "51e35b8a511aea55",
+        "MIDI/S05.mid": "47efa31db3fa2a10"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.020237264480111653,
+          "-12": 0.9623168178646196,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 1657
+    },
+    {
+      "item": 66,
+      "sha256": {
+        "mix.flac": "bc50d05e287eaeed",
+        "stems/S01.flac": "c0339740ed479587",
+        "MIDI/S01.mid": "a70b813a7bbab744"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0005021340697966357,
+          "-12": 0.9994978659302034,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 4374
+    },
+    {
+      "item": 67,
+      "sha256": {
+        "mix.flac": "d10e1e0defc598f3",
+        "stems/S00.flac": "d78cab4fd6804212",
+        "MIDI/S00.mid": "3746c24032ff38f1"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0001996007984031936,
+          "-12": 0.9948103792415169,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5564
+    },
+    {
+      "item": 68,
+      "sha256": {
+        "mix.flac": "af3d70aecff15a4f",
+        "stems/S02.flac": "83b9ffb000c16bee",
+        "MIDI/S02.mid": "f214ed4927157353"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.004356243949661181,
+          "-12": 0.9910454985479187,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 4366
+    },
+    {
+      "item": 69,
+      "sha256": {
+        "mix.flac": "1b00710257e89f82",
+        "stems/S00.flac": "49af7025809d2ab8",
+        "MIDI/S00.mid": "3e3a3323f1c69584"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0005884660651235779,
+          "-12": 0.9978422910945469,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5369
+    },
+    {
+      "item": 70,
+      "sha256": {
+        "mix.flac": "fab0be2588109f76",
+        "stems/S01.flac": "48403cb9ac66c72e",
+        "MIDI/S01.mid": "5ece7699b9e7a191"
+      },
+      "midi_octave": {
+        "transpose": null,
+        "agree": {
+          "-24": null,
+          "-12": null,
+          "0": null,
+          "12": null
+        }
+      },
+      "reference_frames": 0,
+      "excluded": "MIDI octave unclear"
+    },
+    {
+      "item": 71,
+      "sha256": {
+        "mix.flac": "436634ab739104c9",
+        "stems/S02.flac": "fa738f31f27f6f7c",
+        "MIDI/S02.mid": "faf176d73ce65937"
+      },
+      "midi_octave": {
+        "transpose": null,
+        "agree": {
+          "-24": null,
+          "-12": null,
+          "0": null,
+          "12": null
+        }
+      },
+      "reference_frames": 0,
+      "excluded": "MIDI octave unclear"
+    },
+    {
+      "item": 72,
+      "sha256": {
+        "mix.flac": "ab0801424fa4ed94",
+        "stems/S00.flac": "88ed9fb821030f80",
+        "MIDI/S00.mid": "87692e8c794a0cff"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0018076644974692696,
+          "-12": 0.9793926247288504,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 3724
+    },
+    {
+      "item": 73,
+      "sha256": {
+        "mix.flac": "2ebbf265c230bd64",
+        "stems/S03.flac": "245ba301c0141f11",
+        "MIDI/S03.mid": "5ecc87b4248bf04e"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.009645194626248708,
+          "-12": 0.9858766792972786,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 3570
+    },
+    {
+      "item": 74,
+      "sha256": {
+        "mix.flac": "09e47e64e8064efb",
+        "stems/S01.flac": "d140e912b03fc2cc",
+        "stems/S03.flac": "78dcecb5f005083c",
+        "MIDI/S01.mid": "c865156bc16cafc0",
+        "MIDI/S03.mid": "d7d7fcd6d50f35a9"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.16683417085427135,
+          "-12": 0.5981909547738693,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5815
+    },
+    {
+      "item": 75,
+      "sha256": {
+        "mix.flac": "f71b17b32450035f",
+        "stems/S04.flac": "2369369bb6c07fb0",
+        "stems/S14.flac": "459608599ea0c612",
+        "MIDI/S04.mid": "e4335cd7f7be56f0",
+        "MIDI/S14.mid": "03ffdddc79e90bed"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0,
+          "-12": 0.991512513601741,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5083
+    },
+    {
+      "item": 76,
+      "sha256": {
+        "mix.flac": "a2aadb7433ff015a",
+        "stems/S06.flac": "308b58321f850623",
+        "MIDI/S06.mid": "159b46d797a3b70a"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0,
+          "-12": 1.0,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 3806
+    },
+    {
+      "item": 77,
+      "sha256": {
+        "mix.flac": "af17d99468c3830e",
+        "stems/S01.flac": "ac82bede48063c2f",
+        "MIDI/S01.mid": "b304454065cdeb6a"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0020665426741062203,
+          "-12": 0.9938003719776813,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5282
+    },
+    {
+      "item": 78,
+      "sha256": {
+        "mix.flac": "135074057862fafa",
+        "stems/S08.flac": "b75e435c2a546b69",
+        "stems/S13.flac": "be05e83787449e3d",
+        "MIDI/S08.mid": "3d6c34a9b759ece9",
+        "MIDI/S13.mid": "71843d14db219715"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.00029726516052318666,
+          "-12": 0.9931629013079667,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 3526
+    },
+    {
+      "item": 79,
+      "sha256": {
+        "mix.flac": "396c85f6f5bc1a0b",
+        "stems/S00.flac": "e982683fa64d26bd",
+        "MIDI/S00.mid": "b72917e5ed5d8995"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0,
+          "-12": 1.0,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 2141
+    },
+    {
+      "item": 80,
+      "sha256": {
+        "mix.flac": "716806f4e25d7b81",
+        "stems/S00.flac": "97c9df16e4ed2cfa",
+        "MIDI/S00.mid": "7e54885772950364"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.01725703905540418,
+          "-12": 0.9791099000908265,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 4664
+    },
+    {
+      "item": 81,
+      "sha256": {
+        "mix.flac": "c2f13f89dcbabe01",
+        "stems/S02.flac": "0f484eaf91ceec16",
+        "MIDI/S02.mid": "0eddb7b3ad2b4323"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0004411116012351125,
+          "-12": 0.9973533303925893,
+          "0": 0.0015438906043228936,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 4745
+    },
+    {
+      "item": 82,
+      "sha256": {
+        "mix.flac": "e8a21b81308c7e28",
+        "stems/S02.flac": "71b7c24406804e25",
+        "MIDI/S02.mid": "f3b7a074045e12e7"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0,
+          "-12": 0.585635359116022,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5564
+    },
+    {
+      "item": 83,
+      "sha256": {
+        "mix.flac": "f01e9533b13c8531",
+        "stems/S03.flac": "c2f67df55083c2d8",
+        "stems/S07.flac": "06b0420a60aea33e",
+        "MIDI/S03.mid": "6785f5afb35a2b0e",
+        "MIDI/S07.mid": "24e975857c7420d8"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.11992753623188405,
+          "-12": 0.8434782608695652,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 3695
+    },
+    {
+      "item": 84,
+      "sha256": {
+        "mix.flac": "a6b07a395e9018d1",
+        "stems/S01.flac": "c5a774a8eece94b1",
+        "MIDI/S01.mid": "5369e34293be9df0"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.037714712471994025,
+          "-12": 0.9290515309932785,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5910
+    },
+    {
+      "item": 85,
+      "sha256": {
+        "mix.flac": "32a2b1a486a87b84",
+        "stems/S05.flac": "5a2692601d09d451",
+        "MIDI/S05.mid": "333bd3aba9d0876e"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.006968641114982578,
+          "-12": 0.90801393728223,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 3352
+    },
+    {
+      "item": 86,
+      "sha256": {
+        "mix.flac": "a76df5b4734e0741",
+        "stems/S01.flac": "01ed3845a1b8b47a",
+        "stems/S04.flac": "5326898defce1a26",
+        "MIDI/S01.mid": "6f8746d2c7adb2e5",
+        "MIDI/S04.mid": "c103245f8f592542"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0032474122183884717,
+          "-12": 0.9920844327176781,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5578
+    },
+    {
+      "item": 87,
+      "sha256": {
+        "mix.flac": "66074b9c7234a373",
+        "stems/S02.flac": "d0403302ebba06c1",
+        "MIDI/S02.mid": "594d376879981823"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.20882150241212957,
+          "-12": 0.6021134849529061,
+          "0": 0.020445669653112796,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5924
+    },
+    {
+      "item": 88,
+      "sha256": {
+        "mix.flac": "f523d5d3331c863e",
+        "stems/S05.flac": "b104237f906c9c30",
+        "MIDI/S05.mid": "80788bd7360b1c94"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.003194888178913738,
+          "-12": 0.9927582534611289,
+          "0": 0.0010649627263045794,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5222
+    },
+    {
+      "item": 89,
+      "sha256": {
+        "mix.flac": "8ca669bed2efc442",
+        "stems/S02.flac": "c348b9144c323bc0",
+        "MIDI/S02.mid": "4fa67597837b3bcb"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.03451966818303452,
+          "-12": 0.8926946748728927,
+          "0": 0.06422263848006422,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 4739
+    },
+    {
+      "item": 90,
+      "sha256": {
+        "mix.flac": "655f041e93dfffe9",
+        "stems/S01.flac": "08f3c667497d5479",
+        "MIDI/S01.mid": "d55487f38dc54af7"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0010976948408342481,
+          "-12": 0.9936333699231613,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 4884
+    },
+    {
+      "item": 91,
+      "sha256": {
+        "mix.flac": "fbe61bcd77f031ed",
+        "stems/S07.flac": "0afafebea85bc7b6",
+        "MIDI/S07.mid": "ad35bfcdbc5dbbe8"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.00023894862604540023,
+          "-12": 0.9983273596176822,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 4547
+    },
+    {
+      "item": 92,
+      "sha256": {
+        "mix.flac": "74c174272a73ba23",
+        "stems/S01.flac": "be0ce026a92c3778",
+        "MIDI/S01.mid": "3035ca7e3ef1f51e"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0027624309392265192,
+          "-12": 0.9957307885484681,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 4657
+    },
+    {
+      "item": 93,
+      "sha256": {
+        "mix.flac": "4dbd7acb1fea7b70",
+        "stems/S00.flac": "8394755a387f08b4",
+        "stems/S01.flac": "1ac0dfd2810113fd",
+        "stems/S02.flac": "6d8d8f9183639431",
+        "MIDI/S00.mid": "fef349d877eaba94",
+        "MIDI/S01.mid": "19330e9791c5c987",
+        "MIDI/S02.mid": "4d6fd7589ac0a757"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.027161611588954276,
+          "-12": 0.9565414214576732,
+          "0": 0.0009053870529651426,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 3239
+    },
+    {
+      "item": 94,
+      "sha256": {
+        "mix.flac": "6ad4ccd30911c3f7",
+        "stems/S01.flac": "8a2221f24b002af1",
+        "MIDI/S01.mid": "f1c920614166cd06"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.00385630200933631,
+          "-12": 0.9906636898721332,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5836
+    },
+    {
+      "item": 95,
+      "sha256": {
+        "mix.flac": "143cc6e0497d72c8",
+        "stems/S02.flac": "196efa07dd15d352",
+        "stems/S03.flac": "06f7041354de850b",
+        "MIDI/S02.mid": "ba4cbe7b201f325c",
+        "MIDI/S03.mid": "1faf633f5e0f2fa1"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.18284473398479914,
+          "-12": 0.7656894679695982,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5508
+    },
+    {
+      "item": 96,
+      "sha256": {
+        "mix.flac": "99b8838a29b37748",
+        "stems/S04.flac": "1343bd66337da76f",
+        "stems/S05.flac": "bd03f9d2abb898af",
+        "MIDI/S04.mid": "cda1bf93b2110ec3",
+        "MIDI/S05.mid": "9d383ba6812b8127"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.06251648641519388,
+          "-12": 0.9374835135848061,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 4604
+    },
+    {
+      "item": 97,
+      "sha256": {
+        "mix.flac": "d5733fa904550e85",
+        "stems/S01.flac": "dc9821905c9d0f3e",
+        "MIDI/S01.mid": "dfa2d6c6c1a2e797"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.001827485380116959,
+          "-12": 0.9802631578947368,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 3933
+    },
+    {
+      "item": 98,
+      "sha256": {
+        "mix.flac": "d6499f0bd194ae06",
+        "stems/S00.flac": "067d1008032f6efd",
+        "MIDI/S00.mid": "001b9dea454cd4d7"
+      },
+      "midi_octave": {
+        "transpose": null,
+        "agree": {
+          "-24": 0.012749445676274944,
+          "-12": 0.5576496674057649,
+          "0": 0.4284922394678492,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 0,
+      "excluded": "MIDI octave unclear"
+    },
+    {
+      "item": 99,
+      "sha256": {
+        "mix.flac": "7200a8cee69af728",
+        "stems/S00.flac": "e128f0298c2fe57e",
+        "stems/S06.flac": "f3ffbe5f779387df",
+        "MIDI/S00.mid": "17d4c58be4505284",
+        "MIDI/S06.mid": "a0d5ae3bcc323358"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.057634902411021816,
+          "-12": 0.8185993111366245,
+          "0": 0.016303099885189437,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5347
+    },
+    {
+      "item": 100,
+      "sha256": {
+        "mix.flac": "8079020af6cdecbd",
+        "stems/S03.flac": "6dbcd64428c0ab3d",
+        "MIDI/S03.mid": "9a5cf6db9df8add8"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.00042625745950554135,
+          "-12": 0.9940323955669225,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5119
+    },
+    {
+      "item": 101,
+      "sha256": {
+        "mix.flac": "9306fa7b69addebc",
+        "stems/S02.flac": "911fe92b4684ef5a",
+        "MIDI/S02.mid": "4d79447a26b0e694"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0002747252747252747,
+          "-12": 0.9945054945054945,
+          "0": 0.0008241758241758242,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 4590
+    },
+    {
+      "item": 102,
+      "sha256": {
+        "mix.flac": "bcd36da2acdc6ec3",
+        "stems/S00.flac": "3944f6e9c5f9489a",
+        "MIDI/S00.mid": "4dd64aa5d6656c67"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0002991325157044571,
+          "-12": 0.9892312294346396,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 3724
+    },
+    {
+      "item": 103,
+      "sha256": {
+        "mix.flac": "396be7a7fb310d63",
+        "stems/S02.flac": "d4d4f6f12e4c1571",
+        "MIDI/S02.mid": "4a529e017da968ac"
+      },
+      "midi_octave": {
+        "transpose": null,
+        "agree": {
+          "-24": 0.006643849406080129,
+          "-12": 0.5830481175760016,
+          "0": 0.40930138916851216,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 0,
+      "excluded": "MIDI octave unclear"
+    },
+    {
+      "item": 104,
+      "sha256": {
+        "mix.flac": "18b7083faa963f88",
+        "stems/S03.flac": "2614c771b461dc1b",
+        "MIDI/S03.mid": "98a4fa9bb5687ba2"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0,
+          "-12": 0.7450748620961387,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 2698
+    },
+    {
+      "item": 105,
+      "sha256": {
+        "mix.flac": "cc518b454b0a48ce",
+        "stems/S10.flac": "13a0c6fc284739a5",
+        "MIDI/S10.mid": "818a3036dfa474a2"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0,
+          "-12": 0.996135265700483,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5247
+    },
+    {
+      "item": 106,
+      "sha256": {
+        "mix.flac": "00e12b5d0e92da5c",
+        "stems/S03.flac": "ab9f61a35cf6ceb6",
+        "MIDI/S03.mid": "ef6788b38af17806"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.03212669683257918,
+          "-12": 0.883710407239819,
+          "0": 0.07782805429864253,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 3147
+    },
+    {
+      "item": 107,
+      "sha256": {
+        "mix.flac": "0d5526f06740ec20",
+        "stems/S00.flac": "f5a8fd8df11540a8",
+        "MIDI/S00.mid": "b68d614f4413aa6b"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0,
+          "-12": 0.8992805755395683,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 2797
+    },
+    {
+      "item": 108,
+      "sha256": {
+        "mix.flac": "644d1ac807ea7cbe",
+        "stems/S05.flac": "da002ef47b442ddb",
+        "MIDI/S05.mid": "2e23959e50c359e7"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.004274298457535774,
+          "-12": 0.8149042928823639,
+          "0": 0.17989221334324476,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5677
+    },
+    {
+      "item": 109,
+      "sha256": {
+        "mix.flac": "f15f4e2090a7cffa",
+        "stems/S00.flac": "030c5dfedc42e39f",
+        "MIDI/S00.mid": "540ddab4d295fb2d"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.00040290088638195,
+          "-12": 0.9971796937953263,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 2765
+    },
+    {
+      "item": 110,
+      "sha256": {
+        "mix.flac": "d121dbbcabd04103",
+        "stems/S03.flac": "6e54c08e0804ae3e",
+        "MIDI/S03.mid": "06c34b892177dac0"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.04403048264182896,
+          "-12": 0.8441998306519899,
+          "0": 0.09525825571549534,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 3493
+    },
+    {
+      "item": 111,
+      "sha256": {
+        "mix.flac": "e85ceca2131c6786",
+        "stems/S09.flac": "0affb1a8ba036e79",
+        "MIDI/S09.mid": "04f62511c75af05c"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.000646830530401035,
+          "-12": 0.9959034066407935,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5356
+    },
+    {
+      "item": 112,
+      "sha256": {
+        "mix.flac": "48203838ae7bff2b",
+        "stems/S08.flac": "1d0c1ceab043f740",
+        "MIDI/S08.mid": "4aa950e8baa8a03a"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0,
+          "-12": 0.9319055464030752,
+          "0": 0.06699615595826469,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 4137
+    },
+    {
+      "item": 113,
+      "sha256": {
+        "mix.flac": "1bef8b2968cd2582",
+        "stems/S01.flac": "a09fc4791ca77583",
+        "MIDI/S01.mid": "26e0bb8c9e1fba6c"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.011175898931000973,
+          "-12": 0.9800777453838678,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 2798
+    },
+    {
+      "item": 114,
+      "sha256": {
+        "mix.flac": "51cb990ace4e78f6",
+        "stems/S02.flac": "55f63bbf75b01c2a",
+        "MIDI/S02.mid": "c093996118a9359f"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.3367161072079105,
+          "-12": 0.6562581316679678,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5014
+    },
+    {
+      "item": 115,
+      "sha256": {
+        "mix.flac": "8409108e62b2bfcf",
+        "stems/S01.flac": "e7e7dedc3c41552a",
+        "MIDI/S01.mid": "888e8fc66c6b3ddc"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0021077988557663355,
+          "-12": 0.994579945799458,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 4176
+    },
+    {
+      "item": 116,
+      "sha256": {
+        "mix.flac": "20cb85674b0232e9",
+        "stems/S04.flac": "1290032f0334a45e",
+        "MIDI/S04.mid": "11d922a84f7f8139"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0,
+          "-12": 0.9988538681948425,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5631
+    },
+    {
+      "item": 117,
+      "sha256": {
+        "mix.flac": "8159aabfc99b912a",
+        "stems/S04.flac": "1b7901d52e6a47bc",
+        "MIDI/S04.mid": "77b1065f5961e0c0"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0028462998102466793,
+          "-12": 0.9969165085388995,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5194
+    },
+    {
+      "item": 118,
+      "sha256": {
+        "mix.flac": "edd75d4fd5b935fa",
+        "stems/S11.flac": "777ed2ab41baa4e4",
+        "MIDI/S11.mid": "9ab0aa140b89b6c7"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0016728002676480427,
+          "-12": 0.9892940782870525,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 3485
+    },
+    {
+      "item": 119,
+      "sha256": {
+        "mix.flac": "d572d7f17e9100f8",
+        "stems/S04.flac": "c4613ba64882de32",
+        "MIDI/S04.mid": "6506d8f6ef1585a9"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0,
+          "-12": 1.0,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 4068
+    },
+    {
+      "item": 120,
+      "sha256": {
+        "mix.flac": "0b8013532193172b",
+        "stems/S05.flac": "a91628943091f5d1",
+        "MIDI/S05.mid": "a6907ebac22393b5"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.00622584800343495,
+          "-12": 0.9841133533705453,
+          "0": 0.00021468441391155003,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5287
+    },
+    {
+      "item": 121,
+      "sha256": {
+        "mix.flac": "39a7306e45c72b6a",
+        "stems/S06.flac": "65d36a14e3f9a35a",
+        "MIDI/S06.mid": "ed1f04e2160126ff"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.000350385423966363,
+          "-12": 0.9840574632095305,
+          "0": 0.014540995094604065,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5926
+    },
+    {
+      "item": 122,
+      "sha256": {
+        "mix.flac": "8b2932fa7e83bae7",
+        "stems/S00.flac": "d1b509483c7529eb",
+        "MIDI/S00.mid": "7cb54eb88a2a3ea2"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0,
+          "-12": 0.9789291882556131,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 3545
+    },
+    {
+      "item": 123,
+      "sha256": {
+        "mix.flac": "265f471aaf0790ad",
+        "stems/S06.flac": "9a5b0b752eb921b7",
+        "MIDI/S06.mid": "b244aeb0b7688c9e"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0,
+          "-12": 0.9905499905499906,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5455
+    },
+    {
+      "item": 124,
+      "sha256": {
+        "mix.flac": "1f502f3117425ab5",
+        "stems/S11.flac": "594f464b30c75eed",
+        "MIDI/S11.mid": "63950769a978569f"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0002644802962179318,
+          "-12": 0.9732874900819889,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 3961
+    },
+    {
+      "item": 125,
+      "sha256": {
+        "mix.flac": "ebd2d0f1d8766fc8",
+        "stems/S04.flac": "c41097a1e3b31c71",
+        "MIDI/S04.mid": "1f8544212fc18d4c"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0,
+          "-12": 0.9771661569826707,
+          "0": 0.012028542303771662,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5119
+    },
+    {
+      "item": 126,
+      "sha256": {
+        "mix.flac": "3326ea8827cc99de",
+        "stems/S11.flac": "031517ad4d60354c",
+        "MIDI/S11.mid": "f998992d5bec87bd"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.006738544474393531,
+          "-12": 0.9900269541778975,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 4792
+    },
+    {
+      "item": 127,
+      "sha256": {
+        "mix.flac": "0939af60eac3064e",
+        "stems/S02.flac": "672f1517966087e3",
+        "MIDI/S02.mid": "2fce4325acab707a"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.007657284768211921,
+          "-12": 0.9871688741721855,
+          "0": 0.0006208609271523179,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5474
+    },
+    {
+      "item": 128,
+      "sha256": {
+        "mix.flac": "99fc425da7598d9a",
+        "stems/S01.flac": "94fac6e0a88c3ec8",
+        "stems/S07.flac": "f3eb6cd1aa1c7c17",
+        "MIDI/S01.mid": "fc3ef5ce2208519d",
+        "MIDI/S07.mid": "230d0154935ba107"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.009730781706130393,
+          "-12": 0.9896204995134609,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 3941
+    },
+    {
+      "item": 129,
+      "sha256": {
+        "mix.flac": "3e0d31f5d13116b6",
+        "stems/S02.flac": "f6636c1c3e7dea3e",
+        "MIDI/S02.mid": "1a925c74b9ab864c"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.015353121801432957,
+          "-12": 0.9733879222108496,
+          "0": 0.007164790174002047,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 1730
+    },
+    {
+      "item": 130,
+      "sha256": {
+        "mix.flac": "9e2e69009c0cb7b0",
+        "stems/S02.flac": "38175b4d9f0d2169",
+        "MIDI/S02.mid": "f3334862436d0a35"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.00028901734104046245,
+          "-12": 0.980635838150289,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 3910
+    },
+    {
+      "item": 131,
+      "sha256": {
+        "mix.flac": "8166608e2a0e7bf6",
+        "stems/S08.flac": "d13dd4de23e37df1",
+        "MIDI/S08.mid": "b14d1946a0c82e62"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.000708215297450425,
+          "-12": 0.9964589235127479,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 4668
+    },
+    {
+      "item": 132,
+      "sha256": {
+        "mix.flac": "c0d442999d65cfc7",
+        "stems/S05.flac": "71fa21efc804e317",
+        "MIDI/S05.mid": "cd3a54a2789baa4c"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0008054772452678212,
+          "-12": 0.9903342730567861,
+          "0": 0.0066451872734595244,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5331
+    },
+    {
+      "item": 133,
+      "sha256": {
+        "mix.flac": "d8835eae6cced2ee",
+        "stems/S04.flac": "e51327509f78f9f8",
+        "MIDI/S04.mid": "696c8c2daa240953"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0,
+          "-12": 0.9996078431372549,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5392
+    },
+    {
+      "item": 134,
+      "sha256": {
+        "mix.flac": "a39110569b61179a",
+        "stems/S02.flac": "6dba1376a12c5b7b",
+        "MIDI/S02.mid": "7f0766a674c3ac4b"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0022240756185710315,
+          "-12": 0.9974979149291076,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 4169
+    },
+    {
+      "item": 135,
+      "sha256": {
+        "mix.flac": "a4b77ca00c215aa3",
+        "stems/S05.flac": "90bfe26f80984583",
+        "MIDI/S05.mid": "c4e5c6740391eec8"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0,
+          "-12": 0.9837364470391994,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5058
+    },
+    {
+      "item": 136,
+      "sha256": {
+        "mix.flac": "ae5074dcb6c0ad61",
+        "stems/S04.flac": "73c13cc96bfcc088",
+        "MIDI/S04.mid": "4c326989e5511b42"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0,
+          "-12": 0.9997636492554951,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 4860
+    },
+    {
+      "item": 137,
+      "sha256": {
+        "mix.flac": "767addd791458967",
+        "stems/S02.flac": "7ff06ad0681a3a24",
+        "MIDI/S02.mid": "8dbd76e9f04822e4"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.010425716768027803,
+          "-12": 0.9875470605270779,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 4802
+    },
+    {
+      "item": 138,
+      "sha256": {
+        "mix.flac": "4dd30ebe7d0d845b",
+        "stems/S03.flac": "960e1cb59872fe22",
+        "MIDI/S03.mid": "481f31b1cff60dc2"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.00036443148688046647,
+          "-12": 0.9978134110787172,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 3377
+    },
+    {
+      "item": 139,
+      "sha256": {
+        "mix.flac": "27dafc8219f06f5f",
+        "stems/S04.flac": "6f109a52f059adf1",
+        "MIDI/S04.mid": "74008a427cb29b01"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0,
+          "-12": 1.0,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 4985
+    },
+    {
+      "item": 140,
+      "sha256": {
+        "mix.flac": "10f54877acc7a360",
+        "stems/S05.flac": "6702c9e215edc853",
+        "MIDI/S05.mid": "908d476f8e2609c6"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.012605042016806723,
+          "-12": 0.9809014514896868,
+          "0": 0.003437738731856379,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 2927
+    },
+    {
+      "item": 141,
+      "sha256": {
+        "mix.flac": "5252c078b5a3e84e",
+        "stems/S00.flac": "b9a240acc5155a4f",
+        "MIDI/S00.mid": "87d89554fcdc2cbd"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.00018148820326678765,
+          "-12": 0.9869328493647913,
+          "0": 0.010707803992740472,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 5855
+    },
+    {
+      "item": 142,
+      "sha256": {
+        "mix.flac": "ffd4c7284ffdea89",
+        "stems/S03.flac": "630de288a254dd3a",
+        "MIDI/S03.mid": "800658405fe40203"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0,
+          "-12": 1.0,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 3748
+    }
+  ]
+}

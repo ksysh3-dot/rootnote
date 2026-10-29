@@ -1,0 +1,12 @@
+test tracks on disk 151 | inventory rows 143 | loader skipped (no rendered bass stem or mix) 8
+loader skipped: ['Track01880', 'Track01882', 'Track01949', 'Track02016', 'Track02019', 'Track02045', 'Track02053', 'Track02087']
+  excluded Track01931 MIDI octave unclear {'-24': 0.0, '-12': 0.0, '0': 0.0, '12': 0.0}
+  excluded Track01937 MIDI octave unclear {'-24': 0.0, '-12': 0.001343183344526528, '0': 0.0, '12': 0.0}
+  excluded Track01978 MIDI octave unclear {'-24': None, '-12': None, '0': None, '12': None}
+  excluded Track01980 MIDI octave unclear {'-24': None, '-12': None, '0': None, '12': None}
+  excluded Track02020 MIDI octave unclear {'-24': 0.012749445676274944, '-12': 0.5576496674057649, '0': 0.4284922394678492, '12': 0.0}
+  excluded Track02030 MIDI octave unclear {'-24': 0.006643849406080129, '-12': 0.5830481175760016, '0': 0.40930138916851216, '12': 0.0}
+items whose bass stems and bass MIDI counts differ (outside the rules if any): []
+excluded Counter({'MIDI octave unclear': 6})
+valid 137
+transpose Counter({'-12': 137, 'None': 6})
