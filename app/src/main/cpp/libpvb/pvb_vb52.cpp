@@ -562,6 +562,54 @@ void VbHpv::pvFrame52() {
         for(int q=0;q<np;++q) if(q!=p && std::abs(src[0][best]-pk[q].f)<std::abs(src[0][best]-pk[p].f)) nearest=false;
         if(nearest) pk[p].f=src[0][best];
     }
+    if(stageFlags_&(StageSubOctave|StageSubOctaveStrict)) {
+        // Resultant R3: a note at T whose unfiltered spectrum shows the odd partial 1.5 T (strict: and 2.5 T) as a peak
+        // within 10 dB of T (20 dB while a track already holds T / 2, or strict) is the second harmonic of T / 2, a bass whose
+        // fundamental is weak or masked (real-music ground truth: 31 % of 41-55 Hz frames tracked an octave up). The
+        // peak becomes T / 2, its phase the half phase whose third harmonic matches the 1.5 T partial; then the
+        // harmonic dependence check runs again, so 1.5 T and T itself become harmonics of the new peak.
+        const bool strict=stageFlags_&StageSubOctaveStrict;
+        auto level=[&](double f,int& at) {
+            const int lb=std::max(1,static_cast<int>(std::floor(.975*f/binHz_)));
+            const int hb=std::min(kHalfFft-1,static_cast<int>(std::ceil(1.025*f/binHz_)));
+            at=lb; for(int b=lb;b<=hb;++b) if(sm52_[b]>sm52_[at]) at=b;
+            const bool peak=at>lb && at<hb && sm52_[at]>=sm52_[at-1] && sm52_[at]>=sm52_[at+1];
+            return peak?sm52_[at]:0.;
+        };
+        // ...and T / 2 itself must be heard within 20 dB of T (26 dB while held), peak or not: an octave-up frame has its
+        // fundamental at -6 dB re T (median, real-music ground truth), a correctly tracked note nothing at T / 2 (-30 dB)
+        auto any=[&](double f) {
+            const int lb=std::max(1,static_cast<int>(std::floor(.975*f/binHz_)));
+            const int hb=std::min(kHalfFft-1,static_cast<int>(std::ceil(1.025*f/binHz_)));
+            double m=0; for(int b=lb;b<=hb;++b) m=std::max(m,sm52_[b]); return m;
+        };
+        bool changed=false;
+        for(int p=0;p<np;++p) {
+            const double T=pk[p].f; if(T<54 || T>190) continue;
+            bool held=false;
+            for(int t=0;t<nt52_;++t) if(tr52_[t].life>0 && std::abs(tr52_[t].f-T/2)<=.03*T/2) held=true;
+            const double floor=std::pow(10.,-((held || strict)?20.:10.)/20), floorHalf=std::pow(10.,-(held?26.:20.)/20);
+            int bT,b15,b25; const double lT=level(T,bT),l15=level(1.5*T,b15),l25=strict?level(2.5*T,b25):1.;
+            if(lT<=0 || l15<floor*lT || (strict && l25<floor*lT) || any(T/2)<floorHalf*lT) continue;
+            const double ph15=std::atan2(si52_[b15],sr52_[b15]);
+            double c=pk[p].ph/2; const double d0=ph15-3*c,d1=ph15-3*(c+kPi);
+            if(std::abs(std::atan2(std::sin(d1),std::cos(d1)))<std::abs(std::atan2(std::sin(d0),std::cos(d0)))) c+=kPi;
+            pk[p].f=T/2; pk[p].ph=c; pk[p].modulation=ModulationFit{}; pk[p].family=AmFamily52{}; changed=true;
+        }
+        if(changed) {
+            std::sort(pk,pk+np,[](const Peak& a,const Peak& b){return a.f<b.f;});
+            int nk2=0;
+            for(int p=0;p<np;++p) {
+                bool own=false;
+                for(int q=0;q<nk2;++q) {
+                    const double n=std::nearbyint(pk[p].f/pk[q].f);
+                    if(n>=2 && n<=5 && std::abs(pk[p].f-n*pk[q].f)<=std::max(1.5,.015*pk[p].f)) own=true;
+                }
+                if(!own) pk[nk2++]=pk[p];
+            }
+            np=nk2;
+        }
+    }
     const int64_t centre=s0+kPvN+kRtShift;
     int poly=0; for(int p=0;p<np;++p) if(pk[p].a>=.25*am) ++poly;
     // Study 3 C6: the percussive layer's polyphony mute is decided on the causal HPSS harmonic part, as without C6

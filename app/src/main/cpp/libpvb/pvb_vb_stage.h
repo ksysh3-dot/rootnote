@@ -25,7 +25,11 @@ enum StageResearchFlag : unsigned {
     // offset of pvb_vb_r1_tables.h (kPsi plus a change per fundamental) as its target instead of kPsi; a track is
     // still born with kPsi and the existing phase slew moves it there. A harmonic that follows an input partial's
     // phase, and the percussive layer, are unchanged.
-    StagePhaseCrest=1048576
+    StagePhaseCrest=1048576,
+    // Resultant R3: a note whose unfiltered spectrum has the odd partial 1.5 T (strict variant: and 2.5 T) but no
+    // fundamental is taken as the second harmonic of T / 2 (pvFrame52), so the layer follows the real bass instead of
+    // the octave above it.
+    StageSubOctave=2097152, StageSubOctaveStrict=4194304
 };
 struct StageCapture52 {
     static constexpr int kValues=26, kFields=kValues+2, kVersion=3;
