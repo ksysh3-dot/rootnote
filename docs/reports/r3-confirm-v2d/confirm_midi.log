@@ -1,0 +1,25 @@
+ROW 0 f0~73Hz p1:92% p1_r3:94% p1_r3s:94%
+ROW 1 f0~98Hz p1:84% p1_r3:84% p1_r3s:83%
+ROW 2 f0~82Hz p1:82% p1_r3:85% p1_r3s:84%
+ROW 3 f0~73Hz p1:88% p1_r3:91% p1_r3s:91%
+ROW 4 f0~98Hz p1:74% p1_r3:61% p1_r3s:64%
+ROW 5 f0~98Hz p1:86% p1_r3:80% p1_r3s:83%
+ROW 6 f0~87Hz p1:79% p1_r3:84% p1_r3s:86%
+ROW 7 f0~92Hz p1:90% p1_r3:85% p1_r3s:85%
+ROW 8 f0~92Hz p1:75% p1_r3:82% p1_r3s:80%
+ROW 9 f0~82Hz p1:80% p1_r3:78% p1_r3s:84%
+ROW 10 f0~73Hz p1:88% p1_r3:88% p1_r3s:88%
+ROW 11 f0~110Hz p1:81% p1_r3:79% p1_r3s:79%
+ROW 12 f0~82Hz p1:82% p1_r3:83% p1_r3s:84%
+ROW 13 f0~82Hz p1:92% p1_r3:96% p1_r3s:95%
+ROW 14 f0~82Hz p1:94% p1_r3:96% p1_r3s:95%
+ROW 15 f0~78Hz p1:79% p1_r3:80% p1_r3s:80%
+ROW 16 f0~104Hz p1:86% p1_r3:65% p1_r3s:69%
+ROW 17 f0~104Hz p1:63% p1_r3:69% p1_r3s:65%
+ROW 18 f0~82Hz p1:92% p1_r3:97% p1_r3s:96%
+SUMMARY p1 {"items": 19, "tracked": 0.8384512683578104, "octave": 0.08279310983515466, "cents": 7.560518067201626, "bass_share": 0.42467515241190207, "idle_layer_db": -8.792809458375732, "bass_energy_change_db": 0.0, "other_energy_change_db": 0.0}
+SUMMARY p1_r3 {"items": 19, "tracked": 0.8363965829666062, "octave": 0.09835336003560302, "cents": 7.555603333403576, "bass_share": 0.40965866141042057, "idle_layer_db": -7.5835832775820045, "bass_energy_change_db": -0.25424883578719004, "other_energy_change_db": -0.010054533178637302}
+SUMMARY p1_r3s {"items": 19, "tracked": 0.8403077500469132, "octave": 0.09940460781775821, "cents": 7.597361778051455, "bass_share": 0.4132921158754832, "idle_layer_db": -8.277149119220253, "bass_energy_change_db": -0.16165473123619542, "other_energy_change_db": -0.007514949860911367}
+PAIRED p1_r3 {"items": 19, "items_used": 19, "excluded": [], "primary": 0.012030516431924876, "octave_change": -0.009389671361502344, "cents_common": [7.241656143772829, 6.444772544619038, 65626], "cents_all": [9.22132050867341, 8.537664383347186], "band_pooled": {"<41": {"frames": 0, "base": null, "cand": null, "change": null}, "41-55": {"frames": 0, "base": null, "cand": null, "change": null}, "55-82": {"frames": 30643, "base": 0.8164344222171458, "cand": 0.9144013314623242, "change": 0.09796690924517834}, ">=82": {"frames": 53385, "base": 0.8677343823171303, "cand": 0.7927320408354407, "change": -0.07500234148168962}}}
+PAIRED p1_r3s {"items": 19, "items_used": 19, "excluded": [], "primary": 0.014037433155080214, "octave_change": -0.007575757575757569, "cents_common": [7.320375256493045, 6.725003207912158, 67616], "cents_all": [9.22132050867341, 8.706016280801203], "band_pooled": {"<41": {"frames": 0, "base": null, "cand": null, "change": null}, "41-55": {"frames": 0, "base": null, "cand": null, "change": null}, "55-82": {"frames": 30643, "base": 0.8164344222171458, "cand": 0.8863688281173514, "change": 0.0699344059002056}, ">=82": {"frames": 53385, "base": 0.8677343823171303, "cand": 0.8199306921419874, "change": -0.047803690175142834}}}
+DECISION p1_r3 {"verdict": "fail", "checks": {"primary": false, "octave": true, "high_band": false, "cents": true}, "unmeasured": [], "reason": null}
