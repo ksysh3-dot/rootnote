@@ -23,7 +23,21 @@ WIN = np.hanning(N); FR = np.fft.rfftfreq(PAD, 1 / G.CORE)
 FEATS = ('half', 'x15', 'x25', 'half_spread', 'half_peak', 'stem_half', 'mix_minus_stem_half', 'T',
          # R3-b cue screen (ideas from a Gemini Argon brainstorm, measured here): odd ladder of T/2, its side/mid
          # stereo ratio, the past 240 ms mean of half, T/2 level 300 ms earlier, T/2 against the item's causal median
-         'ladder', 'side_half', 'half_avg', 'half_pre', 'reg')
+         'ladder', 'side_half', 'half_avg', 'half_pre', 'reg',
+         # timbre continuity: the item's bass partial profile L(kf) - L(f), k = 2..5, from frames whose f is unambiguous
+         # (mix L(T/2) - L(T) < -20 dB at P1's lowest strong track T); tim = profile distance if f = T minus if f = T/2
+         # (> 0: halving fits the item's bass timbre better), template causal (tim) or from the whole item (tim_all)
+         'tim', 'tim_all')
+K_PROF = range(2, 6)
+
+
+def profile(S, f):
+    return np.array([level(S, k * f) - level(S, f) for k in K_PROF])
+
+
+def timbre_gap(S, T, tmpl):
+    if tmpl is None or not np.all(np.isfinite(tmpl)): return np.nan
+    return float(np.mean(np.abs(profile(S, T) - tmpl)) - np.mean(np.abs(profile(S, T / 2) - tmpl)))
 
 
 def spec(z, t):
@@ -48,7 +62,7 @@ def near(fl, f):
     c = 1200 * np.abs(np.log2(fl / f)); i = int(np.argmin(c)); return float(fl[i]) if c[i] <= 50 else None
 
 
-def features(zm, zs, t, T, zside=None, fmed=np.nan):
+def features(zm, zs, t, T, zside=None, fmed=np.nan, tmpl=None, tmpl_all=None):
     S = spec(zm, t); Ss = spec(zs, t)
     if S is None or Ss is None: return None
     lT, lh = level(S, T), level(S, T / 2)
@@ -61,7 +75,8 @@ def features(zm, zs, t, T, zside=None, fmed=np.nan):
                 mix_minus_stem_half=lh - level(Ss, T / 2), T=T,
                 ladder=(level(S, 2.5 * T) + level(S, 3.5 * T) - level(S, 2.25 * T) - level(S, 2.75 * T)) / 2,
                 side_half=level(Sd, T / 2) - lh if Sd is not None else np.nan, half_avg=float(np.mean(past)),
-                half_pre=level(pre, T / 2) - lh if pre is not None else np.nan, reg=float(np.log2(T / 2 / fmed)))
+                half_pre=level(pre, T / 2) - lh if pre is not None else np.nan, reg=float(np.log2(T / 2 / fmed)),
+                tim=timbre_gap(S, T, tmpl), tim_all=timbre_gap(S, T, tmpl_all))
 
 
 def auc(a, b):
@@ -114,11 +129,20 @@ def main():
         per_item.append((name, {**{k: len(v) for k, v in hits.items()}, **{'hi_' + k: v for k, v in hi.items()}}))
         zside = G.to_rate((mix[:, 0] - mix[:, 1]) / 2, fs, G.CORE) if mix.shape[1] == 2 else None
         lows = np.array([min(b) if len(b) else np.nan for b in (strong(*tk['p1'], t) for t in tt)])   # P1's lowest strong track
+        ct, cq = [], []   # unambiguous frames (every 50 ms) and their partial profiles, for the timbre template
+        for i in range(0, len(tt), 5):
+            t, T = tt[i], lows[i]
+            if not (np.isfinite(T) and 1.0 <= t <= t_end): continue
+            S = spec(zm, t)
+            if S is not None and level(S, T / 2) - level(S, T) < -20: ct.append(t); cq.append(profile(S, T))
+        ct = np.array(ct); cq = np.array(cq).reshape(-1, len(K_PROF))
+        tmpl_all = np.nanmedian(cq, axis=0) if len(cq) >= 10 else None
         for k, v in hits.items():
             take = v if len(v) <= a.per_class else [v[i] for i in sorted(rng.choice(len(v), a.per_class, replace=False))]
             for t, T in take:
                 past = lows[:np.searchsorted(tt, t)]; fmed = np.nanmedian(past) if np.sum(np.isfinite(past)) >= 20 else np.nan
-                ft = features(zm, zs, t, T, zside, fmed)
+                n = np.searchsorted(ct, t); tmpl = np.nanmedian(cq[:n], axis=0) if n >= 10 else None
+                ft = features(zm, zs, t, T, zside, fmed, tmpl, tmpl_all)
                 if ft: cls[k].append(dict(item=name, **ft))
         print('ITEM', j, name, per_item[-1][1], flush=True)
     print('\nfeature quantiles (25 / 50 / 75), dB unless T (Hz)')
