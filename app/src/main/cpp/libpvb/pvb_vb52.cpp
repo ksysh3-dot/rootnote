@@ -3,6 +3,7 @@
 #include "pvb_dsp.h"
 #include "pvb_vb_tables.h"
 #include "pvb_vb52_tables.h"
+#include "pvb_vb_r1_tables.h"
 #include "pvb_vb_detail.h"
 #include "pvb_track_assignment.h"
 #include <algorithm>
@@ -30,6 +31,14 @@ void holdRange52(double f, int& lo, int& hi) {
     const double c = clampv(f, -1000.0, 1000.0);
     lo = std::max(0, static_cast<int>(std::floor(c - 29)));
     hi = std::min(189, static_cast<int>(std::ceil(c - 11)));
+}
+// Offset of a harmonic without a partial of its own in the input: kPsi, or with Resultant R1 kPsi plus the
+// crest-optimal change for the fundamental (linear in f between table points, clamped at the table ends).
+double psi52(int k, double f, bool crest) {
+    if (!crest) return vbt::kPsi[k-2];
+    const double x = clampv((f - vbr1::kF0) / vbr1::kStep, 0.0, static_cast<double>(vbr1::kN - 1));
+    const int j = std::min(static_cast<int>(x), vbr1::kN - 2); const double r = x - j;
+    return vbt::kPsi[k-2] + vbr1::kDelta[j][k-2] * (1 - r) + vbr1::kDelta[j+1][k-2] * r;
 }
 }
 
@@ -166,7 +175,7 @@ void VbHpv::renderTrack52(Track52& tr,const double src[2][256],const int ns[2],
         }
         const double ak=ampHeld>amp && found ? ampHeld : amp;
         if(ampHeld>0) { allW+=w[k-2]*mask; if(found) heldW+=w[k-2]*mask; }
-        double target=!observed || !on ? tr.off[k-2] : found ? std::atan2(si52_[ii],sr52_[ii])+interp52(vb52t::kPhase,3920,(fk-20)*4)+phaseDelta52(fk)+2*kPi*fk*tc-k*tr.phi : vbt::kPsi[k-2];
+        double target=!observed || !on ? tr.off[k-2] : found ? std::atan2(si52_[ii],sr52_[ii])+interp52(vb52t::kPhase,3920,(fk-20)*4)+phaseDelta52(fk)+2*kPi*fk*tc-k*tr.phi : psi52(k,tr.f,stageFlags_&StagePhaseCrest);
         // Losing a reference gives no new phase observation. Returning to an
         // arbitrary table offset would itself modulate an otherwise steady
         // oscillator. Keep its offset until a valid reference or a new track.
@@ -683,6 +692,8 @@ void VbHpv::pvFrame52() {
                 tr.a=std::max(q.a,prev.a*std::exp(-1./std::max(1,dev_.releaseHops)));
             if(stageFlags_&StageGlobalTrack) tr.prediction=prev.prediction;
         } else {
+            // Resultant R1 keeps kPsi at birth: the onset (where the percussive layer, which keeps kPsi, overlaps the
+            // tracks) has the unmodified shape, and the slew below moves the offsets to the crest-optimal ones
             std::copy(vbt::kPsi,vbt::kPsi+7,tr.off); tr.fade=q.res<=-15 ? 1 : 0;
             tr.impactRecoveryPending=guard && p1ppImpactMode_>=4 && q.res>-15;
             if(resumed) tr.fade=1;

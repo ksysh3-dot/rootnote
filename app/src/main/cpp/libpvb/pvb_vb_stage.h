@@ -20,7 +20,12 @@ enum StageResearchFlag : unsigned {
     // and so does the percussive layer's polyphony mute (counted on the causal harmonic part).
     StageRawFrequency=16384, StageLowGridTolerance=32768, StageLowGridOutsideImpact=65536, StageCausalProminence=131072,
     StageAnalysisProminence=262144,
-    StageNoPolyMute=524288   // diagnostic only: the percussive layer's polyphony mute is left off
+    StageNoPolyMute=524288,  // diagnostic only: the percussive layer's polyphony mute is left off
+    // Resultant R1 (#4 follow-up): a harmonic without a partial of its own in the input takes the crest-optimal
+    // offset of pvb_vb_r1_tables.h (kPsi plus a change per fundamental) as its target instead of kPsi; a track is
+    // still born with kPsi and the existing phase slew moves it there. A harmonic that follows an input partial's
+    // phase, and the percussive layer, are unchanged.
+    StagePhaseCrest=1048576
 };
 struct StageCapture52 {
     static constexpr int kValues=26, kFields=kValues+2, kVersion=3;
