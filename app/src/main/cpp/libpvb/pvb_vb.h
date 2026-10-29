@@ -238,7 +238,7 @@ public:
     // grains are kept; when the track is released within three hops they are added back where they belonged.
     void setP1PPV04Research(unsigned flags) { p1ppV04Host_=flags&511; if(!p1PlusFixed_) p1ppV04_=p1ppV04Host_; reset(); }
     void setStageResearch(unsigned flags,StageCapture52::Sink sink=nullptr,void* user=nullptr) {
-        stageHostFlags_=flags&8388607;stageFlags_=stageHostFlags_;stageSink_=sink;stageUser_=user;reset();
+        stageHostFlags_=flags&16777215;stageFlags_=stageHostFlags_;stageSink_=sink;stageUser_=user;reset();
     }
     // App listening profiles, applied only by the audio owner while switching.
     // All use the same gentle24 placement. Legacy research setters remain separate.

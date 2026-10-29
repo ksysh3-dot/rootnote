@@ -29,7 +29,10 @@ enum StageResearchFlag : unsigned {
     // Resultant R3: a note whose unfiltered spectrum has the odd partial 1.5 T (strict variant: and 2.5 T) but no
     // fundamental is taken as the second harmonic of T / 2 (pvFrame52), so the layer follows the real bass instead of
     // the octave above it.
-    StageSubOctave=2097152, StageSubOctaveStrict=4194304
+    StageSubOctave=2097152, StageSubOctaveStrict=4194304,
+    // Resultant R3-a: R3 without the relaxation while a track already holds T / 2 (always 10 / 20 dB). On the BabySlakh
+    // confirmation the wrong halvings of a true fundamental took their T / 2 level from other tonal instruments.
+    StageSubOctaveNoHold=8388608
 };
 struct StageCapture52 {
     static constexpr int kValues=26, kFields=kValues+2, kVersion=3;

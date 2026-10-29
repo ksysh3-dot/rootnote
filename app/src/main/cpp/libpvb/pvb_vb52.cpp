@@ -562,7 +562,7 @@ void VbHpv::pvFrame52() {
         for(int q=0;q<np;++q) if(q!=p && std::abs(src[0][best]-pk[q].f)<std::abs(src[0][best]-pk[p].f)) nearest=false;
         if(nearest) pk[p].f=src[0][best];
     }
-    if(stageFlags_&(StageSubOctave|StageSubOctaveStrict)) {
+    if(stageFlags_&(StageSubOctave|StageSubOctaveStrict|StageSubOctaveNoHold)) {
         // Resultant R3: a note at T whose unfiltered spectrum shows the odd partial 1.5 T (strict: and 2.5 T) as a peak
         // within 10 dB of T (20 dB while a track already holds T / 2, or strict) is the second harmonic of T / 2, a bass whose
         // fundamental is weak or masked (real-music ground truth: 31 % of 41-55 Hz frames tracked an octave up). The
@@ -586,8 +586,9 @@ void VbHpv::pvFrame52() {
         bool changed=false;
         for(int p=0;p<np;++p) {
             const double T=pk[p].f; if(T<54 || T>190) continue;
-            bool held=false;
-            for(int t=0;t<nt52_;++t) if(tr52_[t].life>0 && std::abs(tr52_[t].f-T/2)<=.03*T/2) held=true;
+            bool held=false;   // R3-a: no relaxation for a held T / 2
+            if(!(stageFlags_&StageSubOctaveNoHold))
+                for(int t=0;t<nt52_;++t) if(tr52_[t].life>0 && std::abs(tr52_[t].f-T/2)<=.03*T/2) held=true;
             const double floor=std::pow(10.,-((held || strict)?20.:10.)/20), floorHalf=std::pow(10.,-(held?26.:20.)/20);
             int bT,b15,b25; const double lT=level(T,bT),l15=level(1.5*T,b15),l25=strict?level(2.5*T,b25):1.;
             if(lT<=0 || l15<floor*lT || (strict && l25<floor*lT) || any(T/2)<floorHalf*lT) continue;

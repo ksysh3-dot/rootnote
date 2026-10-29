@@ -108,7 +108,7 @@ int pvb_stage_fields() {return pvb::StageCapture52::kFields;}
 // copying happen outside the audio call. Overflow is explicit, never truncated.
 void* pvb_stage_attach(void* e,unsigned flags,int capacity) {
     const unsigned predictors=pvb::StageTrackLinear|pvb::StageTrackBurg;
-    if(!e || flags>8388607 || (flags&predictors)==predictors ||
+    if(!e || flags>16777215 || (flags&predictors)==predictors ||
        ((flags&pvb::StageOscillatorCorrect) && !(flags&pvb::StageOscillator)) ||
        ((flags&predictors) && !(flags&pvb::StageGlobalTrack)) || capacity<=0 || capacity>2000000) return nullptr;
     auto* s=new pvb::HostStageCapture(static_cast<pvb::Engine*>(e),capacity);

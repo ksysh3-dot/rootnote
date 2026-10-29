@@ -48,8 +48,16 @@ from p1plus_paths import default_library
 FS, CORE = 48000, 3000
 LP = butter(4, 400, fs=CORE, output='sos')
 MODELS = {'p1': (0, 0), 'p1_c1': (0, 8192), 'p1_s3': (0, 32768 | 131072), 'p1plus': (6, 0),
-          'p1_r3': (0, 2097152), 'p1_r3s': (0, 4194304), 'p1_c1_r3': (0, 8192 | 2097152)}
+          'p1_r3': (0, 2097152), 'p1_r3s': (0, 4194304), 'p1_c1_r3': (0, 8192 | 2097152), 'p1_r3a': (0, 8388608)}
 BANDS = ('<41', '41-55', '55-82', '>=82')
+
+
+def model_spec(name):
+    """A named model, or 'x<profile flags>_<stage>[+<stage>...]' for screening research switches (e.g. x0_512+2097152)."""
+    if name in MODELS: return MODELS[name]
+    m = re.fullmatch(r'x(\d+)_(\d+(?:\+\d+)*)', name)
+    if not m: raise SystemExit(f'unknown model {name}')
+    return int(m[1]), sum(int(s) for s in m[2].split('+'))
 W_YIN, HOP_YIN, FMIN, FMAX = 256, 30, 28, 300
 
 
@@ -277,7 +285,7 @@ def main():
         if np.sum(np.isfinite(f0)) < 20: inventory[-1]['excluded'] = 'under 20 reference frames'; continue
         mix48 = to_rate(mix, fs, FS).astype(np.float32)
         for m in models:
-            fl, st = MODELS[m]; res, fr = evaluate(lib, fl, st, mix48, bz, tt, f0)
+            fl, st = model_spec(m); res, fr = evaluate(lib, fl, st, mix48, bz, tt, f0)
             rows.append(dict(item=j, model=m, bass_f0_median=float(np.nanmedian(f0)), **res)); frames[(j, m)] = fr
         q = [x for x in rows if x['item'] == j]
         print('ROW', j, f"f0~{np.nanmedian(f0):.0f}Hz", ' '.join(

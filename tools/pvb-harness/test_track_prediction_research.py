@@ -210,12 +210,12 @@ def stream(lib):
             checks.append(dict(fs=fs,mode=name,am_family_depth_rate_phase='pass'))
     e=T.Engine(lib,48000)
     #2048 is now the valid P2-O flag, 8192 the study 2 (#4) C1 flag, 16384..524288 the study 3 flags, 1048576
-    # Resultant R1 and 2097152 / 4194304 Resultant R3; retain invalid combinations and test the new upper boundary
-    # (8388608) plus correction-without-oscillator rejection.
-    for flags in (512,1024,1792,4096,8192|4096,8388608):assert not lib.pvb_stage_attach(e.h,flags,100)
+    # Resultant R1, 2097152 / 4194304 Resultant R3 and 8388608 R3-a; retain invalid combinations and test the new upper
+    # boundary (16777216) plus correction-without-oscillator rejection.
+    for flags in (512,1024,1792,4096,8192|4096,16777216):assert not lib.pvb_stage_attach(e.h,flags,100)
     lib.pvb_stage_attach.argtypes=[C.c_void_p,C.c_uint,C.c_int];lib.pvb_stage_attach.restype=C.c_void_p
     lib.pvb_stage_detach.argtypes=[C.c_void_p]
-    for flags in (8192,16384,32768,65536,131072,262144,524288,1048576,2097152,4194304):
+    for flags in (8192,16384,32768,65536,131072,262144,524288,1048576,2097152,4194304,8388608):
         handle=lib.pvb_stage_attach(e.h,flags,100);assert handle;lib.pvb_stage_detach(handle)
     e.close()
     # Reset the actual engine after predictor history is populated. The output
