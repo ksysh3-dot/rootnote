@@ -20,7 +20,8 @@ HERE = Path(__file__).resolve().parent
 SOURCES = ('research_s1_interaction.py', 'research_s1_counterfactual.py', 'research_p1pp_impacts.py',
            'research_p1plus.py', 'test_engine.py', 'vb_quality/stage_capture.py', 'research_p1pp_recovery.py',
            'research_p1pp_track_controls.py', '../../docs/STUDY1_PREREG.md', 'research_s2_candidate.py',
-           '../../docs/STUDY2_PREREG.md', '../../app/src/main/cpp/libpvb/pvb_vb52.cpp')
+           '../../docs/STUDY2_PREREG.md', '../../app/src/main/cpp/libpvb/pvb_vb52.cpp', 'research_s3_candidate.py',
+           'check_p1hq_primary_envelopes.py', '../../docs/STUDY3_PREREG.md', '../../app/src/main/cpp/libpvb/pvb_vb_stage.h')
 
 
 def source_hashes():

@@ -238,7 +238,7 @@ public:
     // grains are kept; when the track is released within three hops they are added back where they belonged.
     void setP1PPV04Research(unsigned flags) { p1ppV04Host_=flags&511; if(!p1PlusFixed_) p1ppV04_=p1ppV04Host_; reset(); }
     void setStageResearch(unsigned flags,StageCapture52::Sink sink=nullptr,void* user=nullptr) {
-        stageHostFlags_=flags&16383;stageFlags_=stageHostFlags_;stageSink_=sink;stageUser_=user;reset();
+        stageHostFlags_=flags&1048575;stageFlags_=stageHostFlags_;stageSink_=sink;stageUser_=user;reset();
     }
     // App listening profiles, applied only by the audio owner while switching.
     // All use the same gentle24 placement. Legacy research setters remain separate.
@@ -336,6 +336,7 @@ private:
     double core(double d);       // one 3 kHz sample in, one out (the reference's output kRtShift samples earlier)
     double core52(double d);
     void pvFrame52();
+    int polyCausal52(int64_t s0);
     void spectrum52(const double* ring, int64_t start, double* re, double* im);
     bool masked_ = false;
     bool gentle_ = false;
@@ -391,6 +392,7 @@ private:
     double sHist_[kHpMedT+5][kHpBins] = {};
     int sPos_ = 0;
     double olaH_[kRing] = {}, olaP_[kRing] = {};
+    double olaHA_[kRing] = {};  // study 3 C6: harmonic part for the analysis only (C5 mask); output paths keep olaH_/olaP_
     Hilbert hilH_, hilP_;
     // percussive generator state
     double prevUr_ = 0, prevUi_ = 0;
@@ -458,6 +460,7 @@ private:
     double grave52_[8]={}; int64_t graveHop52_[8]={}; int graveN52_=0; int64_t hop52_=0;
     // research impact modes 5/6: impact context and the tones playing when it began
     int impactCtx52_=0, preImpactN52_=0;
+    int lowGridHold52_=0;  // study 3 C4: hops left in the impact context that suspends the wider low grid
     double histDbResearch_=-6, percSlow52_=0;
     int impactHold52_=24, steadyHops52_=3;
     double steadyA52_=.97, releaseStrength52_=.4;
@@ -506,6 +509,7 @@ private:
     Burst bursts_[2];
     double burstSample52(int64_t j);
     double xr52_[kHalfFft+1]={}, xi52_[kHalfFft+1]={};
+    double polyXr52_[kHalfFft+1]={}, polyXi52_[kHalfFft+1]={}, bhCausal52_[kRing]={};  // study 3 C6 polyphony
     double sr52_[kHalfFft+1]={}, si52_[kHalfFft+1]={}, sm52_[kHalfFft+1]={};
 
     // Developer mode. Each flag is set only while its value differs from the model, so the default path is untouched.

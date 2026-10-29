@@ -119,7 +119,13 @@ void VbHpv::renderTrack52(Track52& tr,const double src[2][256],const int ns[2],
                 continue;
             }
         }
-        const double fk=k*tr.f,tolGrid=std::max(4.,.1*24.7*(4.37*fk/1000+1));
+        const double fk=k*tr.f;
+        double tolGrid=std::max(4.,.1*24.7*(4.37*fk/1000+1));
+        // Study 3 C3: below 65 Hz a fundamental within 10 % supports its harmonics (k x tolerance, not tolerance);
+        // C4: the same outside an impact context only
+        const bool lowGrid=(stageFlags_&StageLowGridTolerance) ||
+            ((stageFlags_&StageLowGridOutsideImpact) && lowGridHold52_==0);
+        if(lowGrid && tr.f<65) tolGrid=std::max(tolGrid,k*.1*tr.f);
         bool on=false; double distance=1e30;
         for(int j=0;j<ns[1];++j) if(std::abs(fk-src[1][j])<=tolGrid) on=true;
         for(int j=0;j<ns[0];++j) for(int h=2;h<=8;++h) if(std::abs(fk-h*src[0][j])<=tolGrid) on=true;
@@ -295,11 +301,48 @@ void VbHpv::grave52(const Track52& tr) {
     grave52_[slot]=tr.confF; graveHop52_[slot]=tr.confHop;
 }
 
+// Study 3 C6: the polyphony count of pvFrame52 (six strongest local maxima above the relative floor, harmonics of a
+// lower peak removed, peaks at a quarter of the strongest or more) on the causal HPSS harmonic part. The dominant
+// peak's modulation fit is not repeated here; it only refines that peak's own frequency and amplitude.
+int VbHpv::polyCausal52(int64_t s0) {
+    spectrum52(bhCausal52_,s0,polyXr52_,polyXi52_);
+    const int nb=hiBin_-loBin_; double mag[256],mx=0;
+    for(int b=0;b<nb;++b) { mag[b]=std::hypot(polyXr52_[loBin_+b],polyXi52_[loBin_+b]); mx=std::max(mx,mag[b]); }
+    if(mx*2/pvWsum_<pvAbs_) return 0;
+    int lm[256],nl=0;
+    for(int b=1;b<nb-1;++b) if(mag[b]>=mag[b-1] && mag[b]>mag[b+1]) lm[nl++]=b;
+    std::sort(lm,lm+nl,[&](int a,int b) {return mag[a]==mag[b] ? a>b : mag[a]>mag[b];});
+    double f[6],a[6]; int np=0;
+    for(int j=0;j<nl && np<6;++j) {
+        const int b=lm[j]; if(mag[b]<mx*pvRel_) break;
+        const double l=std::log(mag[b-1]+1e-30),v=std::log(mag[b]+1e-30),c=std::log(mag[b+1]+1e-30);
+        const double off=offset52(l,v,c);
+        f[np]=(loBin_+b)*binHz_+off*binHz_; a[np++]=std::exp(v-.25*(l-c)*off)*2/pvWsum_;
+    }
+    int order[6]; for(int p=0;p<np;++p) order[p]=p;
+    std::sort(order,order+np,[&](int x,int y){return f[x]<f[y];});
+    double kf[6],ka[6]; int nk=0;
+    for(int i=0;i<np;++i) {
+        const int p=order[i]; bool own=false;
+        for(int q=0;q<nk;++q) {
+            const double n=std::nearbyint(f[p]/kf[q]);
+            if(n>=2 && n<=5 && std::abs(f[p]-n*kf[q])<=std::max(1.5,.015*f[p])) own=true;
+        }
+        if(!own) {kf[nk]=f[p]; ka[nk++]=a[p];}
+    }
+    double am=0; for(int p=0;p<nk;++p) am=std::max(am,ka[p]);
+    int poly=0; for(int p=0;p<nk;++p) if(ka[p]>=.25*am) ++poly;
+    return poly;
+}
+
 void VbHpv::pvFrame52() {
     std::fill(std::begin(oscillatorNominal52_),std::end(oscillatorNominal52_),0.);
     detailApplied52_=familyApplied52_=false;
     beginHarmonic52();
     if(devMeter_) devBeginFrame();
+    // Study 3 C4: the v0.3 impact context (percussive envelope above a quarter of the harmonic one, held 24 hops =
+    // 128 ms) suspends the wider low grid, so an impact's own low tail is judged as before
+    if(stageFlags_&StageLowGridOutsideImpact) lowGridHold52_=percEnv52_>.25*harmEnv52_?24:std::max(0,lowGridHold52_-1);
     const int64_t s0=static_cast<int64_t>(i_)-(kPvN-1);
     spectrum52(bhRing_,s0,xr52_,xi52_);
     double mag[256], mx=0;
@@ -500,15 +543,28 @@ void VbHpv::pvFrame52() {
             src[band][ns[band]++]=b*binHz_+off*binHz_;
         }
     }
+    if(stageFlags_&StageRawFrequency) for(int p=0;p<np;++p) {
+        // Study 3 C2: frequency only, from the nearest unfiltered peak within 10 % that no other peak is nearer to
+        int best=-1;
+        for(int j=0;j<ns[0];++j) if(std::abs(src[0][j]-pk[p].f)<=.1*pk[p].f &&
+            (best<0 || std::abs(src[0][j]-pk[p].f)<std::abs(src[0][best]-pk[p].f))) best=j;
+        if(best<0) continue;
+        bool nearest=true;
+        for(int q=0;q<np;++q) if(q!=p && std::abs(src[0][best]-pk[q].f)<std::abs(src[0][best]-pk[p].f)) nearest=false;
+        if(nearest) pk[p].f=src[0][best];
+    }
     const int64_t centre=s0+kPvN+kRtShift;
     int poly=0; for(int p=0;p<np;++p) if(pk[p].a>=.25*am) ++poly;
+    // Study 3 C6: the percussive layer's polyphony mute is decided on the causal HPSS harmonic part, as without C6
+    if((stageFlags_&(StageAnalysisProminence|StageCausalProminence)) && hpssLookahead()==0) poly=polyCausal52(s0);
     // Unvalidated scene labels are diagnostics only. Fit residual is not a buzz
     // score; AM sidebands may look like several independent bass components.
     bool unresolved=false;
     for(int p=0;p<np;++p) if(pk[p].a>=.25*am && pk[p].res>-15) unresolved=true;
     observeScene(percEnv52_>2*harmEnv52_ ? VB_SCENE_TRANSIENT :
                  (poly>=2 || unresolved) ? VB_SCENE_COMPLEX : VB_SCENE_STEADY);
-    for(int g=0;g<kPvH;++g) polyT52_[(centre+g)&(kRing-1)]=poly>=2 ? 0 : 1;
+    // Study 3 diagnostic (host flag 524288): the polyphony mute of the percussive layer is left off
+    for(int g=0;g<kPvH;++g) polyT52_[(centre+g)&(kRing-1)]=poly>=2 && !(stageFlags_&StageNoPolyMute) ? 0 : 1;
     // research modes 5/6 (set aside, research/p1pp/2026-10-26-v03): the fit guard of mode 4 acts only around an impact (percussive envelope above a quarter of the
     // harmonic one, held 24 hops = 128 ms; genuine tonal onsets were 16-27 dB below, impact births within 6 dB); tones that were playing when the impact began are remembered so
     // that the same tone found again after the impact resumes at once instead of waiting for a clean fit.
@@ -833,17 +889,23 @@ double VbHpv::core52(double d) {
     md52_[slot]=d; md2_52_[slot]=i>=hpssDelay?md52_[(i-hpssDelay)&(kRing-1)]:0;
     double b=d; for(auto& s:band_) b=s.tick(b); bRing_[slot]=b;
     if((i+1)%16==0) hpssFrame();
-    double bh=0,bp=0;
+    double bh=0,bp=0,bhA=0;
     if(i>=hpssDelay) {
         const int64_t t=i-hpssDelay; const int s=t&(kRing-1); const double ws=wsumHp_[t%16];
-        bh=olaH_[s]/ws; bp=olaP_[s]/ws; olaH_[s]=olaP_[s]=0;
+        bh=olaH_[s]/ws; bp=olaP_[s]/ws; bhA=olaHA_[s]/ws; olaH_[s]=olaP_[s]=olaHA_[s]=0;
     }
     const double originalH=bh,originalP=bp,bandDelayed=i>=hpssDelay?bRing_[(i-hpssDelay)&(kRing-1)]:0.;
     detailRing52_[slot]=bandDelayed;
-    if(stageFlags_&StageBypassHpss) {bh=bandDelayed;bp=0.;}
-    if(inject_.active(StageInject52::InjectHpss,i)) {bh=inject_.bh[i];bp=inject_.bp[i];}
-    double hr,hi,pr,pi; hilH_.tick(bh,hr,hi); hilP_.tick(bp,pr,pi);
-    bhRing_[slot]=bh; aRing_[slot]=std::hypot(hr,hi);
+    // Study 3 C6: the vocoder spectrum and the music envelope read the C5-masked harmonic part; the percussive
+    // layer, its gate and the harmonic envelope keep the causal HPSS
+    // C5: the output and the analysis use the C5 mask; olaHA_ (bhA) is then the causal part, for the polyphony count
+    bool analysisH=(stageFlags_&StageAnalysisProminence) && future==0;
+    const bool causalA=(stageFlags_&StageCausalProminence) && future==0;
+    if(stageFlags_&StageBypassHpss) {bh=bandDelayed;bp=0.;analysisH=false;}
+    if(inject_.active(StageInject52::InjectHpss,i)) {bh=inject_.bh[i];bp=inject_.bp[i];analysisH=false;}
+    const double bhAnalysis=analysisH?bhA:bh;
+    double hr,hi,pr,pi; hilH_.tick(bhAnalysis,hr,hi); hilP_.tick(bp,pr,pi);
+    bhRing_[slot]=bhAnalysis; aRing_[slot]=std::hypot(hr,hi); bhCausal52_[slot]=causalA?bhA:bh;
     const double att=std::exp(-1./6),rel=std::exp(-1./120);
     const double ep=bp*bp,eh=bh*bh;
     double a=ep>percEnv52_?att:rel; percEnv52_=a*percEnv52_+(1-a)*ep;

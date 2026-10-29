@@ -332,6 +332,8 @@ void VbHpv::reset() {
     sPos_ = 0;
     std::fill(std::begin(olaH_), std::end(olaH_), 0.0);
     std::fill(std::begin(olaP_), std::end(olaP_), 0.0);
+    std::fill(std::begin(olaHA_), std::end(olaHA_), 0.0);
+    std::fill(std::begin(bhCausal52_), std::end(bhCausal52_), 0.0);
     hilH_.clear();
     hilP_.clear();
     prevUr_ = prevUi_ = 0.0;
@@ -359,7 +361,7 @@ void VbHpv::reset() {
     envA_.b0 = envP_.b0 = 1.0 - al;
     envA_.z = envP_.z = 0.0;
     nt52_=apkCount_=histCount_=holdCount_=holdPos_=onsetLeft_=0;
-    impactCtx52_=preImpactN52_=0; percSlow52_=0; graveN52_=0; hop52_=0;
+    impactCtx52_=preImpactN52_=lowGridHold52_=0; percSlow52_=0; graveN52_=0; hop52_=0;
     for (auto& row : hold52_) std::fill(std::begin(row),std::end(row),-200.0);
     for (double* r : {md52_,md2_52_,max52_}) std::fill(r,r+kRing,0.0);
     std::fill(std::begin(polyT52_),std::end(polyT52_),1.0);
@@ -482,7 +484,10 @@ void VbHpv::hpssFrame() {
         dft192(fr,zero,Fr,Fi,kHpBins);
         for(int k=0;k<kHpBins;++k) S[k]=std::hypot(Fr[k],Fi[k]);
     }
-    double Mh[kHpBins];
+    double Mh[kHpBins], MhA[kHpBins], Mc[kHpBins];
+    // olaHA_ holds the harmonic part the output does not use: the C5 mask under C6, the causal mask under C5 (both
+    // only for the analysis side: C6's vocoder spectrum, or the polyphony count)
+    const bool analysisMask=!future && (stageFlags_&(StageAnalysisProminence|StageCausalProminence));
     for (int k = 0; k < kHpBins; ++k) {
         double v[kHpMedT];
         for (int t = 0; t < kHpMedT; ++t)
@@ -499,25 +504,50 @@ void VbHpv::hpssFrame() {
             const double causalMask=causal*causal/(causal*causal+P*P+1e-20);
             const double weight=clampv((S[k]/(P+1e-20)-1.)/(std::sqrt(10.)-1.),0.,1.);
             Mh[k]=causalMask+weight*(Mh[k]-causalMask);
+        } else if(!future && (stageFlags_&(StageCausalProminence|StageAnalysisProminence))) {
+            // Study 3 C5: no lookahead. A peak prominent in this frame AND at the same bin one hop earlier (10 dB
+            // over its +-3 bin median at full weight; the smaller weight counts) is harmonic now, as if its
+            // eleven-frame history were already the current spectrum. A flat (impact) spectrum and a peak that is
+            // still moving (a kick's falling body) keep the causal median. Weight as in the HQ prominence blend.
+            // C6 uses this mask only for the analysis harmonic part (olaHA_); the output paths keep the causal one.
+            const double* prev=sHist_[(sPos_+history-2)%history];
+            double up[kHpMedF];
+            for(int d=0;d<kHpMedF;++d) up[d]=prev[clampv(k-kHpMedF/2+d,0,kHpBins-1)];
+            const double Pp=kth(up,kHpMedF,kHpMedF/2);
+            const auto prominent=[](double s,double p) {return clampv((s/(p+1e-20)-1.)/(std::sqrt(10.)-1.),0.,1.);};
+            const double weight=std::min(prominent(S[k],P),prominent(prev[k],Pp));
+            const double instant=S[k]*S[k]/(S[k]*S[k]+P*P+1e-20);
+            MhA[k]=std::max(Mh[k],Mh[k]+weight*(instant-Mh[k]));
+            Mc[k]=Mh[k];
+            if(stageFlags_&StageCausalProminence) {Mh[k]=MhA[k];MhA[k]=Mc[k];}
         }
     }
     // inverse real DFT of F * Mh (numpy.fft.irfft, n = 192), windowed, overlap-added. The percussive part
     // irfft(F * (1 - Mh)) is the windowed frame minus that (the inverse of F itself is the windowed frame).
     // irfft through the forward transform: y[n] = Re(DFT(conj(H))[n]) / N, H Hermitian (imaginary parts of the DC
     // and Nyquist bins ignored, like numpy).
-    double gr[kHpN], gi[kHpN];
-    for (int k = 0; k < kHpBins; ++k) {
-        gr[k] = Fr[k] * Mh[k];
-        gi[k] = -(Fi[k] * Mh[k]);
+    double gr[kHpN], gi[kHpN], yr[kHpN], yi[kHpN];
+    auto inverse = [&](const double* mask) {
+        for (int k = 0; k < kHpBins; ++k) {
+            gr[k] = Fr[k] * mask[k];
+            gi[k] = -(Fi[k] * mask[k]);
+        }
+        gi[0] = 0.0;
+        gi[kHpBins - 1] = 0.0;
+        for (int k = 1; k < kHpBins - 1; ++k) {   // conj(H[N - k]) = H[k]
+            gr[kHpN - k] = gr[k];
+            gi[kHpN - k] = -gi[k];
+        }
+        dft192(gr, gi, yr, yi, kHpN);
+    };
+    if (analysisMask) {
+        inverse(MhA);
+        for (int n = 0; n < kHpN; ++n) {
+            const int64_t t = i - (kHpN - 1) + n;
+            if (t >= 0) olaHA_[t & (kRing - 1)] += yr[n] / kHpN * winHp_[n];
+        }
     }
-    gi[0] = 0.0;
-    gi[kHpBins - 1] = 0.0;
-    for (int k = 1; k < kHpBins - 1; ++k) {   // conj(H[N - k]) = H[k]
-        gr[kHpN - k] = gr[k];
-        gi[kHpN - k] = -gi[k];
-    }
-    double yr[kHpN], yi[kHpN];
-    dft192(gr, gi, yr, yi, kHpN);
+    inverse(Mh);
     for (int n = 0; n < kHpN; ++n) {
         const int64_t t = i - (kHpN - 1) + n;
         if (t < 0) continue;  // before the stream: the reference drops these too
