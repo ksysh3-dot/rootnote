@@ -162,6 +162,17 @@ def items(root):
             mix, fs = sf.read(str(mixf), always_2d=True)
             bass = sum(sf.read(str(s), always_2d=True)[0].mean(axis=1) for s in stems)
             yield d.name, mix, bass, fs, midis, [mixf] + stems + midis
+        elif (d / 'data.json').exists():
+            # MoisesDB: one folder per track (data.json), one folder per stem; no mixture file, the mix is the stems' sum
+            files = sorted(p for p in d.glob('*/*') if p.suffix.lower() in ('.wav', '.flac'))
+            bass_f = [p for p in files if p.parent.name.lower() == 'bass']
+            if not bass_f: continue
+            audio = [sf.read(str(p), always_2d=True) for p in files]
+            fs = audio[0][1]
+            if any(r != fs for _, r in audio): raise ValueError(f'{d.name}: stems differ in sample rate')
+            n = max(len(x) for x, _ in audio); stereo = lambda x: np.pad(x if x.shape[1] == 2 else np.repeat(x[:, :1], 2, 1), ((0, n - len(x)), (0, 0)))
+            mix = sum(stereo(x) for x, _ in audio); bass = sum(stereo(x).mean(axis=1) for (x, _), p in zip(audio, files) if p in bass_f)
+            yield d.name, mix, bass, fs, [], [d / 'data.json'] + files
 
 
 def evaluate(lib, flags, stage, mix48, bz, tt, f0):
@@ -230,8 +241,16 @@ def paired(rows, frames, base, cand):
         lm = fb['band'] <= 1
         if lm.sum() >= 50:
             low.append(dict(item=i, frames=int(lm.sum()), base=float((fb['cents'][lm] <= 50).mean()), cand=float((fc['cents'][lm] <= 50).mean())))
+    # Song bootstrap of the per-item median (fixed seed, 10 000 resamples): the interval the R3-a rule (v3) judges by.
+    ci = None
+    if len(d_tr) >= 3:
+        rng = np.random.default_rng(20261029); dt = np.array(d_tr)
+        meds = np.median(dt[rng.integers(0, len(dt), (10000, len(dt)))], axis=1)
+        ci = [float(np.percentile(meds, 2.5)), float(np.percentile(meds, 97.5))]
+    tot = sum(v[0] for v in bp.values())
     return dict(items=len(common), items_used=len(d_tr), excluded=[i for i in common if b[i]['tracked'] is None or c[i]['tracked'] is None],
-                primary=float(np.median(d_tr)) if d_tr else None, primary_per_item=d_tr,
+                primary=float(np.median(d_tr)) if d_tr else None, primary_per_item=d_tr, primary_ci=ci,
+                all_pooled_change=sum(v[2] - v[1] for v in bp.values()) / tot if tot else None,
                 octave_change=float(np.median(d_oc)) if d_oc else None,
                 cents_common=[float(np.median(cb)) if cb else None, float(np.median(cc)) if cc else None, len(cb)],
                 cents_all=[float(np.median(ab)) if ab else None, float(np.median(ac)) if ac else None],
@@ -254,6 +273,28 @@ def decide(pr):
     return dict(verdict=verdict, checks=checks, unmeasured=unmeasured, reason=reason)
 
 
+def decide_v3(pr):
+    """R3-a pre-registration draft (docs/RESULTANT_R3A.md). The gain bar is "not chance", not a size picked without a
+    listening basis: adopt when the song-bootstrap 95 % interval of the per-item median gain lies above 0 and no harm
+    limit is crossed (octave errors not up, all bands pooled not down, >= 82 Hz loss at most 5 pp, common-frame cents up
+    at most 2); fail when there is no gain (median <= 0); hold otherwise (a real gain with a harm limit crossed, or an
+    interval reaching 0). A missing measurement holds and is named."""
+    hi = pr['band_pooled']['>=82']['change']; cc = pr['cents_common']; ci = pr.get('primary_ci'); al = pr.get('all_pooled_change')
+    unmeasured = [k for k, v in dict(primary=pr['primary'], interval=ci, octave=pr['octave_change'], high_band=hi, all_bands=al,
+                                     cents=None if None in cc[:2] else 0).items() if v is None]
+    checks = dict(gain=ci is not None and ci[0] > 0,
+                  octave=pr['octave_change'] is not None and pr['octave_change'] <= 0,
+                  all_bands=al is not None and al > 0,
+                  high_band=hi is not None and hi >= -.05,
+                  cents=None not in cc[:2] and cc[1] - cc[0] <= 2)
+    if 'primary' in unmeasured or 'interval' in unmeasured: verdict = 'hold'
+    elif pr['primary'] <= 0: verdict = 'fail'   # no gain decides before the interval does
+    elif all(checks.values()): verdict = 'adopt'
+    else: verdict = 'hold'
+    reason = 'unmeasured: ' + ', '.join(unmeasured) if verdict == 'hold' and unmeasured else None
+    return dict(rule='v3', verdict=verdict, checks=checks, unmeasured=unmeasured, reason=reason)
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('root', type=Path)
@@ -264,6 +305,7 @@ def main():
     p.add_argument('--limit', type=int, default=0)
     p.add_argument('--crop', default='', help='start,seconds: evaluate only this part of each item (long songs)')
     p.add_argument('--decide', action='store_true')
+    p.add_argument('--rule', choices=('v2d', 'v3'), default='v2d', help='v2d: the frozen R3 rule; v3: the R3-a draft')
     p.add_argument('--report', type=Path, required=True)
     a = p.parse_args()
     lib = P.api(a.library.resolve()); rows = []; frames = {}; inventory = []
@@ -308,7 +350,7 @@ def main():
     pairs = {m: paired(rows, frames, models[0], m) for m in models[1:]}
     for m, pr in pairs.items():
         print('PAIRED', m, json.dumps({k: v for k, v in pr.items() if k not in ('primary_per_item', 'low_items')}), flush=True)
-    decision = decide(pairs[models[1]]) if a.decide and len(models) > 1 else None
+    decision = (decide_v3 if a.rule == 'v3' else decide)(pairs[models[1]]) if a.decide and len(models) > 1 else None
     if decision: print('DECISION', models[1], json.dumps(decision), flush=True)
     a.report.parent.mkdir(parents=True, exist_ok=True)
     a.report.write_text(json.dumps(dict(schema='rootnote.gt_bass.v2', issue=4, root_name=a.root.name, reference=a.reference,
