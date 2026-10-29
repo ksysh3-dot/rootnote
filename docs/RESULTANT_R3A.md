@@ -14,15 +14,15 @@ P1 (기준, stage 0), R3-a (1차 후보, 8388608), R3 (보조 보고, 2097152). 
 ### 확인군: Slakh2100-redux test
 - Zenodo 4599666 `slakh2100_flac_redux.tar.gz` (104,322,767,708 바이트, MD5 `f4b71b6c45ac9b506f59788456b3f0c4`, CC BY 4.0)의 `test` 폴더 151곡 전부. 로컬 전용, 커밋 금지. 압축 파일은 외장 SSD에 두고 `fetch_slakh_split.py`로 test만 푼다.
 - BabySlakh (Track00001–00020, 원래 분할의 train)와 곡이 겹치지 않는다. redux판은 분할 사이에 중복된 MIDI를 뺀 판이다.
-- 곡 전체 (앞 1 s 예열, 끝 0.2 s 제외 — 도구 기본). 44.1 kHz FLAC. 믹스 = `mix.flac`, 베이스 = `metadata.yaml`에서 `inst_class: Bass`인 렌더된 stem들의 합.
+- 각 곡 30–90 s (`--crop 30,60`): v2d BabySlakh 확인과 R3-a 개발 수치가 쓴 창과 같다. 창 안에서 앞 1 s 예열, 끝 0.2 s 제외 (도구 기본). 44.1 kHz FLAC. 믹스 = `mix.flac`, 베이스 = `metadata.yaml`에서 `inst_class: Bass`인 렌더된 stem들의 합.
 - **왜 이 자료:** R3가 확인에서 실패한 곳 (≥ 82 Hz를 잘못 내림)이 이 합성 음원 계열이다. R3-a의 수정이 새 곡에서도 통하는지 정면으로 본다. MIDI가 있어 YIN 추정이 아닌 정확한 음 참조를 쓴다.
 - **한계:** 합성 음원뿐이다. 실제 녹음에서의 일반화는 이 확인의 주장이 아니다 (MoisesDB 후속 확인 몫).
-- **제외 (미리 고정):** 렌더된 베이스 stem 없음 (로더가 건너뜀; 수를 보고), 베이스 MIDI 없음, MIDI 옥타브 불명 (아래), 참조 프레임 20개 미만. 제외 곡은 목록과 사유를 보고한다.
+- **제외 (미리 고정):** 렌더된 베이스 stem 없음 (로더가 건너뜀; 수를 보고), 창이 5 s 미만 (v2d와 같음), 베이스 MIDI 없음, MIDI 옥타브 불명 (아래), 참조 프레임 20개 미만. 제외 곡은 목록과 사유를 보고한다.
 
 ### 참조: MIDI + 곡별 옥타브
 - 베이스 stem MIDI들의 가장 낮은 음 (템포 맵 적용), YIN과 같은 프레임 격자 (10 ms).
 - **곡별 옥타브 (`--midi-transpose auto`, `midi_octave`):** 모델 없이 베이스 stem만으로 정한다. 후보 −24 / −12 / 0 / +12 반음 가운데, MIDI f0가 stem의 YIN (MUSDB와 같은 설정)과 50 cent 안에서 맞는 프레임 몫이 가장 큰 것. 둘 다 값이 있는 프레임이 20개 미만이거나, 최고 몫이 50 % 미만이거나, 다음 후보보다 20 %p 넘게 앞서지 못하면 그 곡은 "MIDI 옥타브 불명"으로 제외한다.
-- 문턱 (50 %, 20 %p)은 BabySlakh에 돌리기 전에 정했다. BabySlakh (개발군)에 적용하면 19곡 중 18곡이 −12 (일치 68–100 %)로 이전의 손 점검과 같고, 1곡은 −12 일치 47 %로 제외된다 (v2d에서는 −12 고정으로 포함됐던 곡). 고정 −12와 auto는 남은 곡에서 같은 행을 낸다 (2곡 회귀 점검).
+- 문턱 (50 %, 20 %p)은 BabySlakh에 돌리기 전에 정했다. BabySlakh (개발군) 30–90 s에 적용하면 19곡 중 18곡이 −12 (일치 91–100 %; 곡 전체로는 68–100 %)로 이전의 손 점검과 같고, Track00012는 −12 일치 49.5 % (곡 전체 47 %)로 제외된다 (v2d에서는 −12 고정으로 포함됐던 곡). 고정 −12와 auto는 남은 곡에서 같은 행을 낸다 (2곡 회귀 점검).
 
 ### 지표와 판정 (`research_gt_bass.py --rule v3 --decide`)
 - **1차:** 곡별 (R3-a 추적 − P1 추적)의 중앙값과 곡 단위 부트스트랩 95 % 구간 (10,000번, 시드 20261029). None인 곡은 빼고 목록·수를 보고한다.
@@ -33,8 +33,8 @@ P1 (기준, stage 0), R3-a (1차 후보, 8388608), R3 (보조 보고, 2097152). 
 - **추가 보고:** 대역별 모은 표, 55 Hz 미만 프레임 50개 이상인 곡별 결과, 전체 프레임 cents, 생성층 몫·절대량, R3 비교.
 
 ### 실행
-1. 동결 전 (모델 없음): `fetch_slakh_split.py <out> --source <압축 파일>` (MD5 확인 포함), 그리고 `research_gt_bass.py <out>/test --reference midi --midi-transpose auto --inventory-only` → 파일 목록·해시·옥타브 점검을 `docs/reports/r3a-confirm/`에 커밋하고 아래 표를 채운다.
-2. 동결 태그 커밋에서 `build_host.sh`로 빌드한 라이브러리, 깨끗한 작업 트리에서 1회: `research_gt_bass.py <out>/test --reference midi --midi-transpose auto --models p1,p1_r3a,p1_r3 --decide --rule v3`. 보고서 (익명 곡 번호, rows·paired·decision·inventory, 오디오 없음)는 `docs/reports/r3a-confirm/`에 커밋한다.
+1. 동결 전 (모델 없음): `fetch_slakh_split.py <out> --source <압축 파일>` (MD5 확인 포함), 그리고 `research_gt_bass.py <out>/test --reference midi --midi-transpose auto --crop 30,60 --inventory-only` → 파일 목록·해시·옥타브 점검을 `docs/reports/r3a-confirm/`에 커밋하고 아래 표를 채운다.
+2. 동결 태그 커밋에서 `build_host.sh`로 빌드한 라이브러리, 깨끗한 작업 트리에서 1회: `research_gt_bass.py <out>/test --reference midi --midi-transpose auto --crop 30,60 --models p1,p1_r3a,p1_r3 --decide --rule v3`. 보고서 (익명 곡 번호, rows·paired·decision·inventory, 오디오 없음)는 `docs/reports/r3a-confirm/`에 커밋한다.
 
 ### 개발군에 v3를 적용하면 (참고, 확인 판정 아님)
 | | 1차 중앙값 | 곡 단위 95 % 구간 | 모든 대역 변화 | ≥ 82 Hz | v3 | (v2d) |

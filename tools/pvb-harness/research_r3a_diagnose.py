@@ -68,6 +68,7 @@ def main():
     p.add_argument('root', type=Path); p.add_argument('--library', type=Path, required=True)
     p.add_argument('--reference', choices=('yin', 'midi'), default='yin'); p.add_argument('--midi-transpose', type=int, default=0)
     p.add_argument('--crop', default=''); p.add_argument('--per-class', type=int, default=300)
+    p.add_argument('--candidate', default='p1_r3', help='model compared with p1 (e.g. p1_r3a for the R3-b question)')
     a = p.parse_args(); lib = P.api(a.library.resolve()); rng = np.random.default_rng(0)
     cls = {'good': [], 'bad': [], 'kept': []}; per_item = []
     for j, (name, mix, bass, fs, midis, _) in enumerate(G.items(a.root)):
@@ -83,18 +84,24 @@ def main():
         if np.sum(np.isfinite(f0)) < 20: continue
         mix48 = G.to_rate(mix, fs, G.FS).astype(np.float32)
         tk = {}
-        for m in ('p1', 'p1_r3'):
+        for m in ('p1', a.candidate):
             fl, st = G.MODELS[m]; r = P.render(lib, mix48 if mix48.shape[1] == 2 else np.repeat(mix48, 2, axis=1), G.FS, fl, stage_flags=st)
             tk[m] = (H.tracks(r['rows']), (H.core_indices(r['rows']).astype(float) - 383) / G.CORE)
         hits = {'good': [], 'bad': [], 'kept': []}; t_end = len(bz) / G.CORE - .2
+        hi = dict(voiced=0, lost_half=0, lost_up=0, lost_other=0, gained=0)   # >= 82 Hz frame budget, candidate vs p1
         for t, f in zip(tt, f0):
             if not (1.0 <= t <= t_end) or not np.isfinite(f): continue
-            b, c = strong(*tk['p1'], t), strong(*tk['p1_r3'], t)
+            b, c = strong(*tk['p1'], t), strong(*tk[a.candidate], t)
             pb, pc = near(b, f), near(c, f)
+            if f >= 82:
+                hi['voiced'] += 1
+                if pb is not None and pc is None:
+                    hi['lost_half' if near(c, f / 2) is not None else 'lost_up' if near(c, 2 * f) is not None else 'lost_other'] += 1
+                elif pb is None and pc is not None: hi['gained'] += 1
             if pb is None and pc is not None and near(b, 2 * f) is not None: hits['good'].append((t, near(b, 2 * f)))
             elif pb is not None and pc is None and near(c, f / 2) is not None: hits['bad'].append((t, pb))
             elif pb is not None and pc is not None and f >= 82: hits['kept'].append((t, pb))
-        per_item.append((name, {k: len(v) for k, v in hits.items()}))
+        per_item.append((name, {**{k: len(v) for k, v in hits.items()}, **{'hi_' + k: v for k, v in hi.items()}}))
         for k, v in hits.items():
             take = v if len(v) <= a.per_class else [v[i] for i in sorted(rng.choice(len(v), a.per_class, replace=False))]
             for t, T in take:
@@ -111,7 +118,7 @@ def main():
     for f in FEATS:
         print(f'   {f:20s} good>bad {auc([x[f] for x in cls["good"]], [x[f] for x in cls["bad"]])}  '
               f'good>kept {auc([x[f] for x in cls["good"]], [x[f] for x in cls["kept"]])}')
-    tot = {k: sum(c[k] for _, c in per_item) for k in cls}
+    tot = {k: sum(c[k] for _, c in per_item) for k in per_item[0][1]} if per_item else {}
     print('\nframes (all, before sampling):', tot)
     print('items with most bad frames:', sorted(((c['bad'], n) for n, c in per_item), reverse=True)[:6])
 
