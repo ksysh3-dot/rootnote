@@ -95,6 +95,10 @@ private:
         int absent = 0;            // CAND: consecutive measured hops without a measured track
         int candMeas = 0;          // CAND: measured hops since the voice appeared
         int bigE = 0;              // consecutive measured hops with |e| > 0.5 rad
+        int onMeas = 0;            // measured hops this voice has been ON without a break (subordinate rule, v1.5)
+        int histN = 0;             // consecutive measured hops with a LS phase in thHist (at most 8)
+        int64_t onHop = -1;        // hop at which the voice was born ON (same-hop births are subordinate by ratio alone)
+        double thHist[8] = {};     // LS phase theta_v at n_h of the last measured hops, slot = measCount_ & 7
         int dfN = 0, dfPos = 0;
         int npv = 0, npvPend = 0;  // per-voice past window (stage 2) and its hysteresis counter
         int npUsed = 0;            // past window actually used for this voice in this hop (trace)
@@ -156,7 +160,9 @@ private:
     int allocateSlot(const Ctx& cx, double trackAmp);
     void rejectTrack(uint32_t id);
     bool rejected(uint32_t id) const;
-    bool isSubordinate(double f, int self) const;
+    bool isSubordinate(int self) const;
+    bool phaseLocked(int v, int u, int m) const;
+    void updatePhaseHistory(const Ctx& cx);
     bool eligible(const Voice& u) const { return u.state == Cand || u.state == On || (u.state == Rel && u.c > 0.1); }
 
     ResultantParams p_;
@@ -164,6 +170,7 @@ private:
     double out_[kOut];
     int nextVoiceId_ = 0;
     int64_t hopCount_ = 0;
+    int64_t measCount_ = 0;    // measured hops so far (ring slot of the voices' phase histories)
     // stage 1 window (N_J) hysteresis and the LS set it was computed for
     int npJ_ = 0, npJPend_ = 0;
     int lsSig_[kVoices] = {};

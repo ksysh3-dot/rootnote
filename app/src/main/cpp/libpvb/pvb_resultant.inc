@@ -108,7 +108,7 @@ inline int rPeriodWindow(double f, int nMin) {
 void ResultantCore::reset() {
     for (auto& u : vo_) u = Voice{};
     std::fill(std::begin(out_), std::end(out_), 0.0);
-    nextVoiceId_ = 0; hopCount_ = 0;
+    nextVoiceId_ = 0; hopCount_ = measCount_ = 0;
     npJ_ = npJPend_ = 0;
     std::fill(std::begin(lsSig_), std::end(lsSig_), 0);
     std::fill(std::begin(rejId_), std::end(rejId_), 0u);
@@ -168,15 +168,52 @@ bool ResultantCore::rejected(uint32_t id) const {
     return false;
 }
 
-// A voice v is subordinate when an ON voice u sits at 1/2, 1/3 or 1/4 of its frequency (spec 5.2)
-bool ResultantCore::isSubordinate(double f, int self) const {
+// Circular standard deviation of phi = theta_v - m theta_u over the last 8 measured hops is at most 0.6 rad (spec 5.2, v1.5):
+// the harmonic of one source keeps its phase relation, two sources drift.
+bool ResultantCore::phaseLocked(int v, int u, int m) const {
+    const Voice& a = vo_[v];
+    const Voice& b = vo_[u];
+    if (a.histN < 8 || b.histN < 8) return false;
+    double cr = 0, ci = 0;
+    for (int k = 0; k < 8; ++k) {
+        const double phi = a.thHist[k] - m * b.thHist[k];
+        cr += std::cos(phi); ci += std::sin(phi);
+    }
+    const double r = std::max(std::hypot(cr, ci) / 8, 1e-12);
+    return std::sqrt(-2 * std::log(std::min(r, 1.0))) <= 0.6;
+}
+
+// A voice v is subordinate to an ON voice u at 1/2, 1/3 or 1/4 of its frequency (spec 5.2, v1.5) when u is also settled
+// (ON for more than 8 measured hops, |fdot| <= 50 Hz/s), v is not much louder (A_v <= 2 A_u) and the two are phase locked.
+// Voices born ON in the same hop are subordinate by the frequency ratio alone.
+bool ResultantCore::isSubordinate(int self) const {
+    const Voice& v = vo_[self];
     for (int q = 0; q < kVoices; ++q) {
         if (q == self) continue;
         const Voice& w = vo_[q];
-        if (w.state != On || !(w.f < .9 * f)) continue;
-        for (int m = 2; m <= 4; ++m) if (std::fabs(f - m * w.f) <= .015 * f) return true;
+        if (w.state != On || !(w.f < .9 * v.f)) continue;
+        for (int m = 2; m <= 4; ++m) {
+            if (!(std::fabs(v.f - m * w.f) <= .015 * v.f)) continue;
+            if (w.onHop >= 0 && w.onHop == v.onHop) return true;
+            if (w.onMeas > 8 && std::fabs(w.fdot) <= 50.0 && v.A <= 2 * w.A && phaseLocked(self, q, m)) return true;
+        }
     }
     return false;
+}
+
+// LS phases of the last 8 measured hops, per voice (slot = measured-hop counter & 7); a gap in the LS restarts the count
+void ResultantCore::updatePhaseHistory(const Ctx& cx) {
+    if (!cx.measured) return;
+    ++measCount_;
+    for (int s = 0; s < kVoices; ++s) {
+        Voice& u = vo_[s];
+        if (cx.lsOk && u.inLs) {
+            u.thHist[measCount_ & 7] = u.thetaMeas;
+            if (u.histN < 8) ++u.histN;
+        } else {
+            u.histN = 0;
+        }
+    }
 }
 
 void ResultantCore::markLs(Ctx& cx) {
@@ -424,6 +461,7 @@ void ResultantCore::transitions(Ctx& cx) {
         if (u.state == On) {
             bool toRel = false;
             if (cx.measured) {
+                ++u.onMeas;
                 u.lowSnrM = u.snr < snrOff ? u.lowSnrM + 1 : 0;
                 if (u.lowSnrM >= 24) toRel = true;
                 // far below a stronger neighbour within 15 Hz: its main lobe is what holds the spectral SNR up
@@ -439,12 +477,12 @@ void ResultantCore::transitions(Ctx& cx) {
                 if (u.domCnt >= 3) toRel = true;
             }
             if (u.coast > kRCoastMax) toRel = true;
-            if (toRel) { u.state = Rel; u.lowSnrM = u.domCnt = u.revCnt = 0; }
+            if (toRel) { u.state = Rel; u.lowSnrM = u.domCnt = u.revCnt = u.onMeas = 0; }
         } else if (u.state == Rel) {
             if (cx.measured) {
                 const bool good = u.snr >= snrOff + 4.0 && u.prominent && !u.excluded && (u.tracked || u.coast <= kRCoastMax);
                 u.revCnt = good ? u.revCnt + 1 : 0;
-                if (u.revCnt >= 3) { u.state = On; u.lowSnrM = u.domCnt = u.revCnt = 0; }
+                if (u.revCnt >= 3) { u.state = On; u.lowSnrM = u.domCnt = u.revCnt = u.onMeas = 0; }
             }
         }
     }
@@ -483,7 +521,8 @@ void ResultantCore::transitions(Ctx& cx) {
         u.npv = u.npvPend = 0; u.psiSet = 0;
         for (int k = 0; k < kPartials; ++k) { u.present[k] = false; u.offC[k] = u.offF[k] = 0; }
         u.c = u.cStart = 0;
-        if (isSubordinate(u.f, born[i])) u.sigma = u.sigmaStart = 0;   // starts silent, not after a 20 ms decay
+        u.onHop = hopCount_; u.onMeas = 0;
+        if (isSubordinate(born[i])) u.sigma = u.sigmaStart = 0;   // starts silent, not after a 20 ms decay
     }
 }
 
@@ -640,7 +679,8 @@ void ResultantCore::updatePhase(Ctx& cx) {
             const double e = std::remainder(u.thetaMeas - pred, kRTwoPi), ae = std::fabs(e);
             const double lo = std::min(p_.betaMin, p_.betaMax), hi = std::max(p_.betaMin, p_.betaMax);
             const double beta = clampv((u.snr - 10.0) / 20.0, lo, hi);
-            const double gamma = std::min(0.2, 0.5 / std::max(u.cb, 1e-9)) * beta;
+            // v1.5: no frequency integration below 12 dB SNR (noise would drive f_off); the leak below still pulls it to 0
+            const double gamma = u.snr < 12.0 ? 0.0 : std::min(0.2, 0.5 / std::max(u.cb, 1e-9)) * beta;
             u.theta = pred + beta * e;
             u.fOff = clampv(u.fOff + gamma * e / (kRTwoPi * kRHopS), -.125 * u.f, .125 * u.f);
             if (ae < 0.2) u.fOff *= 0.98;
@@ -666,7 +706,7 @@ void ResultantCore::updateWeights(Ctx& cx) {
         if (u.state == Empty) continue;
         const double cStar = u.state == On ? 1.0 : 0.0;
         u.c += (cStar - u.c) * (cStar > u.c ? aOn : aOff);
-        u.subordinate = isSubordinate(u.f, s);
+        u.subordinate = isSubordinate(s);
         u.sigma += ((u.subordinate ? 0.0 : 1.0) - u.sigma) * aSig;
         if (u.state == Rel && !u.tracked && u.c < 0.01) { u.c = 0; u.dead = true; }
     }
@@ -848,6 +888,7 @@ void ResultantCore::hop(VbHpv& v, bool measured, const double (*src)[256], const
     computeSnr(cx);
     transitions(cx);
     solveLs(cx);
+    updatePhaseHistory(cx);
     updatePhase(cx);
     updateWeights(cx);
     if (cx.measured && cx.lsOk)
