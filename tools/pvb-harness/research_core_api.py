@@ -90,11 +90,15 @@ def trace_dict(trace):
     return {n: t[:, :, i] for i, n in enumerate(TRACE_FIELDS)}
 
 
+CORE_T0 = 1359.0 / 48000.0  # the core clock lags the 48 kHz input timeline by 1359 host samples (decimator), spec 3
+
+
 def hop_time(trace_hop, sr=48000):
-    """Core index of a hop (field 0) -> (input time of the analysis centre, output time of the hop's first sample), in seconds
-    of the engine input: c_h = i_h - 382 core samples, output sample n is input time n - 398 (spec 3), plus the module latency
-    is not included."""
-    return (np.asarray(trace_hop) - 382) / CORE_FS, (np.asarray(trace_hop) - 398) / CORE_FS
+    """Core index of a hop (field 0) -> (input time of the analysis centre, input time the hop's first output sample
+    corresponds to), in seconds of the engine input: c_h = i_h - 382 core samples, output sample n is input time n - 398
+    (spec 3), both plus CORE_T0 (acceptance audit 2026-10-30: without it the times lead the input by 28.3 ms)."""
+    h = np.asarray(trace_hop, float)
+    return (h - 382) / CORE_FS + CORE_T0, (h - 398) / CORE_FS + CORE_T0
 
 
 def render(lib, x, sr=48000, algo=VB_RESULTANT, params=None, trace=False, block=256, **engine_kw):
