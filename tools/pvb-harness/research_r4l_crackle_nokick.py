@@ -1,5 +1,6 @@
 """Does the kick (90 -> 50 Hz sweep, f0/2 of the 100 Hz bass) switch the R4-L boost off and on inside every note? Build
-bass100 as make_synth.py does, with and without the kick; render P1 and R4-L 6 dB (app chain, defaults); per version:
+bass100 as make_synth.py does, with the kick, without it, and with a kick that settles at 60 Hz (kick60: the same energy
+and onset, never near f0/2); render P1 and R4-L 6 dB (app chain, defaults); per version:
 the cycle-averaged k3 (300 Hz) boost in 20 ms steps, the number of cycle steps where it is below 1 dB (off), and the
 share of the added layer d = L6 - P1 on the partial lines (150-1000 Hz, 0.5 s windows).
 Usage: crackle_nokick.py <lib> <outdir>"""
@@ -19,7 +20,9 @@ pink = .03 * w / np.sqrt(np.mean(w ** 2))
 u = t % .5; env = np.minimum(u / .008, 1) * np.exp(-u / .35)
 kick = np.exp(-u / .12) * np.sin(2 * np.pi * np.cumsum(50 + 40 * np.exp(-u / .02)) / FS)
 bass = env * sum(a * np.sin(2 * np.pi * k * 100 * t) for k, a in ((1, 1), (2, .5), (3, .18)))
-X = {'kick': .25 * bass / np.abs(bass).max() + .2 * kick + pink, 'nokick': .25 * bass / np.abs(bass).max() + pink}
+kick60 = np.exp(-u / .12) * np.sin(2 * np.pi * np.cumsum(60 + 30 * np.exp(-u / .02)) / FS)   # same start, floor off f0/2
+X = {'kick': .25 * bass / np.abs(bass).max() + .2 * kick + pink, 'nokick': .25 * bass / np.abs(bass).max() + pink,
+     'kick60': .25 * bass / np.abs(bass).max() + .2 * kick60 + pink}
 def render(x, level=None):
     x = np.stack([x, x], 1).astype(np.float32); e = T.Engine(lib, FS, vb_on=1, vb_algo=6)
     cap = None
