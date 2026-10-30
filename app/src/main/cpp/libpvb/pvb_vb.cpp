@@ -22,6 +22,7 @@ bool VbHpv::setAlpha2Profile(int algorithm) {
     unsigned flags=0;int mode=3;
     switch(algorithm) {
         case VB_ALPHA2_P1: case VB_ALPHA2_P1_PLUS: case VB_ALPHA2_P1PP: case VB_ALPHA2_P1PP_V03: break;
+        case VB_RESULTANT: break;   // P1 settings with every research flag fixed at 0 (below), the sustained path is the new core's
         case VB_ALPHA2_P1_C1: flags=StageNominalPower;break;
         case VB_ALPHA2_D2: flags=StageShortDetail|StageConditionalGain;break;
         case VB_ALPHA2_J2: flags=StageShortDetail|StageConditionalGain|StageAmFamily|StageFamilyFilterComp;break;
@@ -30,17 +31,25 @@ bool VbHpv::setAlpha2Profile(int algorithm) {
         default:return false;
     }
     p1PlusProfile_=algorithm==VB_ALPHA2_P1 || algorithm==VB_ALPHA2_P1_PLUS || algorithm==VB_ALPHA2_P1PP ||
-                   algorithm==VB_ALPHA2_P1PP_V03 || algorithm==VB_ALPHA2_P1_C1;
+                   algorithm==VB_ALPHA2_P1PP_V03 || algorithm==VB_ALPHA2_P1_C1 || algorithm==VB_RESULTANT;
     // 6: the original P1 (or the host's research flags); 11: P1+ (flags 6); 12: P1++ v0.2 (flags 6, impact 4);
-    // 13: P1++ v0.3 (flags 6, impact 8); 14: P1 + C1 (no P1+ flags, impact 0, power-sum nominal amplitude)
+    // 13: P1++ v0.3 (flags 6, impact 8); 14: P1 + C1 (no P1+ flags, impact 0, power-sum nominal amplitude);
+    // 15: Resultant core (P1 with no research flags: fixed like 14, so later host setters cannot change them)
     p1PlusFixed_=algorithm==VB_ALPHA2_P1_PLUS || algorithm==VB_ALPHA2_P1PP || algorithm==VB_ALPHA2_P1PP_V03 ||
-                 algorithm==VB_ALPHA2_P1_C1;
-    p1PlusFlags_=algorithm==VB_ALPHA2_P1_C1 ? 0u : p1PlusFixed_ ? 6u : p1PlusHostFlags_;
+                 algorithm==VB_ALPHA2_P1_C1 || algorithm==VB_RESULTANT;
+    p1PlusFlags_=algorithm==VB_ALPHA2_P1_C1 || algorithm==VB_RESULTANT ? 0u : p1PlusFixed_ ? 6u : p1PlusHostFlags_;
     p1ppImpactMode_=algorithm==VB_ALPHA2_P1PP_V03 ? 8 : algorithm==VB_ALPHA2_P1PP ? 4 :
-                    algorithm==VB_ALPHA2_P1_PLUS || algorithm==VB_ALPHA2_P1_C1 ? 0 : p1ppHostImpact_;
+                    algorithm==VB_ALPHA2_P1_PLUS || algorithm==VB_ALPHA2_P1_C1 || algorithm==VB_RESULTANT ? 0 : p1ppHostImpact_;
     p1ppV04_=p1PlusFixed_ ? 0u : p1ppV04Host_;
     modulationMode_=mode;tonalOnly_=false;continuity_=ContinuityParams{};continuity_.enabled=true;
     applyDevContinuity();
+    // Resultant core: gen_ (host research, survives profile switches) is not used by algorithm 15; it comes back, as
+    // the host or the engine last asked for it (genReq_), with the next other profile. Only a switch into or out of 15
+    // touches it, so the other profiles stay exactly as they were.
+    if((algorithm==VB_RESULTANT)!=resultantOn_) {
+        resultantOn_=algorithm==VB_RESULTANT;
+        gen_=resultantOn_?GenResearch52{}:genReq_;
+    }
     // P1 is the host research profile: an explicitly attached stage probe may
     // precede the first vbApply() call. Preserve its assignment flags there.
     stageFlags_=flags|(algorithm==VB_ALPHA2_P1 ? stageHostFlags_ : 0u);reset();return true;
@@ -374,6 +383,7 @@ void VbHpv::reset() {
     std::fill(std::begin(genAmpRing_),std::end(genAmpRing_),0.); std::fill(std::begin(genPhaseRing_),std::end(genPhaseRing_),0.);
     std::fill(std::begin(genOnsetRing_),std::end(genOnsetRing_),false);
     for(auto& b:bursts_) b=Burst{};
+    resultant_.reset();
 }
 
 // numpy.interp(f, grid, arange(400)), clipped, then linear interpolation of the weight and gain tables.

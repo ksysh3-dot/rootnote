@@ -39,6 +39,7 @@
 #include "pvb_track_prediction.h"
 #include "pvb_track_protection.h"
 #include "pvb_harmonic_renderer.h"
+#include "pvb_resultant.h"
 
 namespace pvb {
 
@@ -53,7 +54,10 @@ enum VbAlgo : int { VB_HPV = 0, VB_BANKSTOWN = 1, VB_HPV52M = 2, VB_GENTLE = 3,
                    VB_ALPHA2_P1PP_V03 = 13,
                    // P1 + C1: P1 (no research flags) with the power-sum nominal amplitude of the envelope target
                    // (study 2, #4, tag s2-v1-final)
-                   VB_ALPHA2_P1_C1 = 14, VB_ALGO_COUNT };
+                   VB_ALPHA2_P1_C1 = 14,
+                   // Resultant core (docs/RESULTANT_CORE.md): P1's front end (tracker, tables, phase calibration, percussive
+                   // layer) and a new sustained-layer path; vbAlpha2_ with resultantOn_ (host research, not an app model)
+                   VB_RESULTANT = 15, VB_ALGO_COUNT };
 
 // Scene observations are unvalidated. Only the opt-in adaptive profile uses
 // them to select a harmonic attenuation budget; they are not buzz labels.
@@ -245,8 +249,9 @@ public:
     // the harmonics the input already has at k f, 32 = the layer is read four hops later and a guarded track's
     // grains are kept; when the track is released within three hops they are added back where they belonged.
     void setP1PPV04Research(unsigned flags) { p1ppV04Host_=flags&511; if(!p1PlusFixed_) p1ppV04_=p1ppV04Host_; reset(); }
+    // Algorithm 15 (Resultant core) keeps stageFlags_ at 0: the host flags are remembered for a later P1 but not applied.
     void setStageResearch(unsigned flags,StageCapture52::Sink sink=nullptr,void* user=nullptr) {
-        stageHostFlags_=flags&268435455;stageFlags_=stageHostFlags_;stageSink_=sink;stageUser_=user;reset();
+        stageHostFlags_=flags&268435455;stageFlags_=resultantOn_?0u:stageHostFlags_;stageSink_=sink;stageUser_=user;reset();
     }
     // App listening profiles, applied only by the audio owner while switching.
     // All use the same gentle24 placement. Legacy research setters remain separate.
@@ -278,12 +283,19 @@ public:
     void setTrackTape(TrackTape52* t,int mode,int64_t startHop,int64_t endHop,double tol) {
         tape_=t; tapeMode_=t?mode:0; tapeStart_=startHop; tapeEnd_=endHop; tapeTol_=tol; reset();
     }
-    // Host research only; survives setAlpha2Profile (see GenResearch52).
-    void setGenResearch(const GenResearch52& g) { gen_=g; reset(); }
+    // Host research only; survives setAlpha2Profile (see GenResearch52). Algorithm 15 (Resultant core) does not use it:
+    // genReq_ remembers the request, gen_ (the one the code reads) is the default while resultantOn_.
+    void setGenResearch(const GenResearch52& g) { genReq_=g; gen_=resultantOn_?GenResearch52{}:g; reset(); }
     // App option "배음별 단일 포락선" (S1m, P1 only): the S1 envelope with the research defaults. No reset here: the
     // engine calls it while switching (faded out) and then setAlpha2Profile, which resets the module. Realtime safe.
-    void setGenEnvelope(bool on) { gen_=GenResearch52{}; gen_.envelope=on; }
+    void setGenEnvelope(bool on) { genReq_=GenResearch52{}; genReq_.envelope=on; if(!resultantOn_) gen_=genReq_; }
     bool genEnvelope() const { return gen_.envelope; }
+
+    // Resultant core (algorithm 15, host research only): 16 parameters in the order of docs/RESULTANT_CORE.md 5.8 (false:
+    // out of range, nothing applied; kept for any algorithm), and the per-hop voice trace (allocation in enable only).
+    bool setResultantParams(const double* v, int n) { return resultant_.setParams(v, n); }
+    bool resultantTraceEnable(int hops) { return resultant_.traceEnable(hops); }
+    int resultantTraceCopy(double* out, int capacity) const { return resultant_.traceCopy(out, capacity); }
 
     // Developer mode (masked modules only; ignored by the legacy hpv). No allocation; filter memory is kept.
     void setDev(const DevVoicing& d) override;
@@ -305,6 +317,8 @@ public:
 private:
     // Defined only by the host harness; invokes the production grain renderer.
     friend struct HarmonicRendererTestAccess;
+    // Resultant core (pvb_resultant.inc): reads the tracker, rings and spectra of this module and writes its output ring.
+    friend class ResultantCore;
     struct Biquad {  // direct form II transposed, like scipy.signal.sosfilt
         double b0 = 1, b1 = 0, b2 = 0, a1 = 0, a2 = 0, z0 = 0, z1 = 0;
         inline double tick(double x) {
@@ -513,6 +527,10 @@ private:
     double poly52_=1, percEnv52_=0, harmEnv52_=0;
     // gen-s1s2 research state (unused unless gen_ is set)
     GenResearch52 gen_;
+    GenResearch52 genReq_;   // what setGenResearch / setGenEnvelope asked for; gen_ equals it except while resultantOn_
+    // Resultant core: algorithm 15 skips P1's grain renderer and reads its voices' output instead (setAlpha2Profile)
+    ResultantCore resultant_;
+    bool resultantOn_=false;
     double genGain_=0, genFastE_=0, genSlowE_=0, lastFc_=60, lastGk_=0;
     int64_t genLastOnset_=-1000000;
     static constexpr int kBurstDelay=45; // 15 ms look-ahead for the burst amplitude, inside the hp read delay

@@ -78,6 +78,30 @@ int pvb_set_r4_reentry(void* e,double tauMs) {
     static_cast<pvb::Engine*>(e)->setR4Reentry(tauMs);return 1;
 }
 
+// Resultant core (algorithm 15, docs/RESULTANT_CORE.md 4.2 and 5.8), host research. v: the 16 parameters in the order of the
+// spec (voicing, levelDb, ampSource, snrOnDb, snrFastDb (unused since v1.3), snrOffDb, tauOnMs, tauOffMs, betaMin, betaMax,
+// kappa, nMin, nFuture, psiSlew, crest, maxDfdtBirth); n may be shorter, the rest are then the defaults. 1 = accepted,
+// 0 = a value out of range (nothing applied). The setting is kept whichever algorithm runs.
+int pvb_set_resultant(void* e,const double* v,int n) {
+    if(!e || n<0 || (n>0 && !v)) return 0;
+    return static_cast<pvb::Engine*>(e)->setResultantParams(v,n) ? 1 : 0;
+}
+// Voice trace of the Resultant core: 8 rows (one per voice slot) of 22 doubles for every hop (3000/16 per second), up to
+// capacityHops hops; allocation happens here only. capacityHops <= 0 frees the buffer. 1 = enabled, 0 = refused.
+// Fields: hop core index, voice id, track id, state (0 empty 1 CAND 2 ON 3 REL), coasting hops, f_track, f_osc, dfdt_s, A, c,
+// sigma, Np, snr_db, prominent, raw_db, res_db, subordinate, theta_hat, psi_2, psi_3, a_2, a_3.
+int pvb_resultant_trace_enable(void* e,int capacityHops) {
+    if(!e) return 0;
+    return static_cast<pvb::Engine*>(e)->resultantTraceEnable(capacityHops) ? 1 : 0;
+}
+// Copies the recorded rows (22 doubles each, 8 per hop, oldest first) into out (cap doubles). Returns the number of rows,
+// -1 no trace enabled, -2 cap too small, -3 more hops than capacityHops were processed (never silently truncated).
+// A reset (algorithm switch, engine reset) starts the trace again.
+int pvb_resultant_trace_copy(void* e,double* out,int cap) {
+    if(!e || (cap>0 && !out) || cap<0) return -2;
+    return static_cast<pvb::Engine*>(e)->resultantTraceCopy(out,cap);
+}
+
 int pvb_set_p1pp_v04_research(void* e,int flags) {
     if(!e || flags<0 || flags>511) return 0;
     static_cast<pvb::Engine*>(e)->setP1PPV04Research(static_cast<unsigned>(flags));return 1;

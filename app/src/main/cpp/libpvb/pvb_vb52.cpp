@@ -293,16 +293,18 @@ void VbHpv::missingFrame52(int reason,bool fast) {
         if(gen_.envelope) tr.life=1;
         const int state=tr.life<=0?HarmonicTrace::End:(fastEnd || tr.missing>continuity_.hold?HarmonicTrace::Release:HarmonicTrace::Held);
         traceTrack52(j,tr,state,reason|HarmonicTrace::Lost);
-        if(tr.life>0 || (stageFlags_&StageOscillator)) renderTrack52(tr,src,ns,false,fastEnd,j,grain,agrain);
+        // Resultant core: the tracker is kept as it is, only P1's grain renderer is skipped
+        if((tr.life>0 || (stageFlags_&StageOscillator)) && !resultantOn_) renderTrack52(tr,src,ns,false,fastEnd,j,grain,agrain);
         if(gen_.envelope && tr.envPeak<1e-2) tr.life=0;
         if(tr.life>0) tr52_[n++]=tr; else grave52(tr);
     }
     nt52_=n; ++hop52_;
     double energy=0;
     for(int g=0;g<32;++g) energy+=grain[g]*grain[g];
-    addGrain52(static_cast<int64_t>(i_)+16,grain,agrain);
+    if(!resultantOn_) addGrain52(static_cast<int64_t>(i_)+16,grain,agrain);
     if(harmonicCapture_) { harmonicTrace_.data[12]=static_cast<float>(n); harmonicTrace_.data[20]=static_cast<float>(std::sqrt(energy/32)); }
     if(devMeter_) devEndFrame();
+    if(resultantOn_) resultant_.hop(*this,false,nullptr,nullptr);   // a hop without a measurement (Absolute, NoPeak, Relative)
 }
 
 double VbHpv::phaseDelta52(double f) const {
@@ -843,7 +845,7 @@ void VbHpv::pvFrame52() {
                 tr.pendN=0;
             }
         }
-        renderTrack52(tr,src,ns,true,false,p,grain,agrain);
+        if(!resultantOn_) renderTrack52(tr,src,ns,true,false,p,grain,agrain);
         next[p]=tr;
     }
     int lost=0,traceSlot=np;
@@ -889,7 +891,7 @@ void VbHpv::pvFrame52() {
         if(harmonicCapture_ && traceIndex>=HarmonicTrace::kTracks) harmonicTrace_.data[21]+=1;
         traceTrack52(traceIndex,tr,state,HarmonicTrace::Lost);
         if(tr.life>0 || (stageFlags_&StageOscillator)) {
-            renderTrack52(tr,src,ns,false,fast,traceIndex,grain,agrain);
+            if(!resultantOn_) renderTrack52(tr,src,ns,false,fast,traceIndex,grain,agrain);
             if(gen_.envelope && tr.envPeak<1e-2) tr.life=0;
             if(tr.life>0) next[nextCount++]=tr; else grave52(tr);
         }
@@ -909,8 +911,9 @@ void VbHpv::pvFrame52() {
     }
     int n=0; for(int p=0;p<np;++p) if(tr52_[p].strong) hist52_[histCount_][n++]=tr52_[p].f;
     histN52_[histCount_++]=n;
-    addGrain52(centre,grain,agrain);
+    if(!resultantOn_) addGrain52(centre,grain,agrain);
     if(devMeter_) devEndFrame();
+    if(resultantOn_) resultant_.hop(*this,true,src,ns);   // after the hop counter and the track list: the core reads both
 }
 
 struct VbHpv::TrackTape52 {
@@ -1035,7 +1038,8 @@ double VbHpv::core52(double d) {
         const int64_t t=i-207-defer; ac=1e30;
         for(int64_t j=std::max<int64_t>(0,t-90);j<=t+90;++j) ac=std::min(ac,max52_[j&(kRing-1)]);
     }
-    double out=0,apv=0; if(i>=defer) takeGrain52(i-defer,out,apv);
+    double out=0,apv=0;
+    if(i>=defer) { if(resultantOn_) out=resultant_.take(i-defer); else takeGrain52(i-defer,out,apv); }
     double as=envA_.tick(ac),ps=envP_.tick(apv);
     if(inject_.active(StageInject52::InjectEnvelope,i)) {as=inject_.as[i];ps=inject_.ps[i];}
     const double gain=apv>0?clampv(as/(ps+1e-9),0.,1.):0;
@@ -1057,6 +1061,7 @@ double VbHpv::core52(double d) {
         const double c=std::exp(-1./((appliedGain>devGain_?.003:rel)*kFsd));
         devGain_=c*devGain_+(1-c)*appliedGain; appliedGain=devGain_;
     }
+    if(resultantOn_) appliedGain=1.;   // Resultant core: the layer's level is the input's own, no envelope imposition
     const int pslot=(i-defer)&(kRing-1);
     const double target=i>=defer?polyT52_[pslot]:1.; if(i>=defer) polyT52_[pslot]=1;
     a=std::exp(-1./(target<poly52_?60:600)); poly52_=a*poly52_+(1-a)*target;
@@ -1148,5 +1153,8 @@ void VbHpv::spectrum52(const double* ring, int64_t s0, double* re, double* im) {
     }
 }
 }
+
+// Resultant core (algorithm 15): defined here, in this translation unit, to use the helpers above and the privates of VbHpv
+#include "pvb_resultant.inc"
 
 

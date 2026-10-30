@@ -65,7 +65,7 @@ enum Param : int {
     P_TAG,            // opaque condition tag (integer); openMs() counts audible time per tag (blind comparison)
     P_VB_ON,          // virtual bass (experimental): 1 = the algorithm below is in the path (with its latency)
     P_VB_ALGO,        // IDs0-5 legacy; 4 Alpha2 reference,6 P1,7 D2,8 J2,9 free oscillator,10 corrected oscillator,
-                      // 11 P1+, 12 P1++ v0.2, 13 P1++ v0.3
+                      // 11 P1+, 12 P1++ v0.2, 13 P1++ v0.3, 14 P1 + C1, 15 Resultant core (host research only)
     P_VB_LEVEL_DB,    // layer level re the 'faithful' level, dB (-120..+12; the app offers -6..+9); <= -90 = layer
                       // silent (algorithm and latency stay)
     P_FLAT,           // 1 = the bypass path is 'flat' (input x loudness-match gain, limiter) instead of the plain input
@@ -220,6 +220,12 @@ public:
     void setR4Research(int holdHops, double floorBlend, double tauUpMs) { vbAlpha2_.setR4Research(holdHops, floorBlend, tauUpMs); }
     void setR4Level(double gainDb) { vbAlpha2_.setR4Level(gainDb); }
     void setR4Reentry(double tauMs) { vbAlpha2_.setR4Reentry(tauMs); }
+    // Host research (Resultant core, algorithm 15; docs/RESULTANT_CORE.md 4.2, 5.8). Not reachable from JNI.
+    // v: 16 values in the order of the spec (n may be shorter: the rest are the defaults); false = out of range, nothing
+    // applied. Kept whichever algorithm runs. The trace holds 8 voice rows of 22 values per hop (allocated in enable).
+    bool setResultantParams(const double* v, int n) { return vbAlpha2_.setResultantParams(v, n); }
+    bool resultantTraceEnable(int hops) { return vbAlpha2_.resultantTraceEnable(hops); }
+    int resultantTraceCopy(double* out, int capacity) const { return vbAlpha2_.resultantTraceCopy(out, capacity); }
     void setContinuityResearch(const ContinuityParams& p) {
         for(VbHpv* m : {&vb52_, &vbGentle_, &vbGentleStrong_, &vbGentleAdaptive_}) m->setContinuityResearch(p);
     }
@@ -334,7 +340,7 @@ private:
     VbHpv vbAlpha2_{true, true, 1};
     VbModule* vbMods_[VB_ALGO_COUNT] = {&vbHpv_, &vbBank_, &vb52_, &vbGentle_, &vbGentleStrong_, &vbGentleAdaptive_,
                                      &vbAlpha2_, &vbAlpha2_, &vbAlpha2_, &vbAlpha2_, &vbAlpha2_, &vbAlpha2_, &vbAlpha2_, &vbAlpha2_,
-                                     &vbAlpha2_};
+                                     &vbAlpha2_, &vbAlpha2_};
     bool vbOk_[VB_ALGO_COUNT] = {};   // available at the current rate
     int vbCur_ = -1;                  // algorithm in the signal path, -1 = none
     bool genCur_ = false;             // S1m running in vbAlpha2_ (P1 only); switched like an algorithm (faded)
