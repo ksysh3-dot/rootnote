@@ -43,7 +43,11 @@ enum StageResearchFlag : unsigned {
     // Resultant R4-L: the sustained layer of a track above 73.3 Hz is raised by the setR4Level gain (default 6 dB):
     // full from 92.4 Hz (a third of an octave up) to 150 Hz, back to 0 dB at 220 Hz. A track at twice or three times a
     // live lower track and the bursts are unchanged, below 73.3 Hz nothing changes; StageOnsetProtect blends it in.
-    StageRegisterLevel=67108864
+    StageRegisterLevel=67108864,
+    // Resultant R4-L v2: the register corner and level shares of each track follow its own fit. A failed fit (the
+    // re-attack of a held note fails it for ~0.2 s while the layer fades out) takes the share back within ~10 ms;
+    // once the fit passes it returns over setR4Reentry ms (default 250), so the returning layer comes back at P1 level.
+    StageReentrySlow=134217728
 };
 struct StageCapture52 {
     static constexpr int kValues=26, kFields=kValues+2, kVersion=3;

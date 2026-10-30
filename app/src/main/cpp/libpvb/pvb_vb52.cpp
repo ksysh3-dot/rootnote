@@ -81,11 +81,13 @@ void VbHpv::renderTrack52(Track52& tr,const double src[2][256],const int ns[2],
         const auto& o=tr52_[t];
         if(o.life>0 && o.f<tr.f*.9 && (std::abs(tr.f/2-o.f)<=.03*o.f || std::abs(tr.f/3-o.f)<=.03*o.f)) {harmonicOfLower=true;break;}
     }
+    // Share of the register corner and level: onsetBlend52_, times the track's own after a failed fit (R4-L v2).
+    const double share=onsetBlend52_*((stageFlags_&StageReentrySlow)?tr.r4Share:1.);
     // Resultant R4-L: the register level, 0 dB at 73.3 Hz, full from 92.4 to 150 Hz, 0 dB again at 220 Hz; it scales
-    // the rendered amplitude only (the nominal level below uses tr.a), blended by onsetBlend52_ like the corner.
+    // the rendered amplitude only (the nominal level below uses tr.a), blended by the share like the corner.
     if((stageFlags_&StageRegisterLevel) && upperRegister && !harmonicOfLower && tr.f<220) {
         const double s=tr.f<92.4?3*std::log2(tr.f*3/220):tr.f<=150?1.:std::log2(220/tr.f)/std::log2(220/150.);
-        gain*=1+onsetBlend52_*(std::pow(10.,r4LevelDb52_*clampv(s,0.,1.)/20)-1);
+        gain*=1+share*(std::pow(10.,r4LevelDb52_*clampv(s,0.,1.)/20)-1);
     }
     // S1 research: the per-harmonic envelope below is the only time gate.
     const double amp=gen_.envelope?tr.a*gain:tr.a*gain*tr.fade*tr.life;
@@ -134,7 +136,7 @@ void VbHpv::renderTrack52(Track52& tr,const double src[2][256],const int ns[2],
             const double base=w[k-2]*rolloff(k*tr.f,220.);
             if(registerCorner) {
                 const double moved=k*tr.f>corner?w[k-2]*rolloff(k*tr.f,corner):w[k-2];
-                w[k-2]=base+onsetBlend52_*(moved-base);
+                w[k-2]=base+share*(moved-base);
             } else w[k-2]=base;
         }
         float* ht=harmonicCapture_ && traceSlot<HarmonicTrace::kTracks ?
@@ -749,7 +751,7 @@ void VbHpv::pvFrame52() {
             // Held tracks already advance phi once on each missing hop below.
             const double pred=prev.phi+kPi*(prev.f+q.f)*16/3000;
             tr.phi=q.ph+2*kPi*std::nearbyint((pred-q.ph)/(2*kPi));
-            std::copy(prev.off,prev.off+7,tr.off); tr.fade=prev.fade;
+            std::copy(prev.off,prev.off+7,tr.off); tr.fade=prev.fade; tr.r4Share=prev.r4Share;
             tr.impactRecoveryPending=prev.impactRecoveryPending;
             tr.steadyHops=steady;
             tr.confF=prev.confF; tr.confHop=prev.confHop; tr.confHops=prev.confHops; tr.inherited=inherited;
@@ -772,7 +774,7 @@ void VbHpv::pvFrame52() {
         } else {
             // Resultant R1 keeps kPsi at birth: the onset (where the percussive layer, which keeps kPsi, overlaps the
             // tracks) has the unmodified shape, and the slew below moves the offsets to the crest-optimal ones
-            std::copy(vbt::kPsi,vbt::kPsi+7,tr.off); tr.fade=q.res<=-15 ? 1 : 0;
+            std::copy(vbt::kPsi,vbt::kPsi+7,tr.off); tr.fade=q.res<=-15 ? 1 : 0; tr.r4Share=tr.fade;
             tr.impactRecoveryPending=guard && p1ppImpactMode_>=4 && q.res>-15;
             if(resumed) tr.fade=1;
             tr.id=++nextTrackId_; tr.age=1;
@@ -796,6 +798,11 @@ void VbHpv::pvFrame52() {
         }
         tr.residual=q.res; tr.rawResidual=q.raw;
         tr.fade+=((q.res>-15?0.:1.)-tr.fade)*(1-std::exp(-16./90));
+        if(stageFlags_&StageReentrySlow) {
+            // Resultant R4-L v2: the share follows the fit like fade, falling within ~10 ms, returning over the tau
+            const double target=q.res>-15?0.:1.,tau=target<tr.r4Share?10.:r4ReentryTau52_;
+            tr.r4Share+=(target-tr.r4Share)*(1-std::exp(-1000.*kPvH/kFsd/tau));
+        }
         if(best<0) tr.inherited=inherited;
         if(tr.fade>=.5) { tr.confF=tr.f; tr.confHop=hop52_; ++tr.confHops; }
         if(gen_.envelope) {
