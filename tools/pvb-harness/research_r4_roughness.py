@@ -78,11 +78,15 @@ def bass_db(y):
     return 10 * np.log10(S[(fr >= 150) & (fr < 700)].sum() + 1e-30), 10 * np.log10(S.sum() + 1e-30)
 for name, kw in VAR:
     kw = dict(kw); stage = int(kw.pop('stage', 0)); r4 = [kw.pop(k, None) for k in ('r4hold', 'r4floor', 'r4tau')]
+    r4l = kw.pop('r4level', None)
     eng = T.Engine(plib, FS, **kw)
+    import ctypes as _c
     if r4[0] is not None:
-        import ctypes as _c
         plib.pvb_set_r4_research.argtypes = [_c.c_void_p, _c.c_int, _c.c_double, _c.c_double]
         assert plib.pvb_set_r4_research(eng.h, int(r4[0]), float(r4[1]), float(r4[2])) == 1
+    if r4l is not None:      # Resultant R4-L register level (with stage 67108864)
+        plib.pvb_set_r4_level.argtypes = [_c.c_void_p, _c.c_double]
+        assert plib.pvb_set_r4_level(eng.h, float(r4l)) == 1
     cap = StageCapture(plib, eng.h, stage, int(len(x) / FS * 3000) + 16) if stage else None
     y = eng.process(x, block=256); lat = eng.latency(); eng.close()
     y = y[lat:].astype(float).mean(axis=1)
@@ -93,6 +97,10 @@ for name, kw in VAR:
                total_hits=float(R[hit].sum(1).mean()) if hit.any() else None, total_rest=float(R[~hit].sum(1).mean()),
                mid_hits=float(R[hit][:, mid].sum(1).mean()) if hit.any() else None, mid_rest=float(R[~hit][:, mid].sum(1).mean()))
     bd, td = bass_db(y); out['bass_band_db'] = bd; out['total_db'] = td
+    if a.phone_hz < 0:       # the phone processor's gain reduction on this output (octave bands x time, dB)
+        _, inf = PM.drc(np.stack([y, y], 1), FS); g = np.asarray(inf['gr_bands'], float)
+        out['gr'] = dict(mean=round(float(g.mean()), 2), low_p95=round(float(np.percentile(np.asarray(inf['gr_low'], float), 95)), 2),
+                         max=round(float(g.max()), 2))
     if base is None: base = out
     out['bass_band_change_db'] = round(bd - base['bass_band_db'], 2); out['total_change_db'] = round(td - base['total_db'], 2)
     out['change_pct'] = {k: round(100 * (out[k] / base[k] - 1), 1) for k in out if isinstance(out[k], float) and base.get(k)}

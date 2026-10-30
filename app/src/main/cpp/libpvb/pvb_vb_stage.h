@@ -39,7 +39,11 @@ enum StageResearchFlag : unsigned {
     StageRegisterCorner=16777216,
     // Resultant R4, with StageRegisterCorner: while a low-band onset is recent (onsetLeft_, 24 hops = 128 ms) the
     // 220 Hz roll-off returns within ~10 ms and the register corner comes back over ~60 ms afterwards; bursts keep 220 Hz.
-    StageOnsetProtect=33554432
+    StageOnsetProtect=33554432,
+    // Resultant R4-L: the sustained layer of a track above 73.3 Hz is raised by the setR4Level gain (default 6 dB):
+    // full from 92.4 Hz (a third of an octave up) to 150 Hz, back to 0 dB at 220 Hz. A track at twice or three times a
+    // live lower track and the bursts are unchanged, below 73.3 Hz nothing changes; StageOnsetProtect blends it in.
+    StageRegisterLevel=67108864
 };
 struct StageCapture52 {
     static constexpr int kValues=26, kFields=kValues+2, kVersion=3;

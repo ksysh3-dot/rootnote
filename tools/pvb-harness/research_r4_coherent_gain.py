@@ -4,7 +4,7 @@ defaults) at k f0 for steady-f0 frames (128 ms, reference f0 spread < 1.5 %), f0
 coherently, unlike a power sum). Models: P1 and R4 variants via host stage flags (StageCapture attached) and
 pvb_set_r4_research. Also the phone-weighted (S26 Ultra speaker curve) sum over k = 1..6.
 Usage: coherent_gain.py <root> <lib> --reference midi|yin [--midi-transpose auto] [--crop s0,dur] [--skip RE]
-       [--limit N] [--models 'name:stage[:hold,floor,tau];...'] [--out json]"""
+       [--limit N] [--models 'name:stage[:hold,floor,tau[:r4level dB]];...'] [--out json]"""
 import argparse, ctypes as Cty, json, re, sys
 from pathlib import Path
 import numpy as np
@@ -22,9 +22,11 @@ a = p.parse_args(); FS, CORE = 48000, 3000; lib = RP.api(a.lib)
 lib.pvb_set_r4_research.argtypes = [Cty.c_void_p, Cty.c_int, Cty.c_double, Cty.c_double]
 MODELS = [m.split(':') for m in a.models.split(';')]
 BANDS = ((55, 80), (80, 100), (100, 125), (125, 150)); K = np.arange(1, 7)
-def run(x, stage=0, r4=None, on=1):
+lib.pvb_set_r4_level.argtypes = [Cty.c_void_p, Cty.c_double]
+def run(x, stage=0, r4=None, on=1, level=None):
     e = T.Engine(lib, FS, vb_on=on, vb_algo=6)
     if r4: assert lib.pvb_set_r4_research(e.h, *r4) == 1
+    if level is not None: assert lib.pvb_set_r4_level(e.h, level) == 1   # R4-L register level (4th model field)
     cap = StageCapture(lib, e.h, stage, int(len(x) / FS * 3000) + 16) if stage else None
     y = e.process(x.copy(), block=256); lat = e.latency(); e.close(); return y[lat:].astype(float).mean(axis=1)
 N = int(.128 * FS); HOP = N // 2; tw = np.arange(N) / FS
@@ -47,7 +49,8 @@ for name, mix, bass, fs, midis, _ in G.items(a.root):
     x = G.to_rate(mix, fs, FS); x = (x if x.ndim == 2 and x.shape[1] == 2 else np.repeat(x.reshape(len(x), -1)[:, :1], 2, 1))
     x = np.clip(x, -1, 1).astype(np.float32)
     yoff = run(x, on=0)
-    ys = {m[0]: run(x, int(m[1]), tuple(float(v) if i else int(v) for i, v in enumerate(m[2].split(','))) if len(m) > 2 else None) for m in MODELS}
+    ys = {m[0]: run(x, int(m[1]), tuple(float(v) if i else int(v) for i, v in enumerate(m[2].split(','))) if len(m) > 2 and m[2] else None,
+                    level=float(m[3]) if len(m) > 3 else None) for m in MODELS}
     L = min(len(yoff), *(len(v) for v in ys.values()))
     for s in range(int(1.0 * FS), L - N, HOP):
         sel = (tt >= s / FS) & (tt <= (s + N) / FS); fs_ = f0[sel]; good = fs_[np.isfinite(fs_)]

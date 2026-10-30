@@ -233,6 +233,8 @@ public:
     // the register corner share falls to floorBlend there, and comes back with tauUpMs. Defaults: 24, 0, 60.
     void setR4Research(int holdHops,double floorBlend,double tauUpMs) {
         r4Hold52_=holdHops; r4Floor52_=floorBlend; r4TauUp52_=tauUpMs; }
+    // Resultant R4-L register level (StageRegisterLevel), dB at full share. Default 6.
+    void setR4Level(double gainDb) { r4LevelDb52_=gainDb; }
     void setP1PPImpactResearch(int mode) { p1ppHostImpact_=mode; if(!p1PlusFixed_) p1ppImpactMode_=mode; reset(); }
     // Host-only P1++ v0.4 research on top of impact mode 8 (research/p1pp/2026-10-27-v04): 1 = a confirmed track
     // whose peak is not among the six strongest keeps its own local peak (up to 8 peaks), 2 = steadiness from the
@@ -242,7 +244,7 @@ public:
     // grains are kept; when the track is released within three hops they are added back where they belonged.
     void setP1PPV04Research(unsigned flags) { p1ppV04Host_=flags&511; if(!p1PlusFixed_) p1ppV04_=p1ppV04Host_; reset(); }
     void setStageResearch(unsigned flags,StageCapture52::Sink sink=nullptr,void* user=nullptr) {
-        stageHostFlags_=flags&67108863;stageFlags_=stageHostFlags_;stageSink_=sink;stageUser_=user;reset();
+        stageHostFlags_=flags&134217727;stageFlags_=stageHostFlags_;stageSink_=sink;stageUser_=user;reset();
     }
     // App listening profiles, applied only by the audio owner while switching.
     // All use the same gentle24 placement. Legacy research setters remain separate.
@@ -467,6 +469,7 @@ private:
     int lowGridHold52_=0;  // study 3 C4: hops left in the impact context that suspends the wider low grid
     double onsetBlend52_=1;  // Resultant R4: share of the register-corner roll-off (StageOnsetProtect; 1 otherwise)
     int r4Hold52_=24; double r4Floor52_=0, r4TauUp52_=60;  // Resultant R4 onset protection (setR4Research)
+    double r4LevelDb52_=6;  // Resultant R4-L register level (setR4Level)
     double histDbResearch_=-6, percSlow52_=0;
     int impactHold52_=24, steadyHops52_=3;
     double steadyA52_=.97, releaseStrength52_=.4;

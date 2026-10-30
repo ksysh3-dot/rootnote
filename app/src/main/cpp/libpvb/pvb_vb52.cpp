@@ -73,6 +73,20 @@ void VbHpv::renderTrack52(Track52& tr,const double src[2][256],const int ns[2],
     double w[7],gain; lookup(tr.f,w,gain);
     if(devHarm_) devWeights(w);   // developer mode: per-harmonic offsets (off: untouched)
     double devH[7]={};
+    // A track that is itself the 2nd or 3rd harmonic of a live lower track (a sub-bass with a strong native 2nd
+    // harmonic) keeps 220 Hz and its level (R4, R4-L): its upper partials are high orders of the lower series.
+    const bool upperRegister=tr.f*3>220;
+    bool harmonicOfLower=false;
+    if(upperRegister && (stageFlags_&(StageRegisterCorner|StageRegisterLevel))) for(int t=0;t<nt52_;++t) {
+        const auto& o=tr52_[t];
+        if(o.life>0 && o.f<tr.f*.9 && (std::abs(tr.f/2-o.f)<=.03*o.f || std::abs(tr.f/3-o.f)<=.03*o.f)) {harmonicOfLower=true;break;}
+    }
+    // Resultant R4-L: the register level, 0 dB at 73.3 Hz, full from 92.4 to 150 Hz, 0 dB again at 220 Hz; it scales
+    // the rendered amplitude only (the nominal level below uses tr.a), blended by onsetBlend52_ like the corner.
+    if((stageFlags_&StageRegisterLevel) && upperRegister && !harmonicOfLower && tr.f<220) {
+        const double s=tr.f<92.4?3*std::log2(tr.f*3/220):tr.f<=150?1.:std::log2(220/tr.f)/std::log2(220/150.);
+        gain*=1+onsetBlend52_*(std::pow(10.,r4LevelDb52_*clampv(s,0.,1.)/20)-1);
+    }
     // S1 research: the per-harmonic envelope below is the only time gate.
     const double amp=gen_.envelope?tr.a*gain:tr.a*gain*tr.fade*tr.life;
     // P1++ v0.4 bit 16: a track held back only by the fit guard emits the harmonics found in the input at k f
@@ -111,13 +125,7 @@ void VbHpv::renderTrack52(Track52& tr,const double src[2][256],const int ns[2],
         // A convex amplitude blend introduces no second oscillator.
         return g12+research_.upperBlend*(g12*g12-g12);
     };
-    // A track that is itself the 2nd or 3rd harmonic of a live lower track (a sub-bass with a strong native 2nd
-    // harmonic) keeps 220 Hz: its upper partials are high orders of the lower series.
-    bool registerCorner=stageFlags_&StageRegisterCorner;
-    if(registerCorner && tr.f*3>220) for(int t=0;t<nt52_;++t) {
-        const auto& o=tr52_[t];
-        if(o.life>0 && o.f<tr.f*.9 && (std::abs(tr.f/2-o.f)<=.03*o.f || std::abs(tr.f/3-o.f)<=.03*o.f)) {registerCorner=false;break;}
-    }
+    const bool registerCorner=(stageFlags_&StageRegisterCorner) && !harmonicOfLower;
     const double corner=std::max(220.,3*tr.f);
     for(int k=2;k<=8;++k) {
         // Exact gentle128 reference: sustained partials above 220 Hz lose

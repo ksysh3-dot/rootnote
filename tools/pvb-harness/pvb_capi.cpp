@@ -69,6 +69,10 @@ int pvb_set_r4_research(void* e,int holdHops,double floorBlend,double tauUpMs) {
     if(!e || holdHops<0 || holdHops>24 || floorBlend<0 || floorBlend>1 || tauUpMs<=0) return 0;
     static_cast<pvb::Engine*>(e)->setR4Research(holdHops,floorBlend,tauUpMs);return 1;
 }
+int pvb_set_r4_level(void* e,double gainDb) {
+    if(!e || !(gainDb>=0) || gainDb>18) return 0;
+    static_cast<pvb::Engine*>(e)->setR4Level(gainDb);return 1;
+}
 
 int pvb_set_p1pp_v04_research(void* e,int flags) {
     if(!e || flags<0 || flags>511) return 0;
@@ -112,7 +116,7 @@ int pvb_stage_fields() {return pvb::StageCapture52::kFields;}
 // copying happen outside the audio call. Overflow is explicit, never truncated.
 void* pvb_stage_attach(void* e,unsigned flags,int capacity) {
     const unsigned predictors=pvb::StageTrackLinear|pvb::StageTrackBurg;
-    if(!e || flags>67108863 || (flags&predictors)==predictors ||
+    if(!e || flags>134217727 || (flags&predictors)==predictors ||
        ((flags&pvb::StageOscillatorCorrect) && !(flags&pvb::StageOscillator)) ||
        ((flags&predictors) && !(flags&pvb::StageGlobalTrack)) || capacity<=0 || capacity>2000000) return nullptr;
     auto* s=new pvb::HostStageCapture(static_cast<pvb::Engine*>(e),capacity);
