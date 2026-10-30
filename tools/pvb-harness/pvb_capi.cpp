@@ -65,6 +65,10 @@ int pvb_set_p1pp_research_params(void* e,int hold,double historyDb,int steadyHop
     if(!e || hold<1 || steadyHops<1 || steadyA<=0 || releaseStrength<0) return 0;
     static_cast<pvb::Engine*>(e)->setP1PPResearchParams(hold,historyDb,steadyHops,steadyA,releaseStrength);return 1;
 }
+int pvb_set_r4_research(void* e,int holdHops,double floorBlend,double tauUpMs) {
+    if(!e || holdHops<0 || holdHops>24 || floorBlend<0 || floorBlend>1 || tauUpMs<=0) return 0;
+    static_cast<pvb::Engine*>(e)->setR4Research(holdHops,floorBlend,tauUpMs);return 1;
+}
 
 int pvb_set_p1pp_v04_research(void* e,int flags) {
     if(!e || flags<0 || flags>511) return 0;

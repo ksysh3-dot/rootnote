@@ -217,6 +217,7 @@ public:
     }
     void setP1PPResearchParams(int hold, double historyDb, int steadyHops, double steadyA, double releaseStrength) {
         vbAlpha2_.setP1PPResearchParams(hold, historyDb, steadyHops, steadyA, releaseStrength); }
+    void setR4Research(int holdHops, double floorBlend, double tauUpMs) { vbAlpha2_.setR4Research(holdHops, floorBlend, tauUpMs); }
     void setContinuityResearch(const ContinuityParams& p) {
         for(VbHpv* m : {&vb52_, &vbGentle_, &vbGentleStrong_, &vbGentleAdaptive_}) m->setContinuityResearch(p);
     }

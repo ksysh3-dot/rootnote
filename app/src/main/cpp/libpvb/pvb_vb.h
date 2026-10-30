@@ -229,6 +229,10 @@ public:
     void setP1PPResearchParams(int hold, double historyDb, int steadyHops, double steadyA, double releaseStrength) {
         impactHold52_=hold; histDbResearch_=historyDb; steadyHops52_=steadyHops; steadyA52_=steadyA;
         releaseStrength52_=releaseStrength; }
+    // Resultant R4 onset protection (StageOnsetProtect): protected for the first holdHops of the 24-hop onset window,
+    // the register corner share falls to floorBlend there, and comes back with tauUpMs. Defaults: 24, 0, 60.
+    void setR4Research(int holdHops,double floorBlend,double tauUpMs) {
+        r4Hold52_=holdHops; r4Floor52_=floorBlend; r4TauUp52_=tauUpMs; }
     void setP1PPImpactResearch(int mode) { p1ppHostImpact_=mode; if(!p1PlusFixed_) p1ppImpactMode_=mode; reset(); }
     // Host-only P1++ v0.4 research on top of impact mode 8 (research/p1pp/2026-10-27-v04): 1 = a confirmed track
     // whose peak is not among the six strongest keeps its own local peak (up to 8 peaks), 2 = steadiness from the
@@ -462,6 +466,7 @@ private:
     int impactCtx52_=0, preImpactN52_=0;
     int lowGridHold52_=0;  // study 3 C4: hops left in the impact context that suspends the wider low grid
     double onsetBlend52_=1;  // Resultant R4: share of the register-corner roll-off (StageOnsetProtect; 1 otherwise)
+    int r4Hold52_=24; double r4Floor52_=0, r4TauUp52_=60;  // Resultant R4 onset protection (setR4Research)
     double histDbResearch_=-6, percSlow52_=0;
     int impactHold52_=24, steadyHops52_=3;
     double steadyA52_=.97, releaseStrength52_=.4;

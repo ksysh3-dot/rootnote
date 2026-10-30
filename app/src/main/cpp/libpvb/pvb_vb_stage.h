@@ -34,7 +34,8 @@ enum StageResearchFlag : unsigned {
     // confirmation the wrong halvings of a true fundamental took their T / 2 level from other tonal instruments.
     StageSubOctaveNoHold=8388608,
     // Resultant R4: the sustained upper roll-off starts at max(220 Hz, 3 f) instead of 220 Hz (renderTrack52 and the
-    // burst copy), so a fundamental of 80-150 Hz keeps its 3rd and 4th harmonics; below 73.3 Hz nothing changes.
+    // burst copy), so a fundamental of 80-150 Hz keeps its 3rd and 4th harmonics; below 73.3 Hz nothing changes, and a
+    // track at twice or three times a live lower track keeps 220 Hz.
     StageRegisterCorner=16777216,
     // Resultant R4, with StageRegisterCorner: while a low-band onset is recent (onsetLeft_, 24 hops = 128 ms) the
     // 220 Hz roll-off returns within ~10 ms and the register corner comes back over ~60 ms afterwards; bursts keep 220 Hz.

@@ -111,7 +111,13 @@ void VbHpv::renderTrack52(Track52& tr,const double src[2][256],const int ns[2],
         // A convex amplitude blend introduces no second oscillator.
         return g12+research_.upperBlend*(g12*g12-g12);
     };
-    const bool registerCorner=stageFlags_&StageRegisterCorner;
+    // A track that is itself the 2nd or 3rd harmonic of a live lower track (a sub-bass with a strong native 2nd
+    // harmonic) keeps 220 Hz: its upper partials are high orders of the lower series.
+    bool registerCorner=stageFlags_&StageRegisterCorner;
+    if(registerCorner && tr.f*3>220) for(int t=0;t<nt52_;++t) {
+        const auto& o=tr52_[t];
+        if(o.life>0 && o.f<tr.f*.9 && (std::abs(tr.f/2-o.f)<=.03*o.f || std::abs(tr.f/3-o.f)<=.03*o.f)) {registerCorner=false;break;}
+    }
     const double corner=std::max(220.,3*tr.f);
     for(int k=2;k<=8;++k) {
         // Exact gentle128 reference: sustained partials above 220 Hz lose
@@ -533,7 +539,7 @@ void VbHpv::pvFrame52() {
     --onsetLeft_; holdPos_=(holdPos_+1)%28; holdCount_=std::min(28,holdCount_+1);
     if(stageFlags_&StageOnsetProtect) {
         // Resultant R4: back to the 220 Hz roll-off within ~10 ms of a low-band onset, the register corner over ~60 ms
-        const double target=onsetLeft_>0?0.:1.,tau=target<onsetBlend52_?10.:60.;
+        const double target=onsetLeft_>24-r4Hold52_?r4Floor52_:1.,tau=target<onsetBlend52_?10.:r4TauUp52_;
         onsetBlend52_+=(target-onsetBlend52_)*(1-std::exp(-1000.*kPvH/kFsd/tau));
     }
     for(int p=0;p<np;++p) {

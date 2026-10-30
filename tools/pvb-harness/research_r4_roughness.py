@@ -76,8 +76,12 @@ def bass_db(y):
     S = np.abs(np.fft.rfft(z)) ** 2; fr = np.fft.rfftfreq(len(z), 1 / FS)
     return 10 * np.log10(S[(fr >= 150) & (fr < 700)].sum() + 1e-30), 10 * np.log10(S.sum() + 1e-30)
 for name, kw in VAR:
-    kw = dict(kw); stage = int(kw.pop('stage', 0))
+    kw = dict(kw); stage = int(kw.pop('stage', 0)); r4 = [kw.pop(k, None) for k in ('r4hold', 'r4floor', 'r4tau')]
     eng = T.Engine(plib, FS, **kw)
+    if r4[0] is not None:
+        import ctypes as _c
+        plib.pvb_set_r4_research.argtypes = [_c.c_void_p, _c.c_int, _c.c_double, _c.c_double]
+        assert plib.pvb_set_r4_research(eng.h, int(r4[0]), float(r4[1]), float(r4[2])) == 1
     cap = StageCapture(plib, eng.h, stage, int(len(x) / FS * 3000) + 16) if stage else None
     y = eng.process(x, block=256); lat = eng.latency(); eng.close()
     y = y[lat:].astype(float).mean(axis=1)

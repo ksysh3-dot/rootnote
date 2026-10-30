@@ -22,14 +22,20 @@ import test_harmonic_continuity as H
 p = argparse.ArgumentParser(); p.add_argument('root', type=Path); p.add_argument('lib', type=Path)
 p.add_argument('--reference', default='yin'); p.add_argument('--midi-transpose', default='0')
 p.add_argument('--crop', default=''); p.add_argument('--skip', default=''); p.add_argument('--limit', type=int, default=0)
-p.add_argument('--out', type=Path)
+p.add_argument('--out', type=Path); p.add_argument('--stage', type=int, default=0, help='stage flags of the rendered model')
+p.add_argument('--r4', default='', help='hold,floor,tau for pvb_set_r4_research (onset protection)')
 a = p.parse_args(); lib = P.api(a.lib.resolve()); CORE = G.CORE
+HOOK = None
+if a.r4:
+    import ctypes as _c
+    _h, _f, _t = a.r4.split(','); lib.pvb_set_r4_research.argtypes = [_c.c_void_p, _c.c_int, _c.c_double, _c.c_double]
+    HOOK = lambda l, h: l.pvb_set_r4_research(h, int(_h), float(_f), float(_t))
 BANDS = ((55, 80), (80, 100), (100, 125), (125, 150)); K = np.arange(1, 9)
 n, hop = 384, 96; win = np.hanning(n); FR = np.fft.rfftfreq(n * 8, 1 / CORE); BM = (FR >= 120) & (FR <= 1450)
 acc = {b: dict(frames=0, tracked=0, lay=np.zeros(8), lay_b=np.zeros(8), lay_tot=0., layb_tot=0., nat=[], ratio=[], added=[], bassprof=[])
        for b in BANDS}
 def render(x48):
-    r = P.render(lib, x48, G.FS, 0, stage_flags=0)
+    r = P.render(lib, x48, G.FS, 0, stage_flags=a.stage, before_process=HOOK)
     lat = r['latency']; lay = resample_poly(r['stem'][lat:, :].astype(float).mean(axis=1), 1, 16)
     return lay, H.tracks(r['rows']), (H.core_indices(r['rows']).astype(float) - 383) / CORE
 def harm(S, f):
