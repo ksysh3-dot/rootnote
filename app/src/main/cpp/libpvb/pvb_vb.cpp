@@ -361,7 +361,7 @@ void VbHpv::reset() {
     envA_.b0 = envP_.b0 = 1.0 - al;
     envA_.z = envP_.z = 0.0;
     nt52_=apkCount_=histCount_=holdCount_=holdPos_=onsetLeft_=0;
-    impactCtx52_=preImpactN52_=lowGridHold52_=0; percSlow52_=0; graveN52_=0; hop52_=0;
+    impactCtx52_=preImpactN52_=lowGridHold52_=0; percSlow52_=0; graveN52_=0; hop52_=0; onsetBlend52_=1;
     for (auto& row : hold52_) std::fill(std::begin(row),std::end(row),-200.0);
     for (double* r : {md52_,md2_52_,max52_}) std::fill(r,r+kRing,0.0);
     std::fill(std::begin(polyT52_),std::end(polyT52_),1.0);

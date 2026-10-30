@@ -98,20 +98,30 @@ void VbHpv::renderTrack52(Track52& tr,const double src[2][256],const int ns[2],
     const bool preserveUnreferencedPhase=p1PlusProfile_ && (p1PlusFlags_&2);
     double targetAmplitude[7]={},targetPhase[7]={};
     for(int j=0;j<7;++j) targetPhase[j]=(j+2)*tr.phi+tr.off[j];
+    // Resultant R4: the roll-off factor for a corner; the register corner is blended in by onsetBlend52_ (1 without
+    // StageOnsetProtect), and equals 220 Hz below 73.3 Hz, so those weights stay bit-identical.
+    auto rolloff=[&](double fk,double corner) {
+        if(devRolloff_) {
+            // Developer mode: the module's own slope (12 or 24 dB/oct) plus the offset, 0..48 dB/oct.
+            const double slope=clampv((upperMode_==0?12.:24.)+dev_.rolloffOffset,0.,48.);
+            return std::pow(10.,-slope*std::log2(fk/corner)/20);
+        }
+        const double g12=std::pow(10.,-12*std::log2(fk/corner)/20);
+        // Both budgets share frequency, phase, grid and track history.
+        // A convex amplitude blend introduces no second oscillator.
+        return g12+research_.upperBlend*(g12*g12-g12);
+    };
+    const bool registerCorner=stageFlags_&StageRegisterCorner;
+    const double corner=std::max(220.,3*tr.f);
     for(int k=2;k<=8;++k) {
         // Exact gentle128 reference: sustained partials above 220 Hz lose
         // 12 dB/octave; no redistribution, no percussion or level change.
         if(gentle_ && k*tr.f>220) {
-            if(devRolloff_) {
-                // Developer mode: the module's own slope (12 or 24 dB/oct) plus the offset, 0..48 dB/oct.
-                const double slope=clampv((upperMode_==0?12.:24.)+dev_.rolloffOffset,0.,48.);
-                w[k-2]*=std::pow(10.,-slope*std::log2(k*tr.f/220.)/20);
-            } else {
-            const double g12=std::pow(10.,-12*std::log2(k*tr.f/220.)/20);
-            // Both budgets share frequency, phase, grid and track history.
-            // A convex amplitude blend introduces no second oscillator.
-            w[k-2]*=g12+research_.upperBlend*(g12*g12-g12);
-            }
+            const double base=w[k-2]*rolloff(k*tr.f,220.);
+            if(registerCorner) {
+                const double moved=k*tr.f>corner?w[k-2]*rolloff(k*tr.f,corner):w[k-2];
+                w[k-2]=base+onsetBlend52_*(moved-base);
+            } else w[k-2]=base;
         }
         float* ht=harmonicCapture_ && traceSlot<HarmonicTrace::kTracks ?
             harmonicTrace_.data+HarmonicTrace::kHeader+traceSlot*HarmonicTrace::kTrack+14+6*(k-2) : nullptr;
@@ -521,6 +531,11 @@ void VbHpv::pvFrame52() {
     }
     if(harmonicCapture_) { harmonicTrace_.data[24]=static_cast<float>(onsetLeft_); harmonicTrace_.data[25]=falling?1.f:0.f; harmonicTrace_.data[26]=static_cast<float>(holdCount_); }
     --onsetLeft_; holdPos_=(holdPos_+1)%28; holdCount_=std::min(28,holdCount_+1);
+    if(stageFlags_&StageOnsetProtect) {
+        // Resultant R4: back to the 220 Hz roll-off within ~10 ms of a low-band onset, the register corner over ~60 ms
+        const double target=onsetLeft_>0?0.:1.,tau=target<onsetBlend52_?10.:60.;
+        onsetBlend52_+=(target-onsetBlend52_)*(1-std::exp(-1000.*kPvH/kFsd/tau));
+    }
     for(int p=0;p<np;++p) {
         if(pk[p].modulation.valid) { pk[p].res=pk[p].modulation.residual; continue; }
         double r=-200;
@@ -1063,8 +1078,10 @@ double VbHpv::burstSample52(int64_t j) {
         f=clampv(f,params.fLoHz,dev_.tableScale!=1.0?params.fHiHz*dev_.tableScale:params.fHiHz);
         auto& v=(!bursts_[0].on || (bursts_[1].on && bursts_[0].start>bursts_[1].start))?bursts_[0]:bursts_[1];
         double g; lookup(f,v.w,g);
-        for(int k=2;k<=8;++k) if(gentle_ && k*f>220) {
-            const double g12=std::pow(10.,-12*std::log2(k*f/220.)/20);
+        // Resultant R4: the register corner applies to bursts only without the onset protection (bursts are onsets)
+        const double corner=(stageFlags_&StageRegisterCorner) && !(stageFlags_&StageOnsetProtect)?std::max(220.,3*f):220.;
+        for(int k=2;k<=8;++k) if(gentle_ && k*f>corner) {
+            const double g12=std::pow(10.,-12*std::log2(k*f/corner)/20);
             v.w[k-2]*=g12+research_.upperBlend*(g12*g12-g12);
         }
         v.amp=amp; v.phi=genPhaseRing_[s]; v.f=f; v.start=j; v.on=true;

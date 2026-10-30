@@ -65,8 +65,21 @@ def rough(y):
     return R
 res = {}; base = None
 tf = (np.arange(10 ** 6) * .2 + .1)
+import research_p1plus as RP
+from vb_quality.stage_capture import StageCapture
+plib = RP.api(a.lib)
+if a.phone_hz < 0:
+    _phone_only = _phone
+def bass_db(y):
+    """energy 150-700 Hz after the phone model (the audible bass harmonics), dB"""
+    z = _phone_only(y) if a.phone_hz < 0 else y
+    S = np.abs(np.fft.rfft(z)) ** 2; fr = np.fft.rfftfreq(len(z), 1 / FS)
+    return 10 * np.log10(S[(fr >= 150) & (fr < 700)].sum() + 1e-30), 10 * np.log10(S.sum() + 1e-30)
 for name, kw in VAR:
-    eng = T.Engine(lib, FS, **kw); y = eng.process(x, block=256); lat = eng.latency(); eng.close()
+    kw = dict(kw); stage = int(kw.pop('stage', 0))
+    eng = T.Engine(plib, FS, **kw)
+    cap = StageCapture(plib, eng.h, stage, int(len(x) / FS * 3000) + 16) if stage else None
+    y = eng.process(x, block=256); lat = eng.latency(); eng.close()
     y = y[lat:].astype(float).mean(axis=1)
     R = rough(y); nf = len(R); t = tf[:nf]
     hit = np.array([np.any((tc - on >= -.05) & (tc - on < .3)) for tc in t]) if len(on) else np.zeros(nf, bool)
@@ -74,6 +87,8 @@ for name, kw in VAR:
     out = dict(total=float(R.sum(1).mean()), mid=float(R[:, mid].sum(1).mean()),
                total_hits=float(R[hit].sum(1).mean()) if hit.any() else None, total_rest=float(R[~hit].sum(1).mean()),
                mid_hits=float(R[hit][:, mid].sum(1).mean()) if hit.any() else None, mid_rest=float(R[~hit][:, mid].sum(1).mean()))
+    bd, td = bass_db(y); out['bass_band_db'] = bd; out['total_db'] = td
     if base is None: base = out
+    out['bass_band_change_db'] = round(bd - base['bass_band_db'], 2); out['total_change_db'] = round(td - base['total_db'], 2)
     out['change_pct'] = {k: round(100 * (out[k] / base[k] - 1), 1) for k in out if isinstance(out[k], float) and base.get(k)}
     res[name] = out; print(name, json.dumps({k: (round(v, 4) if isinstance(v, float) else v) for k, v in out.items()}), flush=True)

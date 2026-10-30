@@ -238,7 +238,7 @@ public:
     // grains are kept; when the track is released within three hops they are added back where they belonged.
     void setP1PPV04Research(unsigned flags) { p1ppV04Host_=flags&511; if(!p1PlusFixed_) p1ppV04_=p1ppV04Host_; reset(); }
     void setStageResearch(unsigned flags,StageCapture52::Sink sink=nullptr,void* user=nullptr) {
-        stageHostFlags_=flags&16777215;stageFlags_=stageHostFlags_;stageSink_=sink;stageUser_=user;reset();
+        stageHostFlags_=flags&67108863;stageFlags_=stageHostFlags_;stageSink_=sink;stageUser_=user;reset();
     }
     // App listening profiles, applied only by the audio owner while switching.
     // All use the same gentle24 placement. Legacy research setters remain separate.
@@ -461,6 +461,7 @@ private:
     // research impact modes 5/6: impact context and the tones playing when it began
     int impactCtx52_=0, preImpactN52_=0;
     int lowGridHold52_=0;  // study 3 C4: hops left in the impact context that suspends the wider low grid
+    double onsetBlend52_=1;  // Resultant R4: share of the register-corner roll-off (StageOnsetProtect; 1 otherwise)
     double histDbResearch_=-6, percSlow52_=0;
     int impactHold52_=24, steadyHops52_=3;
     double steadyA52_=.97, releaseStrength52_=.4;

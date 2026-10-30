@@ -32,7 +32,13 @@ enum StageResearchFlag : unsigned {
     StageSubOctave=2097152, StageSubOctaveStrict=4194304,
     // Resultant R3-a: R3 without the relaxation while a track already holds T / 2 (always 10 / 20 dB). On the BabySlakh
     // confirmation the wrong halvings of a true fundamental took their T / 2 level from other tonal instruments.
-    StageSubOctaveNoHold=8388608
+    StageSubOctaveNoHold=8388608,
+    // Resultant R4: the sustained upper roll-off starts at max(220 Hz, 3 f) instead of 220 Hz (renderTrack52 and the
+    // burst copy), so a fundamental of 80-150 Hz keeps its 3rd and 4th harmonics; below 73.3 Hz nothing changes.
+    StageRegisterCorner=16777216,
+    // Resultant R4, with StageRegisterCorner: while a low-band onset is recent (onsetLeft_, 24 hops = 128 ms) the
+    // 220 Hz roll-off returns within ~10 ms and the register corner comes back over ~60 ms afterwards; bursts keep 220 Hz.
+    StageOnsetProtect=33554432
 };
 struct StageCapture52 {
     static constexpr int kValues=26, kFields=kValues+2, kVersion=3;
