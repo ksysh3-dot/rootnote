@@ -1,8 +1,9 @@
 """R4-L crackle: signal or playback? On the synthetic 100 Hz bass the 6 dB file differs from P1 almost only by a clean
 +2.5 dB on the partial lines (bass + pink: 76 % of the added layer on the lines, nothing above 1 kHz: -67 dB), yet it
-is heard as noise on the phone. Pair set (phone speaker, Rootnote off): the bare bass (no kick, no pink noise) P1/L6
-and L6/L6 (null), each in a random order. If the bare-bass 6 dB also crackles, the pink noise is not needed (points to
-playback); if it is clean, the noise-tracking interaction matters. Each file = A (8 s) + 1 s silence + B (8 s).
+is heard as noise on the phone. Pair set (phone speaker, Rootnote off): the bare bass (no kick, no pink noise) P1/L6,
+L6/L6 (null) and P1eq/L6 (P1 given L6's per-partial level change by EQ), each in a random order. If the bare-bass
+6 dB also crackles, the pink noise is not needed; if P1eq crackles too, the phone reacts to the level (cap design),
+if only L6 does, to the R4-L layer itself. Each file = A (8 s) + 1 s silence + B (8 s).
 Key JSON SHA-256 printed, listening spots from |l6 - p1| (150-600 Hz), key-free.
 Usage: render_r4l6c_pairs.py <lib> <outdir> <keyfile> <seed>"""
 import ctypes as C, hashlib, json, sys
@@ -23,10 +24,22 @@ def render(x, level=None):
         assert lib.pvb_set_r4_level(e.h, level) == 1; cap = StageCapture(lib, e.h, 16777216 | 67108864, int(len(x) / FS * 3000) + 16)
     y = e.process(x.copy(), block=256); lat = e.latency(); e.close(); return y[lat:lat + 8 * FS].astype(np.float32)
 S = {'p1': render(bass), 'l6': render(bass, 6.)}
+# p1eq: P1 with the same per-partial level change as L6 (measured on the lines k*100 Hz, smooth zero-phase EQ between
+# them, 0 dB below 150 Hz): the level control. If p1eq also crackles, the phone objects to the level, not the layer.
+n = len(S['p1']); f = np.fft.rfftfreq(n, 1 / FS); P, V = np.fft.rfft(S['p1'], axis=0), np.fft.rfft(S['l6'], axis=0)
+kk = np.arange(1, 9); g = []
+for k in kk:
+    m = np.abs(f - 100 * k) < 3; g.append(10 * np.log10(np.sum(np.abs(V[m]) ** 2) / np.sum(np.abs(P[m]) ** 2)))
+g = np.array(g); g[0] = 0; gc = np.interp(f, 100 * kk, g, left=0, right=g[-1])
+S['p1eq'] = np.fft.irfft(P * 10 ** (gc / 20)[:, None], n, axis=0).astype(np.float32)
+print('L6 re P1 per partial k1..8 dB:', np.round(g, 1).tolist(), '| peaks p1/l6/p1eq',
+      [round(float(np.abs(S[k]).max()), 3) for k in ('p1', 'l6', 'p1eq')])
+bb = butter(4, [150, 600], btype='band', fs=FS, output='sos'); lv = lambda y: 10 * np.log10(np.sum(sosfiltfilt(bb, y.mean(axis=1)) ** 2))
+print(f'150-600 Hz re P1: l6 {lv(S["l6"]) - lv(S["p1"]):+.2f} dB, p1eq {lv(S["p1eq"]) - lv(S["p1"]):+.2f} dB')
 d = sosfiltfilt(butter(4, [150, 600], btype='band', fs=FS, output='sos'), (S['l6'] - S['p1']).mean(axis=1))
 B = FS // 4; en = np.array([np.sum(d[i:i + B] ** 2) for i in range(0, len(d) - B + 1, B)]); en[:2] = en[-2:] = 0
 print('spots:', ', '.join(f'{i * .25:.2f}-{i * .25 + .25:.2f} s' for i in sorted(np.argsort(en)[::-1][:3])))
-pairs = [('p1', 'l6'), ('l6', 'l6')]
+pairs = [('p1', 'l6'), ('l6', 'l6'), ('p1eq', 'l6')]
 rng = np.random.default_rng(seed); outdir.mkdir(parents=True, exist_ok=True); key = {}
 fade = np.minimum(1, np.minimum(np.arange(8 * FS), np.arange(8 * FS)[::-1]) / 480)[:, None]
 for n, j in enumerate(rng.permutation(len(pairs)), 1):
