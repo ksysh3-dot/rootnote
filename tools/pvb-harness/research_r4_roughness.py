@@ -19,6 +19,7 @@ ap.add_argument('--phone-hz', type=float, default=300); ap.add_argument('--pairs
 a = ap.parse_args(); FS = 48000
 T.P.update(dict(DEV_ON=33, D_OUT_HI_HZ=37, D_ROLLOFF_DB_OCT=42))
 x, fs = sf.read(a.song, always_2d=True)
+if x.shape[1] == 1: x = np.repeat(x, 2, axis=1)      # the engine processes interleaved stereo
 x = np.clip(resample_poly(x, 160, 147, axis=0) if fs == 44100 else x, -1, 1).astype(np.float32)
 if a.dur: x = x[int(a.start * FS):int((a.start + a.dur) * FS)]
 mono = x.astype(float).mean(axis=1)

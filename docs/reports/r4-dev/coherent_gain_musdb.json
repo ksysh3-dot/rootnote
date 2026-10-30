@@ -1,0 +1,159 @@
+{
+ "items": 144,
+ "p1 55-80": {
+  "frames": 2445,
+  "gain_db_k1_6": [
+   0.0,
+   0.01,
+   0.68,
+   0.66,
+   0.12,
+   0.03
+  ],
+  "phone_weighted_gain_db": 0.47,
+  "phone_weighted_p90": 2.04
+ },
+ "p1 80-100": {
+  "frames": 1076,
+  "gain_db_k1_6": [
+   0.0,
+   1.79,
+   1.19,
+   0.48,
+   0.07,
+   0.0
+  ],
+  "phone_weighted_gain_db": 0.73,
+  "phone_weighted_p90": 2.94
+ },
+ "p1 100-125": {
+  "frames": 274,
+  "gain_db_k1_6": [
+   -0.0,
+   1.37,
+   0.21,
+   0.09,
+   0.0,
+   0.0
+  ],
+  "phone_weighted_gain_db": 0.46,
+  "phone_weighted_p90": 3.39
+ },
+ "p1 125-150": {
+  "frames": 101,
+  "gain_db_k1_6": [
+   0.0,
+   0.38,
+   0.06,
+   0.0,
+   0.0,
+   -0.0
+  ],
+  "phone_weighted_gain_db": 0.07,
+  "phone_weighted_p90": 0.57
+ },
+ "r4c 55-80": {
+  "frames": 2445,
+  "gain_db_k1_6": [
+   -0.0,
+   0.01,
+   0.7,
+   0.77,
+   0.18,
+   0.06
+  ],
+  "phone_weighted_gain_db": 0.58,
+  "phone_weighted_p90": 2.28
+ },
+ "r4c 80-100": {
+  "frames": 1076,
+  "gain_db_k1_6": [
+   0.0,
+   1.78,
+   2.25,
+   0.9,
+   0.14,
+   0.0
+  ],
+  "phone_weighted_gain_db": 1.07,
+  "phone_weighted_p90": 4.07
+ },
+ "r4c 100-125": {
+  "frames": 274,
+  "gain_db_k1_6": [
+   0.0,
+   1.54,
+   1.26,
+   0.6,
+   -0.0,
+   0.0
+  ],
+  "phone_weighted_gain_db": 1.02,
+  "phone_weighted_p90": 4.08
+ },
+ "r4c 125-150": {
+  "frames": 101,
+  "gain_db_k1_6": [
+   0.0,
+   0.95,
+   1.1,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "phone_weighted_gain_db": 0.24,
+  "phone_weighted_p90": 2.1
+ },
+ "p8 55-80": {
+  "frames": 2445,
+  "gain_db_k1_6": [
+   -0.0,
+   0.01,
+   0.69,
+   0.71,
+   0.14,
+   0.04
+  ],
+  "phone_weighted_gain_db": 0.51,
+  "phone_weighted_p90": 2.16
+ },
+ "p8 80-100": {
+  "frames": 1076,
+  "gain_db_k1_6": [
+   0.0,
+   1.78,
+   1.98,
+   0.76,
+   0.12,
+   0.0
+  ],
+  "phone_weighted_gain_db": 0.96,
+  "phone_weighted_p90": 4.03
+ },
+ "p8 100-125": {
+  "frames": 274,
+  "gain_db_k1_6": [
+   0.0,
+   1.52,
+   0.99,
+   0.43,
+   0.0,
+   0.0
+  ],
+  "phone_weighted_gain_db": 0.79,
+  "phone_weighted_p90": 4.05
+ },
+ "p8 125-150": {
+  "frames": 101,
+  "gain_db_k1_6": [
+   0.0,
+   0.84,
+   0.76,
+   0.0,
+   0.0,
+   -0.0
+  ],
+  "phone_weighted_gain_db": 0.24,
+  "phone_weighted_p90": 2.05
+ }
+}
