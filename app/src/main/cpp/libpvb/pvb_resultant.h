@@ -33,6 +33,10 @@ struct ResultantParams {
     double psiSlew = .12;
     int crest = 0;
     double maxDfdtBirth = 200;
+    double capRho = 0;          // v1.5.1 (16.17; 13.2 D2 as revised by 13.5 F4): stage 1 coefficient cap rho, 0 = off (v1.5)
+    int windowCreep = 0;        // v1.6-a A1 (18.3; 13.2 D4 narrowed by 13.5 F5): window growth limit, samples per hop (1..320), 0 = off (v1.5)
+    int creepMode = 0;          // A1' (18.5): which windows the growth limit acts on and when. 0 = N_J and N_v always (18.3 A1), 1 = N_v only while its voice's SNR
+                                // is falling, 2 = N_v (own SNR) and N_J (max SNR over the LS set) only while falling; no effect when windowCreep = 0
 };
 
 class ResultantCore {
@@ -40,10 +44,11 @@ public:
     static constexpr int kVoices = 8;        // voice slots (V_max)
     static constexpr int kFade = 2;          // extra fade-only slots for voices pushed out of a full slot table
     static constexpr int kPartials = 7;      // harmonics k = 2..8
-    static constexpr int kParams = 16;
+    static constexpr int kParams = 19;
     static constexpr int kTraceFields = 22;
     static constexpr int kOut = 64;          // output ring, power of two (a hop writes 16 samples ahead of the read index)
     static constexpr int kTracks = 12;       // VbHpv::tr52_ capacity
+    static constexpr int kFallHops = 6;      // A1': SNR history length, 6 hops = 32 ms (the 30 ms of 18.5)
 
     enum State : int { Empty = 0, Cand = 1, On = 2, Rel = 3, Fade = 4 };
 
@@ -101,6 +106,9 @@ private:
         double thHist[8] = {};     // LS phase theta_v at n_h of the last measured hops, slot = measCount_ & 7
         int dfN = 0, dfPos = 0;
         int npv = 0, npvPend = 0;  // per-voice past window (stage 2) and its hysteresis counter
+        int npvA = 0;              // window creep: the stage 2 window actually applied (follows npv up by at most windowCreep per hop)
+        double snrH[kFallHops] = {};   // A1': SNR of the last hops (ring), snrHp = next slot, snrHn = valid entries
+        int snrHp = 0, snrHn = 0;
         int npUsed = 0;            // past window actually used for this voice in this hop (trace)
         int64_t birthHop = 0;
         int64_t candHop = -1;      // measured hop at which candOk / candF were taken
@@ -173,6 +181,9 @@ private:
     int64_t measCount_ = 0;    // measured hops so far (ring slot of the voices' phase histories)
     // stage 1 window (N_J) hysteresis and the LS set it was computed for
     int npJ_ = 0, npJPend_ = 0;
+    int npJA_ = 0;             // window creep: N_J actually applied (npJ_ stays the hysteresis-held value); 0 = start at N_lo
+    double sMaxH_[kFallHops] = {};   // A1' (creepMode 2): maximum SNR over the LS set at the last hops (ring); emptied when the set is empty
+    int sMaxHp_ = 0, sMaxHn_ = 0;
     int lsSig_[kVoices] = {};
     // tracks that were pushed out or timed out as candidates: not given a voice again for a while
     uint32_t rejId_[8] = {};
