@@ -41,6 +41,9 @@ OUTI="$HERE/../build/jvm-intercept"
 rm -rf "$OUTI"; mkdir -p "$OUTI"
 $KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/../../../app/src/main/java/me/timschneeberger/rootlessjamesdsp/capture/InterceptPolicy.kt" "$HERE/InterceptPolicyTest.kt" -d "$OUTI"
 java -cp "$OUTI:$KOTLIN_STDLIB" InterceptPolicyTestKt
+# bounded shell PCM pipe, frame alignment, overload and cancellation (pure Kotlin)
+$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/../../../app/src/main/java/me/timschneeberger/rootlessjamesdsp/capture/InterceptPcmQueue.kt" "$HERE/InterceptPcmQueueTest.kt" -d "$OUTI"
+java -cp "$OUTI:$KOTLIN_STDLIB" InterceptPcmQueueTestKt
 # service silence pause (battery; pure Kotlin)
 OUTG="$HERE/../build/jvm-silence"
 rm -rf "$OUTG"; mkdir -p "$OUTG"
