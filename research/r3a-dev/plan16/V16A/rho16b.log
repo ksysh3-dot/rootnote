@@ -1,0 +1,9 @@
+rendered 24
+P1             rho 0.1313  vs v1.5 0.702  r(P1/row) 1.000  E_act 245.5  E_sil 32.23 drum-near 0.339  noT40 0.1616
+v1.5           rho 0.1870  vs v1.5 1.000  r(P1/row) 0.702  E_act 355.4  E_sil 66.46 drum-near 0.447  noT40 0.2248
+A2 1.5         rho 0.1753  vs v1.5 0.938  r(P1/row) 0.749  E_act 336.5  E_sil 59 drum-near 0.467  noT40 0.2114
+A1+A2 8/1.5    rho 0.1714  vs v1.5 0.917  r(P1/row) 0.766  E_act 336.3  E_sil 57.64 drum-near 0.478  noT40 0.2076
+A1p (i) 8      rho 0.1741  vs v1.5 0.931  r(P1/row) 0.754  E_act 336.4  E_sil 58.56 drum-near 0.458  noT40 0.2112
+A1p (i) 16     rho 0.1709  vs v1.5 0.914  r(P1/row) 0.768  E_act 338.2  E_sil 57.8 drum-near 0.488  noT40 0.2072
+A1p (ii) 8     rho 0.1754  vs v1.5 0.938  r(P1/row) 0.749  E_act 339.6  E_sil 59.56 drum-near 0.490  noT40 0.2116
+A1p (ii) 16    rho 0.1708  vs v1.5 0.913  r(P1/row) 0.769  E_act 332.3  E_sil 56.76 drum-near 0.476  noT40 0.2078

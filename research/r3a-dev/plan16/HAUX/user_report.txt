@@ -1,0 +1,51 @@
+# HAUX user windows (v1.5 = build_core algo 15, default16)
+window | selected hops | checked pairs | >6 dB jumps | A5 primary_v15 (jumps/checked, build_core16c) 
+app 52.0-54.0 | 375 | 2050 | 473 | 473/2050
+app 88.5-90.5 | 375 | 1479 | 235 | 235/1479
+app 123.5-125.5 | 375 | 2432 | 674 | 674/2432
+app 201.0-203.0 | 375 | 1991 | 445 | 445/1991
+app 203.0-205.0 | 375 | 1970 | 504 | 504/1970
+rem 96.0-98.0 | 375 | 1685 | 394 | 394/1685
+rem 113.0-115.0 | 375 | 2255 | 588 | 588/2255
+
+## Q3: rendered a_2 jumps > 6 dB: 3313 of 13862 checked voice-hop pairs (0.239)
+
+### window 40 ms: jumps with a valid input fit 3313
+input change D_in (dB) at the jumps: median 2.33, p75 4.86, p90 8.41, p99 18.37
+**unsupported (D_in < 2 dB): 44.6 %**  | D_in < 1 dB: 26.1 % | D_in < 3 dB: 58.4 % | D_in < 6 dB: 81.6 %
+per window unsupported share: app 52.0: 47 % (n 473) ; app 88.5: 42 % (n 235) ; app 123.5: 41 % (n 674) ; app 201.0: 47 % (n 445) ; app 203.0: 51 % (n 504) ; rem 96.0: 43 % (n 394) ; rem 113.0: 41 % (n 588)
+3-hop variant (input change h-2 -> h+1, 16 ms): valid 3266, unsupported (<2 dB) 30.8 %, median 3.68 dB
+fixed-frequency variant (2 f_osc(h) in both hops): valid 3313, unsupported 53.0 %, median 1.81 dB
+where the input changed >= 2 dB (1836 jumps): same direction as the render in 51.7 %
+control: D_in over all checked pairs (13862): median 1.80, p90 7.30, share >= 2 dB 47.1 %, >= 6 dB 14.1 %
+control: non-jump pairs: share D_in >= 2 dB 44.4 %; jump pairs: 55.4 %
+H_sal6 at f_osc (dB): jump hops median -1.1, non-jump -0.0; among jumps: unsupported 0.0, supported -2.0
+  render jump 6-9 dB: n 1296, unsupported 46.1 %
+  render jump 9-15 dB: n 1271, unsupported 46.7 %
+  render jump 15-inf dB: n 746, unsupported 38.3 %
+
+### window 85 ms: jumps with a valid input fit 3313
+input change D_in (dB) at the jumps: median 2.36, p75 6.09, p90 12.43, p99 24.95
+**unsupported (D_in < 2 dB): 45.4 %**  | D_in < 1 dB: 29.3 % | D_in < 3 dB: 56.5 % | D_in < 6 dB: 74.6 %
+per window unsupported share: app 52.0: 51 % (n 473) ; app 88.5: 49 % (n 235) ; app 123.5: 42 % (n 674) ; app 201.0: 43 % (n 445) ; app 203.0: 45 % (n 504) ; rem 96.0: 46 % (n 394) ; rem 113.0: 45 % (n 588)
+3-hop variant (input change h-2 -> h+1, 16 ms): valid 3266, unsupported (<2 dB) 28.3 %, median 4.34 dB
+fixed-frequency variant (2 f_osc(h) in both hops): valid 3313, unsupported 77.8 %, median 0.73 dB
+where the input changed >= 2 dB (1809 jumps): same direction as the render in 50.0 %
+control: D_in over all checked pairs (13862): median 1.23, p90 7.83, share >= 2 dB 37.9 %, >= 6 dB 13.7 %
+control: non-jump pairs: share D_in >= 2 dB 32.6 %; jump pairs: 54.6 %
+H_sal6 at f_osc (dB): jump hops median -2.0, non-jump -0.3; among jumps: unsupported -1.6, supported -2.3
+  render jump 6-9 dB: n 1296, unsupported 48.5 %
+  render jump 9-15 dB: n 1271, unsupported 45.7 %
+  render jump 15-inf dB: n 746, unsupported 39.4 %
+
+## Q2 in the user windows: hop-to-hop frequency jumps on consecutive hops (same slot/voice, state >= 2; f_h = comb refinement around f_track)
+pairs 15449 (82.4 voice-seconds)
+series | jumps > 2 Hz per window summed | per voice-second | median |df| Hz | p95 |df| Hz | median cent | p95 cent
+f_osc (rendered) | 4170 | 50.61 | 0.565 | 9.04 | 8.9 | 141.2
+f_track | 569 | 6.91 | 0.154 | 1.63 | nan | nan
+f_h W40 | 1670 | 20.27 | 0.319 | 8.00 | 4.8 | 133.7
+f_h W85 | 702 | 8.52 | 0.079 | 1.52 | 1.2 | 26.7
+per window jumps > 2 Hz (f_osc / f_h40 / f_h85): app 52.0: 532/252/82 of 2161 ; app 88.5: 239/205/85 of 1609 ; app 123.5: 872/309/115 of 2516 ; app 201.0: 665/240/102 of 2482 ; app 203.0: 575/263/118 of 2252 ; rem 96.0: 452/183/99 of 2081 ; rem 113.0: 835/218/101 of 2348
+at the 4170 f_osc jumps > 2 Hz: f_h W40 moved < 1 Hz in 76.4 %, < 2 Hz in 87.8 %; W85 < 1 Hz in 90.5 %, < 2 Hz in 93.1 %; f_track < 2 Hz in 91.5 %
+
+secs 73

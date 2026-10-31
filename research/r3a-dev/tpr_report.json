@@ -1,0 +1,1423 @@
+{
+  "schema": "pvb.phase2.track_prediction.v1",
+  "config": {
+    "history": 32,
+    "order": 2,
+    "minimum_history": 8,
+    "reflection_limit": 0.999,
+    "slope_limit_hz_s": 400,
+    "frequency_only": true,
+    "hold_release_unchanged": true,
+    "flags": {
+      "constant": 256,
+      "linear": 768,
+      "burg2": 1280
+    }
+  },
+  "direct": {
+    "seeds": [
+      2026101809,
+      2026101810
+    ],
+    "cases": {
+      "2026101809:steady": {
+        "constant": {
+          "cases": 144,
+          "mae_hz": 0.0,
+          "p95_hz": 0.0,
+          "max_hz": 0.0,
+          "limited": 0,
+          "used_modes": {
+            "0": 144
+          }
+        },
+        "linear": {
+          "cases": 144,
+          "mae_hz": 0.0,
+          "p95_hz": 0.0,
+          "max_hz": 0.0,
+          "limited": 0,
+          "used_modes": {
+            "1": 144
+          }
+        },
+        "burg2": {
+          "cases": 144,
+          "mae_hz": 0.0,
+          "p95_hz": 0.0,
+          "max_hz": 0.0,
+          "limited": 0,
+          "used_modes": {
+            "1": 144
+          }
+        }
+      },
+      "2026101809:glide": {
+        "constant": {
+          "cases": 144,
+          "mae_hz": 0.6626947478903459,
+          "p95_hz": 1.9380102992479094,
+          "max_hz": 2.8331950572389104,
+          "limited": 0,
+          "used_modes": {
+            "0": 144
+          }
+        },
+        "linear": {
+          "cases": 144,
+          "mae_hz": 8.881784197001252e-15,
+          "p95_hz": 2.842170943040401e-14,
+          "max_hz": 4.263256414560601e-14,
+          "limited": 0,
+          "used_modes": {
+            "1": 144
+          }
+        },
+        "burg2": {
+          "cases": 144,
+          "mae_hz": 0.384548458109441,
+          "p95_hz": 1.4152273445818266,
+          "max_hz": 2.0689338540125135,
+          "limited": 0,
+          "used_modes": {
+            "2": 144
+          }
+        }
+      },
+      "2026101809:vibrato": {
+        "constant": {
+          "cases": 144,
+          "mae_hz": 1.3829275440932918,
+          "p95_hz": 4.211777522491913,
+          "max_hz": 5.850315268926451,
+          "limited": 0,
+          "used_modes": {
+            "0": 144
+          }
+        },
+        "linear": {
+          "cases": 144,
+          "mae_hz": 0.5756722945470263,
+          "p95_hz": 2.222662382254002,
+          "max_hz": 4.83318529690419,
+          "limited": 0,
+          "used_modes": {
+            "1": 144
+          }
+        },
+        "burg2": {
+          "cases": 144,
+          "mae_hz": 0.2434007117420744,
+          "p95_hz": 1.0997408303409804,
+          "max_hz": 2.9131983115576787,
+          "limited": 0,
+          "used_modes": {
+            "2": 144
+          }
+        }
+      },
+      "2026101809:noisy_steady": {
+        "constant": {
+          "cases": 144,
+          "mae_hz": 0.18662622713985044,
+          "p95_hz": 0.43156423786408027,
+          "max_hz": 0.5092942426452467,
+          "limited": 0,
+          "used_modes": {
+            "0": 144
+          }
+        },
+        "linear": {
+          "cases": 144,
+          "mae_hz": 1.0946535712225947,
+          "p95_hz": 3.2991725951140687,
+          "max_hz": 5.359590258116896,
+          "limited": 0,
+          "used_modes": {
+            "1": 144
+          }
+        },
+        "burg2": {
+          "cases": 144,
+          "mae_hz": 0.045130499331239214,
+          "p95_hz": 0.11142792352142336,
+          "max_hz": 0.20285168142760313,
+          "limited": 0,
+          "used_modes": {
+            "2": 144
+          }
+        }
+      },
+      "2026101809:noisy_vibrato": {
+        "constant": {
+          "cases": 144,
+          "mae_hz": 1.3127406579555034,
+          "p95_hz": 4.385311069789716,
+          "max_hz": 6.180416620419621,
+          "limited": 0,
+          "used_modes": {
+            "0": 144
+          }
+        },
+        "linear": {
+          "cases": 144,
+          "mae_hz": 1.2850247699696,
+          "p95_hz": 4.205263550366978,
+          "max_hz": 7.930401488447053,
+          "limited": 0,
+          "used_modes": {
+            "1": 144
+          }
+        },
+        "burg2": {
+          "cases": 144,
+          "mae_hz": 1.0289736893050585,
+          "p95_hz": 3.15520194742334,
+          "max_hz": 3.8992018044617467,
+          "limited": 0,
+          "used_modes": {
+            "2": 144
+          }
+        }
+      },
+      "2026101810:steady": {
+        "constant": {
+          "cases": 144,
+          "mae_hz": 0.0,
+          "p95_hz": 0.0,
+          "max_hz": 0.0,
+          "limited": 0,
+          "used_modes": {
+            "0": 144
+          }
+        },
+        "linear": {
+          "cases": 144,
+          "mae_hz": 0.0,
+          "p95_hz": 0.0,
+          "max_hz": 0.0,
+          "limited": 0,
+          "used_modes": {
+            "1": 144
+          }
+        },
+        "burg2": {
+          "cases": 144,
+          "mae_hz": 0.0,
+          "p95_hz": 0.0,
+          "max_hz": 0.0,
+          "limited": 0,
+          "used_modes": {
+            "1": 144
+          }
+        }
+      },
+      "2026101810:glide": {
+        "constant": {
+          "cases": 144,
+          "mae_hz": 0.8733721767681525,
+          "p95_hz": 2.582313437794837,
+          "max_hz": 2.855766460841565,
+          "limited": 0,
+          "used_modes": {
+            "0": 144
+          }
+        },
+        "linear": {
+          "cases": 144,
+          "mae_hz": 1.0016678844395857e-14,
+          "p95_hz": 2.842170943040401e-14,
+          "max_hz": 4.263256414560601e-14,
+          "limited": 0,
+          "used_modes": {
+            "1": 144
+          }
+        },
+        "burg2": {
+          "cases": 144,
+          "mae_hz": 0.5068003405807107,
+          "p95_hz": 1.8857281567940198,
+          "max_hz": 2.0854165670282185,
+          "limited": 0,
+          "used_modes": {
+            "2": 144
+          }
+        }
+      },
+      "2026101810:vibrato": {
+        "constant": {
+          "cases": 144,
+          "mae_hz": 1.1145207769278649,
+          "p95_hz": 3.985990433693288,
+          "max_hz": 5.009947881597206,
+          "limited": 0,
+          "used_modes": {
+            "0": 144
+          }
+        },
+        "linear": {
+          "cases": 144,
+          "mae_hz": 0.6873028613614744,
+          "p95_hz": 2.845675885333821,
+          "max_hz": 4.601384355200381,
+          "limited": 0,
+          "used_modes": {
+            "1": 144
+          }
+        },
+        "burg2": {
+          "cases": 144,
+          "mae_hz": 0.22981315678768668,
+          "p95_hz": 0.9539233313758984,
+          "max_hz": 2.609975659896648,
+          "limited": 0,
+          "used_modes": {
+            "2": 144
+          }
+        }
+      },
+      "2026101810:noisy_steady": {
+        "constant": {
+          "cases": 144,
+          "mae_hz": 0.20688753444452868,
+          "p95_hz": 0.45226675596508414,
+          "max_hz": 0.7216171622094834,
+          "limited": 0,
+          "used_modes": {
+            "0": 144
+          }
+        },
+        "linear": {
+          "cases": 144,
+          "mae_hz": 1.2482363152722655,
+          "p95_hz": 3.8996747050223353,
+          "max_hz": 5.770608119697144,
+          "limited": 0,
+          "used_modes": {
+            "1": 144
+          }
+        },
+        "burg2": {
+          "cases": 144,
+          "mae_hz": 0.04414808392923245,
+          "p95_hz": 0.11001650216263593,
+          "max_hz": 0.22582918121646856,
+          "limited": 0,
+          "used_modes": {
+            "2": 144
+          }
+        }
+      },
+      "2026101810:noisy_vibrato": {
+        "constant": {
+          "cases": 144,
+          "mae_hz": 1.1370509890925524,
+          "p95_hz": 3.2952734150902456,
+          "max_hz": 5.689177264683906,
+          "limited": 0,
+          "used_modes": {
+            "0": 144
+          }
+        },
+        "linear": {
+          "cases": 144,
+          "mae_hz": 1.0723508143302949,
+          "p95_hz": 3.389543720587734,
+          "max_hz": 6.372108544031931,
+          "limited": 0,
+          "used_modes": {
+            "1": 144
+          }
+        },
+        "burg2": {
+          "cases": 144,
+          "mae_hz": 0.9418507296741665,
+          "p95_hz": 2.548794840058099,
+          "max_hz": 3.630964016848722,
+          "limited": 0,
+          "used_modes": {
+            "2": 144
+          }
+        }
+      }
+    },
+    "constant_identity_cases": 1440,
+    "linear_exact_glide_cases": 288,
+    "forecast_assignment_oracle_cases": 120,
+    "max_objective_difference": 0,
+    "held_phase_clock_cases": 18
+  },
+  "native": {
+    "cases": {
+      "steady": {
+        "constant": {
+          "tracking": {
+            "hops": 608,
+            "observed_tracks": 615,
+            "birth_tracks": 4,
+            "held_tracks": 19,
+            "releasing_tracks": 15,
+            "ended_tracks": 3,
+            "lost_track_hops": 37,
+            "fit_rejected_track_hops": 0,
+            "grid_rejected_harmonic_hops": 126,
+            "capacity_omissions": 0,
+            "capacity_hops": 0,
+            "emitted_harmonic_hops": 2500,
+            "permission_held_harmonic_hops": 0,
+            "zero_pre_envelope_hops": 0,
+            "tracks_with_id": 656
+          },
+          "observability": {
+            "evaluated_hops": 441,
+            "eligible_component_hops": 441,
+            "covered_component_hops": 441,
+            "missing_component_hops": 0,
+            "unmatched_observations": 0,
+            "unresolved_hops": 0,
+            "no_observation_component_hops": 0,
+            "out_of_tolerance_component_hops": 0,
+            "peak_count_deficit_component_hops": 0,
+            "adjacent_id_switches": 0,
+            "reacquisition_id_changes": 0,
+            "adjacent_links": 440,
+            "coverage": 1.0,
+            "frequency_mae_hz": 0.00012280557161015447,
+            "eligible_truth_count_observation_count_histogram": {
+              "1:1": 441
+            },
+            "unresolved_observation_count_histogram": {},
+            "contract": "source clock=host event+header9; warmup.65s/end.4s; eligible separation>=12Hz; coverage tolerance2Hz. These are diagnostic thresholds, not a resolution theorem."
+          },
+          "stem_rms_dbfs": -44.94487762451172,
+          "peak_dbfs": -35.64271754703292,
+          "callback_p95_ms": 2.3888535996775313,
+          "latency_frames": 7140
+        },
+        "linear": {
+          "tracking": {
+            "hops": 608,
+            "observed_tracks": 615,
+            "birth_tracks": 4,
+            "held_tracks": 19,
+            "releasing_tracks": 15,
+            "ended_tracks": 3,
+            "lost_track_hops": 37,
+            "fit_rejected_track_hops": 0,
+            "grid_rejected_harmonic_hops": 126,
+            "capacity_omissions": 0,
+            "capacity_hops": 0,
+            "emitted_harmonic_hops": 2500,
+            "permission_held_harmonic_hops": 0,
+            "zero_pre_envelope_hops": 0,
+            "tracks_with_id": 656
+          },
+          "observability": {
+            "evaluated_hops": 441,
+            "eligible_component_hops": 441,
+            "covered_component_hops": 441,
+            "missing_component_hops": 0,
+            "unmatched_observations": 0,
+            "unresolved_hops": 0,
+            "no_observation_component_hops": 0,
+            "out_of_tolerance_component_hops": 0,
+            "peak_count_deficit_component_hops": 0,
+            "adjacent_id_switches": 0,
+            "reacquisition_id_changes": 0,
+            "adjacent_links": 440,
+            "coverage": 1.0,
+            "frequency_mae_hz": 0.00012280557161015447,
+            "eligible_truth_count_observation_count_histogram": {
+              "1:1": 441
+            },
+            "unresolved_observation_count_histogram": {},
+            "contract": "source clock=host event+header9; warmup.65s/end.4s; eligible separation>=12Hz; coverage tolerance2Hz. These are diagnostic thresholds, not a resolution theorem."
+          },
+          "stem_rms_dbfs": -44.94487762451172,
+          "peak_dbfs": -35.64271754703292,
+          "callback_p95_ms": 2.452959000311239,
+          "latency_frames": 7140
+        },
+        "burg2": {
+          "tracking": {
+            "hops": 608,
+            "observed_tracks": 615,
+            "birth_tracks": 4,
+            "held_tracks": 19,
+            "releasing_tracks": 15,
+            "ended_tracks": 3,
+            "lost_track_hops": 37,
+            "fit_rejected_track_hops": 0,
+            "grid_rejected_harmonic_hops": 126,
+            "capacity_omissions": 0,
+            "capacity_hops": 0,
+            "emitted_harmonic_hops": 2500,
+            "permission_held_harmonic_hops": 0,
+            "zero_pre_envelope_hops": 0,
+            "tracks_with_id": 656
+          },
+          "observability": {
+            "evaluated_hops": 441,
+            "eligible_component_hops": 441,
+            "covered_component_hops": 441,
+            "missing_component_hops": 0,
+            "unmatched_observations": 0,
+            "unresolved_hops": 0,
+            "no_observation_component_hops": 0,
+            "out_of_tolerance_component_hops": 0,
+            "peak_count_deficit_component_hops": 0,
+            "adjacent_id_switches": 0,
+            "reacquisition_id_changes": 0,
+            "adjacent_links": 440,
+            "coverage": 1.0,
+            "frequency_mae_hz": 0.00012280557161015447,
+            "eligible_truth_count_observation_count_histogram": {
+              "1:1": 441
+            },
+            "unresolved_observation_count_histogram": {},
+            "contract": "source clock=host event+header9; warmup.65s/end.4s; eligible separation>=12Hz; coverage tolerance2Hz. These are diagnostic thresholds, not a resolution theorem."
+          },
+          "stem_rms_dbfs": -44.94487762451172,
+          "peak_dbfs": -35.64271754703292,
+          "callback_p95_ms": 2.3024709999390325,
+          "latency_frames": 7140
+        }
+      },
+      "glide": {
+        "constant": {
+          "tracking": {
+            "hops": 608,
+            "observed_tracks": 616,
+            "birth_tracks": 4,
+            "held_tracks": 19,
+            "releasing_tracks": 15,
+            "ended_tracks": 3,
+            "lost_track_hops": 37,
+            "fit_rejected_track_hops": 0,
+            "grid_rejected_harmonic_hops": 151,
+            "capacity_omissions": 0,
+            "capacity_hops": 0,
+            "emitted_harmonic_hops": 2471,
+            "permission_held_harmonic_hops": 13,
+            "zero_pre_envelope_hops": 1,
+            "tracks_with_id": 657
+          },
+          "observability": {
+            "evaluated_hops": 441,
+            "eligible_component_hops": 441,
+            "covered_component_hops": 441,
+            "missing_component_hops": 0,
+            "unmatched_observations": 0,
+            "unresolved_hops": 0,
+            "no_observation_component_hops": 0,
+            "out_of_tolerance_component_hops": 0,
+            "peak_count_deficit_component_hops": 0,
+            "adjacent_id_switches": 0,
+            "reacquisition_id_changes": 0,
+            "adjacent_links": 440,
+            "coverage": 1.0,
+            "frequency_mae_hz": 0.1081399906357401,
+            "eligible_truth_count_observation_count_histogram": {
+              "1:1": 441
+            },
+            "unresolved_observation_count_histogram": {},
+            "contract": "source clock=host event+header9; warmup.65s/end.4s; eligible separation>=12Hz; coverage tolerance2Hz. These are diagnostic thresholds, not a resolution theorem."
+          },
+          "stem_rms_dbfs": -41.734588623046875,
+          "peak_dbfs": -30.33668611248128,
+          "callback_p95_ms": 2.4996843000280933,
+          "latency_frames": 7140
+        },
+        "linear": {
+          "tracking": {
+            "hops": 608,
+            "observed_tracks": 616,
+            "birth_tracks": 4,
+            "held_tracks": 19,
+            "releasing_tracks": 15,
+            "ended_tracks": 3,
+            "lost_track_hops": 37,
+            "fit_rejected_track_hops": 0,
+            "grid_rejected_harmonic_hops": 151,
+            "capacity_omissions": 0,
+            "capacity_hops": 0,
+            "emitted_harmonic_hops": 2471,
+            "permission_held_harmonic_hops": 13,
+            "zero_pre_envelope_hops": 1,
+            "tracks_with_id": 657
+          },
+          "observability": {
+            "evaluated_hops": 441,
+            "eligible_component_hops": 441,
+            "covered_component_hops": 441,
+            "missing_component_hops": 0,
+            "unmatched_observations": 0,
+            "unresolved_hops": 0,
+            "no_observation_component_hops": 0,
+            "out_of_tolerance_component_hops": 0,
+            "peak_count_deficit_component_hops": 0,
+            "adjacent_id_switches": 0,
+            "reacquisition_id_changes": 0,
+            "adjacent_links": 440,
+            "coverage": 1.0,
+            "frequency_mae_hz": 0.1081399906357401,
+            "eligible_truth_count_observation_count_histogram": {
+              "1:1": 441
+            },
+            "unresolved_observation_count_histogram": {},
+            "contract": "source clock=host event+header9; warmup.65s/end.4s; eligible separation>=12Hz; coverage tolerance2Hz. These are diagnostic thresholds, not a resolution theorem."
+          },
+          "stem_rms_dbfs": -41.734588623046875,
+          "peak_dbfs": -30.33668611248128,
+          "callback_p95_ms": 2.4608748494756583,
+          "latency_frames": 7140
+        },
+        "burg2": {
+          "tracking": {
+            "hops": 608,
+            "observed_tracks": 616,
+            "birth_tracks": 4,
+            "held_tracks": 19,
+            "releasing_tracks": 15,
+            "ended_tracks": 3,
+            "lost_track_hops": 37,
+            "fit_rejected_track_hops": 0,
+            "grid_rejected_harmonic_hops": 151,
+            "capacity_omissions": 0,
+            "capacity_hops": 0,
+            "emitted_harmonic_hops": 2471,
+            "permission_held_harmonic_hops": 13,
+            "zero_pre_envelope_hops": 1,
+            "tracks_with_id": 657
+          },
+          "observability": {
+            "evaluated_hops": 441,
+            "eligible_component_hops": 441,
+            "covered_component_hops": 441,
+            "missing_component_hops": 0,
+            "unmatched_observations": 0,
+            "unresolved_hops": 0,
+            "no_observation_component_hops": 0,
+            "out_of_tolerance_component_hops": 0,
+            "peak_count_deficit_component_hops": 0,
+            "adjacent_id_switches": 0,
+            "reacquisition_id_changes": 0,
+            "adjacent_links": 440,
+            "coverage": 1.0,
+            "frequency_mae_hz": 0.1081399906357401,
+            "eligible_truth_count_observation_count_histogram": {
+              "1:1": 441
+            },
+            "unresolved_observation_count_histogram": {},
+            "contract": "source clock=host event+header9; warmup.65s/end.4s; eligible separation>=12Hz; coverage tolerance2Hz. These are diagnostic thresholds, not a resolution theorem."
+          },
+          "stem_rms_dbfs": -41.734588623046875,
+          "peak_dbfs": -30.33668611248128,
+          "callback_p95_ms": 2.6006726006016834,
+          "latency_frames": 7140
+        }
+      },
+      "vibrato": {
+        "constant": {
+          "tracking": {
+            "hops": 608,
+            "observed_tracks": 786,
+            "birth_tracks": 30,
+            "held_tracks": 169,
+            "releasing_tracks": 140,
+            "ended_tracks": 28,
+            "lost_track_hops": 337,
+            "fit_rejected_track_hops": 195,
+            "grid_rejected_harmonic_hops": 1326,
+            "capacity_omissions": 0,
+            "capacity_hops": 0,
+            "emitted_harmonic_hops": 2439,
+            "permission_held_harmonic_hops": 995,
+            "zero_pre_envelope_hops": 0,
+            "tracks_with_id": 1153
+          },
+          "observability": {
+            "evaluated_hops": 441,
+            "eligible_component_hops": 441,
+            "covered_component_hops": 441,
+            "missing_component_hops": 0,
+            "unmatched_observations": 145,
+            "unresolved_hops": 0,
+            "no_observation_component_hops": 0,
+            "out_of_tolerance_component_hops": 0,
+            "peak_count_deficit_component_hops": 0,
+            "adjacent_id_switches": 0,
+            "reacquisition_id_changes": 0,
+            "adjacent_links": 440,
+            "coverage": 1.0,
+            "frequency_mae_hz": 0.5878757617186974,
+            "eligible_truth_count_observation_count_histogram": {
+              "1:1": 296,
+              "1:2": 145
+            },
+            "unresolved_observation_count_histogram": {},
+            "contract": "source clock=host event+header9; warmup.65s/end.4s; eligible separation>=12Hz; coverage tolerance2Hz. These are diagnostic thresholds, not a resolution theorem."
+          },
+          "stem_rms_dbfs": -44.13207244873047,
+          "peak_dbfs": -35.64271754703292,
+          "callback_p95_ms": 4.614821950008263,
+          "latency_frames": 7140
+        },
+        "linear": {
+          "tracking": {
+            "hops": 608,
+            "observed_tracks": 786,
+            "birth_tracks": 30,
+            "held_tracks": 169,
+            "releasing_tracks": 140,
+            "ended_tracks": 28,
+            "lost_track_hops": 337,
+            "fit_rejected_track_hops": 195,
+            "grid_rejected_harmonic_hops": 1326,
+            "capacity_omissions": 0,
+            "capacity_hops": 0,
+            "emitted_harmonic_hops": 2439,
+            "permission_held_harmonic_hops": 995,
+            "zero_pre_envelope_hops": 0,
+            "tracks_with_id": 1153
+          },
+          "observability": {
+            "evaluated_hops": 441,
+            "eligible_component_hops": 441,
+            "covered_component_hops": 441,
+            "missing_component_hops": 0,
+            "unmatched_observations": 145,
+            "unresolved_hops": 0,
+            "no_observation_component_hops": 0,
+            "out_of_tolerance_component_hops": 0,
+            "peak_count_deficit_component_hops": 0,
+            "adjacent_id_switches": 0,
+            "reacquisition_id_changes": 0,
+            "adjacent_links": 440,
+            "coverage": 1.0,
+            "frequency_mae_hz": 0.5878757617186974,
+            "eligible_truth_count_observation_count_histogram": {
+              "1:1": 296,
+              "1:2": 145
+            },
+            "unresolved_observation_count_histogram": {},
+            "contract": "source clock=host event+header9; warmup.65s/end.4s; eligible separation>=12Hz; coverage tolerance2Hz. These are diagnostic thresholds, not a resolution theorem."
+          },
+          "stem_rms_dbfs": -44.13207244873047,
+          "peak_dbfs": -35.64271754703292,
+          "callback_p95_ms": 2.8483971994774038,
+          "latency_frames": 7140
+        },
+        "burg2": {
+          "tracking": {
+            "hops": 608,
+            "observed_tracks": 786,
+            "birth_tracks": 30,
+            "held_tracks": 169,
+            "releasing_tracks": 140,
+            "ended_tracks": 28,
+            "lost_track_hops": 337,
+            "fit_rejected_track_hops": 195,
+            "grid_rejected_harmonic_hops": 1326,
+            "capacity_omissions": 0,
+            "capacity_hops": 0,
+            "emitted_harmonic_hops": 2439,
+            "permission_held_harmonic_hops": 995,
+            "zero_pre_envelope_hops": 0,
+            "tracks_with_id": 1153
+          },
+          "observability": {
+            "evaluated_hops": 441,
+            "eligible_component_hops": 441,
+            "covered_component_hops": 441,
+            "missing_component_hops": 0,
+            "unmatched_observations": 145,
+            "unresolved_hops": 0,
+            "no_observation_component_hops": 0,
+            "out_of_tolerance_component_hops": 0,
+            "peak_count_deficit_component_hops": 0,
+            "adjacent_id_switches": 0,
+            "reacquisition_id_changes": 0,
+            "adjacent_links": 440,
+            "coverage": 1.0,
+            "frequency_mae_hz": 0.5878757617186974,
+            "eligible_truth_count_observation_count_histogram": {
+              "1:1": 296,
+              "1:2": 145
+            },
+            "unresolved_observation_count_histogram": {},
+            "contract": "source clock=host event+header9; warmup.65s/end.4s; eligible separation>=12Hz; coverage tolerance2Hz. These are diagnostic thresholds, not a resolution theorem."
+          },
+          "stem_rms_dbfs": -44.13207244873047,
+          "peak_dbfs": -35.64271754703292,
+          "callback_p95_ms": 2.8775785502148206,
+          "latency_frames": 7140
+        }
+      },
+      "crossing": {
+        "constant": {
+          "tracking": {
+            "hops": 608,
+            "observed_tracks": 1164,
+            "birth_tracks": 53,
+            "held_tracks": 246,
+            "releasing_tracks": 161,
+            "ended_tracks": 51,
+            "lost_track_hops": 458,
+            "fit_rejected_track_hops": 186,
+            "grid_rejected_harmonic_hops": 2647,
+            "capacity_omissions": 0,
+            "capacity_hops": 0,
+            "emitted_harmonic_hops": 4383,
+            "permission_held_harmonic_hops": 1236,
+            "zero_pre_envelope_hops": 3,
+            "tracks_with_id": 1675
+          },
+          "observability": {
+            "evaluated_hops": 441,
+            "eligible_component_hops": 432,
+            "covered_component_hops": 374,
+            "missing_component_hops": 58,
+            "unmatched_observations": 119,
+            "unresolved_hops": 225,
+            "no_observation_component_hops": 0,
+            "out_of_tolerance_component_hops": 58,
+            "peak_count_deficit_component_hops": 3,
+            "adjacent_id_switches": 0,
+            "reacquisition_id_changes": 0,
+            "adjacent_links": 357,
+            "coverage": 0.8657407407407407,
+            "frequency_mae_hz": 0.21477566547359808,
+            "eligible_truth_count_observation_count_histogram": {
+              "2:3": 50,
+              "2:2": 156,
+              "2:4": 7,
+              "2:1": 3
+            },
+            "unresolved_observation_count_histogram": {
+              "1": 129,
+              "2": 51,
+              "3": 34,
+              "4": 11
+            },
+            "contract": "source clock=host event+header9; warmup.65s/end.4s; eligible separation>=12Hz; coverage tolerance2Hz. These are diagnostic thresholds, not a resolution theorem."
+          },
+          "stem_rms_dbfs": -48.139427185058594,
+          "peak_dbfs": -35.714266830107356,
+          "callback_p95_ms": 3.2105984993904713,
+          "latency_frames": 7140
+        },
+        "linear": {
+          "tracking": {
+            "hops": 608,
+            "observed_tracks": 1156,
+            "birth_tracks": 61,
+            "held_tracks": 261,
+            "releasing_tracks": 189,
+            "ended_tracks": 58,
+            "lost_track_hops": 508,
+            "fit_rejected_track_hops": 186,
+            "grid_rejected_harmonic_hops": 2741,
+            "capacity_omissions": 0,
+            "capacity_hops": 0,
+            "emitted_harmonic_hops": 4416,
+            "permission_held_harmonic_hops": 1311,
+            "zero_pre_envelope_hops": 3,
+            "tracks_with_id": 1725
+          },
+          "observability": {
+            "evaluated_hops": 441,
+            "eligible_component_hops": 432,
+            "covered_component_hops": 374,
+            "missing_component_hops": 58,
+            "unmatched_observations": 119,
+            "unresolved_hops": 225,
+            "no_observation_component_hops": 0,
+            "out_of_tolerance_component_hops": 58,
+            "peak_count_deficit_component_hops": 3,
+            "adjacent_id_switches": 0,
+            "reacquisition_id_changes": 3,
+            "adjacent_links": 357,
+            "coverage": 0.8657407407407407,
+            "frequency_mae_hz": 0.21477566547359808,
+            "eligible_truth_count_observation_count_histogram": {
+              "2:3": 50,
+              "2:2": 156,
+              "2:4": 7,
+              "2:1": 3
+            },
+            "unresolved_observation_count_histogram": {
+              "1": 129,
+              "2": 51,
+              "3": 34,
+              "4": 11
+            },
+            "contract": "source clock=host event+header9; warmup.65s/end.4s; eligible separation>=12Hz; coverage tolerance2Hz. These are diagnostic thresholds, not a resolution theorem."
+          },
+          "stem_rms_dbfs": -48.14704895019531,
+          "peak_dbfs": -35.714266830107356,
+          "callback_p95_ms": 3.1530360496162757,
+          "latency_frames": 7140
+        },
+        "burg2": {
+          "tracking": {
+            "hops": 608,
+            "observed_tracks": 1160,
+            "birth_tracks": 57,
+            "held_tracks": 246,
+            "releasing_tracks": 171,
+            "ended_tracks": 55,
+            "lost_track_hops": 472,
+            "fit_rejected_track_hops": 186,
+            "grid_rejected_harmonic_hops": 2668,
+            "capacity_omissions": 0,
+            "capacity_hops": 0,
+            "emitted_harmonic_hops": 4323,
+            "permission_held_harmonic_hops": 1249,
+            "zero_pre_envelope_hops": 3,
+            "tracks_with_id": 1689
+          },
+          "observability": {
+            "evaluated_hops": 441,
+            "eligible_component_hops": 432,
+            "covered_component_hops": 374,
+            "missing_component_hops": 58,
+            "unmatched_observations": 119,
+            "unresolved_hops": 225,
+            "no_observation_component_hops": 0,
+            "out_of_tolerance_component_hops": 58,
+            "peak_count_deficit_component_hops": 3,
+            "adjacent_id_switches": 0,
+            "reacquisition_id_changes": 0,
+            "adjacent_links": 357,
+            "coverage": 0.8657407407407407,
+            "frequency_mae_hz": 0.21477566547359808,
+            "eligible_truth_count_observation_count_histogram": {
+              "2:3": 50,
+              "2:2": 156,
+              "2:4": 7,
+              "2:1": 3
+            },
+            "unresolved_observation_count_histogram": {
+              "1": 129,
+              "2": 51,
+              "3": 34,
+              "4": 11
+            },
+            "contract": "source clock=host event+header9; warmup.65s/end.4s; eligible separation>=12Hz; coverage tolerance2Hz. These are diagnostic thresholds, not a resolution theorem."
+          },
+          "stem_rms_dbfs": -48.14153289794922,
+          "peak_dbfs": -35.714266830107356,
+          "callback_p95_ms": 3.1495925005856407,
+          "latency_frames": 7140
+        }
+      },
+      "near_pair": {
+        "constant": {
+          "tracking": {
+            "hops": 608,
+            "observed_tracks": 848,
+            "birth_tracks": 31,
+            "held_tracks": 202,
+            "releasing_tracks": 150,
+            "ended_tracks": 30,
+            "lost_track_hops": 382,
+            "fit_rejected_track_hops": 82,
+            "grid_rejected_harmonic_hops": 2253,
+            "capacity_omissions": 0,
+            "capacity_hops": 0,
+            "emitted_harmonic_hops": 3654,
+            "permission_held_harmonic_hops": 823,
+            "zero_pre_envelope_hops": 1,
+            "tracks_with_id": 1261
+          },
+          "observability": {
+            "evaluated_hops": 441,
+            "eligible_component_hops": 0,
+            "covered_component_hops": 0,
+            "missing_component_hops": 0,
+            "unmatched_observations": 0,
+            "unresolved_hops": 441,
+            "no_observation_component_hops": 0,
+            "out_of_tolerance_component_hops": 0,
+            "peak_count_deficit_component_hops": 0,
+            "adjacent_id_switches": 0,
+            "reacquisition_id_changes": 0,
+            "adjacent_links": 0,
+            "coverage": null,
+            "frequency_mae_hz": null,
+            "eligible_truth_count_observation_count_histogram": {},
+            "unresolved_observation_count_histogram": {
+              "1": 312,
+              "2": 78,
+              "3": 44,
+              "4": 7
+            },
+            "contract": "source clock=host event+header9; warmup.65s/end.4s; eligible separation>=12Hz; coverage tolerance2Hz. These are diagnostic thresholds, not a resolution theorem."
+          },
+          "stem_rms_dbfs": -46.81217956542969,
+          "peak_dbfs": -35.20386181585633,
+          "callback_p95_ms": 3.124288099706973,
+          "latency_frames": 7140
+        },
+        "linear": {
+          "tracking": {
+            "hops": 608,
+            "observed_tracks": 848,
+            "birth_tracks": 31,
+            "held_tracks": 202,
+            "releasing_tracks": 150,
+            "ended_tracks": 30,
+            "lost_track_hops": 382,
+            "fit_rejected_track_hops": 82,
+            "grid_rejected_harmonic_hops": 2253,
+            "capacity_omissions": 0,
+            "capacity_hops": 0,
+            "emitted_harmonic_hops": 3654,
+            "permission_held_harmonic_hops": 823,
+            "zero_pre_envelope_hops": 1,
+            "tracks_with_id": 1261
+          },
+          "observability": {
+            "evaluated_hops": 441,
+            "eligible_component_hops": 0,
+            "covered_component_hops": 0,
+            "missing_component_hops": 0,
+            "unmatched_observations": 0,
+            "unresolved_hops": 441,
+            "no_observation_component_hops": 0,
+            "out_of_tolerance_component_hops": 0,
+            "peak_count_deficit_component_hops": 0,
+            "adjacent_id_switches": 0,
+            "reacquisition_id_changes": 0,
+            "adjacent_links": 0,
+            "coverage": null,
+            "frequency_mae_hz": null,
+            "eligible_truth_count_observation_count_histogram": {},
+            "unresolved_observation_count_histogram": {
+              "1": 312,
+              "2": 78,
+              "3": 44,
+              "4": 7
+            },
+            "contract": "source clock=host event+header9; warmup.65s/end.4s; eligible separation>=12Hz; coverage tolerance2Hz. These are diagnostic thresholds, not a resolution theorem."
+          },
+          "stem_rms_dbfs": -46.81217956542969,
+          "peak_dbfs": -35.20386181585633,
+          "callback_p95_ms": 3.269647599836389,
+          "latency_frames": 7140
+        },
+        "burg2": {
+          "tracking": {
+            "hops": 608,
+            "observed_tracks": 848,
+            "birth_tracks": 31,
+            "held_tracks": 202,
+            "releasing_tracks": 150,
+            "ended_tracks": 30,
+            "lost_track_hops": 382,
+            "fit_rejected_track_hops": 82,
+            "grid_rejected_harmonic_hops": 2253,
+            "capacity_omissions": 0,
+            "capacity_hops": 0,
+            "emitted_harmonic_hops": 3654,
+            "permission_held_harmonic_hops": 823,
+            "zero_pre_envelope_hops": 1,
+            "tracks_with_id": 1261
+          },
+          "observability": {
+            "evaluated_hops": 441,
+            "eligible_component_hops": 0,
+            "covered_component_hops": 0,
+            "missing_component_hops": 0,
+            "unmatched_observations": 0,
+            "unresolved_hops": 441,
+            "no_observation_component_hops": 0,
+            "out_of_tolerance_component_hops": 0,
+            "peak_count_deficit_component_hops": 0,
+            "adjacent_id_switches": 0,
+            "reacquisition_id_changes": 0,
+            "adjacent_links": 0,
+            "coverage": null,
+            "frequency_mae_hz": null,
+            "eligible_truth_count_observation_count_histogram": {},
+            "unresolved_observation_count_histogram": {
+              "1": 312,
+              "2": 78,
+              "3": 44,
+              "4": 7
+            },
+            "contract": "source clock=host event+header9; warmup.65s/end.4s; eligible separation>=12Hz; coverage tolerance2Hz. These are diagnostic thresholds, not a resolution theorem."
+          },
+          "stem_rms_dbfs": -46.81217956542969,
+          "peak_dbfs": -35.20386181585633,
+          "callback_p95_ms": 3.285935550547947,
+          "latency_frames": 7140
+        }
+      },
+      "am7": {
+        "constant": {
+          "tracking": {
+            "hops": 608,
+            "observed_tracks": 892,
+            "birth_tracks": 93,
+            "held_tracks": 540,
+            "releasing_tracks": 456,
+            "ended_tracks": 90,
+            "lost_track_hops": 1086,
+            "fit_rejected_track_hops": 259,
+            "grid_rejected_harmonic_hops": 4279,
+            "capacity_omissions": 0,
+            "capacity_hops": 0,
+            "emitted_harmonic_hops": 3331,
+            "permission_held_harmonic_hops": 1677,
+            "zero_pre_envelope_hops": 2,
+            "tracks_with_id": 2071
+          },
+          "observability": {
+            "evaluated_hops": 441,
+            "eligible_component_hops": 441,
+            "covered_component_hops": 436,
+            "missing_component_hops": 5,
+            "unmatched_observations": 290,
+            "unresolved_hops": 0,
+            "no_observation_component_hops": 0,
+            "out_of_tolerance_component_hops": 5,
+            "peak_count_deficit_component_hops": 0,
+            "adjacent_id_switches": 0,
+            "reacquisition_id_changes": 0,
+            "adjacent_links": 430,
+            "coverage": 0.9886621315192744,
+            "frequency_mae_hz": 0.2795514447973409,
+            "eligible_truth_count_observation_count_histogram": {
+              "1:1": 298,
+              "1:2": 17,
+              "1:3": 110,
+              "1:4": 16
+            },
+            "unresolved_observation_count_histogram": {},
+            "contract": "source clock=host event+header9; warmup.65s/end.4s; eligible separation>=12Hz; coverage tolerance2Hz. These are diagnostic thresholds, not a resolution theorem."
+          },
+          "stem_rms_dbfs": -44.968624114990234,
+          "peak_dbfs": -33.39816402554192,
+          "callback_p95_ms": 3.099735650266665,
+          "latency_frames": 7140
+        },
+        "linear": {
+          "tracking": {
+            "hops": 608,
+            "observed_tracks": 892,
+            "birth_tracks": 93,
+            "held_tracks": 540,
+            "releasing_tracks": 456,
+            "ended_tracks": 90,
+            "lost_track_hops": 1086,
+            "fit_rejected_track_hops": 259,
+            "grid_rejected_harmonic_hops": 4279,
+            "capacity_omissions": 0,
+            "capacity_hops": 0,
+            "emitted_harmonic_hops": 3331,
+            "permission_held_harmonic_hops": 1677,
+            "zero_pre_envelope_hops": 2,
+            "tracks_with_id": 2071
+          },
+          "observability": {
+            "evaluated_hops": 441,
+            "eligible_component_hops": 441,
+            "covered_component_hops": 436,
+            "missing_component_hops": 5,
+            "unmatched_observations": 290,
+            "unresolved_hops": 0,
+            "no_observation_component_hops": 0,
+            "out_of_tolerance_component_hops": 5,
+            "peak_count_deficit_component_hops": 0,
+            "adjacent_id_switches": 0,
+            "reacquisition_id_changes": 0,
+            "adjacent_links": 430,
+            "coverage": 0.9886621315192744,
+            "frequency_mae_hz": 0.2795514447973409,
+            "eligible_truth_count_observation_count_histogram": {
+              "1:1": 298,
+              "1:2": 17,
+              "1:3": 110,
+              "1:4": 16
+            },
+            "unresolved_observation_count_histogram": {},
+            "contract": "source clock=host event+header9; warmup.65s/end.4s; eligible separation>=12Hz; coverage tolerance2Hz. These are diagnostic thresholds, not a resolution theorem."
+          },
+          "stem_rms_dbfs": -44.968624114990234,
+          "peak_dbfs": -33.39816402554192,
+          "callback_p95_ms": 2.9291183007444483,
+          "latency_frames": 7140
+        },
+        "burg2": {
+          "tracking": {
+            "hops": 608,
+            "observed_tracks": 892,
+            "birth_tracks": 93,
+            "held_tracks": 540,
+            "releasing_tracks": 456,
+            "ended_tracks": 90,
+            "lost_track_hops": 1086,
+            "fit_rejected_track_hops": 259,
+            "grid_rejected_harmonic_hops": 4279,
+            "capacity_omissions": 0,
+            "capacity_hops": 0,
+            "emitted_harmonic_hops": 3331,
+            "permission_held_harmonic_hops": 1677,
+            "zero_pre_envelope_hops": 2,
+            "tracks_with_id": 2071
+          },
+          "observability": {
+            "evaluated_hops": 441,
+            "eligible_component_hops": 441,
+            "covered_component_hops": 436,
+            "missing_component_hops": 5,
+            "unmatched_observations": 290,
+            "unresolved_hops": 0,
+            "no_observation_component_hops": 0,
+            "out_of_tolerance_component_hops": 5,
+            "peak_count_deficit_component_hops": 0,
+            "adjacent_id_switches": 0,
+            "reacquisition_id_changes": 0,
+            "adjacent_links": 430,
+            "coverage": 0.9886621315192744,
+            "frequency_mae_hz": 0.2795514447973409,
+            "eligible_truth_count_observation_count_histogram": {
+              "1:1": 298,
+              "1:2": 17,
+              "1:3": 110,
+              "1:4": 16
+            },
+            "unresolved_observation_count_histogram": {},
+            "contract": "source clock=host event+header9; warmup.65s/end.4s; eligible separation>=12Hz; coverage tolerance2Hz. These are diagnostic thresholds, not a resolution theorem."
+          },
+          "stem_rms_dbfs": -44.968624114990234,
+          "peak_dbfs": -33.39816402554192,
+          "callback_p95_ms": 2.869527500388358,
+          "latency_frames": 7140
+        }
+      },
+      "off": {
+        "constant": {
+          "tracking": {
+            "hops": 608,
+            "observed_tracks": 345,
+            "birth_tracks": 6,
+            "held_tracks": 25,
+            "releasing_tracks": 22,
+            "ended_tracks": 6,
+            "lost_track_hops": 53,
+            "fit_rejected_track_hops": 24,
+            "grid_rejected_harmonic_hops": 293,
+            "capacity_omissions": 0,
+            "capacity_hops": 0,
+            "emitted_harmonic_hops": 1329,
+            "permission_held_harmonic_hops": 51,
+            "zero_pre_envelope_hops": 282,
+            "tracks_with_id": 404
+          },
+          "observability": {
+            "evaluated_hops": 441,
+            "eligible_component_hops": 197,
+            "covered_component_hops": 197,
+            "missing_component_hops": 0,
+            "unmatched_observations": 25,
+            "unresolved_hops": 0,
+            "no_observation_component_hops": 0,
+            "out_of_tolerance_component_hops": 0,
+            "peak_count_deficit_component_hops": 0,
+            "adjacent_id_switches": 0,
+            "reacquisition_id_changes": 0,
+            "adjacent_links": 196,
+            "coverage": 1.0,
+            "frequency_mae_hz": 0.012206179236397526,
+            "eligible_truth_count_observation_count_histogram": {
+              "1:1": 191,
+              "1:2": 2,
+              "1:3": 4,
+              "0:1": 13,
+              "0:2": 1,
+              "0:0": 230
+            },
+            "unresolved_observation_count_histogram": {},
+            "contract": "source clock=host event+header9; warmup.65s/end.4s; eligible separation>=12Hz; coverage tolerance2Hz. These are diagnostic thresholds, not a resolution theorem."
+          },
+          "stem_rms_dbfs": -47.23295593261719,
+          "peak_dbfs": -32.92638267072055,
+          "callback_p95_ms": 2.1812292000504385,
+          "latency_frames": 7140
+        },
+        "linear": {
+          "tracking": {
+            "hops": 608,
+            "observed_tracks": 345,
+            "birth_tracks": 6,
+            "held_tracks": 25,
+            "releasing_tracks": 22,
+            "ended_tracks": 6,
+            "lost_track_hops": 53,
+            "fit_rejected_track_hops": 24,
+            "grid_rejected_harmonic_hops": 293,
+            "capacity_omissions": 0,
+            "capacity_hops": 0,
+            "emitted_harmonic_hops": 1329,
+            "permission_held_harmonic_hops": 51,
+            "zero_pre_envelope_hops": 282,
+            "tracks_with_id": 404
+          },
+          "observability": {
+            "evaluated_hops": 441,
+            "eligible_component_hops": 197,
+            "covered_component_hops": 197,
+            "missing_component_hops": 0,
+            "unmatched_observations": 25,
+            "unresolved_hops": 0,
+            "no_observation_component_hops": 0,
+            "out_of_tolerance_component_hops": 0,
+            "peak_count_deficit_component_hops": 0,
+            "adjacent_id_switches": 0,
+            "reacquisition_id_changes": 0,
+            "adjacent_links": 196,
+            "coverage": 1.0,
+            "frequency_mae_hz": 0.012206179236397526,
+            "eligible_truth_count_observation_count_histogram": {
+              "1:1": 191,
+              "1:2": 2,
+              "1:3": 4,
+              "0:1": 13,
+              "0:2": 1,
+              "0:0": 230
+            },
+            "unresolved_observation_count_histogram": {},
+            "contract": "source clock=host event+header9; warmup.65s/end.4s; eligible separation>=12Hz; coverage tolerance2Hz. These are diagnostic thresholds, not a resolution theorem."
+          },
+          "stem_rms_dbfs": -47.23295593261719,
+          "peak_dbfs": -32.92638267072055,
+          "callback_p95_ms": 2.075372349690951,
+          "latency_frames": 7140
+        },
+        "burg2": {
+          "tracking": {
+            "hops": 608,
+            "observed_tracks": 344,
+            "birth_tracks": 7,
+            "held_tracks": 26,
+            "releasing_tracks": 23,
+            "ended_tracks": 7,
+            "lost_track_hops": 56,
+            "fit_rejected_track_hops": 24,
+            "grid_rejected_harmonic_hops": 301,
+            "capacity_omissions": 0,
+            "capacity_hops": 0,
+            "emitted_harmonic_hops": 1329,
+            "permission_held_harmonic_hops": 51,
+            "zero_pre_envelope_hops": 282,
+            "tracks_with_id": 407
+          },
+          "observability": {
+            "evaluated_hops": 441,
+            "eligible_component_hops": 197,
+            "covered_component_hops": 197,
+            "missing_component_hops": 0,
+            "unmatched_observations": 25,
+            "unresolved_hops": 0,
+            "no_observation_component_hops": 0,
+            "out_of_tolerance_component_hops": 0,
+            "peak_count_deficit_component_hops": 0,
+            "adjacent_id_switches": 0,
+            "reacquisition_id_changes": 0,
+            "adjacent_links": 196,
+            "coverage": 1.0,
+            "frequency_mae_hz": 0.012206179236397526,
+            "eligible_truth_count_observation_count_histogram": {
+              "1:1": 191,
+              "1:2": 2,
+              "1:3": 4,
+              "0:1": 13,
+              "0:2": 1,
+              "0:0": 230
+            },
+            "unresolved_observation_count_histogram": {},
+            "contract": "source clock=host event+header9; warmup.65s/end.4s; eligible separation>=12Hz; coverage tolerance2Hz. These are diagnostic thresholds, not a resolution theorem."
+          },
+          "stem_rms_dbfs": -47.23295593261719,
+          "peak_dbfs": -32.92638267072055,
+          "callback_p95_ms": 2.1596446003059095,
+          "latency_frames": 7140
+        }
+      }
+    },
+    "changed_native_id_slots": {
+      "linear": 854,
+      "burg2": 475
+    },
+    "constant_c2_bit_exact_with_previous": []
+  },
+  "stream": [
+    {
+      "fs": 44100,
+      "mode": "constant",
+      "chunk_prefix": "pass"
+    },
+    {
+      "fs": 44100,
+      "mode": "linear",
+      "chunk_prefix": "pass"
+    },
+    {
+      "fs": 44100,
+      "mode": "burg2",
+      "chunk_prefix": "pass"
+    },
+    {
+      "fs": 44100,
+      "mode": "linear",
+      "am_family_depth_rate_phase": "pass"
+    },
+    {
+      "fs": 44100,
+      "mode": "burg2",
+      "am_family_depth_rate_phase": "pass"
+    },
+    {
+      "fs": 48000,
+      "mode": "constant",
+      "chunk_prefix": "pass"
+    },
+    {
+      "fs": 48000,
+      "mode": "linear",
+      "chunk_prefix": "pass"
+    },
+    {
+      "fs": 48000,
+      "mode": "burg2",
+      "chunk_prefix": "pass"
+    },
+    {
+      "fs": 48000,
+      "mode": "linear",
+      "am_family_depth_rate_phase": "pass"
+    },
+    {
+      "fs": 48000,
+      "mode": "burg2",
+      "am_family_depth_rate_phase": "pass"
+    },
+    {
+      "mode": "linear",
+      "engine_reset": "bit_exact"
+    },
+    {
+      "mode": "burg2",
+      "engine_reset": "bit_exact"
+    }
+  ],
+  "library_sha256": "acbee29155d21f49bac1b67301064b3355225db3a391b3eb75e6241b4e7cc1e9",
+  "baseline_library_sha256": null,
+  "oracle_forecasts": 4320,
+  "quality": "not_evaluated",
+  "device": "not_evaluated",
+  "listening": "not_evaluated"
+}

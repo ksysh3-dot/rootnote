@@ -1,0 +1,139 @@
+
+##### beyond #####  (E rebuilt: S=8 slots; window sets: abs-top8 and excess-top8, union)
+
+[3:13.0] (c_abs) c abs20-140 -68.1 dBFS, P1 -76.6, exc +8.4, input 20-150 -12.8
+  voices ON per hop: mean 6.5 max 8; ON-voice-hops with f_track<100 Hz: 29%
+  lowest voices (median f_track Hz / s present / id): 43.4/0.17s; 46.3/0.28s; 70.6/0.51s; 72.0/0.55s
+  rebuild ms(20-150, 3k) dBFS: real layer -72.1 | post k2+3 -61.5 (k2 -61.5, k3 -81.1) | pre k2+3 -50.3 (k2 -50.3, k3 -68.9); rebuild-post minus real +10.6 dB
+  top voices by post-HP share: 45% f_track 78 f_osc 81 1.35s k2frac 99%; 41% f_track 104 f_osc 108 1.28s k2frac 100%; 3% f_track 105 f_osc 105 0.69s k2frac 100%; 2% f_track 72 f_osc 68 0.58s k2frac 62%
+  share of post-HP rebuilt energy from voices with 2*f_osc<150 (f_osc<75): 2% (pre-HP 2%); k2 of f_osc<75 2%, k3 of f_osc<50 0%
+  post-HP rebuilt energy share by voice f_osc bin (<60/60-75/75-100/100-130/>=130): 0% 2% 38% 60% 0%
+  event attribution of real 20-150 box energy (% excl): no-event 43%, no-voice 0%, none&f<=75 0%; event types >=2%: REL>ON5 ON>REL5 window6 fosc_jump8 amp_jump30
+
+[3:57.0] (c_abs) c abs20-140 -69.8 dBFS, P1 -71.7, exc +1.8, input 20-150 -15.1
+  voices ON per hop: mean 6.5 max 8; ON-voice-hops with f_track<100 Hz: 30%
+  lowest voices (median f_track Hz / s present / id): 51.4/0.14s; 66.2/0.36s; 76.9/0.51s; 77.3/2.00s
+  rebuild ms(20-150, 3k) dBFS: real layer -73.0 | post k2+3 -60.3 (k2 -60.5, k3 -78.2) | pre k2+3 -48.1 (k2 -48.3, k3 -65.8); rebuild-post minus real +12.7 dB
+  top voices by post-HP share: 37% f_track 108 f_osc 108 2.00s k2frac 100%; 24% f_track 77 f_osc 78 2.00s k2frac 85%; 12% f_track 105 f_osc 104 1.61s k2frac 102%; 11% f_track 77 f_osc 78 0.53s k2frac 92%
+  share of post-HP rebuilt energy from voices with 2*f_osc<150 (f_osc<75): 3% (pre-HP 1%); k2 of f_osc<75 2%, k3 of f_osc<50 0%
+  post-HP rebuilt energy share by voice f_osc bin (<60/60-75/75-100/100-130/>=130): 0% 2% 54% 43% 0%
+  event attribution of real 20-150 box energy (% excl): no-event 32%, no-voice 0%, none&f<=75 0%; event types >=2%: REL>ON4 ON>REL10 window4 fosc_jump5 amp_jump38 note_chg7
+
+[3:59.5] (c_abs) c abs20-140 -70.0 dBFS, P1 -86.6, exc +16.6, input 20-150 -17.5
+  voices ON per hop: mean 6.5 max 8; ON-voice-hops with f_track<100 Hz: 34%
+  lowest voices (median f_track Hz / s present / id): 69.5/0.27s; 70.1/0.61s; 70.3/0.37s; 86.5/0.67s
+  rebuild ms(20-150, 3k) dBFS: real layer -73.2 | post k2+3 -63.6 (k2 -63.8, k3 -78.3) | pre k2+3 -51.9 (k2 -52.1, k3 -67.3); rebuild-post minus real +9.7 dB
+  top voices by post-HP share: 37% f_track 101 f_osc 99 2.00s k2frac 98%; 30% f_track 97 f_osc 88 0.85s k2frac 99%; 13% f_track 87 f_osc 87 1.02s k2frac 93%; 6% f_track 86 f_osc 87 0.67s k2frac 97%
+  share of post-HP rebuilt energy from voices with 2*f_osc<150 (f_osc<75): 4% (pre-HP 3%); k2 of f_osc<75 1%, k3 of f_osc<50 0%
+  post-HP rebuilt energy share by voice f_osc bin (<60/60-75/75-100/100-130/>=130): 0% 4% 53% 42% 0%
+  event attribution of real 20-150 box energy (% excl): no-event 39%, no-voice 0%, none&f<=75 0%; event types >=2%: REL>ON5 ON>REL4 fosc_jump6 amp_jump43
+
+[1:31.5] (c_abs) c abs20-140 -70.8 dBFS, P1 -71.9, exc +1.1, input 20-150 -16.5
+  voices ON per hop: mean 6.5 max 8; ON-voice-hops with f_track<100 Hz: 35%
+  lowest voices (median f_track Hz / s present / id): 45.9/0.15s; 53.9/0.81s; 55.1/0.78s; 63.0/0.43s
+  rebuild ms(20-150, 3k) dBFS: real layer -74.2 | post k2+3 -65.5 (k2 -65.6, k3 -82.8) | pre k2+3 -54.3 (k2 -54.4, k3 -70.7); rebuild-post minus real +8.7 dB
+  top voices by post-HP share: 52% f_track 104 f_osc 105 2.00s k2frac 102%; 36% f_track 85 f_osc 91 1.44s k2frac 99%; 5% f_track 86 f_osc 83 0.49s k2frac 89%; 2% f_track 127 f_osc 113 0.74s k2frac 98%
+  share of post-HP rebuilt energy from voices with 2*f_osc<150 (f_osc<75): 2% (pre-HP 2%); k2 of f_osc<75 0%, k3 of f_osc<50 0%
+  post-HP rebuilt energy share by voice f_osc bin (<60/60-75/75-100/100-130/>=130): 1% 1% 47% 51% 0%
+  event attribution of real 20-150 box energy (% excl): no-event 44%, no-voice 0%, none&f<=75 0%; event types >=2%: REL>ON4 ON>REL2 window7 fosc_jump3 amp_jump38
+
+[1:29.0] (c_abs) c abs20-140 -72.5 dBFS, P1 -80.7, exc +8.2, input 20-150 -14.3
+  voices ON per hop: mean 6.8 max 8; ON-voice-hops with f_track<100 Hz: 24%
+  lowest voices (median f_track Hz / s present / id): 63.8/0.14s; 64.6/0.18s; 68.4/0.59s; 77.5/0.26s
+  rebuild ms(20-150, 3k) dBFS: real layer -75.5 | post k2+3 -66.2 (k2 -66.1, k3 -84.9) | pre k2+3 -54.1 (k2 -54.1, k3 -73.7); rebuild-post minus real +9.3 dB
+  top voices by post-HP share: 35% f_track 105 f_osc 104 1.80s k2frac 100%; 34% f_track 82 f_osc 83 1.69s k2frac 102%; 13% f_track 104 f_osc 103 0.39s k2frac 101%; 6% f_track 122 f_osc 111 1.25s k2frac 100%
+  share of post-HP rebuilt energy from voices with 2*f_osc<150 (f_osc<75): 1% (pre-HP 1%); k2 of f_osc<75 1%, k3 of f_osc<50 0%
+  post-HP rebuilt energy share by voice f_osc bin (<60/60-75/75-100/100-130/>=130): 0% 1% 42% 57% 0%
+  event attribution of real 20-150 box energy (% excl): no-event 28%, no-voice 0%, none&f<=75 0%; event types >=2%: REL>ON8 ON>REL4 window27 fosc_jump9 amp_jump17 note_chg7
+
+[3:51.0] (c_abs) c abs20-140 -72.8 dBFS, P1 -85.1, exc +12.3, input 20-150 -20.0
+  voices ON per hop: mean 6.3 max 8; ON-voice-hops with f_track<100 Hz: 42%
+  lowest voices (median f_track Hz / s present / id): 58.3/1.23s; 68.4/0.31s; 71.9/0.65s; 78.6/1.47s
+  rebuild ms(20-150, 3k) dBFS: real layer -76.7 | post k2+3 -68.8 (k2 -68.9, k3 -87.5) | pre k2+3 -57.1 (k2 -57.2, k3 -74.8); rebuild-post minus real +7.9 dB
+  top voices by post-HP share: 39% f_track 115 f_osc 116 2.00s k2frac 100%; 17% f_track 79 f_osc 79 1.49s k2frac 96%; 15% f_track 80 f_osc 90 0.31s k2frac 97%; 10% f_track 114 f_osc 110 0.36s k2frac 106%
+  share of post-HP rebuilt energy from voices with 2*f_osc<150 (f_osc<75): 1% (pre-HP 1%); k2 of f_osc<75 0%, k3 of f_osc<50 0%
+  post-HP rebuilt energy share by voice f_osc bin (<60/60-75/75-100/100-130/>=130): 1% 1% 38% 60% 1%
+  event attribution of real 20-150 box energy (% excl): no-event 25%, no-voice 0%, none&f<=75 0%; event types >=2%: birth9 REL>ON17 ON>REL18 window6 amp_jump23
+
+[3:33.5] (c_abs) c abs20-140 -72.9 dBFS, P1 -78.8, exc +5.8, input 20-150 -15.2
+  voices ON per hop: mean 6.0 max 8; ON-voice-hops with f_track<100 Hz: 25%
+  lowest voices (median f_track Hz / s present / id): 53.2/0.97s; 54.8/0.30s; 68.9/0.60s; 71.0/0.17s
+  rebuild ms(20-150, 3k) dBFS: real layer -77.4 | post k2+3 -68.6 (k2 -68.6, k3 -92.0) | pre k2+3 -56.5 (k2 -56.5, k3 -78.7); rebuild-post minus real +8.9 dB
+  top voices by post-HP share: 53% f_track 120 f_osc 124 2.00s k2frac 100%; 19% f_track 117 f_osc 109 0.57s k2frac 97%; 15% f_track 94 f_osc 87 0.29s k2frac 103%; 6% f_track 104 f_osc 104 1.31s k2frac 98%
+  share of post-HP rebuilt energy from voices with 2*f_osc<150 (f_osc<75): 1% (pre-HP 1%); k2 of f_osc<75 0%, k3 of f_osc<50 0%
+  post-HP rebuilt energy share by voice f_osc bin (<60/60-75/75-100/100-130/>=130): 0% 0% 17% 82% 0%
+  event attribution of real 20-150 box energy (% excl): no-event 19%, no-voice 0%, none&f<=75 0%; event types >=2%: REL>ON2 ON>REL10 window7 fosc_jump19 amp_jump41
+
+[1:02.5] (c_abs) c abs20-140 -73.2 dBFS, P1 -81.0, exc +7.8, input 20-150 -24.7
+  voices ON per hop: mean 6.7 max 8; ON-voice-hops with f_track<100 Hz: 38%
+  lowest voices (median f_track Hz / s present / id): 47.1/0.11s; 63.9/0.39s; 65.2/0.03s; 67.2/0.38s
+  rebuild ms(20-150, 3k) dBFS: real layer -78.0 | post k2+3 -69.3 (k2 -69.4, k3 -86.1) | pre k2+3 -58.3 (k2 -58.4, k3 -74.7); rebuild-post minus real +8.7 dB
+  top voices by post-HP share: 53% f_track 82 f_osc 82 2.00s k2frac 94%; 32% f_track 89 f_osc 83 1.14s k2frac 101%; 8% f_track 99 f_osc 91 0.41s k2frac 101%; 3% f_track 117 f_osc 124 1.02s k2frac 102%
+  share of post-HP rebuilt energy from voices with 2*f_osc<150 (f_osc<75): 4% (pre-HP 4%); k2 of f_osc<75 1%, k3 of f_osc<50 0%
+  post-HP rebuilt energy share by voice f_osc bin (<60/60-75/75-100/100-130/>=130): 0% 4% 91% 5% 0%
+  event attribution of real 20-150 box energy (% excl): no-event 38%, no-voice 0%, none&f<=75 1%; event types >=2%: REL>ON16 ON>REL3 amp_jump39
+
+[1:43.0] (exc) c abs20-140 -80.6 dBFS, P1 -101.9, exc +21.3, input 20-150 -27.8
+  voices ON per hop: mean 6.4 max 8; ON-voice-hops with f_track<100 Hz: 40%
+  lowest voices (median f_track Hz / s present / id): 65.1/1.38s; 70.3/0.44s; 78.1/0.70s; 90.0/0.21s
+  rebuild ms(20-150, 3k) dBFS: real layer -83.7 | post k2+3 -74.8 (k2 -75.0, k3 -91.3) | pre k2+3 -63.2 (k2 -63.4, k3 -79.2); rebuild-post minus real +8.9 dB
+  top voices by post-HP share: 53% f_track 97 f_osc 95 1.47s k2frac 98%; 30% f_track 78 f_osc 77 0.71s k2frac 97%; 9% f_track 101 f_osc 100 0.45s k2frac 94%; 4% f_track 115 f_osc 106 0.76s k2frac 101%
+  share of post-HP rebuilt energy from voices with 2*f_osc<150 (f_osc<75): 5% (pre-HP 4%); k2 of f_osc<75 4%, k3 of f_osc<50 0%
+  post-HP rebuilt energy share by voice f_osc bin (<60/60-75/75-100/100-130/>=130): 0% 5% 82% 12% 0%
+  event attribution of real 20-150 box energy (% excl): no-event 20%, no-voice 0%, none&f<=75 1%; event types >=2%: window31 fosc_jump9 amp_jump40
+
+[0:08.5] (exc) c abs20-140 -94.7 dBFS, P1 -112.8, exc +18.1, input 20-150 -26.7
+  voices ON per hop: mean 6.1 max 8; ON-voice-hops with f_track<100 Hz: 18%
+  lowest voices (median f_track Hz / s present / id): 49.3/0.48s; 50.6/0.31s; 66.3/0.41s; 80.5/0.45s
+  rebuild ms(20-150, 3k) dBFS: real layer -91.5 | post k2+3 -81.7 (k2 -81.8, k3 -102.6) | pre k2+3 -70.7 (k2 -70.7, k3 -90.8); rebuild-post minus real +9.8 dB
+  top voices by post-HP share: 64% f_track 131 f_osc 130 2.00s k2frac 99%; 12% f_track 105 f_osc 103 0.38s k2frac 101%; 6% f_track 117 f_osc 119 0.77s k2frac 99%; 5% f_track 119 f_osc 128 1.08s k2frac 103%
+  share of post-HP rebuilt energy from voices with 2*f_osc<150 (f_osc<75): 1% (pre-HP 0%); k2 of f_osc<75 0%, k3 of f_osc<50 0%
+  post-HP rebuilt energy share by voice f_osc bin (<60/60-75/75-100/100-130/>=130): 0% 0% 3% 88% 8%
+  event attribution of real 20-150 box energy (% excl): no-event 21%, no-voice 0%, none&f<=75 0%; event types >=2%: REL>ON7 ON>REL3 window7 amp_jump60
+
+[0:24.0] (exc) c abs20-140 -87.0 dBFS, P1 -102.1, exc +15.1, input 20-150 -29.1
+  voices ON per hop: mean 7.0 max 8; ON-voice-hops with f_track<100 Hz: 13%
+  lowest voices (median f_track Hz / s present / id): 69.2/0.18s; 81.2/0.03s; 81.7/0.18s; 84.3/0.13s
+  rebuild ms(20-150, 3k) dBFS: real layer -90.0 | post k2+3 -80.1 (k2 -80.2, k3 -99.9) | pre k2+3 -68.0 (k2 -68.0, k3 -87.7); rebuild-post minus real +9.9 dB
+  top voices by post-HP share: 32% f_track 87 f_osc 86 0.82s k2frac 102%; 15% f_track 131 f_osc 132 2.00s k2frac 103%; 14% f_track 156 f_osc 170 0.85s k2frac 102%; 8% f_track 127 f_osc 127 0.65s k2frac 100%
+  share of post-HP rebuilt energy from voices with 2*f_osc<150 (f_osc<75): 1% (pre-HP 0%); k2 of f_osc<75 0%, k3 of f_osc<50 0%
+  post-HP rebuilt energy share by voice f_osc bin (<60/60-75/75-100/100-130/>=130): 0% 0% 47% 46% 6%
+  event attribution of real 20-150 box energy (% excl): no-event 15%, no-voice 0%, none&f<=75 0%; event types >=2%: birth3 REL>ON3 ON>REL4 release2 window17 fosc_jump20 amp_jump34
+
+[2:51.5] (exc) c abs20-140 -79.0 dBFS, P1 -93.8, exc +14.8, input 20-150 -20.0
+  voices ON per hop: mean 6.4 max 8; ON-voice-hops with f_track<100 Hz: 39%
+  lowest voices (median f_track Hz / s present / id): 58.0/0.63s; 63.8/0.41s; 74.4/1.18s; 74.5/0.33s
+  rebuild ms(20-150, 3k) dBFS: real layer -82.0 | post k2+3 -72.3 (k2 -72.3, k3 -87.3) | pre k2+3 -60.4 (k2 -60.5, k3 -74.9); rebuild-post minus real +9.7 dB
+  top voices by post-HP share: 81% f_track 98 f_osc 98 2.00s k2frac 100%; 5% f_track 114 f_osc 109 0.26s k2frac 101%; 5% f_track 74 f_osc 74 1.21s k2frac 72%; 3% f_track 59 f_osc 55 0.69s k2frac 130%
+  share of post-HP rebuilt energy from voices with 2*f_osc<150 (f_osc<75): 5% (pre-HP 4%); k2 of f_osc<75 2%, k3 of f_osc<50 0%
+  post-HP rebuilt energy share by voice f_osc bin (<60/60-75/75-100/100-130/>=130): 1% 4% 50% 45% 0%
+  event attribution of real 20-150 box energy (% excl): no-event 69%, no-voice 0%, none&f<=75 0%; event types >=2%: ON>REL2 window12 fosc_jump2 amp_jump14
+
+[3:51.5] (exc) c abs20-140 -77.6 dBFS, P1 -92.2, exc +14.6, input 20-150 -21.7
+  voices ON per hop: mean 6.6 max 8; ON-voice-hops with f_track<100 Hz: 44%
+  lowest voices (median f_track Hz / s present / id): 61.3/0.78s; 63.2/0.47s; 68.4/0.31s; 71.9/0.65s
+  rebuild ms(20-150, 3k) dBFS: real layer -76.2 | post k2+3 -68.1 (k2 -68.2, k3 -88.1) | pre k2+3 -56.1 (k2 -56.1, k3 -75.7); rebuild-post minus real +8.1 dB
+  top voices by post-HP share: 45% f_track 110 f_osc 111 2.00s k2frac 100%; 17% f_track 76 f_osc 78 1.99s k2frac 97%; 13% f_track 80 f_osc 90 0.31s k2frac 97%; 9% f_track 114 f_osc 110 0.36s k2frac 106%
+  share of post-HP rebuilt energy from voices with 2*f_osc<150 (f_osc<75): 1% (pre-HP 1%); k2 of f_osc<75 0%, k3 of f_osc<50 0%
+  post-HP rebuilt energy share by voice f_osc bin (<60/60-75/75-100/100-130/>=130): 1% 1% 34% 65% 1%
+  event attribution of real 20-150 box energy (% excl): no-event 25%, no-voice 0%, none&f<=75 0%; event types >=2%: birth8 REL>ON15 ON>REL17 window6 amp_jump27
+
+[2:57.5] (exc) c abs20-140 -75.3 dBFS, P1 -89.0, exc +13.7, input 20-150 -15.3
+  voices ON per hop: mean 5.3 max 7; ON-voice-hops with f_track<100 Hz: 35%
+  lowest voices (median f_track Hz / s present / id): 45.7/0.26s; 54.2/0.62s; 71.5/0.38s; 73.4/0.19s
+  rebuild ms(20-150, 3k) dBFS: real layer -77.3 | post k2+3 -68.0 (k2 -68.0, k3 -87.4) | pre k2+3 -55.9 (k2 -55.9, k3 -75.8); rebuild-post minus real +9.3 dB
+  top voices by post-HP share: 50% f_track 104 f_osc 103 2.00s k2frac 101%; 23% f_track 121 f_osc 108 0.59s k2frac 99%; 18% f_track 84 f_osc 86 2.00s k2frac 104%; 3% f_track 84 f_osc 84 0.25s k2frac 92%
+  share of post-HP rebuilt energy from voices with 2*f_osc<150 (f_osc<75): 2% (pre-HP 1%); k2 of f_osc<75 1%, k3 of f_osc<50 0%
+  post-HP rebuilt energy share by voice f_osc bin (<60/60-75/75-100/100-130/>=130): 1% 1% 22% 77% 0%
+  event attribution of real 20-150 box energy (% excl): no-event 35%, no-voice 0%, none&f<=75 0%; event types >=2%: ON>REL22 window3 fosc_jump4 amp_jump32
+
+[2:18.5] (exc) c abs20-140 -86.6 dBFS, P1 -99.9, exc +13.3, input 20-150 -22.2
+  voices ON per hop: mean 6.5 max 8; ON-voice-hops with f_track<100 Hz: 29%
+  lowest voices (median f_track Hz / s present / id): 57.4/0.35s; 58.6/0.14s; 69.8/0.15s; 81.3/1.74s
+  rebuild ms(20-150, 3k) dBFS: real layer -84.5 | post k2+3 -73.9 (k2 -74.0, k3 -93.3) | pre k2+3 -61.9 (k2 -62.1, k3 -79.5); rebuild-post minus real +10.6 dB
+  top voices by post-HP share: 41% f_track 101 f_osc 106 2.00s k2frac 99%; 39% f_track 101 f_osc 105 0.66s k2frac 98%; 14% f_track 81 f_osc 79 1.75s k2frac 91%; 2% f_track 109 f_osc 98 0.19s k2frac 103%
+  share of post-HP rebuilt energy from voices with 2*f_osc<150 (f_osc<75): 2% (pre-HP 2%); k2 of f_osc<75 0%, k3 of f_osc<50 0%
+  post-HP rebuilt energy share by voice f_osc bin (<60/60-75/75-100/100-130/>=130): 1% 1% 53% 43% 2%
+  event attribution of real 20-150 box energy (% excl): no-event 32%, no-voice 0%, none&f<=75 0%; event types >=2%: window8 fosc_jump25 amp_jump29 note_chg4
+
+beyond all listed windows pooled: post-HP share from f_osc<75 voices 2%, pre-HP 2%

@@ -1,0 +1,22 @@
+song Track00026 4.4
+song Track00023 4.5
+song Track00025 7.4
+song Track00060 7.6
+song Track00024 7.8
+song Track00005 8.8
+song Track00012 8.8
+song Track00001 8.8
+song Track00020 9.3
+song Track00040 12.0
+Traceback (most recent call last):
+  File "/home/ksysh/r3a-dev/plan16/D/ref_rows.py", line 101, in <module>
+    main()
+  File "/home/ksysh/r3a-dev/plan16/D/ref_rows.py", line 44, in main
+    report(res)
+  File "/home/ksysh/r3a-dev/plan16/D/ref_rows.py", line 75, in report
+    P(k + ' | ' + ' | '.join(f"{res[k][rn]['E_wrong_sa'] / r3k:.4f}" for rn in ('R2', "R2s'", 'S2-core', 'core')) + f"  (v6b: " + ' | '.join(f"{res[k][rn]['E_wrong_v6b'] / r3k:.4f}" for rn in ('R2', "R2s'", 'S2-core', 'core')) + ')')
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ksysh/r3a-dev/plan16/D/ref_rows.py", line 75, in <genexpr>
+    P(k + ' | ' + ' | '.join(f"{res[k][rn]['E_wrong_sa'] / r3k:.4f}" for rn in ('R2', "R2s'", 'S2-core', 'core')) + f"  (v6b: " + ' | '.join(f"{res[k][rn]['E_wrong_v6b'] / r3k:.4f}" for rn in ('R2', "R2s'", 'S2-core', 'core')) + ')')
+                                ~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~
+ZeroDivisionError: float division by zero

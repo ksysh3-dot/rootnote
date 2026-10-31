@@ -1,0 +1,88 @@
+{
+ "X1_R3raw_v5a": {
+  "frac": 0.06701030927835051,
+  "drops": 13,
+  "n": 194
+ },
+ "X1_R3engine_v5a": {
+  "frac": 0.08247422680412371,
+  "drops": 16,
+  "n": 194
+ },
+ "X1_R3raw_right_dB_vs_R3engine": 1.3600883396006924,
+ "X1_rms_ratio_raw_over_enginestem_T1_8_12s": 1.1508433789144943,
+ "X2_core_k2to8_v5a": {
+  "frac": 0.061855670103092786,
+  "drops": 12,
+  "n": 194
+ },
+ "X2_core_k2k3_v5a_(14.1_synthesis)": {
+  "frac": 0.05154639175257732,
+  "drops": 10,
+  "n": 194
+ },
+ "X3_present_bins": 194,
+ "X3_present_bins_with_2plus_bass_notes": 0,
+ "X3": {
+  "P1": {
+   "drops": 31,
+   "n": 194,
+   "drops_with_2plus_bass_notes": 0,
+   "drops_near_boundary_50ms": 8,
+   "drops_neither": 23,
+   "n_single_note_bins": 194,
+   "drops_in_single_note_bins": 31,
+   "v5a_single_note_bins": 0.15979381443298968
+  },
+  "R0": {
+   "drops": 24,
+   "n": 194,
+   "drops_with_2plus_bass_notes": 0,
+   "drops_near_boundary_50ms": 3,
+   "drops_neither": 21,
+   "n_single_note_bins": 194,
+   "drops_in_single_note_bins": 24,
+   "v5a_single_note_bins": 0.12371134020618557
+  },
+  "R1": {
+   "drops": 29,
+   "n": 194,
+   "drops_with_2plus_bass_notes": 0,
+   "drops_near_boundary_50ms": 3,
+   "drops_neither": 26,
+   "n_single_note_bins": 194,
+   "drops_in_single_note_bins": 29,
+   "v5a_single_note_bins": 0.14948453608247422
+  },
+  "R2": {
+   "drops": 14,
+   "n": 194,
+   "drops_with_2plus_bass_notes": 0,
+   "drops_near_boundary_50ms": 5,
+   "drops_neither": 9,
+   "n_single_note_bins": 194,
+   "drops_in_single_note_bins": 14,
+   "v5a_single_note_bins": 0.07216494845360824
+  },
+  "R3": {
+   "drops": 16,
+   "n": 194,
+   "drops_with_2plus_bass_notes": 0,
+   "drops_near_boundary_50ms": 6,
+   "drops_neither": 10,
+   "n_single_note_bins": 194,
+   "drops_in_single_note_bins": 16,
+   "v5a_single_note_bins": 0.08247422680412371
+  },
+  "core": {
+   "drops": 12,
+   "n": 194,
+   "drops_with_2plus_bass_notes": 0,
+   "drops_near_boundary_50ms": 3,
+   "drops_neither": 9,
+   "n_single_note_bins": 194,
+   "drops_in_single_note_bins": 12,
+   "v5a_single_note_bins": 0.061855670103092786
+  }
+ }
+}

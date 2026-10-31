@@ -1,0 +1,175 @@
+computed 16.2
+determinism (x1 vs x1 re-rendered) bitwise identical: True
+{
+ "song": "Track00060",
+ "start": 20.0,
+ "T": 7.0,
+ "dur": 14.0,
+ "tol": 1e-09,
+ "checks": {
+  "kick": {
+   "stream_bh_first_div_ms_re_T": -65.7274999999995,
+   "stream_det_first_div_ms_re_T": -2.394166666666031,
+   "tracker_first_div_hop_centre_ms_re_T": -118.02083333333346,
+   "layer_bh-64-clf": {
+    "pass_": false,
+    "max_abs_diff_t_le_T_minus_L": 0.0001265106113258821,
+    "first_div_ms_re_T": -115.00000000000021,
+    "first_div_ms_re_T_minus_L": -51.000000000000156,
+    "layer_peak": 0.0667960461148852
+   },
+   "layer_bh-64-all": {
+    "pass_": false,
+    "max_abs_diff_t_le_T_minus_L": 0.00012586900529728065,
+    "first_div_ms_re_T": -115.00000000000021,
+    "first_div_ms_re_T_minus_L": -51.000000000000156,
+    "layer_peak": 0.06615872604783421
+   },
+   "layer_bh-217-clf": {
+    "pass_": false,
+    "max_abs_diff_t_le_T_minus_L": 1.0859943036119896e-05,
+    "first_div_ms_re_T": -257.6666666666663,
+    "first_div_ms_re_T_minus_L": -40.66666666666663,
+    "layer_peak": 0.06481507671060543
+   },
+   "layer_bh-217-all": {
+    "pass_": false,
+    "max_abs_diff_t_le_T_minus_L": 1.0855331815018757e-05,
+    "first_div_ms_re_T": -257.6666666666663,
+    "first_div_ms_re_T_minus_L": -40.66666666666663,
+    "layer_peak": 0.06720786540980184
+   },
+   "layer_det-64-clf": {
+    "pass_": false,
+    "max_abs_diff_t_le_T_minus_L": 0.00010499130906628865,
+    "first_div_ms_re_T": -113.33333333333329,
+    "first_div_ms_re_T_minus_L": -49.33333333333323,
+    "layer_peak": 0.10508498232024963
+   },
+   "layer_det-64-all": {
+    "pass_": false,
+    "max_abs_diff_t_le_T_minus_L": 0.00010468581874844424,
+    "first_div_ms_re_T": -113.33333333333329,
+    "first_div_ms_re_T_minus_L": -49.33333333333323,
+    "layer_peak": 0.10766856111855289
+   },
+   "layer_det-217-clf": {
+    "pass_": false,
+    "max_abs_diff_t_le_T_minus_L": 8.053811133268245e-06,
+    "first_div_ms_re_T": -261.0000000000001,
+    "first_div_ms_re_T_minus_L": -44.00000000000048,
+    "layer_peak": 0.08592553411834193
+   },
+   "layer_det-217-all": {
+    "pass_": false,
+    "max_abs_diff_t_le_T_minus_L": 7.767807276858746e-06,
+    "first_div_ms_re_T": -261.0000000000001,
+    "first_div_ms_re_T_minus_L": -44.00000000000048,
+    "layer_peak": 0.1622251730253864
+   }
+  },
+  "note": {
+   "stream_bh_first_div_ms_re_T": -65.7274999999995,
+   "stream_det_first_div_ms_re_T": -2.394166666666031,
+   "tracker_first_div_hop_centre_ms_re_T": -118.02083333333346,
+   "layer_bh-64-clf": {
+    "pass_": false,
+    "max_abs_diff_t_le_T_minus_L": 0.0005062671376893533,
+    "first_div_ms_re_T": -115.00000000000021,
+    "first_div_ms_re_T_minus_L": -51.000000000000156,
+    "layer_peak": 0.0667960461148852
+   },
+   "layer_bh-64-all": {
+    "pass_": false,
+    "max_abs_diff_t_le_T_minus_L": 0.0004986944517031233,
+    "first_div_ms_re_T": -115.00000000000021,
+    "first_div_ms_re_T_minus_L": -51.000000000000156,
+    "layer_peak": 0.06615872604783421
+   },
+   "layer_bh-217-clf": {
+    "pass_": false,
+    "max_abs_diff_t_le_T_minus_L": 6.227851536814294e-06,
+    "first_div_ms_re_T": -256.99999999999966,
+    "first_div_ms_re_T_minus_L": -40.000000000000036,
+    "layer_peak": 0.06481507671060543
+   },
+   "layer_bh-217-all": {
+    "pass_": false,
+    "max_abs_diff_t_le_T_minus_L": 6.226393250643655e-06,
+    "first_div_ms_re_T": -257.3333333333334,
+    "first_div_ms_re_T_minus_L": -40.333333333333776,
+    "layer_peak": 0.06720786540980184
+   },
+   "layer_det-64-clf": {
+    "pass_": false,
+    "max_abs_diff_t_le_T_minus_L": 0.0005621690274595446,
+    "first_div_ms_re_T": -113.33333333333329,
+    "first_div_ms_re_T_minus_L": -49.33333333333323,
+    "layer_peak": 0.10508498232024963
+   },
+   "layer_det-64-all": {
+    "pass_": false,
+    "max_abs_diff_t_le_T_minus_L": 0.0005477543486018862,
+    "first_div_ms_re_T": -113.33333333333329,
+    "first_div_ms_re_T_minus_L": -49.33333333333323,
+    "layer_peak": 0.10766856111855289
+   },
+   "layer_det-217-clf": {
+    "pass_": false,
+    "max_abs_diff_t_le_T_minus_L": 1.2948406720621197e-06,
+    "first_div_ms_re_T": -259.3333333333332,
+    "first_div_ms_re_T_minus_L": -42.333333333333556,
+    "layer_peak": 0.08592553411834193
+   },
+   "layer_det-217-all": {
+    "pass_": false,
+    "max_abs_diff_t_le_T_minus_L": 1.2850149006607414e-06,
+    "first_div_ms_re_T": -259.3333333333332,
+    "first_div_ms_re_T_minus_L": -42.333333333333556,
+    "layer_peak": 0.1622251730253864
+   }
+  },
+  "silence": {
+   "stream_bh_first_div_ms_re_T": -65.7274999999995,
+   "stream_det_first_div_ms_re_T": -2.394166666666031,
+   "tracker_first_div_hop_centre_ms_re_T": -118.02083333333346,
+   "layer_bh-64-clf": {
+    "pass_": false,
+    "max_abs_diff_t_le_T_minus_L": 0.00012651071024737462,
+    "first_div_ms_re_T": -115.00000000000021,
+    "first_div_ms_re_T_minus_L": -51.000000000000156,
+    "layer_peak": 0.0667960461148852
+   },
+   "layer_bh-64-all": {
+    "pass_": false,
+    "max_abs_diff_t_le_T_minus_L": 0.00012586910421877318,
+    "first_div_ms_re_T": -115.00000000000021,
+    "first_div_ms_re_T_minus_L": -51.000000000000156,
+    "layer_peak": 0.06615872604783421
+   },
+   "layer_bh-217-clf": {
+    "pass_": false,
+    "max_abs_diff_t_le_T_minus_L": 1.0859990937948233e-05,
+    "first_div_ms_re_T": -257.6666666666663,
+    "first_div_ms_re_T_minus_L": -40.66666666666663,
+    "layer_peak": 0.06481507671060543
+   },
+   "layer_bh-217-all": {
+    "pass_": false,
+    "max_abs_diff_t_le_T_minus_L": 1.0855379752516478e-05,
+    "first_div_ms_re_T": -257.6666666666663,
+    "first_div_ms_re_T_minus_L": -40.66666666666663,
+    "layer_peak": 0.06720786540980184
+   },
+   "layer_det-64-clf": {
+    "pass_": false,
+    "max_abs_diff_t_le_T_minus_L": 0.0001049913085514817,
+    "first_div_ms_re_T": -113.33333333333329,
+    "first_div_ms_re_T_minus_L": -49.33333333333323,
+    "layer_peak": 0.10508498232024963
+   },
+   "layer_det-64-all": {
+    "pass_": false,
+    "max_abs_diff_t_le_T_minus_L": 0.00010468581823363729,
+    "first_div_ms_re_T": -113.33333333333329,
+    "first_div_ms_re_T

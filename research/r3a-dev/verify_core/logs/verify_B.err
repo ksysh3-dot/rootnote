@@ -1,0 +1,51 @@
+19:17:16 start V1
+19:17:16 done V1 0s
+19:17:16 start V2
+19:17:16 done V2 0s
+19:17:16 start V3bare
+19:17:17 done V3bare 1s
+19:17:17 start V3c
+19:17:18 done V3c 1s
+19:17:18 start V3h
+19:17:20 done V3h 2s
+19:17:20 start V3e
+19:17:21 done V3e 2s
+19:17:21 start V3f
+19:17:22 done V3f 0s
+19:17:22 start V3g
+19:17:22 done V3g 0s
+19:17:22 start V3i
+19:17:23 done V3i 1s
+19:17:23 start V4
+19:17:26 done V4 2s
+19:17:26 start V5
+19:17:29 done V5 3s
+19:17:29 start V6
+19:17:29 V6 Track00060
+19:17:33 V6 Track00040
+19:17:43 V6 Track00001
+19:17:54 V6 Track00005
+19:17:54 V6 Track00012
+19:18:02 V6 Track00020
+19:18:09 V6 Track00023
+19:18:15 V6 Track00024
+19:18:23 V6 Track00025
+19:18:29 V6 Track00026
+19:18:34 done V6 65s
+19:18:34 start V7
+19:18:40 V7b/c Track00060 0.01916849211284098
+19:18:42 V7b/c Track00040 0.04711850995580487
+19:18:44 V7b/c Track00031 0.02790494866078391
+19:18:45 V7b/c Track00001 0.01977453648294672
+19:18:46 V7b/c musdb:A Classic Education - NightOwl 0.05300267466478311
+19:18:47 V7b/c musdb:Auctioneer - Our Future Faces 0.04684824664910919
+19:18:48 V7b/c musdb:Dark Ride - Burning Bridges 0.051921026139017314
+19:18:49 V7b/c musdb:Hollow Ground - Left Blind 0.07439912324594104
+19:18:50 V7b/c musdb:Leaf - Summerghost 0.03598231438379504
+19:18:51 V7b/c musdb:Music Delta - Grunge 0.046359129886311794
+19:18:52 V7b/c musdb:Spike Mullings - Mike's Sulking 0.036694855566410015
+19:18:53 V7b/c musdb:Titanium - Haunted Age 0.05019649119561441
+19:18:53 done V7 19s
+19:18:53 start V9
+19:18:56 done V9 3s
+exit 0

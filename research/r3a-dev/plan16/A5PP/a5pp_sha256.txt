@@ -1,0 +1,1 @@
+dd568a70982c6fa22b5bf3b20ac4756b0823d4baf239354b7ad6e371bca16012  /home/ksysh/r3a-dev/plan16/A5PP/a5pp.diff

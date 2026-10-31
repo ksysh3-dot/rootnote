@@ -1,0 +1,61 @@
+ITEM 0 Track00001 {'good': 95, 'bad': 2, 'kept': 1713}
+ITEM 1 Track00002 {'good': 202, 'bad': 194, 'kept': 2254}
+ITEM 2 Track00003 {'good': 480, 'bad': 359, 'kept': 2467}
+ITEM 3 Track00004 {'good': 137, 'bad': 52, 'kept': 1848}
+ITEM 4 Track00005 {'good': 134, 'bad': 473, 'kept': 943}
+ITEM 5 Track00006 {'good': 271, 'bad': 549, 'kept': 3117}
+ITEM 6 Track00007 {'good': 492, 'bad': 325, 'kept': 1866}
+ITEM 7 Track00008 {'good': 161, 'bad': 423, 'kept': 3189}
+ITEM 8 Track00009 {'good': 65, 'bad': 3, 'kept': 684}
+ITEM 9 Track00010 {'good': 597, 'bad': 668, 'kept': 2320}
+ITEM 10 Track00011 {'good': 122, 'bad': 169, 'kept': 1968}
+ITEM 11 Track00012 {'good': 66, 'bad': 186, 'kept': 4171}
+ITEM 12 Track00013 {'good': 162, 'bad': 145, 'kept': 2386}
+ITEM 13 Track00014 {'good': 220, 'bad': 22, 'kept': 2689}
+ITEM 14 Track00015 {'good': 118, 'bad': 46, 'kept': 2820}
+ITEM 15 Track00016 {'good': 342, 'bad': 312, 'kept': 1189}
+ITEM 16 Track00018 {'good': 67, 'bad': 1291, 'kept': 1890}
+ITEM 17 Track00019 {'good': 407, 'bad': 254, 'kept': 1003}
+ITEM 18 Track00020 {'good': 273, 'bad': 12, 'kept': 2477}
+
+feature quantiles (25 / 50 / 75), dB unless T (Hz)
+-- good: 3593 frames from 19 items
+   half                    -7.0    -2.8     2.3
+   x15                     -4.4    -0.6     3.3
+   x25                    -14.9    -9.1    -2.3
+   half_spread              2.3     4.1     7.6
+   half_peak                1.2     4.6     8.8
+   stem_half               -7.8    -3.7     0.6
+   mix_minus_stem_half     -0.3     0.8     4.3
+   T                      130.4   146.7   161.5
+-- bad: 3485 frames from 19 items
+   half                   -18.9   -10.9    -2.8
+   x15                     -9.8    -4.4     1.4
+   x25                    -14.2    -7.4    -0.5
+   half_spread              3.7     6.9    11.5
+   half_peak               -0.2     1.4     6.1
+   stem_half              -46.1   -31.4   -22.2
+   mix_minus_stem_half     13.2    25.0    35.7
+   T                       96.5   109.2   116.7
+-- kept: 5700 frames from 19 items
+   half                   -34.9   -24.9   -10.5
+   x15                    -26.2   -17.8   -10.9
+   x25                    -19.7   -11.7    -4.4
+   half_spread              3.7     6.7    11.5
+   half_peak               -0.5     1.1     4.1
+   stem_half              -61.9   -39.7   -26.6
+   mix_minus_stem_half      7.6    22.7    33.8
+   T                       88.1   101.8   110.7
+
+AUC good > bad (1 = feature higher for correct restorations; 0 = lower; 0.5 = no separation)
+   half                 good>bad 0.737213560082753  good>kept 0.8600866206707976
+   x15                  good>bad 0.6416739707090265  good>kept 0.9198021005756808
+   x25                  good>bad 0.4663607420933658  good>kept 0.5945696065937178
+   half_spread          good>bad 0.3456695846898221  good>kept 0.34308699664552417
+   half_peak            good>bad 0.624067042523702  good>kept 0.6867640294725124
+   stem_half            good>bad 0.9852730540533742  good>kept 0.996511052192128
+   mix_minus_stem_half  good>bad 0.08530847283555103  good>kept 0.13977968857573939
+   T                    good>bad 0.956445439702019  good>kept 0.9964009941357708
+
+frames (all, before sampling): {'good': 4411, 'bad': 5485, 'kept': 40994}
+items with most bad frames: [(1291, 'Track00018'), (668, 'Track00010'), (549, 'Track00006'), (473, 'Track00005'), (423, 'Track00008'), (359, 'Track00003')]

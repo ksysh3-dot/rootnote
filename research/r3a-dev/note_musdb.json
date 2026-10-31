@@ -1,0 +1,35 @@
+{
+ "items": 144,
+ "frames": 60335,
+ "hi_frames": 14386,
+ "all": {
+  "p1": 69.12,
+  "r3a": 70.74,
+  "oracle": 72.73,
+  "run0.2": 70.53,
+  "run0.35": 70.63,
+  "run0.5": 70.47,
+  "run0.65": 70.31,
+  "run0.8": 70.01,
+  "note0.2": null,
+  "note0.35": null,
+  "note0.5": null,
+  "note0.65": null,
+  "note0.8": null
+ },
+ "hi": {
+  "p1": 84.65,
+  "r3a": 84.63,
+  "oracle": 84.94,
+  "run0.2": 83.34,
+  "run0.35": 84.27,
+  "run0.5": 84.35,
+  "run0.65": 84.62,
+  "run0.8": 84.65,
+  "note0.2": null,
+  "note0.35": null,
+  "note0.5": null,
+  "note0.65": null,
+  "note0.8": null
+ }
+}

@@ -1,0 +1,11 @@
+v15 {'hops': 2062, 'on_frac': 0.3268671193016489, 'n_gaps': 33, 'gap_hops_total': 1388, 'longest_gap': 278}
+base {'hops': 2062, 'on_frac': 0.33802133850630456, 'n_gaps': 33, 'gap_hops_total': 1365, 'longest_gap': 334}
+s2m0 {'hops': 2062, 'on_frac': 0.33802133850630456, 'n_gaps': 33, 'gap_hops_total': 1365, 'longest_gap': 334}
+s2m1 {'hops': 2062, 'on_frac': 0.33802133850630456, 'n_gaps': 33, 'gap_hops_total': 1365, 'longest_gap': 334}
+s2m2 {'hops': 2062, 'on_frac': 0.33802133850630456, 'n_gaps': 33, 'gap_hops_total': 1365, 'longest_gap': 334}
+s4m0 {'hops': 2062, 'on_frac': 0.33802133850630456, 'n_gaps': 33, 'gap_hops_total': 1365, 'longest_gap': 334}
+s4m1 {'hops': 2062, 'on_frac': 0.33802133850630456, 'n_gaps': 33, 'gap_hops_total': 1365, 'longest_gap': 334}
+s4m2 {'hops': 2062, 'on_frac': 0.33802133850630456, 'n_gaps': 33, 'gap_hops_total': 1365, 'longest_gap': 334}
+s8m0 {'hops': 2062, 'on_frac': 0.33802133850630456, 'n_gaps': 33, 'gap_hops_total': 1365, 'longest_gap': 334}
+s8m1 {'hops': 2062, 'on_frac': 0.33802133850630456, 'n_gaps': 33, 'gap_hops_total': 1365, 'longest_gap': 334}
+s8m2 {'hops': 2062, 'on_frac': 0.33802133850630456, 'n_gaps': 33, 'gap_hops_total': 1365, 'longest_gap': 334}

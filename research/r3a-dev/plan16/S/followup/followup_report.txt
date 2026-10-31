@@ -1,0 +1,26 @@
+# followup report
+
+## part 1 (all 10 songs): unmatched truth segments 185, segment time (t>0.5 s) 33.16 s
+class | time s | time share % | segments with majority(>50% of its time) in class
+(i) kept voice linked to another note | 15.99 | 48.2 | 110
+(ii-a) unkept voice, failed pitch filter | 11.51 | 34.7 | 38
+(ii-b) unkept voice, silence won | 5.55 | 16.7 | 36
+(iii) no ON/REL voice | 0.11 | 0.3 | 0
+segments with T=0 (entirely before 0.5 s): 0
+
+## part 1 (without Track00040): unmatched truth segments 98, segment time (t>0.5 s) 21.89 s
+class | time s | time share % | segments with majority(>50% of its time) in class
+(i) kept voice linked to another note | 5.31 | 24.3 | 26
+(ii-a) unkept voice, failed pitch filter | 11.02 | 50.4 | 35
+(ii-b) unkept voice, silence won | 5.55 | 25.4 | 36
+(iii) no ON/REL voice | 0.00 | 0.0 | 0
+segments with T=0 (entirely before 0.5 s): 0
+
+## part 2: S2-core wrong energy (v6b, fixed gain F), pooled 10 songs
+total wrong layer energy (own render) 2.0262; S2-core from s_raw 2.0262; /R3right = 0.0341
+category | energy | share of total % | ratio to R3 right energy
+(a) other-note portion inside a multi-note voice | 1.1125 | 54.9 | 0.0187
+(b) after matched note end, silence (tail) | 0.7948 | 39.2 | 0.0134
+(c) before matched note start, silence | 0.0808 | 4.0 | 0.0014
+(d) other | 0.0080 | 0.4 | 0.0001
+sum of categories 1.9961 (98.5 % of total; difference = cross terms)

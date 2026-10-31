@@ -1,0 +1,19 @@
+built: /home/ksysh/r3-work/tools/pvb-harness/build_r4l/libpvbcapi.so /home/ksysh/r3-work/tools/pvb-harness/build_r4l/libpvbengine.so (source b670d304e229-dirty)
+LOGOFF: /home/ksysh/r3a-dev/songs/logoff.mp3
+1 LOGOFF flags 0: new == r4b True
+1 LOGOFF flags 16777216: new == r4b True
+1 Track00040 flags 0: new == r4b True
+1 Track00040 flags 16777216: new == r4b True
+2 45 Hz sine R4-L == P1 True
+2 LOGOFF R4-L 6 dB vs P1: max|diff|/rms 0.9443
+2 Track00040 R4-L 6 dB vs P1: max|diff|/rms 0.7434
+3 60 Hz k1..k4 dB re input {'P1': [np.float64(-23.6), np.float64(-87.0), np.float64(-19.6), np.float64(-23.1)], 'R4c': [np.float64(-23.6), np.float64(-87.0), np.float64(-19.6), np.float64(-23.1)], 'R4L6': [np.float64(-23.6), np.float64(-87.0), np.float64(-19.6), np.float64(-23.1)], 'R4L12': [np.float64(-23.6), np.float64(-87.0), np.float64(-19.6), np.float64(-23.1)]}
+3 80 Hz k1..k4 dB re input {'P1': [np.float64(-15.3), np.float64(-19.4), np.float64(-19.5), np.float64(-30.8)], 'R4c': [np.float64(-15.3), np.float64(-19.4), np.float64(-16.5), np.float64(-27.8)], 'R4L6': [np.float64(-15.3), np.float64(-17.2), np.float64(-14.2), np.float64(-25.6)], 'R4L12': [np.float64(-15.3), np.float64(-14.9), np.float64(-12.0), np.float64(-23.3)]}
+3 100 Hz k1..k4 dB re input {'P1': [np.float64(-10.3), np.float64(-12.8), np.float64(-25.1), np.float64(-36.8)], 'R4c': [np.float64(-10.3), np.float64(-12.8), np.float64(-14.4), np.float64(-26.1)], 'R4L6': [np.float64(-10.3), np.float64(-6.8), np.float64(-8.4), np.float64(-20.1)], 'R4L12': [np.float64(-10.3), np.float64(-0.8), np.float64(-2.4), np.float64(-14.1)]}
+3 125 Hz k1..k4 dB re input {'P1': [np.float64(-6.7), np.float64(-14.7), np.float64(-30.9), np.float64(-47.4)], 'R4c': [np.float64(-6.7), np.float64(-10.2), np.float64(-12.4), np.float64(-29.0)], 'R4L6': [np.float64(-6.8), np.float64(-4.2), np.float64(-6.4), np.float64(-23.0)], 'R4L12': [np.float64(-6.8), np.float64(1.8), np.float64(-0.4), np.float64(-17.0)]}
+3 150 Hz k1..k4 dB re input {'P1': [np.float64(-4.7), np.float64(-29.2), np.float64(-46.0), np.float64(-83.7)], 'R4c': [np.float64(-4.7), np.float64(-18.5), np.float64(-21.4), np.float64(-78.2)], 'R4L6': [np.float64(-4.7), np.float64(-12.5), np.float64(-15.4), np.float64(-74.1)], 'R4L12': [np.float64(-4.7), np.float64(-6.5), np.float64(-9.4), np.float64(-69.0)]}
+3 200 Hz k1..k4 dB re input {'P1': [np.float64(-2.6), np.float64(-70.1), np.float64(-73.7), np.float64(-79.2)], 'R4c': [np.float64(-2.6), np.float64(-70.1), np.float64(-73.7), np.float64(-79.2)], 'R4L6': [np.float64(-2.6), np.float64(-70.1), np.float64(-73.7), np.float64(-79.2)], 'R4L12': [np.float64(-2.6), np.float64(-70.1), np.float64(-73.7), np.float64(-79.2)]}
+== regression
+near_pair {'constant': (None, 0), 'linear': (None, 0), 'burg2': (None, 0)}
+am7 {'constant': (0.9886621315192744, 0), 'linear': (0.9886621315192744, 0), 'burg2': (0.9886621315192744, 0)}
+off {'constant': (1.0, 0), 'linear': (1.0, 0), 'burg2': (1.0, 0)}

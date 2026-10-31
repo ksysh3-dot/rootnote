@@ -1,0 +1,38 @@
+{
+ "P1": {
+  "n": 194,
+  "drops": 31,
+  "within50ms_of_boundary": 8,
+  "median_drop_ratio_db": -17.140360669705956
+ },
+ "R0": {
+  "n": 194,
+  "drops": 24,
+  "within50ms_of_boundary": 3,
+  "median_drop_ratio_db": -9.854245811028756
+ },
+ "R1": {
+  "n": 194,
+  "drops": 29,
+  "within50ms_of_boundary": 3,
+  "median_drop_ratio_db": -10.295287398674946
+ },
+ "R2": {
+  "n": 194,
+  "drops": 14,
+  "within50ms_of_boundary": 5,
+  "median_drop_ratio_db": -9.328829175971764
+ },
+ "R3": {
+  "n": 194,
+  "drops": 16,
+  "within50ms_of_boundary": 6,
+  "median_drop_ratio_db": -10.43490879937383
+ },
+ "R2s": {
+  "n": 194,
+  "drops": 14,
+  "within50ms_of_boundary": 8,
+  "median_drop_ratio_db": -12.613610480588775
+ }
+}

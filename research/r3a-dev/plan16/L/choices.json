@@ -1,0 +1,57 @@
+{
+ "Track00025": {
+  "tests": [
+   {
+    "start": 21.0,
+    "units": 0.0722933451825556
+   },
+   {
+    "start": 12.0,
+    "units": 0.0357776092097274
+   },
+   {
+    "start": 3.0,
+    "units": 0.007381864353693113
+   }
+  ],
+  "null": {
+   "start": 1.0,
+   "units": 0.0032775129363017794,
+   "overlap_with_tests": 7.0
+  },
+  "min_overlap": 7.0,
+  "n_candidate_windows": 81,
+  "greedy_info": [
+   20.75,
+   11.75,
+   2.75
+  ]
+ },
+ "Track00026": {
+  "tests": [
+   {
+    "start": 21.0,
+    "units": 0.020979712478232285
+   },
+   {
+    "start": 2.75,
+    "units": 0.01990096637323516
+   },
+   {
+    "start": 11.75,
+    "units": 0.010704294786689394
+   }
+  ],
+  "null": {
+   "start": 1.0,
+   "units": 0.018881308159080984,
+   "overlap_with_tests": 7.25
+  },
+  "min_overlap": 7.25,
+  "n_candidate_windows": 81,
+  "greedy_info": [
+   19.25,
+   5.5
+  ]
+ }
+}

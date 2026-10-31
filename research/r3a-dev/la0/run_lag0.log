@@ -1,0 +1,24 @@
+stage A done 80.7
+synthetic bare100 81.9
+synthetic step25 83.8
+synthetic bass9 84.2
+synthetic bkp_0 85.7
+synthetic steady8 86.2
+synthetic pink10 87.6
+synthetic t60_36_48 97.4
+synthetic logoff_37_49 98.7
+songs Track00060 99.3
+songs Track00040 102.3
+songs Track00001 103.6
+songs Track00005 104.8
+songs Track00012 106.8
+songs Track00020 110.6
+songs Track00023 114.1
+songs Track00024 119.5
+songs Track00025 123.9
+songs Track00026 127.5
+stage C done 128.9
+
+real	2m9.893s
+user	18m25.278s
+sys	0m26.237s

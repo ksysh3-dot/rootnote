@@ -1,0 +1,1 @@
+d571cb530de4105c204307e95768edc583588e029f65ec9667c969974013c4c7  /home/ksysh/r3a-dev/plan16/S19/HP/lib_m/libpvbcapi.so

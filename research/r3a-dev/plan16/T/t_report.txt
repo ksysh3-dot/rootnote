@@ -1,0 +1,120 @@
+# plan16 T report -- 2026-10-31T11:46:27  (readings: CHOICES.md; units = energy / R3R)
+
+================ Track00026
+REPRO: my silent-wrong energy 0.05159 (16.14: 0.0516); sum of 5 category layers 0.05313; energy of the summed layers 0.05159
+silent-wrong voice-hops 15690 (counted t>0.5 s: 11489); stable-voice hop fraction (any voice, whole song): D_s=100 ms 57.7 %, 150 ms 50.7 %; stable_scan max trace hop read <= h: True
+voice f of the silent-wrong energy (a^2 weight) deciles 10/25/50/75/90 %: 47.1 50.4 96.7 115.3 189.2 Hz; min 23.1 max 221.5; weight share with f >= 4 x 36.7 Hz (146 Hz): 18.1 %; with f >= 260 Hz: 0.0 %
+ALIGNMENT CHECK (stem STFT argmax within +-300 cent of MIDI f0, 0.25 s into notes >= 0.4 s, 62 notes): median -8.4 cent, |dev| <= 50 cent: 93.5 %, <= 100 cent: 100.0 %
+
+### (a)-(e) table: exact layer energy (units) | share of layer sum % | proxy a^2 share %
+(a) | 0.00000 | 0.0 | 0.0
+(b) | 0.00000 | 0.0 | 0.0
+(c) | 0.00315 | 5.9 | 4.9
+(d) | 0.01791 | 33.7 | 54.8
+(e) | 0.03208 | 60.4 | 40.3
+sum | 0.05313 | 100 | 100     (E_sil rendered together 0.05159)
+(a)+(b)+(c) = 5.9 % (proxy 4.9 %); (d)+(e) = 94.1 % (proxy 95.1 %)  =>  RULE: ENGINE (e+d >= 50 %)   [proxy: ENGINE (e+d >= 50 %)]
+
+### k-coverage (non-exclusive, proxy weight share of ALL silent-wrong energy where some sounding non-drum note has f = m x f0 within 50 cent)
+k=1 (a) 0.00 | k=2 0.00 | k=3 0.00 | k=4 0.00 | k=5 0.00 | k=6 0.00 | k=7 0.00 | k=8 0.00 | x1/2 0.00 | x1/3 (info) 4.16 | x1/4 (info) 1.87
+first-match (b) by k (proxy share of all): 2 0.00 | 3 0.00 | 4 0.00 | 5 0.00 | 6 0.00 | 7 0.00 | 8 0.00 | 0.5 0.00
+exact layer energy of (b) by first-match k (units): 2: 0.00000 | 3: 0.00000 | 4: 0.00000 | 5: 0.00000 | 6: 0.00000 | 7: 0.00000 | 8: 0.00000 | 0.5: 0.00000
+
+### per-instrument share (stems with audio; exact layers, units, share of ALL layer energy %) for categories a/b/c
+S01 Guitar / Acoustic Guitar (steel) | a 0.00000 b 0.00000 c 0.00006 | 0.1 % of all
+S02 Guitar / Acoustic Guitar (nylon) | a 0.00000 b 0.00000 c 0.00056 | 1.0 % of all
+S03 Guitar / Acoustic Guitar (steel) | a 0.00000 b 0.00000 c 0.00238 | 4.5 % of all
+S04 Piano / Bright Acoustic Piano | a 0.00000 b 0.00000 c 0.00016 | 0.3 % of all
+by inst_class (a+b+c): Guitar 5.6 % | Piano 0.3 %
+(d) dominant stem at f (proxy share within (d) ): Guitar 56.6 % | Drums [drum] 43.3 % | Piano 0.1 %
+(e) dominant stem at f (proxy share within (e) ): Guitar 96.0 % | Drums [drum] 2.3 % | Piano 1.7 %
+
+### diagnostics per category (proxy weights): cents from f to the nearest V6b target (any note, 0.5/1/2/3): <=100 | 100-200 | 200-400 | >400 ; drum hit within [-150,+20] ms | kick ; engine-recipe peak at f ; mix excess dB p10/p50/p90 ; voice f p10/p50/p90
+(c) n 824 | 8% | 23% | 36% | 33% | drum 62% kick 28% | eng-peak 48% | excess -99.0/19.7/31.2 | f 48/99/131
+(d) n 2911 | 32% | 30% | 11% | 26% | drum 58% kick 40% | eng-peak 74% | excess 23.2/25.2/38.6 | f 47/96/204
+(e) n 7754 | 45% | 47% | 6% | 1% | drum 43% kick 10% | eng-peak 35% | excess -99.0/-99.0/-99.0 | f 79/99/145
+
+### chance baseline for "<=100 cent from a V6b target": same records with f shifted by +-0.25 octave (all categories, proxy): c2t: 36% | null_up: 27% | null_dn: 26%
+### distance from f to the nearest mix local maximum (>= 6 dB over median, +-300 cent search), proxy shares: <=50 | 50-100 | 100-200 | 200-300 | none within 300
+(c) 72% | 13% | 8% | 6% | 2%
+(d) 100% | 0% | 0% | 0% | 0%
+(e) 8% | 59% | 28% | 3% | 2%
+   all hops, real f: nearest mix peak <=50 62% | <=100 86% | <=200 98% | none in 300 1%
+   all hops, null +0.25 oct: nearest mix peak <=50 15% | <=100 33% | <=200 56% | none in 300 13%
+   all hops, null -0.25 oct: nearest mix peak <=50 20% | <=100 30% | <=200 52% | none in 300 31%
+### octave-folded distance (cent) from f to the nearest sounding non-drum MIDI note class (any octave), proxy shares: <=50 | 50-100 | 100-200 | >200 | no note sounding
+(d) real f: 3% | 32% | 33% | 32% | 0%
+(e) real f: 1% | 43% | 47% | 9% | 0%
+(d) null +0.25 oct: 9% | 12% | 26% | 54% | 0%
+(e) null +0.25 oct: 19% | 12% | 41% | 28% | 0%
+(d) null -0.25 oct: 18% | 5% | 32% | 46% | 0%
+(e) null -0.25 oct: 16% | 23% | 31% | 30% | 0%
+
+### split by "a stable voice exists at this hop" (st100: D_s = 100 ms), proxy shares
+stable hops: weight share of all 20.4 % | (a) 0.0 | (b) 0.0 | (c) 6.1 | (d) 52.9 | (e) 41.0 | (a+b+c) 6.1 (d+e) 93.9
+unstable hops: weight share of all 79.6 % | (a) 0.0 | (b) 0.0 | (c) 4.6 | (d) 55.4 | (e) 40.1 | (a+b+c) 4.6 (d+e) 95.4
+stable subset: dominant stem at f: Guitar 87.4 % | Drums [drum] 8.6 % | Piano 4.0 %; cents-to-nearest V6b target median 114, share <=100: 47 %, f p10/50/90 80/120/205
+
+### split by "a stable voice exists at this hop" (st150: D_s = 150 ms), proxy shares
+stable hops: weight share of all 13.2 % | (a) 0.0 | (b) 0.0 | (c) 7.9 | (d) 51.5 | (e) 40.5 | (a+b+c) 7.9 (d+e) 92.1
+unstable hops: weight share of all 86.8 % | (a) 0.0 | (b) 0.0 | (c) 4.4 | (d) 55.4 | (e) 40.2 | (a+b+c) 4.4 (d+e) 95.6
+stable subset: dominant stem at f: Guitar 93.0 % | Piano 6.1 % | Drums [drum] 0.8 %; cents-to-nearest V6b target median 114, share <=100: 46 %, f p10/50/90 91/127/205
+
+================ Track00024
+REPRO: my silent-wrong energy 0.01462 (16.14: 0.0146); sum of 5 category layers 0.01444; energy of the summed layers 0.01462
+silent-wrong voice-hops 28111 (counted t>0.5 s: 14427); stable-voice hop fraction (any voice, whole song): D_s=100 ms 3.5 %, 150 ms 0.0 %; stable_scan max trace hop read <= h: True
+voice f of the silent-wrong energy (a^2 weight) deciles 10/25/50/75/90 %: 52.1 56.6 60.5 63.3 70.3 Hz; min 27.1 max 222.6; weight share with f >= 4 x 36.7 Hz (146 Hz): 3.6 %; with f >= 260 Hz: 0.0 %
+ALIGNMENT CHECK (stem STFT argmax within +-300 cent of MIDI f0, 0.25 s into notes >= 0.4 s, 28 notes): median +8.7 cent, |dev| <= 50 cent: 64.3 %, <= 100 cent: 64.3 %
+
+### (a)-(e) table: exact layer energy (units) | share of layer sum % | proxy a^2 share %
+(a) | 0.00000 | 0.0 | 0.0
+(b) | 0.00000 | 0.0 | 0.0
+(c) | 0.00000 | 0.0 | 0.0
+(d) | 0.00128 | 8.8 | 11.8
+(e) | 0.01316 | 91.2 | 88.2
+sum | 0.01444 | 100 | 100     (E_sil rendered together 0.01462)
+(a)+(b)+(c) = 0.0 % (proxy 0.0 %); (d)+(e) = 100.0 % (proxy 100.0 %)  =>  RULE: ENGINE (e+d >= 50 %)   [proxy: ENGINE (e+d >= 50 %)]
+
+### k-coverage (non-exclusive, proxy weight share of ALL silent-wrong energy where some sounding non-drum note has f = m x f0 within 50 cent)
+k=1 (a) 0.00 | k=2 0.00 | k=3 0.00 | k=4 0.00 | k=5 0.00 | k=6 0.00 | k=7 0.00 | k=8 0.00 | x1/2 0.00 | x1/3 (info) 4.97 | x1/4 (info) 15.88
+first-match (b) by k (proxy share of all): 2 0.00 | 3 0.00 | 4 0.00 | 5 0.00 | 6 0.00 | 7 0.00 | 8 0.00 | 0.5 0.00
+exact layer energy of (b) by first-match k (units): 2: 0.00000 | 3: 0.00000 | 4: 0.00000 | 5: 0.00000 | 6: 0.00000 | 7: 0.00000 | 8: 0.00000 | 0.5: 0.00000
+
+### per-instrument share (stems with audio; exact layers, units, share of ALL layer energy %) for categories a/b/c
+S01 Strings (continued) / Synth Strings 1 | a 0.00000 b 0.00000 c 0.00000 | 0.0 % of all
+by inst_class (a+b+c): Strings (continued) 0.0 %
+(d) dominant stem at f (proxy share within (d) ): Drums [drum] 100.0 % | Strings (continued) 0.0 %
+(e) dominant stem at f (proxy share within (e) ): Drums [drum] 99.9 % | Strings (continued) 0.1 %
+
+### diagnostics per category (proxy weights): cents from f to the nearest V6b target (any note, 0.5/1/2/3): <=100 | 100-200 | 200-400 | >400 ; drum hit within [-150,+20] ms | kick ; engine-recipe peak at f ; mix excess dB p10/p50/p90 ; voice f p10/p50/p90
+(c) n 189 | 1% | 61% | 37% | 0% | drum 62% kick 0% | eng-peak 5% | excess -99.0/0.0/19.2 | f 129/194/197
+(d) n 2238 | 1% | 21% | 0% | 72% | drum 96% kick 71% | eng-peak 34% | excess 6.2/8.1/18.9 | f 52/60/192
+(e) n 12000 | 8% | 15% | 6% | 66% | drum 99% kick 98% | eng-peak 3% | excess -99.0/-99.0/5.3 | f 52/60/69
+
+### chance baseline for "<=100 cent from a V6b target": same records with f shifted by +-0.25 octave (all categories, proxy): c2t: 7% | null_up: 7% | null_dn: 5%
+### distance from f to the nearest mix local maximum (>= 6 dB over median, +-300 cent search), proxy shares: <=50 | 50-100 | 100-200 | 200-300 | none within 300
+(c) 40% | 14% | 8% | 27% | 11%
+(d) 100% | 0% | 0% | 0% | 0%
+(e) 1% | 14% | 14% | 7% | 65%
+   all hops, real f: nearest mix peak <=50 12% | <=100 24% | <=200 37% | none in 300 57%
+   all hops, null +0.25 oct: nearest mix peak <=50 6% | <=100 11% | <=200 23% | none in 300 53%
+   all hops, null -0.25 oct: nearest mix peak <=50 2% | <=100 4% | <=200 12% | none in 300 78%
+### octave-folded distance (cent) from f to the nearest sounding non-drum MIDI note class (any octave), proxy shares: <=50 | 50-100 | 100-200 | >200 | no note sounding
+(d) real f: 13% | 16% | 63% | 2% | 6%
+(e) real f: 18% | 25% | 42% | 7% | 8%
+(d) null +0.25 oct: 23% | 20% | 48% | 4% | 6%
+(e) null +0.25 oct: 35% | 22% | 31% | 5% | 8%
+(d) null -0.25 oct: 24% | 26% | 25% | 20% | 6%
+(e) null -0.25 oct: 20% | 14% | 39% | 18% | 8%
+
+### split by "a stable voice exists at this hop" (st100: D_s = 100 ms), proxy shares
+stable hops: weight share of all 0.1 % | (a) 0.0 | (b) 0.0 | (c) 0.3 | (d) 53.5 | (e) 46.3 | (a+b+c) 0.3 (d+e) 99.7
+unstable hops: weight share of all 99.9 % | (a) 0.0 | (b) 0.0 | (c) 0.0 | (d) 11.8 | (e) 88.2 | (a+b+c) 0.0 (d+e) 100.0
+stable subset: dominant stem at f: Drums [drum] 100.0 %; cents-to-nearest V6b target median 1275, share <=100: 2 %, f p10/50/90 48/50/77
+
+### split by "a stable voice exists at this hop" (st150: D_s = 150 ms), proxy shares
+stable hops: weight share of all 0.0 % | (a) nan | (b) nan | (c) nan | (d) nan | (e) nan | (a+b+c) nan (d+e) nan
+unstable hops: weight share of all 100.0 % | (a) 0.0 | (b) 0.0 | (c) 0.0 | (d) 11.8 | (e) 88.2 | (a+b+c) 0.0 (d+e) 100.0
+
+================ pooled T26 + T24 (exact layers)
+(a) 0.0 % | (b) 0.0 % | (c) 4.7 % | (d) 28.4 % | (e) 66.9 % | a+b+c 4.7 | d+e 95.3  =>  ENGINE (e+d >= 50 %)

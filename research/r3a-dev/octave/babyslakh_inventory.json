@@ -1,0 +1,361 @@
+{
+  "schema": "rootnote.gt_bass.inventory.v1",
+  "issue": 4,
+  "root_name": "babyslakh_16k",
+  "reference": "midi",
+  "midi_transpose": "auto",
+  "crop": "",
+  "min_seconds": 5,
+  "source_sha256": "d7a2069dee926dfef63964190a31d07ef5c3da64d6d169e21f5c9abb5ec5759c",
+  "inventory": [
+    {
+      "item": 0,
+      "sha256": {
+        "mix.wav": "e6590a50b9c4d6aa",
+        "stems/S03.wav": "0dafc03d0630fb0b",
+        "MIDI/S03.mid": "cea8d708eb483f77"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0006385696040868455,
+          "-12": 0.9826309067688378,
+          "0": 0.012899106002554278,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 17462
+    },
+    {
+      "item": 1,
+      "sha256": {
+        "mix.wav": "06de7810c57fab9b",
+        "stems/S01.wav": "47f4bfb2d25eeeb2",
+        "MIDI/S01.mid": "9295015ab7ca81c2"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.010140797854508884,
+          "-12": 0.9881830372108615,
+          "0": 0.00025142474019443513,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 13519
+    },
+    {
+      "item": 2,
+      "sha256": {
+        "mix.wav": "c628dbf30b818417",
+        "stems/S01.wav": "24459427d7dd4031",
+        "MIDI/S01.mid": "bcf885afeb0e724d"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.007889819364661915,
+          "-12": 0.9907260017994325,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 18685
+    },
+    {
+      "item": 3,
+      "sha256": {
+        "mix.wav": "d4c1c15491a38a3e",
+        "stems/S01.wav": "46ea162b268441e1",
+        "MIDI/S01.mid": "a71aebe31ab23e0d"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0,
+          "-12": 1.0,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 17824
+    },
+    {
+      "item": 4,
+      "sha256": {
+        "mix.wav": "2ada57d35631b349",
+        "stems/S04.wav": "0580553e02b750e4",
+        "MIDI/S04.mid": "4f13fae1fbf06f4d"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.000489077274209325,
+          "-12": 0.9330779263123573,
+          "0": 0.00032605151613955004,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 13403
+    },
+    {
+      "item": 5,
+      "sha256": {
+        "mix.wav": "46c959fd4ff102aa",
+        "stems/S03.wav": "616ba7d9a637d483",
+        "MIDI/S03.mid": "9c8f3099b45be724"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0028263557675322383,
+          "-12": 0.9886356945180474,
+          "0": 0.0038273567685332393,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 19471
+    },
+    {
+      "item": 6,
+      "sha256": {
+        "mix.wav": "91c0142ad5373c23",
+        "stems/S02.wav": "a4ed6f2e889cbbc5",
+        "MIDI/S02.mid": "d5a1ed8d83d9e72c"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.002753423664951815,
+          "-12": 0.9965219911600609,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 16580
+    },
+    {
+      "item": 7,
+      "sha256": {
+        "mix.wav": "a771ddc3a0d2d92d",
+        "stems/S00.wav": "1ff2177aaec62746",
+        "MIDI/S00.mid": "a337b21f693ae801"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0001312623058411726,
+          "-12": 0.9990811638591118,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 24268
+    },
+    {
+      "item": 8,
+      "sha256": {
+        "mix.wav": "0ca93ceaf8222984",
+        "stems/S06.wav": "7746e872c99c1cbb",
+        "MIDI/S06.mid": "f6648cc86efe5bef"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0,
+          "-12": 1.0,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 2980
+    },
+    {
+      "item": 9,
+      "sha256": {
+        "mix.wav": "6cd939f61c3c4489",
+        "stems/S00.wav": "896729eef847b8ac",
+        "MIDI/S00.mid": "1906ef682a4e660a"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0037354427598330037,
+          "-12": 0.995165897604922,
+          "0": 0.00029297590273200027,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 15820
+    },
+    {
+      "item": 10,
+      "sha256": {
+        "mix.wav": "adb9b52c1ecb28b0",
+        "stems/S01.wav": "f3626d817d24e7dd",
+        "MIDI/S01.mid": "ceb4b4ad16db20e8"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0058771672054069935,
+          "-12": 0.9849397590361446,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 16395
+    },
+    {
+      "item": 11,
+      "sha256": {
+        "mix.wav": "2b5d03c3f9795985",
+        "stems/S05.wav": "4f4525b502f8f5e5",
+        "stems/S10.wav": "792e519e6268190b",
+        "MIDI/S05.mid": "7c8287587e3aaaeb",
+        "MIDI/S10.mid": "0fd53012d10e796d"
+      },
+      "midi_octave": {
+        "transpose": null,
+        "agree": {
+          "-24": 0.19965257672264042,
+          "-12": 0.470816444701795,
+          "0": 0.0025477707006369425,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 0,
+      "excluded": "MIDI octave unclear"
+    },
+    {
+      "item": 12,
+      "sha256": {
+        "mix.wav": "29e2f1cb9e806077",
+        "stems/S00.wav": "552e6bd5dbf8a6df",
+        "stems/S01.wav": "9ea636197325148a",
+        "MIDI/S00.mid": "0b318d357f083e23",
+        "MIDI/S01.mid": "9e912f7a6be90d49"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.3012318029115342,
+          "-12": 0.684006922528759,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 14609
+    },
+    {
+      "item": 13,
+      "sha256": {
+        "mix.wav": "3e92fc90f7e7cf99",
+        "stems/S01.wav": "ece1fdccf77c4ba1",
+        "MIDI/S01.mid": "290682027497e35f"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0008979630417316508,
+          "-12": 0.9859161586086299,
+          "0": 0.013091355924193014,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 22198
+    },
+    {
+      "item": 14,
+      "sha256": {
+        "mix.wav": "3fdfb90022f17933",
+        "stems/S04.wav": "c57f058dd6958762",
+        "MIDI/S04.mid": "6dc79ec4e25215fd"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0016766467065868263,
+          "-12": 0.9936526946107784,
+          "0": 0.004550898203592815,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 17454
+    },
+    {
+      "item": 15,
+      "sha256": {
+        "mix.wav": "750a138e0f11ce9b",
+        "stems/S01.wav": "1f5a5076d9946028",
+        "MIDI/S01.mid": "1ea4681e3b664179"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0,
+          "-12": 1.0,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 8200
+    },
+    {
+      "item": 16,
+      "sha256": {
+        "mix.wav": "696378bfb0d3abc7",
+        "stems/S15.wav": "022e1f5c6dd1b5b5",
+        "stems/S16.wav": "66e7d81a70257001",
+        "MIDI/S15.mid": "458c3b7e98116077",
+        "MIDI/S16.mid": "7c2bd3e47e0e25a4"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.011240775699330702,
+          "-12": 0.9847691779646474,
+          "0": 0.0024026085464218293,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 26384
+    },
+    {
+      "item": 17,
+      "sha256": {
+        "mix.wav": "c870751da492e28d",
+        "stems/S08.wav": "9f713ae1ec29ed1a",
+        "MIDI/S08.mid": "3ebe7e0c9ed491fb"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0,
+          "-12": 1.0,
+          "0": 0.0,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 9279
+    },
+    {
+      "item": 18,
+      "sha256": {
+        "mix.wav": "ace79e02353e22d0",
+        "stems/S01.wav": "8b815cd481ee0a5b",
+        "MIDI/S01.mid": "195d3a0b73728636"
+      },
+      "midi_octave": {
+        "transpose": -12,
+        "agree": {
+          "-24": 0.0008975371580383428,
+          "-12": 0.993537732462124,
+          "0": 0.005169814030300855,
+          "12": 0.0
+        }
+      },
+      "reference_frames": 29432
+    }
+  ]
+}

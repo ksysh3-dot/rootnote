@@ -1,0 +1,69 @@
+=== window 0:52.00-0:54.00 ===
+input low-band spectral peaks (STFT 0.5 s, Hz/dB-rel), time|peaks:
+  0:51.75: [(108.0, -15.0), (113.5, -13.0), (117.6, -8.0), (123.8, 0.0), (184.9, -7.0), (219.4, -6.0), (247.9, -10.0), (369.5, -4.0), (439.8, -14.0), (554.8, -10.0), (740.1, -14.0), (991.0, -15.0)]
+  0:52.00: [(108.0, -12.0), (116.8, -12.0), (124.1, 0.0), (184.2, -10.0), (220.1, -5.0), (247.6, -6.0), (370.2, -1.0), (439.5, -14.0), (494.8, -9.0), (554.8, -5.0), (743.4, -10.0), (989.5, -11.0)]
+  0:52.25: [(112.8, -8.0), (119.0, -4.0), (124.5, -3.0), (184.6, -2.0), (219.4, -5.0), (247.9, -7.0), (293.3, 0.0), (332.9, -9.0), (370.6, -4.0), (495.1, -9.0), (587.8, -8.0), (741.9, -9.0)]
+  0:52.50: [(123.4, -1.0), (184.9, -9.0), (219.4, -9.0), (247.9, -6.0), (293.3, 0.0), (330.7, -2.0), (366.2, -9.0), (370.2, -4.0), (495.5, -8.0), (661.0, -10.0), (743.0, -7.0), (992.1, -8.0)]
+  0:52.75: [(108.4, -14.0), (113.9, -14.0), (123.4, -2.0), (219.4, -13.0), (247.9, -10.0), (293.3, -8.0), (371.0, -9.0), (440.9, 0.0), (660.3, -15.0), (741.2, -14.0), (991.0, -8.0), (1113.6, -15.0)]
+  0:53.00: [(118.7, -7.0), (123.8, -1.0), (184.6, -10.0), (219.7, -7.0), (247.9, -8.0), (369.9, -2.0), (440.9, 0.0), (494.4, -5.0), (555.5, -1.0), (741.9, -6.0), (747.8, -10.0), (991.3, -4.0)]
+  0:53.25: [(113.2, -15.0), (123.0, -7.0), (248.3, -11.0), (369.9, -11.0), (441.3, 0.0), (496.2, -8.0), (502.1, -12.0), (555.5, -2.0), (741.6, -14.0), (882.2, -11.0), (991.7, -14.0), (999.8, -15.0)]
+  0:53.50: [(112.4, -13.0), (122.3, -10.0), (219.0, -15.0), (370.6, -15.0), (440.6, -4.0), (495.1, -7.0), (502.4, -10.0), (555.2, 0.0), (882.9, -13.0), (990.6, -7.0), (1000.5, -13.0), (1111.5, -14.0)]
+  0:53.75: [(124.1, -13.0), (184.9, -12.0), (219.7, -13.0), (369.5, -12.0), (440.9, -7.0), (495.1, -10.0), (502.8, -14.0), (550.0, -16.0), (555.5, 0.0), (661.4, -3.0), (882.2, -16.0), (991.3, -8.0)]
+  0:54.00: [(123.4, -1.0), (248.3, -7.0), (487.1, -11.0), (492.6, -3.0), (501.7, -10.0), (556.3, -5.0), (589.6, 0.0), (661.4, -3.0), (748.9, -10.0), (985.1, -12.0), (990.6, -10.0), (1113.3, -10.0)]
+  0:54.25: [(123.8, -4.0), (183.1, -9.0), (218.3, -12.0), (248.7, -14.0), (253.1, -12.0), (369.5, -7.0), (491.8, -13.0), (554.8, -8.0), (588.9, 0.0), (662.5, -8.0), (748.2, -13.0), (1112.9, -11.0)]
+--- v15: 0:52.00-0:54.00  hops=375
+voices sounding (state ON/REL, A>1e-5), sorted by energy share: id | share | dur s | f_osc mean Hz | f range Hz | A max dB | A med dB | ON s | REL s | coasting max
+   2403 | 0.44 | 2.00 |  122.5 |  42.3 |  -21.4 |  -35.9 | 2.00 | 0.00 | 14
+   2466 | 0.14 | 1.71 |  137.3 |  68.1 |  -21.7 |  -46.1 | 1.16 | 0.55 | 30
+   2488 | 0.13 | 1.43 |  105.1 |  60.8 |  -27.1 |  -41.7 | 0.86 | 0.57 | 45
+   2507 | 0.10 | 0.50 |  130.0 |  29.2 |  -24.0 |  -37.0 | 0.09 | 0.41 | 74
+   2530 | 0.07 | 0.69 |  122.0 |  24.8 |  -26.6 |  -38.0 | 0.38 | 0.30 | 44
+   2492 | 0.03 | 0.42 |  120.7 |  31.0 |  -30.1 |  -40.0 | 0.21 | 0.21 | 74
+   2480 | 0.01 | 0.42 |  141.9 |  25.8 |  -28.9 |  -49.8 | 0.21 | 0.21 | 63
+   2529 | 0.01 | 0.70 |   87.2 |  30.4 |  -28.7 |  -49.8 | 0.46 | 0.24 | 17
+   2514 | 0.01 | 0.50 |   81.9 |  29.5 |  -35.4 |  -48.1 | 0.12 | 0.38 | 66
+   2513 | 0.01 | 0.35 |   77.9 |  25.1 |  -36.1 |  -43.7 | 0.21 | 0.14 | 25
+  number of distinct voice ids sounding: 18
+  births (->ON from CAND/EMPTY) 15 = 7.5/s ; ON->REL 61 = 30.5/s ; REL->ON 49 = 24.5/s ; voices ending 10 = 5.0/s
+  hops with a pair within 14 Hz (both within 20 dB of the loudest): 355/375 = 0.95; pair-hops 979; df median 6.0 Hz, df<=12 share 0.87
+  layer 150-600 envelope (v15) pulsing: P1: M=10.63 dB-rms, peak 3.6 Hz, p-p 43.7 dB, mean -56.9 dBFS | v15: M=3.15 dB-rms, peak 5.6 Hz, p-p 28.9 dB, mean -47.8 dBFS | v16a: M=2.75 dB-rms, peak 5.5 Hz, p-p 32.8 dB, mean -48.6 dBFS
+  sum(A) dB modulation: peak at 3.9 Hz, rms in 2-12 Hz band 1.71 dB, p-p 28.1 dB
+  voice 2403 (f~123 Hz): A-dB mod peak 5.7 Hz p-p 47.3 dB | f_track mod peak 5.2 Hz, p-p 491 cents
+  voice 2466 (f~138 Hz): A-dB mod peak 2.0 Hz p-p 65.6 dB | f_track mod peak 3.2 Hz, p-p 408 cents
+  voice 2488 (f~101 Hz): A-dB mod peak 2.0 Hz p-p 37.8 dB | f_track mod peak 2.0 Hz, p-p 724 cents
+  dominant voice 2403: f_osc vs f_track |dev|>100 cents in 0.27 of its hops, >50 cents 0.47; median dev -5 cents; f_osc range 98.7-141.0 Hz vs f_track 112.8-150.3 Hz
+  dominant voice A dips (>8 dB below its 0.3 s median): 19 events = 9.5/s, dip hops share 0.11; A p-p 47.3 dB; A std 8.6 dB
+  f_osc jumps (>4 Hz between consecutive hops): 62 = 31.0/s
+  corr(layer env dB, dom. voice A dB) = 0.61; corr(layer env dB, |dev| cents) = -0.28; corr(A dB, |dev|) = -0.47
+  (c) test, dominant voice: A-dB modulation peak 5.7 Hz vs f_track modulation peak 5.3 Hz (ratio 1.08); corr(A dB, |dfdt|) = -0.31; corr(A dB, |f_track - 0.4 s mean|) = -0.45; |dfdt| median 57.0 Hz/s; input 40-600 modulation M in window = see registered line
+  events (B=birth to ON, R=release): B2481@0.11s/95Hz, R2481@0.14s/101Hz, R2466@0.15s/120Hz, B2480@0.15s/144Hz, R2480@0.18s/126Hz, R2466@0.20s/120Hz, B2488@0.24s/98Hz, B2490@0.24s/75Hz, R2488@0.25s/99Hz, B2492@0.31s/130Hz, R2488@0.34s/111Hz, R2492@0.34s/110Hz, R2481@0.36s/97Hz, R2417@0.38s/204Hz, R2480@0.43s/145Hz, R2492@0.44s/133Hz, R2466@0.46s/144Hz, R2492@0.53s/126Hz, R2488@0.55s/115Hz, R2492@0.59s/137Hz, R2466@0.61s/140Hz, R2488@0.68s/121Hz, R2488@0.75s/121Hz, B2507@0.75s/150Hz, R2507@0.79s/127Hz, R2466@0.80s/126Hz, R2507@0.82s/131Hz, R2466@0.85s/135Hz, R2488@0.87s/124Hz, B2512@0.90s/184Hz, R2507@0.91s/142Hz, B2513@0.91s/73Hz, R2488@0.92s/121Hz, R2466@0.93s/126Hz, B2514@0.94s/91Hz, R2488@0.98s/127Hz, R2514@0.98s/93Hz, R2507@1.01s/121Hz, R2488@1.02s/112Hz, R2507@1.03s/123Hz
+  (d) pitch support, loud voices (>=-10 dB of loudest): harmonics k=1..8 of f_osc within 40 cents of an input spectral peak (top 12 peaks 25-1200 Hz, within 30 dB): share with >=2 matching harmonics 0.53, with 0 or 1 match 0.47, with 0 matches 0.21; (fundamental itself present as a peak: 0.43)
+--- v16a: 0:52.00-0:54.00  hops=375
+voices sounding (state ON/REL, A>1e-5), sorted by energy share: id | share | dur s | f_osc mean Hz | f range Hz | A max dB | A med dB | ON s | REL s | coasting max
+   2381 | 0.33 | 2.00 |  121.7 |  38.7 |  -22.0 |  -36.0 | 2.00 | 0.00 | 3
+   2481 | 0.19 | 0.45 |  132.6 |  34.1 |  -24.0 |  -42.5 | 0.11 | 0.35 | 65
+   2456 | 0.17 | 1.89 |   99.6 |  55.8 |  -23.8 |  -46.9 | 1.46 | 0.43 | 32
+   2440 | 0.16 | 1.72 |  128.8 |  47.3 |  -25.4 |  -39.7 | 1.01 | 0.71 | 56
+   2467 | 0.08 | 0.39 |  120.9 |  28.8 |  -23.3 |  -37.3 | 0.13 | 0.26 | 68
+   2455 | 0.03 | 0.36 |  128.6 |  31.8 |  -30.4 |  -40.4 | 0.07 | 0.29 | 33
+   2504 | 0.03 | 0.61 |   97.5 |  39.2 |  -30.5 |  -46.9 | 0.20 | 0.41 | 37
+   2488 | 0.01 | 1.06 |   84.5 |  62.7 |  -35.6 |  -51.5 | 0.75 | 0.31 | 49
+   2487 | 0.01 | 0.43 |   85.0 |  28.1 |  -33.6 |  -45.4 | 0.28 | 0.15 | 23
+   2502 | 0.01 | 0.47 |  138.5 |  25.3 |  -34.2 |  -49.8 | 0.27 | 0.20 | 39
+  number of distinct voice ids sounding: 16
+  births (->ON from CAND/EMPTY) 13 = 6.5/s ; ON->REL 55 = 27.5/s ; REL->ON 43 = 21.5/s ; voices ending 8 = 4.0/s
+  hops with a pair within 14 Hz (both within 20 dB of the loudest): 338/375 = 0.90; pair-hops 994; df median 6.2 Hz, df<=12 share 0.84
+  layer 150-600 envelope (v15) pulsing: P1: M=10.63 dB-rms, peak 3.6 Hz, p-p 43.7 dB, mean -56.9 dBFS | v15: M=3.15 dB-rms, peak 5.6 Hz, p-p 28.9 dB, mean -47.8 dBFS | v16a: M=2.75 dB-rms, peak 5.5 Hz, p-p 32.8 dB, mean -48.6 dBFS
+  sum(A) dB modulation: peak at 3.0 Hz, rms in 2-12 Hz band 2.98 dB, p-p 29.3 dB
+  voice 2381 (f~122 Hz): A-dB mod peak 4.4 Hz p-p 55.4 dB | f_track mod peak 5.5 Hz, p-p 241 cents
+  voice 2481 (f~139 Hz): A-dB mod peak 2.5 Hz p-p 34.1 dB | f_track mod peak 3.3 Hz, p-p 117 cents
+  voice 2456 (f~97 Hz): A-dB mod peak 3.0 Hz p-p 46.4 dB | f_track mod peak 2.0 Hz, p-p 674 cents
+  dominant voice 2381: f_osc vs f_track |dev|>100 cents in 0.23 of its hops, >50 cents 0.42; median dev +2 cents; f_osc range 99.5-138.2 Hz vs f_track 112.8-129.8 Hz
+  dominant voice A dips (>8 dB below its 0.3 s median): 24 events = 12.0/s, dip hops share 0.14; A p-p 55.4 dB; A std 8.3 dB
+  f_osc jumps (>4 Hz between consecutive hops): 60 = 30.0/s
+  corr(layer env dB, dom. voice A dB) = 0.58; corr(layer env dB, |dev| cents) = -0.19; corr(A dB, |dev|) = -0.51
+  (c) test, dominant voice: A-dB modulation peak 4.4 Hz vs f_track modulation peak 5.4 Hz (ratio 0.81); corr(A dB, |dfdt|) = -0.35; corr(A dB, |f_track - 0.4 s mean|) = -0.36; |dfdt| median 49.1 Hz/s; input 40-600 modulation M in window = see registered line
+  events (B=birth to ON, R=release): R2440@0.01s/114Hz, B2456@0.11s/95Hz, R2456@0.14s/105Hz, B2455@0.15s/144Hz, R2455@0.17s/126Hz, R2440@0.17s/122Hz, R2440@0.22s/124Hz, B2465@0.24s/75Hz, R2455@0.26s/121Hz, B2467@0.31s/130Hz, R2467@0.33s/122Hz, R2455@0.34s/114Hz, R2455@0.37s/116Hz, R2395@0.38s/204Hz, R2467@0.38s/117Hz, R2465@0.39s/68Hz, R2467@0.46s/107Hz, R2467@0.49s/123Hz, R2440@0.52s/126Hz, R2440@0.55s/131Hz, R2456@0.55s/119Hz, R2467@0.57s/119Hz, R2440@0.65s/124Hz, R2440@0.67s/131Hz, R2456@0.71s/120Hz, B2481@0.75s/150Hz, R2456@0.75s/109Hz, R2440@0.79s/125Hz, R2481@0.79s/127Hz, R2481@0.81s/144Hz, R2440@0.84s/129Hz, R2456@0.86s/124Hz, B2486@0.90s/184Hz, R2481@0.91s/120Hz, B2487@0.91s/73Hz, R2440@0.94s/127Hz, B2488@0.94s/91Hz, R2456@0.95s/127Hz, R2456@1.00s/124Hz, R2488@1.00s/86Hz
+  (d) pitch support, loud voices (>=-10 dB of loudest): harmonics k=1..8 of f_osc within 40 cents of an input spectral peak (top 12 peaks 25-1200 Hz, within 30 dB): share with >=2 matching harmonics 0.56, with 0 or 1 match 0.44, with 0 matches 0.18; (fundamental itself present as a peak: 0.41)
+layer envelope stats (registered measure, 150-600 Hz, window as given): P1: M=10.63 dB-rms, peak 3.6 Hz, p-p 43.7 dB, mean -56.9 dBFS | v15: M=3.15 dB-rms, peak 5.6 Hz, p-p 28.9 dB, mean -47.8 dBFS | v16a: M=2.75 dB-rms, peak 5.5 Hz, p-p 32.8 dB, mean -48.6 dBFS
+layer envelope stats (SUPPLEMENTARY 20-150 Hz band): P1: M=0.66 dB-rms, peak 3.5 Hz, p-p 6.7 dB, mean -89.8 dBFS | v15: M=5.68 dB-rms, peak 2.4 Hz, p-p 35.1 dB, mean -69.7 dBFS | v16a: M=4.13 dB-rms, peak 9.4 Hz, p-p 33.2 dB, mean -71.5 dBFS

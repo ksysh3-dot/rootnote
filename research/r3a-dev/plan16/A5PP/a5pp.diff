@@ -1,0 +1,155 @@
+diff --git a/app/src/main/cpp/libpvb/pvb_resultant.h b/app/src/main/cpp/libpvb/pvb_resultant.h
+index 8090750..b61c154 100644
+--- a/app/src/main/cpp/libpvb/pvb_resultant.h
++++ b/app/src/main/cpp/libpvb/pvb_resultant.h
+@@ -37,6 +37,9 @@ struct ResultantParams {
+     int windowCreep = 0;        // v1.6-a A1 (18.3; 13.2 D4 narrowed by 13.5 F5): window growth limit, samples per hop (1..320), 0 = off (v1.5)
+     int creepMode = 0;          // A1' (18.5): which windows the growth limit acts on and when. 0 = N_J and N_v always (18.3 A1), 1 = N_v only while its voice's SNR
+                                 // is falling, 2 = N_v (own SNR) and N_J (max SNR over the LS set) only while falling; no effect when windowCreep = 0
++    double betaSusMin = 0, betaSusMax = 0;   // A5'' (18.15): beta range of the sustain, used instead of betaMin / betaMax (theta pull and f_off gain) outside the
++                                // onset period; 0 / 0 = off (betaMin / betaMax always, as 5c1c62c)
++    double betaOnsetMs = 0;     // A5'': length of the onset period after a voice birth, a REL -> ON or a pitch move of > 50 cent in 2 hops; > 0 when the sustain pair is on
+ };
+ 
+ class ResultantCore {
+@@ -44,7 +47,7 @@ public:
+     static constexpr int kVoices = 8;        // voice slots (V_max)
+     static constexpr int kFade = 2;          // extra fade-only slots for voices pushed out of a full slot table
+     static constexpr int kPartials = 7;      // harmonics k = 2..8
+-    static constexpr int kParams = 19;
++    static constexpr int kParams = 22;
+     static constexpr int kTraceFields = 22;
+     static constexpr int kOut = 64;          // output ring, power of two (a hop writes 16 samples ahead of the read index)
+     static constexpr int kTracks = 12;       // VbHpv::tr52_ capacity
+@@ -103,6 +106,7 @@ private:
+         int onMeas = 0;            // measured hops this voice has been ON without a break (subordinate rule, v1.5)
+         int histN = 0;             // consecutive measured hops with a LS phase in thHist (at most 8)
+         int64_t onHop = -1;        // hop at which the voice was born ON (same-hop births are subordinate by ratio alone)
++        int64_t onsetAt = -1;      // A5'': hop of the last onset (birth, REL -> ON, pitch move); beta is the onset pair for betaOnsetMs from it
+         double thHist[8] = {};     // LS phase theta_v at n_h of the last measured hops, slot = measCount_ & 7
+         int dfN = 0, dfPos = 0;
+         int npv = 0, npvPend = 0;  // per-voice past window (stage 2) and its hysteresis counter
+@@ -113,7 +117,7 @@ private:
+         int64_t birthHop = 0;
+         int64_t candHop = -1;      // measured hop at which candOk / candF were taken
+         double candF = 0;
+-        double f = 0, fPrev = 0, fdot = 0;   // track (or coasting) frequency, Hz; smoothed slope, Hz/s
++        double f = 0, fPrev = 0, fPrev2 = 0, fdot = 0;   // track (or coasting) frequency, Hz; smoothed slope, Hz/s
+         double dfHist[4] = {};
+         double fOff = 0, fb = 0, fOsc = 0;   // oscillator offset, LS basis frequency, oscillator frequency
+         double theta = 0, thetaStart = 0, thetaMeas = 0;
+diff --git a/app/src/main/cpp/libpvb/pvb_resultant.inc b/app/src/main/cpp/libpvb/pvb_resultant.inc
+index 0b54e87..fa413c6 100644
+--- a/app/src/main/cpp/libpvb/pvb_resultant.inc
++++ b/app/src/main/cpp/libpvb/pvb_resultant.inc
+@@ -145,20 +145,23 @@ bool ResultantCore::setParams(const double* v, int n) {
+     const ResultantParams d;
+     double q[kParams] = {static_cast<double>(d.voicing), d.levelDb, static_cast<double>(d.ampSource), d.snrOnDb,
+         d.snrFastDb, d.snrOffDb, d.tauOnMs, d.tauOffMs, d.betaMin, d.betaMax, d.kappa, static_cast<double>(d.nMin),
+-        static_cast<double>(d.nFuture), d.psiSlew, static_cast<double>(d.crest), d.maxDfdtBirth, d.capRho, static_cast<double>(d.windowCreep), static_cast<double>(d.creepMode)};
++        static_cast<double>(d.nFuture), d.psiSlew, static_cast<double>(d.crest), d.maxDfdtBirth, d.capRho, static_cast<double>(d.windowCreep), static_cast<double>(d.creepMode),
++        d.betaSusMin, d.betaSusMax, d.betaOnsetMs};
+     for (int i = 0; i < n; ++i) q[i] = v[i];
+     auto in = [&](int i, double lo, double hi) { return std::isfinite(q[i]) && q[i] >= lo && q[i] <= hi; };
+     auto flag = [&](int i) { return q[i] == 0.0 || q[i] == 1.0; };
+     if (!flag(0) || !in(1, 0, 12) || !flag(2) || !in(3, 6, 30) || !in(4, 10, 40) || !in(5, 0, 20) || !in(6, 1, 100) ||
+         !in(7, 5, 300) || !in(8, 0, 1) || !in(9, 0, 1) || !in(10, .5, 3) || !in(11, 16, 191) || !in(12, 0, 96) ||
+         !in(13, .01, 3.2) || !flag(14) || !in(15, 20, 2000) ||
+-        !(q[16] == 0.0 || in(16, 1, 10)) || !(q[17] == 0.0 || in(17, 1, 320)) || !(q[18] == 0.0 || q[18] == 1.0 || q[18] == 2.0)) return false;
++        !(q[16] == 0.0 || in(16, 1, 10)) || !(q[17] == 0.0 || in(17, 1, 320)) || !(q[18] == 0.0 || q[18] == 1.0 || q[18] == 2.0) ||
++        !in(19, 0, 1) || !in(20, 0, 1) || !in(21, 0, 1000) || ((q[19] > 0 || q[20] > 0) && !(q[21] > 0))) return false;
+     p_.voicing = static_cast<int>(q[0]); p_.levelDb = q[1]; p_.ampSource = static_cast<int>(q[2]);
+     p_.snrOnDb = q[3]; p_.snrFastDb = q[4]; p_.snrOffDb = q[5]; p_.tauOnMs = q[6]; p_.tauOffMs = q[7];
+     p_.betaMin = q[8]; p_.betaMax = q[9]; p_.kappa = q[10];
+     p_.nMin = static_cast<int>(std::lround(q[11])); p_.nFuture = static_cast<int>(std::lround(q[12]));
+     p_.psiSlew = q[13]; p_.crest = static_cast<int>(q[14]); p_.maxDfdtBirth = q[15];
+     p_.capRho = q[16]; p_.windowCreep = static_cast<int>(std::lround(q[17])); p_.creepMode = static_cast<int>(q[18]);
++    p_.betaSusMin = q[19]; p_.betaSusMax = q[20]; p_.betaOnsetMs = q[21];
+     return true;
+ }
+ 
+@@ -404,7 +407,7 @@ void ResultantCore::spawnVoices(Ctx& cx) {
+         Voice& u = vo_[s];
+         u = Voice{};
+         u.state = Cand; u.id = ++nextVoiceId_; u.trackId = tk.id; u.tracked = true; u.birthHop = hopCount_;
+-        u.f = u.fPrev = tk.f;
++        u.f = u.fPrev = u.fPrev2 = tk.f;
+         u.fdot = clampv(tk.dfdt, -400.0, 400.0);
+         u.dfHist[0] = tk.dfdt; u.dfN = 1; u.dfPos = 1;
+         u.fb = u.fOsc = tk.f;
+@@ -508,7 +511,7 @@ void ResultantCore::transitions(Ctx& cx) {
+             if (cx.measured) {
+                 const bool good = u.snr >= snrOff + 4.0 && u.prominent && !u.excluded && (u.tracked || u.coast <= kRCoastMax);
+                 u.revCnt = good ? u.revCnt + 1 : 0;
+-                if (u.revCnt >= 3) { u.state = On; u.lowSnrM = u.domCnt = u.revCnt = u.onMeas = 0; }
++                if (u.revCnt >= 3) { u.state = On; u.lowSnrM = u.domCnt = u.revCnt = u.onMeas = 0; u.onsetAt = hopCount_; }
+             }
+         }
+     }
+@@ -547,7 +550,7 @@ void ResultantCore::transitions(Ctx& cx) {
+         u.npv = u.npvPend = u.npvA = 0; u.psiSet = 0;
+         for (int k = 0; k < kPartials; ++k) { u.present[k] = false; u.offC[k] = u.offF[k] = 0; }
+         u.c = u.cStart = 0;
+-        u.onHop = hopCount_; u.onMeas = 0;
++        u.onHop = u.onsetAt = hopCount_; u.onMeas = 0;
+         if (isSubordinate(born[i])) u.sigma = u.sigmaStart = 0;   // starts silent, not after a 20 ms decay
+     }
+ }
+@@ -746,9 +749,19 @@ void ResultantCore::updatePhase(Ctx& cx) {
+             u.fOff = 0; u.fOsc = u.f;
+             continue;
+         }
++        // A5'': after an onset (birth, REL -> ON, or f_track more than 50 cent from where it was 1 or 2 hops ago) the voice pulls with betaMin / betaMax
++        // for betaOnsetMs, afterwards with the sustain pair; both the theta pull and the f_off gain use the beta chosen here
++        const bool sus = p_.betaSusMin > 0 || p_.betaSusMax > 0;
++        bool sustain = false;
++        if (sus) {
++            auto moved = [&](double f0) { return f0 > 0 && std::fabs(1200.0 * std::log2(u.f / f0)) > 50.0; };
++            if (moved(u.fPrev) || moved(u.fPrev2)) u.onsetAt = hopCount_;
++            sustain = static_cast<double>(hopCount_ - u.onsetAt) * kRHopS * 1000.0 >= p_.betaOnsetMs;
++        }
+         if (cx.lsOk && u.inLs) {
+             const double e = std::remainder(u.thetaMeas - pred, kRTwoPi), ae = std::fabs(e);
+-            const double lo = std::min(p_.betaMin, p_.betaMax), hi = std::max(p_.betaMin, p_.betaMax);
++            const double b0 = sustain ? p_.betaSusMin : p_.betaMin, b1 = sustain ? p_.betaSusMax : p_.betaMax;
++            const double lo = std::min(b0, b1), hi = std::max(b0, b1);
+             const double beta = clampv((u.snr - 10.0) / 20.0, lo, hi);
+             // v1.5: no frequency integration below 12 dB SNR (noise would drive f_off); the leak below still pulls it to 0
+             const double gamma = u.snr < 12.0 ? 0.0 : std::min(0.2, 0.5 / std::max(u.cb, 1e-9)) * beta;
+@@ -974,7 +987,7 @@ void ResultantCore::hop(VbHpv& v, bool measured, const double (*src)[256], const
+     for (int s = 0; s < kVoices + kFade; ++s) {
+         Voice& u = vo_[s];
+         if (u.state == Empty) continue;
+-        u.fPrev = u.f;
++        u.fPrev2 = u.fPrev; u.fPrev = u.f;
+         if (u.dead) u = Voice{};
+     }
+ }
+diff --git a/tools/pvb-harness/research_core_api.py b/tools/pvb-harness/research_core_api.py
+index 08e411b..308ec0f 100644
+--- a/tools/pvb-harness/research_core_api.py
++++ b/tools/pvb-harness/research_core_api.py
+@@ -1,4 +1,4 @@
+-"""Python access to the Resultant core (algorithm 15, docs/RESULTANT_CORE.md): library loading, the 19 parameters, the voice
++"""Python access to the Resultant core (algorithm 15, docs/RESULTANT_CORE.md): library loading, the 22 parameters, the voice
+ trace and a render helper. Host research only.
+ 
+     import research_core_api as R
+@@ -12,11 +12,14 @@ import ctypes as C
+ import numpy as np
+ import test_engine as T
+ 
+-# the 19 parameters of pvb_set_resultant, in the order of spec 5.8 (capRho, windowCreep: v1.6-a; creepMode: A1', 0 = off = v1.5), with their defaults
++# the 22 parameters of pvb_set_resultant, in the order of spec 5.8 (capRho, windowCreep: v1.6-a; creepMode: A1', 0 = off = v1.5;
++# betaSusMin, betaSusMax, betaOnsetMs: A5'', 0 = off), with their defaults
+ PARAMS = ('voicing', 'levelDb', 'ampSource', 'snrOnDb', 'snrFastDb', 'snrOffDb', 'tauOnMs', 'tauOffMs', 'betaMin',
+-          'betaMax', 'kappa', 'nMin', 'nFuture', 'psiSlew', 'crest', 'maxDfdtBirth', 'capRho', 'windowCreep', 'creepMode')
++          'betaMax', 'kappa', 'nMin', 'nFuture', 'psiSlew', 'crest', 'maxDfdtBirth', 'capRho', 'windowCreep', 'creepMode',
++          'betaSusMin', 'betaSusMax', 'betaOnsetMs')
+ DEFAULTS = dict(voicing=0, levelDb=0, ampSource=0, snrOnDb=15, snrFastDb=22, snrOffDb=6, tauOnMs=8, tauOffMs=30,
+-                betaMin=.2, betaMax=.9, kappa=1.0, nMin=30, nFuture=24, psiSlew=.12, crest=0, maxDfdtBirth=200, capRho=0, windowCreep=0, creepMode=0)
++                betaMin=.2, betaMax=.9, kappa=1.0, nMin=30, nFuture=24, psiSlew=.12, crest=0, maxDfdtBirth=200, capRho=0, windowCreep=0, creepMode=0,
++                betaSusMin=0, betaSusMax=0, betaOnsetMs=0)
+ # one record per voice slot (8 per hop), in the order of the spec
+ TRACE_FIELDS = ('hop', 'voice', 'track', 'state', 'coasting', 'f_track', 'f_osc', 'dfdt_s', 'A', 'c', 'sigma', 'Np',
+                 'snr_db', 'prominent', 'raw_db', 'res_db', 'subordinate', 'theta_hat', 'psi_2', 'psi_3', 'a_2', 'a_3')

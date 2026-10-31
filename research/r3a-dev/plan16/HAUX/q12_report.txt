@@ -1,0 +1,114 @@
+# HAUX Q1/Q2 (Slakh train dev songs) rows: 60:14776, 40:10808, 01:13536, 05:10670, 12:13749, 20:18946, 23:12920, 24:14174, 25:14189, 26:11287
+
+## Q1 hop-level AUC, real (matched, right) vs ghost (silence class, stem-aware wrong); 7 bass songs
+
+### window 40 ms  (rows: song | n_real n_ghost | AUC per score)
+song | n_real | n_ghost | K2 (3 kHz cue) | H_sal12 | H_sal6 | n_hit | H_odd | (d) pct(H12)+pct(nhit) | (e) pct(H6)+0.5 K2 | (f) H_sal6 at f_h | (h) min(H6,H_odd) | H_sal12 at f_h | (h) at f_h
+Track00060 | 1804 | 3036 | 0.610 | 0.532 | 0.489 | 0.516 | 0.566 | 0.523 | 0.557 | 0.466 | 0.543 | 0.496 | 0.532
+Track00040 | 3528 | 0 | nan | nan | nan | nan | nan | nan | nan | nan | nan | nan | nan
+Track00001 | 2878 | 3806 | 0.846 | 0.741 | 0.696 | 0.766 | 0.711 | 0.769 | 0.841 | 0.544 | 0.747 | 0.614 | 0.646
+Track00005 | 1466 | 3915 | 0.682 | 0.654 | 0.680 | 0.701 | 0.557 | 0.692 | 0.725 | 0.675 | 0.593 | 0.633 | 0.570
+Track00012 | 1741 | 3889 | 0.683 | 0.617 | 0.604 | 0.646 | 0.616 | 0.644 | 0.693 | 0.534 | 0.644 | 0.553 | 0.615
+Track00020 | 4880 | 1306 | 0.757 | 0.676 | 0.661 | 0.687 | 0.684 | 0.685 | 0.723 | 0.633 | 0.675 | 0.623 | 0.648
+Track00025 | 56 | 13021 | 0.516 | 0.462 | 0.448 | 0.411 | 0.645 | 0.442 | 0.447 | 0.433 | 0.580 | 0.412 | 0.575
+median over songs | | | 0.683 | 0.635 | 0.632 | 0.667 | 0.630 | 0.664 | 0.708 | 0.539 | 0.619 | 0.583 | 0.595
+min over songs | | | 0.516 | 0.462 | 0.448 | 0.411 | 0.557 | 0.442 | 0.447 | 0.433 | 0.543 | 0.412 | 0.532
+pooled bass songs | 16353 | 28973 | 0.740 | 0.672 | 0.662 | 0.685 | 0.650 | 0.683 | 0.731 | 0.658 | 0.653 | 0.662 | 0.657
+FPR(ghost passing) at the threshold passing 80 % of real, median over songs: H_sal12: 0.719 | H_sal6: 0.738 | n_hit: 1.000 | H_odd: 0.708 | (d) pct(H12)+pct(nhit): 0.724 | (e) pct(H6)+0.5 K2: 0.702 | (f) H_sal6 at f_h: 0.785 | (h) min(H6,H_odd): 0.711 | H_sal12 at f_h: 0.730 | (h) at f_h: 0.673
+K2 cue: real hops with K2 true (median over songs) 0.453; ghost hops with K2 true 0.039
+
+### window 85 ms  (rows: song | n_real n_ghost | AUC per score)
+song | n_real | n_ghost | K2 (3 kHz cue) | H_sal12 | H_sal6 | n_hit | H_odd | (d) pct(H12)+pct(nhit) | (e) pct(H6)+0.5 K2 | (f) H_sal6 at f_h | (h) min(H6,H_odd) | H_sal12 at f_h | (h) at f_h
+Track00060 | 1804 | 3036 | 0.610 | 0.498 | 0.465 | 0.493 | 0.559 | 0.498 | 0.542 | 0.424 | 0.546 | 0.457 | 0.510
+Track00040 | 3528 | 0 | nan | nan | nan | nan | nan | nan | nan | nan | nan | nan | nan
+Track00001 | 2878 | 3806 | 0.846 | 0.762 | 0.716 | 0.803 | 0.735 | 0.803 | 0.848 | 0.520 | 0.779 | 0.591 | 0.651
+Track00005 | 1466 | 3915 | 0.682 | 0.649 | 0.661 | 0.669 | 0.563 | 0.668 | 0.706 | 0.639 | 0.607 | 0.622 | 0.615
+Track00012 | 1741 | 3889 | 0.683 | 0.670 | 0.621 | 0.692 | 0.678 | 0.692 | 0.707 | 0.536 | 0.708 | 0.574 | 0.639
+Track00020 | 4880 | 1306 | 0.757 | 0.701 | 0.678 | 0.704 | 0.693 | 0.714 | 0.740 | 0.594 | 0.687 | 0.591 | 0.628
+Track00025 | 56 | 13021 | 0.516 | 0.682 | 0.673 | 0.686 | 0.785 | 0.695 | 0.667 | 0.625 | 0.776 | 0.612 | 0.725
+median over songs | | | 0.683 | 0.676 | 0.667 | 0.689 | 0.686 | 0.694 | 0.706 | 0.565 | 0.698 | 0.591 | 0.633
+min over songs | | | 0.516 | 0.498 | 0.465 | 0.493 | 0.559 | 0.498 | 0.542 | 0.424 | 0.546 | 0.457 | 0.510
+pooled bass songs | 16353 | 28973 | 0.740 | 0.707 | 0.689 | 0.716 | 0.688 | 0.717 | 0.743 | 0.656 | 0.691 | 0.670 | 0.676
+FPR(ghost passing) at the threshold passing 80 % of real, median over songs: H_sal12: 0.599 | H_sal6: 0.637 | n_hit: 1.000 | H_odd: 0.616 | (d) pct(H12)+pct(nhit): 0.609 | (e) pct(H6)+0.5 K2: 0.636 | (f) H_sal6 at f_h: 0.744 | (h) min(H6,H_odd): 0.616 | H_sal12 at f_h: 0.674 | (h) at f_h: 0.660
+K2 cue: real hops with K2 true (median over songs) 0.453; ghost hops with K2 true 0.039
+
+### ghost-only songs (no bass MIDI): AUC of ghost hops vs the POOLED real hops of the 7 bass songs (cross-song, flagged)
+window 40 ms: song | n_ghost | K2 (3 kHz cue) | H_sal12 | H_sal6 | n_hit | H_odd | (d) pct(H12)+pct(nhit) | (e) pct(H6)+0.5 K2 | (f) H_sal6 at f_h | (h) min(H6,H_odd) | H_sal12 at f_h | (h) at f_h
+Track00023 | 12920 | 0.673 | 0.685 | 0.667 | 0.685 | 0.616 | 0.687 | 0.699 | 0.644 | 0.629 | 0.655 | 0.615
+Track00024 | 14174 | 0.763 | 0.578 | 0.565 | 0.609 | 0.516 | 0.596 | 0.686 | 0.513 | 0.538 | 0.544 | 0.528
+Track00026 | 11287 | 0.732 | 0.677 | 0.668 | 0.694 | 0.695 | 0.699 | 0.739 | 0.659 | 0.699 | 0.653 | 0.691
+window 85 ms: song | n_ghost | K2 (3 kHz cue) | H_sal12 | H_sal6 | n_hit | H_odd | (d) pct(H12)+pct(nhit) | (e) pct(H6)+0.5 K2 | (f) H_sal6 at f_h | (h) min(H6,H_odd) | H_sal12 at f_h | (h) at f_h
+Track00023 | 12920 | 0.673 | 0.669 | 0.657 | 0.671 | 0.614 | 0.677 | 0.695 | 0.578 | 0.633 | 0.590 | 0.580
+Track00024 | 14174 | 0.763 | 0.717 | 0.678 | 0.733 | 0.651 | 0.729 | 0.752 | 0.543 | 0.684 | 0.636 | 0.626
+Track00026 | 11287 | 0.732 | 0.673 | 0.661 | 0.696 | 0.687 | 0.700 | 0.732 | 0.594 | 0.688 | 0.597 | 0.658
+
+### per cause, ghost of cause vs pooled real of the 7 bass songs (hop level)
+window 40 ms: cause | n | K2 (3 kHz cue) | H_sal12 | H_sal6 | n_hit | H_odd | (d) pct(H12)+pct(nhit) | (e) pct(H6)+0.5 K2 | (f) H_sal6 at f_h | (h) min(H6,H_odd) | H_sal12 at f_h | (h) at f_h
+drum | 9137 | 0.740 | 0.683 | 0.675 | 0.694 | 0.664 | 0.692 | 0.739 | 0.691 | 0.664 | 0.687 | 0.679
+bass late/reverb | 495 | 0.707 | 0.643 | 0.629 | 0.639 | 0.586 | 0.641 | 0.688 | 0.641 | 0.581 | 0.639 | 0.590
+other instrument | 1315 | 0.693 | 0.683 | 0.678 | 0.688 | 0.656 | 0.691 | 0.718 | 0.691 | 0.661 | 0.675 | 0.657
+other | 18026 | 0.744 | 0.666 | 0.655 | 0.682 | 0.644 | 0.680 | 0.729 | 0.639 | 0.650 | 0.649 | 0.648
+no-bass song (3 songs) | 38381 | 0.724 | 0.643 | 0.630 | 0.660 | 0.602 | 0.657 | 0.706 | 0.600 | 0.616 | 0.614 | 0.605
+window 85 ms: cause | n | K2 (3 kHz cue) | H_sal12 | H_sal6 | n_hit | H_odd | (d) pct(H12)+pct(nhit) | (e) pct(H6)+0.5 K2 | (f) H_sal6 at f_h | (h) min(H6,H_odd) | H_sal12 at f_h | (h) at f_h
+drum | 9137 | 0.740 | 0.720 | 0.705 | 0.726 | 0.696 | 0.727 | 0.751 | 0.696 | 0.692 | 0.706 | 0.698
+bass late/reverb | 495 | 0.707 | 0.670 | 0.656 | 0.676 | 0.617 | 0.671 | 0.700 | 0.638 | 0.610 | 0.650 | 0.597
+other instrument | 1315 | 0.693 | 0.672 | 0.669 | 0.663 | 0.648 | 0.675 | 0.708 | 0.651 | 0.647 | 0.625 | 0.624
+other | 18026 | 0.744 | 0.704 | 0.684 | 0.715 | 0.688 | 0.716 | 0.742 | 0.636 | 0.695 | 0.656 | 0.671
+no-bass song (3 songs) | 38381 | 0.724 | 0.688 | 0.666 | 0.702 | 0.649 | 0.703 | 0.727 | 0.570 | 0.668 | 0.609 | 0.620
+
+### mismatch-wrong voices (cls 1, comp 2) vs real, per song median (information)
+window 40 ms: K2 (3 kHz cue): 0.675 | H_sal12: 0.572 | H_sal6: 0.560 | n_hit: 0.590 | H_odd: 0.609 | (d) pct(H12)+pct(nhit): 0.583 | (e) pct(H6)+0.5 K2: 0.650 | (f) H_sal6 at f_h: 0.537 | (h) min(H6,H_odd): 0.593 | H_sal12 at f_h: 0.559 | (h) at f_h: 0.581
+window 85 ms: K2 (3 kHz cue): 0.675 | H_sal12: 0.669 | H_sal6: 0.661 | n_hit: 0.690 | H_odd: 0.703 | (d) pct(H12)+pct(nhit): 0.687 | (e) pct(H6)+0.5 K2: 0.701 | (f) H_sal6 at f_h: 0.600 | (h) min(H6,H_odd): 0.707 | H_sal12 at f_h: 0.613 | (h) at f_h: 0.658
+
+### Q1 voice-level AUC (median over the voice hops of the score; voices with >= 5 real / ghost hops)
+window 40 ms median over songs: K2 (3 kHz cue): 0.666 | H_sal12: 0.589 | H_sal6: 0.564 | n_hit: 0.622 | H_odd: 0.638 | (d) pct(H12)+pct(nhit): 0.601 | (e) pct(H6)+0.5 K2: 0.626 | (f) H_sal6 at f_h: 0.476 | (h) min(H6,H_odd): 0.637 | H_sal12 at f_h: 0.525 | (h) at f_h: 0.598
+window 85 ms median over songs: K2 (3 kHz cue): 0.666 | H_sal12: 0.596 | H_sal6: 0.555 | n_hit: 0.615 | H_odd: 0.614 | (d) pct(H12)+pct(nhit): 0.612 | (e) pct(H6)+0.5 K2: 0.619 | (f) H_sal6 at f_h: 0.423 | (h) min(H6,H_odd): 0.620 | H_sal12 at f_h: 0.467 | (h) at f_h: 0.565
+
+Q1 best median per-song AUC (non-K2): 0.708 = (40, '(e) pct(H6)+0.5 K2');  K2 cue: W40/W85 median 0.683
+
+## Q2 pitch on matched hops (cls 0), gate: f_track within 100 cent of m x f_MIDI (m in 0.5/1/2/3 nearest)
+matched hops total 27055; no sounding MIDI segment 2727; outside the 100 cent gate 9207; used 15121
+pooled error (cent): name | median | p75 | p90 | share>25 | share>50
+f_osc | 10.4 | 30.8 | 108.0 | 0.286 | 0.181
+f_track | 8.0 | 17.5 | 43.8 | 0.179 | 0.081
+f_h W40 | 8.6 | 28.1 | 90.3 | 0.263 | 0.169
+f_h W85 | 5.6 | 12.1 | 48.4 | 0.148 | 0.098
+per song median error (cent): song | n | f_osc | f_track | f_h W40 | f_h W85
+Track00060 | 1639 | 39.1 | 17.9 | 9.9 | 5.6
+Track00040 | 3492 | 10.8 | 10.5 | 7.3 | 5.0
+Track00001 | 2960 | 5.8 | 4.0 | 10.6 | 5.1
+Track00005 | 1363 | 7.4 | 4.5 | 10.3 | 3.9
+Track00012 | 1415 | 12.3 | 10.9 | 9.7 | 8.8
+Track00020 | 4225 | 8.2 | 5.5 | 8.1 | 6.4
+Track00025 | 27 | 38.6 | 25.1 | 14.0 | 9.2
+per song p90 error (cent): 60: 211/61/98/97 ; 40: 65/41/92/19 ; 01: 100/50/84/54 ; 05: 109/55/101/74 ; 12: 72/52/36/26 ; 20: 83/22/90/64 ; 25: 145/84/96/19
+f_h W40: median error lower than f_track in 4/7 songs; p90 lower in 1/7
+f_h W85: median error lower than f_track in 5/7 songs; p90 lower in 3/7
+
+error near a MIDI note change (|T - nearest change of f_MIDI| < 100 ms, change detected as a change of the sounding segment f along time of the same song) vs elsewhere
+f_osc: near change n=1326 median 17.0 p90 132.0 | elsewhere n=12405 median 9.9 p90 104.0
+f_track: near change n=1326 median 12.8 p90 59.4 | elsewhere n=12405 median 7.8 p90 40.2
+f_h W40: near change n=1326 median 7.7 p90 91.7 | elsewhere n=12405 median 8.6 p90 89.3
+f_h W85: near change n=1326 median 5.3 p90 17.2 | elsewhere n=12405 median 5.9 p90 49.0
+
+## Q2 hop-to-hop jitter on consecutive hops of one voice (matched voices; all hops of cls 0)
+consecutive pairs: 26903 (143.5 voice-seconds)
+name | median |df| Hz | p95 |df| Hz | median cent | p95 cent | jumps > 2 Hz/hop per voice-second | share of pairs > 2 Hz
+f_osc | 0.239 | 4.45 | 3.9 | 73.3 | 21.68 | 0.1156
+f_track | 0.060 | 1.40 | 1.0 | 25.6 | 5.39 | 0.0288
+f_h W40 | 0.192 | 3.42 | 3.2 | 67.0 | 14.73 | 0.0786
+f_h W85 | 0.056 | 1.20 | 0.9 | 22.6 | 6.87 | 0.0367
+per song jumps>2Hz per voice-second: song | f_osc | f_track | f_h W40 | f_h W85
+Track00060 | 32.38 | 6.18 | 19.90 | 6.53 | (pairs 3185)
+Track00040 | 14.41 | 6.68 | 16.58 | 7.72 | (pairs 5778)
+Track00001 | 22.25 | 5.23 | 11.09 | 5.51 | (pairs 5342)
+Track00005 | 13.78 | 4.50 | 16.93 | 7.20 | (pairs 2082)
+Track00012 | 16.86 | 6.11 | 17.07 | 8.71 | (pairs 2669)
+Track00020 | 26.27 | 4.25 | 11.60 | 6.46 | (pairs 7630)
+Track00025 | 18.15 | 3.46 | 39.75 | 11.23 | (pairs 217)
+at the 3111 pairs where f_osc jumps > 2 Hz: f_h W40 moved < 1 Hz in 0.767, < 2 Hz in 0.865; f_track moved < 2 Hz in 0.867
+at the 3111 pairs where f_osc jumps > 2 Hz: f_h W85 moved < 1 Hz in 0.884, < 2 Hz in 0.918; f_track moved < 2 Hz in 0.867
+
+## verdict inputs (mechanical, CHOICES 3-4)
+Q1: best non-K2 median per-song AUC = 0.708 (threshold 0.7) -> useful
+Q2: error improvement (median and p90 both lower than f_track): {'f_h W40': np.False_, 'f_h W85': np.False_}; jump rate <= half of f_osc at no worse median error: {'f_h W40': np.False_, 'f_h W85': np.True_}; rates {'f_osc': np.float64(0.11563766122737242), 'f_track': np.float64(0.028770025647697282), 'f_h W40': np.float64(0.07857859718247036), 'f_h W85': np.float64(0.03665018771140765)}

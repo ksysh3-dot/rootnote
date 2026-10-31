@@ -1,0 +1,99 @@
+=== app 0:52.00-0:54.00  engine v16b  hops 375
+MEASURED levels, mean hop power in dBFS (layer after out filter, incl. engine out_db): 
+  20-150 Hz: v16b actual -73.0 | resynth(trace) -72.6 | P1 actual -95.8
+  150-600 Hz: v16b actual -48.0 | resynth(trace) -47.9 | P1 actual -56.9
+  resynth-vs-actual series corr (shift -2 hops): lo 0.36, mid 0.62; sum of per-component energies / total (cross terms): lo 1.23, mid 0.94
+  20-150 Hz of a stationary-sinusoid model (each (v,k) frozen per hop, no AM/FM sidebands): -81.4 dBFS  -> excess of the true (re-synthesised) layer over it: +8.8 dB
+MEASURED share of the 20-150 Hz energy (sum of per-component energies) by harmonic k:
+  k=2: 97.0%, k=3: 2.9%, k=4: 0.1%, k=5: 0.0%, k=6: 0.0%, k=7: 0.0%, k=8: 0.0%
+MEASURED voice f_osc distribution of the 20-150 Hz energy (energy-weighted over hops): 0-50 Hz: 0.0%, 50-75 Hz: 1.8%, 75-100 Hz: 17.3%, 100-125 Hz: 65.3%, 125-150 Hz: 15.7%, 150-200 Hz: 0.0%, 200-999 Hz: 0.0%
+MEASURED instantaneous k*f_osc of the component, same weighting: 0-100 Hz: 0.0%, 100-150 Hz: 0.4%, 150-200 Hz: 16.7%, 200-300 Hz: 81.9%, 300-450 Hz: 0.9%, 450-999 Hz: 0.0%
+MEASURED share of the 20-150 Hz layer energy in hops (+-1) where some voice has a birth/slot change, |df_osc| > 3 Hz/hop or |dA| > 3 dB/hop: 100% (those hops are 99% of the window)
+Top voices by 20-150 Hz energy: id | share | mid(150-600) share of own energy | f_osc E-weighted mean [min-max] | main k (share of own) | kf mean | sounding hops ON/REL/CAND | ON<->REL changes | input relation (E-weighted: f_osc is a real partial / k*f_osc matches a partial (k) / none)
+   2480 |  39.1% |   99% |  120.3 [97-153] | k=2 (98%) | 240.6 | 241/134/0 | 25 | real 95% / ghost 5% (k2:63% k3:37%) / none 0%
+   2440 |  27.3% |  100% |  122.5 [105-165] | k=2 (99%) | 245.0 | 375/0/0 | 0 | real 98% / ghost 2% (k2:100% k3:0%) / none 0%
+   2524 |  15.7% |   95% |   91.9 [66-122] | k=2 (87%) | 183.7 | 205/0/5 | 0 | real 81% / ghost 19% (k2:85% k3:15%) / none 0%
+   2495 |   5.1% |  100% |  107.6 [92-127] | k=2 (100%) | 215.3 | 91/118/2 | 15 | real 78% / ghost 22% (k2:90% k3:10%) / none 0%
+   2530 |   4.6% |   99% |  119.0 [111-127] | k=2 (100%) | 238.0 | 12/26/1 | 1 | real 100% / ghost 0% () / none 0%
+   2525 |   1.6% |   99% |  101.0 [91-128] | k=2 (99%) | 201.9 | 37/40/2 | 3 | real 32% / ghost 68% (k2:91% k3:9%) / none 0%
+   2545 |   1.6% |   98% |   96.0 [83-107] | k=2 (98%) | 192.0 | 13/39/1 | 3 | real 29% / ghost 71% (k2:100% k3:0%) / none 0%
+   2537 |   1.5% |   99% |  124.4 [121-150] | k=2 (99%) | 248.8 | 16/88/1 | 11 | real 99% / ghost 1% (k2:100%) / none 0%
+   2552 |   1.3% |  100% |  115.8 [110-136] | k=2 (99%) | 231.6 | 24/54/1 | 7 | real 45% / ghost 55% (k2:100%) / none 0%
+   2543 |   0.7% |   99% |  130.7 [128-158] | k=2 (100%) | 261.3 | 18/41/3 | 7 | real 100% / ghost 0% () / none 0%
+  voices needed for 50/80/90% of the 20-150 Hz energy: 2/3/5 of 20 voices
+  top-10 voices overall (E-weighted): f_osc real input partial 90%, sub-harmonic ghost (k f_osc matches a partial) 10%, matches nothing 0%
+
+=== app 1:28.50-1:30.50  engine v16b  hops 375
+MEASURED levels, mean hop power in dBFS (layer after out filter, incl. engine out_db): 
+  20-150 Hz: v16b actual -73.7 | resynth(trace) -64.1 | P1 actual -90.1
+  150-600 Hz: v16b actual -48.2 | resynth(trace) -48.7 | P1 actual -56.6
+  resynth-vs-actual series corr (shift -2 hops): lo 0.49, mid 0.47; sum of per-component energies / total (cross terms): lo 0.70, mid 0.98
+  20-150 Hz of a stationary-sinusoid model (each (v,k) frozen per hop, no AM/FM sidebands): -78.2 dBFS  -> excess of the true (re-synthesised) layer over it: +14.1 dB
+MEASURED share of the 20-150 Hz energy (sum of per-component energies) by harmonic k:
+  k=2: 88.9%, k=3: 10.7%, k=4: 0.3%, k=5: 0.0%, k=6: 0.0%, k=7: 0.0%, k=8: 0.0%
+MEASURED voice f_osc distribution of the 20-150 Hz energy (energy-weighted over hops): 0-50 Hz: 0.0%, 50-75 Hz: 0.0%, 75-100 Hz: 5.4%, 100-125 Hz: 93.4%, 125-150 Hz: 1.2%, 150-200 Hz: 0.0%, 200-999 Hz: 0.0%
+MEASURED instantaneous k*f_osc of the component, same weighting: 0-100 Hz: 0.0%, 100-150 Hz: 0.0%, 150-200 Hz: 5.2%, 200-300 Hz: 83.9%, 300-450 Hz: 10.6%, 450-999 Hz: 0.3%
+MEASURED share of the 20-150 Hz layer energy in hops (+-1) where some voice has a birth/slot change, |df_osc| > 3 Hz/hop or |dA| > 3 dB/hop: 100% (those hops are 100% of the window)
+Top voices by 20-150 Hz energy: id | share | mid(150-600) share of own energy | f_osc E-weighted mean [min-max] | main k (share of own) | kf mean | sounding hops ON/REL/CAND | ON<->REL changes | input relation (E-weighted: f_osc is a real partial / k*f_osc matches a partial (k) / none)
+   4082 |  76.6% |   98% |  112.0 [103-140] | k=2 (94%) | 223.9 | 372/3/0 | 2 | real 97% / ghost 3% (k2:100% k3:0%) / none 0%
+   4223 |  13.7% |   87% |  116.8 [111-144] | k=2 (55%) | 233.7 | 10/0/1 | 0 | real 25% / ghost 75% (k2:100%) / none 0%
+   3942 |   5.8% |   99% |   93.3 [68-108] | k=2 (98%) | 186.6 | 276/26/0 | 1 | real 92% / ghost 8% (k2:62% k3:12% k4:26%) / none 0%
+   4154 |   1.9% |   99% |  101.0 [88-158] | k=2 (100%) | 202.1 | 159/87/1 | 9 | real 41% / ghost 59% (k2:87% k3:10% k4:3%) / none 0%
+   4187 |   0.9% |  100% |  111.6 [107-138] | k=2 (99%) | 223.1 | 67/79/10 | 21 | real 44% / ghost 56% (k2:98% k3:2%) / none 0%
+   4177 |   0.7% |   99% |  108.2 [104-118] | k=2 (100%) | 216.5 | 16/26/2 | 1 | real 18% / ghost 82% (k2:100%) / none 0%
+   4149 |   0.2% |   98% |   79.4 [54-92] | k=2 (76%) | 158.9 | 97/26/11 | 1 | real 77% / ghost 23% (k2:100%) / none 0%
+   4153 |   0.1% |   99% |  101.4 [91-119] | k=2 (100%) | 202.8 | 7/26/1 | 1 | real 98% / ghost 2% (k2:100%) / none 0%
+   4117 |   0.1% |  100% |  104.9 [98-127] | k=2 (100%) | 209.7 | 47/54/0 | 9 | real 90% / ghost 10% (k2:20% k3:80%) / none 0%
+   3466 |   0.0% |   98% |   57.6 [54-60] | k=3 (99%) | 172.9 | 0/21/0 | 0 | real 0% / ghost 100% (k2:100%) / none 0%
+  voices needed for 50/80/90% of the 20-150 Hz energy: 1/2/2 of 14 voices
+  top-10 voices overall (E-weighted): f_osc real input partial 84%, sub-harmonic ghost (k f_osc matches a partial) 16%, matches nothing 0%
+
+=== app 2:03.50-2:05.50  engine v16b  hops 375
+MEASURED levels, mean hop power in dBFS (layer after out filter, incl. engine out_db): 
+  20-150 Hz: v16b actual -64.0 | resynth(trace) -59.3 | P1 actual -82.4
+  150-600 Hz: v16b actual -41.8 | resynth(trace) -41.8 | P1 actual -53.1
+  resynth-vs-actual series corr (shift -2 hops): lo 0.37, mid 0.44; sum of per-component energies / total (cross terms): lo 0.78, mid 0.78
+  20-150 Hz of a stationary-sinusoid model (each (v,k) frozen per hop, no AM/FM sidebands): -72.3 dBFS  -> excess of the true (re-synthesised) layer over it: +13.0 dB
+MEASURED share of the 20-150 Hz energy (sum of per-component energies) by harmonic k:
+  k=2: 98.9%, k=3: 1.0%, k=4: 0.1%, k=5: 0.0%, k=6: 0.0%, k=7: 0.0%, k=8: 0.0%
+MEASURED voice f_osc distribution of the 20-150 Hz energy (energy-weighted over hops): 0-50 Hz: 0.0%, 50-75 Hz: 0.2%, 75-100 Hz: 13.7%, 100-125 Hz: 83.9%, 125-150 Hz: 2.1%, 150-200 Hz: 0.1%, 200-999 Hz: 0.0%
+MEASURED instantaneous k*f_osc of the component, same weighting: 0-100 Hz: 0.0%, 100-150 Hz: 0.0%, 150-200 Hz: 13.7%, 200-300 Hz: 85.5%, 300-450 Hz: 0.8%, 450-999 Hz: 0.0%
+MEASURED share of the 20-150 Hz layer energy in hops (+-1) where some voice has a birth/slot change, |df_osc| > 3 Hz/hop or |dA| > 3 dB/hop: 100% (those hops are 100% of the window)
+Top voices by 20-150 Hz energy: id | share | mid(150-600) share of own energy | f_osc E-weighted mean [min-max] | main k (share of own) | kf mean | sounding hops ON/REL/CAND | ON<->REL changes | input relation (E-weighted: f_osc is a real partial / k*f_osc matches a partial (k) / none)
+   5561 |  73.2% |   97% |  109.4 [96-142] | k=2 (99%) | 218.8 | 375/0/0 | 0 | real 99% / ghost 1% (k2:88% k3:12%) / none 0%
+   5575 |  13.8% |   99% |  107.2 [81-145] | k=2 (99%) | 214.4 | 131/109/0 | 19 | real 95% / ghost 5% (k2:93% k3:7%) / none 0%
+   5569 |   6.6% |   99% |  101.6 [80-163] | k=2 (99%) | 203.1 | 184/94/0 | 17 | real 87% / ghost 13% (k2:76% k3:24%) / none 0%
+   5577 |   3.1% |   98% |   98.1 [85-124] | k=2 (99%) | 196.3 | 43/111/0 | 11 | real 95% / ghost 5% (k2:34% k3:66%) / none 0%
+   5582 |   1.0% |   97% |   80.5 [55-104] | k=2 (79%) | 161.0 | 105/37/0 | 5 | real 52% / ghost 48% (k2:88% k3:11% k4:1%) / none 0%
+   5632 |   0.8% |  100% |  102.8 [87-120] | k=2 (98%) | 205.6 | 97/32/1 | 3 | real 53% / ghost 47% (k2:73% k3:27%) / none 0%
+   5585 |   0.5% |  100% |  138.3 [125-206] | k=2 (100%) | 276.7 | 333/42/0 | 10 | real 97% / ghost 3% (k2:92% k3:0% k4:8%) / none 0%
+   5650 |   0.4% |   83% |  147.5 [141-157] | k=2 (99%) | 295.0 | 11/5/1 | 3 | real 84% / ghost 16% (k2:100%) / none 0%
+   5612 |   0.3% |   99% |  124.0 [119-165] | k=2 (99%) | 248.1 | 43/76/1 | 15 | real 100% / ghost 0% (k2:94% k3:6%) / none 0%
+   5593 |   0.2% |  100% |  128.2 [122-141] | k=2 (100%) | 256.4 | 35/54/1 | 11 | real 41% / ghost 59% (k2:66% k4:34%) / none 0%
+  voices needed for 50/80/90% of the 20-150 Hz energy: 1/2/3 of 30 voices
+  top-10 voices overall (E-weighted): f_osc real input partial 96%, sub-harmonic ghost (k f_osc matches a partial) 4%, matches nothing 0%
+
+=== rem 0:52.00-0:54.00  engine v16b  hops 375
+MEASURED levels, mean hop power in dBFS (layer after out filter, incl. engine out_db): 
+  20-150 Hz: v16b actual -72.1 | resynth(trace) -71.3 | P1 actual -93.9
+  150-600 Hz: v16b actual -48.8 | resynth(trace) -48.7 | P1 actual -54.8
+  resynth-vs-actual series corr (shift -2 hops): lo 0.36, mid 0.59; sum of per-component energies / total (cross terms): lo 1.05, mid 0.92
+  20-150 Hz of a stationary-sinusoid model (each (v,k) frozen per hop, no AM/FM sidebands): -80.8 dBFS  -> excess of the true (re-synthesised) layer over it: +9.5 dB
+MEASURED share of the 20-150 Hz energy (sum of per-component energies) by harmonic k:
+  k=2: 98.5%, k=3: 1.4%, k=4: 0.1%, k=5: 0.0%, k=6: 0.0%, k=7: 0.0%, k=8: 0.0%
+MEASURED voice f_osc distribution of the 20-150 Hz energy (energy-weighted over hops): 0-50 Hz: 0.0%, 50-75 Hz: 0.5%, 75-100 Hz: 15.5%, 100-125 Hz: 73.0%, 125-150 Hz: 10.4%, 150-200 Hz: 0.8%, 200-999 Hz: 0.0%
+MEASURED instantaneous k*f_osc of the component, same weighting: 0-100 Hz: 0.0%, 100-150 Hz: 0.1%, 150-200 Hz: 15.2%, 200-300 Hz: 83.3%, 300-450 Hz: 1.4%, 450-999 Hz: 0.0%
+MEASURED share of the 20-150 Hz layer energy in hops (+-1) where some voice has a birth/slot change, |df_osc| > 3 Hz/hop or |dA| > 3 dB/hop: 100% (those hops are 100% of the window)
+Top voices by 20-150 Hz energy: id | share | mid(150-600) share of own energy | f_osc E-weighted mean [min-max] | main k (share of own) | kf mean | sounding hops ON/REL/CAND | ON<->REL changes | input relation (E-weighted: f_osc is a real partial / k*f_osc matches a partial (k) / none)
+   3119 |  46.4% |   99% |  119.8 [86-179] | k=2 (99%) | 239.6 | 211/25/0 | 8 | real 85% / ghost 14% (k2:7% k3:80% k4:13%) / none 2%
+   3150 |  27.1% |   99% |  114.8 [90-138] | k=2 (99%) | 229.7 | 207/33/1 | 6 | real 94% / ghost 6% (k2:99% k3:1%) / none 0%
+   3131 |  13.3% |  100% |   99.9 [86-138] | k=2 (97%) | 199.7 | 133/71/4 | 13 | real 51% / ghost 30% (k2:85% k3:13% k4:2%) / none 18%
+   3146 |   5.9% |  100% |  115.5 [82-135] | k=2 (99%) | 231.1 | 31/23/5 | 3 | real 98% / ghost 2% (k2:100%) / none 0%
+   3187 |   2.4% |   97% |   89.3 [70-113] | k=2 (99%) | 178.7 | 47/10/1 | 1 | real 77% / ghost 20% (k2:91% k3:9%) / none 3%
+   3167 |   1.5% |   98% |   75.8 [54-93] | k=2 (72%) | 151.5 | 157/0/4 | 0 | real 84% / ghost 16% (k2:40% k3:60%) / none 0%
+   3133 |   1.3% |   99% |  132.0 [126-152] | k=2 (99%) | 264.0 | 28/38/9 | 9 | real 53% / ghost 47% (k2:0% k3:67% k4:33%) / none 0%
+   3164 |   0.7% |   99% |  105.3 [99-124] | k=2 (98%) | 210.6 | 13/26/8 | 1 | real 95% / ghost 5% (k2:100%) / none 0%
+   3175 |   0.5% |   99% |  108.1 [94-131] | k=2 (99%) | 216.2 | 29/47/2 | 5 | real 97% / ghost 3% (k2:100% k3:0%) / none 0%
+   3168 |   0.2% |  100% |  130.2 [122-152] | k=2 (100%) | 260.3 | 96/30/1 | 8 | real 96% / ghost 4% (k2:100%) / none 0%
+  voices needed for 50/80/90% of the 20-150 Hz energy: 2/3/4 of 30 voices
+  top-10 voices overall (E-weighted): f_osc real input partial 83%, sub-harmonic ghost (k f_osc matches a partial) 14%, matches nothing 3%

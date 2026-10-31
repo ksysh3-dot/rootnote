@@ -1,0 +1,181 @@
+computed 14.9
+determinism (x1 vs x1 re-rendered) bitwise identical: True
+{
+ "song": "Track00040",
+ "start": 10.0,
+ "T": 7.0,
+ "dur": 14.0,
+ "tol": 1e-09,
+ "checks": {
+  "kick": {
+   "stream_bh_first_div_ms_re_T": -65.7274999999995,
+   "stream_det_first_div_ms_re_T": -2.394166666666031,
+   "tracker_first_div_hop_centre_ms_re_T": -118.02083333333346,
+   "layer_bh-64-clf": {
+    "pass_": false,
+    "max_abs_diff_t_le_T_minus_L": 3.091615970059018e-05,
+    "first_div_ms_re_T": -106.33333333333361,
+    "first_div_ms_re_T_minus_L": -42.333333333333556,
+    "layer_peak": 0.047216662441310384
+   },
+   "layer_bh-64-all": {
+    "pass_": false,
+    "max_abs_diff_t_le_T_minus_L": 3.0839855830234325e-05,
+    "first_div_ms_re_T": -106.33333333333361,
+    "first_div_ms_re_T_minus_L": -42.333333333333556,
+    "layer_peak": 0.04777664957973814
+   },
+   "layer_bh-217-clf": {
+    "pass_": true,
+    "max_abs_diff_t_le_T_minus_L": 0.0,
+    "first_div_ms_re_T": -184.66666666666674,
+    "first_div_ms_re_T_minus_L": 32.33333333333288,
+    "layer_peak": 0.03700348570071367
+   },
+   "layer_bh-217-all": {
+    "pass_": true,
+    "max_abs_diff_t_le_T_minus_L": 0.0,
+    "first_div_ms_re_T": -187.33333333333314,
+    "first_div_ms_re_T_minus_L": 29.666666666666508,
+    "layer_peak": 0.05313977389246624
+   },
+   "layer_det-64-clf": {
+    "pass_": false,
+    "max_abs_diff_t_le_T_minus_L": 3.170031087895708e-05,
+    "first_div_ms_re_T": -112.66666666666669,
+    "first_div_ms_re_T_minus_L": -48.666666666666636,
+    "layer_peak": 0.0775671280510235
+   },
+   "layer_det-64-all": {
+    "pass_": false,
+    "max_abs_diff_t_le_T_minus_L": 3.2253856899274944e-05,
+    "first_div_ms_re_T": -112.66666666666669,
+    "first_div_ms_re_T_minus_L": -48.666666666666636,
+    "layer_peak": 0.10833285885757177
+   },
+   "layer_det-217-clf": {
+    "pass_": true,
+    "max_abs_diff_t_le_T_minus_L": 0.0,
+    "first_div_ms_re_T": -188.66666666666632,
+    "first_div_ms_re_T_minus_L": 28.33333333333332,
+    "layer_peak": 0.08466016519552766
+   },
+   "layer_det-217-all": {
+    "pass_": true,
+    "max_abs_diff_t_le_T_minus_L": 0.0,
+    "first_div_ms_re_T": -190.0000000000004,
+    "first_div_ms_re_T_minus_L": 26.999999999999247,
+    "layer_peak": 0.13619200888980765
+   }
+  },
+  "note": {
+   "stream_bh_first_div_ms_re_T": -65.7274999999995,
+   "stream_det_first_div_ms_re_T": -2.394166666666031,
+   "tracker_first_div_hop_centre_ms_re_T": -118.02083333333346,
+   "layer_bh-64-clf": {
+    "pass_": false,
+    "max_abs_diff_t_le_T_minus_L": 3.5103368785692826e-05,
+    "first_div_ms_re_T": -106.33333333333361,
+    "first_div_ms_re_T_minus_L": -42.333333333333556,
+    "layer_peak": 0.047216662441310384
+   },
+   "layer_bh-64-all": {
+    "pass_": false,
+    "max_abs_diff_t_le_T_minus_L": 3.50264171801503e-05,
+    "first_div_ms_re_T": -106.33333333333361,
+    "first_div_ms_re_T_minus_L": -42.333333333333556,
+    "layer_peak": 0.04777664957973814
+   },
+   "layer_bh-217-clf": {
+    "pass_": true,
+    "max_abs_diff_t_le_T_minus_L": 0.0,
+    "first_div_ms_re_T": -184.66666666666674,
+    "first_div_ms_re_T_minus_L": 32.33333333333288,
+    "layer_peak": 0.03700348570071367
+   },
+   "layer_bh-217-all": {
+    "pass_": true,
+    "max_abs_diff_t_le_T_minus_L": 0.0,
+    "first_div_ms_re_T": -187.33333333333314,
+    "first_div_ms_re_T_minus_L": 29.666666666666508,
+    "layer_peak": 0.05313977389246624
+   },
+   "layer_det-64-clf": {
+    "pass_": false,
+    "max_abs_diff_t_le_T_minus_L": 3.2578025732065904e-05,
+    "first_div_ms_re_T": -112.66666666666669,
+    "first_div_ms_re_T_minus_L": -48.666666666666636,
+    "layer_peak": 0.0775671280510235
+   },
+   "layer_det-64-all": {
+    "pass_": false,
+    "max_abs_diff_t_le_T_minus_L": 3.312971336849255e-05,
+    "first_div_ms_re_T": -112.66666666666669,
+    "first_div_ms_re_T_minus_L": -48.666666666666636,
+    "layer_peak": 0.10833285885757177
+   },
+   "layer_det-217-clf": {
+    "pass_": true,
+    "max_abs_diff_t_le_T_minus_L": 0.0,
+    "first_div_ms_re_T": -188.66666666666632,
+    "first_div_ms_re_T_minus_L": 28.33333333333332,
+    "layer_peak": 0.08466016519552766
+   },
+   "layer_det-217-all": {
+    "pass_": true,
+    "max_abs_diff_t_le_T_minus_L": 0.0,
+    "first_div_ms_re_T": -190.0000000000004,
+    "first_div_ms_re_T_minus_L": 26.999999999999247,
+    "layer_peak": 0.13619200888980765
+   }
+  },
+  "silence": {
+   "stream_bh_first_div_ms_re_T": -65.7274999999995,
+   "stream_det_first_div_ms_re_T": -2.394166666666031,
+   "tracker_first_div_hop_centre_ms_re_T": -118.02083333333346,
+   "layer_bh-64-clf": {
+    "pass_": false,
+    "max_abs_diff_t_le_T_minus_L": 3.0916220852925114e-05,
+    "first_div_ms_re_T": -106.33333333333361,
+    "first_div_ms_re_T_minus_L": -42.333333333333556,
+    "layer_peak": 0.047216662441310384
+   },
+   "layer_bh-64-all": {
+    "pass_": false,
+    "max_abs_diff_t_le_T_minus_L": 3.083991694112151e-05,
+    "first_div_ms_re_T": -106.33333333333361,
+    "first_div_ms_re_T_minus_L": -42.333333333333556,
+    "layer_peak": 0.04777664957973814
+   },
+   "layer_bh-217-clf": {
+    "pass_": true,
+    "max_abs_diff_t_le_T_minus_L": 0.0,
+    "first_div_ms_re_T": -184.66666666666674,
+    "first_div_ms_re_T_minus_L": 32.33333333333288,
+    "layer_peak": 0.03700348570071367
+   },
+   "layer_bh-217-all": {
+    "pass_": true,
+    "max_abs_diff_t_le_T_minus_L": 0.0,
+    "first_div_ms_re_T": -187.33333333333314,
+    "first_div_ms_re_T_minus_L": 29.666666666666508,
+    "layer_peak": 0.05313977389246624
+   },
+   "layer_det-64-clf": {
+    "pass_": false,
+    "max_abs_diff_t_le_T_minus_L": 3.170031087895708e-05,
+    "first_div_ms_re_T": -112.66666666666669,
+    "first_div_ms_re_T_minus_L": -48.666666666666636,
+    "layer_peak": 0.0775671280510235
+   },
+   "layer_det-64-all": {
+    "pass_": false,
+    "max_abs_diff_t_le_T_minus_L": 3.2253856899274944e-05,
+    "first_div_ms_re_T": -112.66666666666669,
+    "first_div_ms_re_T_minus_L": -48.666666666666636,
+    "layer_peak": 0.10833285885757177
+   },
+   "layer_det-217-clf": {
+    "pass_": true,
+    "max_abs_diff_t_le_T_minus_L": 0.0,
+    "first_div_ms_re_T": -18

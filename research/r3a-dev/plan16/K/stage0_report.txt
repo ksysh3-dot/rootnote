@@ -1,0 +1,87 @@
+# plan16 K stage 0 -- 2026-10-31T08:30:13  (literal setting: thr 9 dB, W 60 ms, gain -12 dB, cap +3 dB, K3 120 dB/s)
+
+## detector (info)
+song | windows | MIDI H hits | recall(+-40ms) | false windows (share) | bass starts in false windows / bass notes
+Track00060 | 25 | 14 | 0.786 | 14 (0.56) | 2/12
+Track00040 | 51 | 36 | 0.722 | 28 (0.55) | 22/434
+Track00001 | 4 | 27 | 0.074 | 2 (0.50) | 0/36
+Track00005 | 26 | 49 | 0.408 | 6 (0.23) | 1/41
+Track00012 | 14 | 58 | 0.155 | 6 (0.43) | 0/30
+Track00020 | 4 | 42 | 0.095 | 0 (0.00) | 0/28
+Track00023 | 6 | no hits
+Track00024 | 81 | 112 | 0.714 | 10 (0.12) | 0/0
+Track00025 | 79 | 164 | 0.927 | 7 (0.09) | 0/50
+Track00026 | 27 | 9 | 1.000 | 18 (0.67) | 0/0
+
+## 0a separation (bass songs pooled: Track00060, Track00040, Track00001, Track00005, Track00012, Track00020, Track00025)
+group | events (births) | K1 hop % | K2 hop % | K3 hop % | K1 ev % | K2 ev % | K3 ev % | confirm consecutive % | any-hop 2of3 % | last-hop 2of3 % | K2 control hop % | K2 control ev %
+A drum-cause silence voices | 217 (49) | 56.8 | 5.2 | 15.7 | 77.0 | 12.9 | 55.8 | 20.7 | 35.9 | 11.5 | 0.3 | 0.9
+B matched (bass-compatible) voices | 69 (14) | 70.2 | 19.9 | 19.7 | 89.9 | 37.7 | 60.9 | 55.1 | 69.6 | 43.5 | 1.4 | 2.9
+C other silence voices (info) | 107 (34) | 67.0 | 12.3 | 12.9 | 87.9 | 29.0 | 48.6 | 32.7 | 43.9 | 26.2 | 0.1 | 0.9
+A energy-weighted consecutive confirmation: 25.6 %
+
+per song: group A (events, cons %) | group B (events, cons %) | K2 control hop % A / B
+Track00060 | A 0, 0% | B 15, 47% | 0.0 / 3.6
+Track00040 | A 0, 0% | B 38, 66% | 0.0 / 1.3
+Track00001 | A 1, 100% | B 2, 50% | 0.0 / 0.0
+Track00005 | A 14, 21% | B 6, 33% | 4.9 / 0.0
+Track00012 | A 11, 18% | B 3, 67% | 0.0 / 0.0
+Track00020 | A 3, 33% | B 2, 0% | 0.0 / 0.0
+Track00025 | A 188, 20% | B 3, 33% | 0.1 / 0.0
+
+K3 decay-rate distribution (dB/s) at event hops with a defined statistic (peak >= 15 ms back): deciles
+A: n 884  p10=32 p25=82 p50=192 p75=323 p90=478  share <=120: 35.4 %
+B: n 307  p10=19 p25=55 p50=138 p75=238 p90=418  share <=120: 45.0 %
+
+0a conditions: A cons 20.7 % <= 40 : PASS;  B cons 55.1 % >= 80 : FAIL;  K2 control hop A 0.3 % / B 1.4 % <= 25 : PASS
+
+## 0b upper bound (units = energy / R3R)
+song | core drum | R_det | oracle | oracle reading A | hard oracle | evidence (literal)
+Track00060 | 0.0000 | 0.0 % | 0.0000 | 0.0000 | 0.0000 | 0.0000
+Track00040 | 0.0000 | 0.0 % | 0.0000 | 0.0000 | 0.0000 | 0.0000
+Track00001 | 0.0084 | 1.9 % | 0.0081 | 0.0077 | 0.0082 | 0.0082
+Track00005 | 0.0027 | 8.4 % | 0.0021 | 0.0009 | 0.0023 | 0.0023
+Track00012 | 0.0012 | 7.9 % | 0.0010 | 0.0010 | 0.0010 | 0.0010
+Track00020 | 0.0027 | 19.9 % | 0.0015 | 0.0002 | 0.0022 | 0.0015
+Track00025 | 0.0558 | 33.0 % | 0.0141 | 0.0015 | 0.0201 | 0.0158
+pooled core 0.0708 | R_det pooled 27.4 % | oracle 0.0268 | A 0.0113 | hard 0.0338 | evid 0.0288
+reduction pooled: oracle R_max 62.2 %, reading A 84.1 %, hard 52.3 %, evidence 59.3 %, L20 45.2 %, L35 51.7 %
+reduction without T25: oracle 15.1 %, A 35.2 %, hard 8.5 %, evidence 13.0 %
+per-song oracle reduction: 01 3%, 05 21%, 12 18%, 20 46%, 25 75%
+0b condition: R_max 62.2 % >= 55 : PASS
+
+## 0c attack upper bound: co-hit attack energy change vs core (dB), notes with H hit within +-30 ms
+song | co-hit notes (used) | oracle (L=inf) | L=20 ms | L=35 ms | evidence (literal) | worst-note 10th percentile (L20)
+Track00060 | 5 (5) <8 excluded
+Track00040 | 151 (116) | -3.90 | -1.22 | -1.91 | -1.47 | -12.2
+Track00001 | 20 (19) | -0.11 | -0.06 | -0.11 | -0.11 | -0.0
+Track00005 | 20 (19) | -4.08 | -1.39 | -3.35 | -2.50 | -3.2
+Track00012 | 27 (25) | -0.00 | -0.00 | -0.00 | -0.00 | +0.0
+Track00020 | 22 (21) | -2.36 | -0.73 | -1.64 | -0.79 | -0.5
+Track00025 | 42 (37) | -12.91 | -6.01 | -9.08 | -11.91 | -34.7
+pooled (songs with >= 8 co-hit notes): oracle -3.83 dB, L20 -2.09 dB, L35 -2.93 dB, evid -2.83 dB
+0c condition: L20 -2.09, L35 -2.93 >= -2 dB : FAIL (stop; Opus resets the attack threshold)
+
+## INFORMATION (post-run additions; not decisions)
+confirmation by kind (consecutive): A: births 9/49, rises 36/168, B: births 7/14, rises 31/55, C: births 8/34, rises 27/73
+detector band diagnostics on MIDI H hits (anywhere in [-1, +15] blocks): song | hits | low band >= 9 dB % | high band >= 9 dB % | both in the same block %
+Track00060 | 14 | 100 | 79 | 79
+Track00040 | 36 | 94 | 78 | 72
+Track00001 | 27 | 81 | 11 | 7
+Track00005 | 49 | 71 | 67 | 41
+Track00012 | 58 | 90 | 24 | 16
+Track00020 | 42 | 90 | 10 | 10
+Track00023 | 0 | 0 | 0 | 0
+Track00024 | 112 | 100 | 88 | 71
+Track00025 | 164 | 95 | 99 | 93
+Track00026 | 9 | 100 | 100 | 100
+oracle (reading B, gain -12 dB) R_det and R_max for the registered detector settings (bass songs, pooled), cause-2 units:
+thr_W | windows (all songs) | R_det % | oracle reduction % | oracle reduction w/o T25 %
+6_40 | 466 | 12.3 | 59.3 | 15.0
+6_60 | 466 | 30.4 | 69.7 | 21.0
+9_40 | 317 | 10.8 | 52.5 | 8.9
+9_60 | 317 | 27.4 | 62.2 | 15.1
+12_40 | 202 | 11.9 | 50.5 | 4.9
+12_60 | 202 | 27.4 | 58.9 | 6.4
+
+STOP FLAGS: 0a stop, 0b ok, 0c stop

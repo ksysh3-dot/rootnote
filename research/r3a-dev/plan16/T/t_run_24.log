@@ -1,0 +1,5 @@
+Track00024 ctx ready 5.1 stems ['S00', 'S01', 'S02', 'S03', 'S04', 'S05', 'S06', 'S07', 'S08', 'S10']
+Track00024 silent-wrong voice-hops 28111
+Track00024 classified 18.8
+Track00024 E_sil mine / R3R = 0.01462149078058014 layer-sum / R3R = 0.014440989943753015 secs 21.1
+REPRO Track00024: mine 0.01462 vs V v_raw 0.01462 (rel diff 0.00e+00)

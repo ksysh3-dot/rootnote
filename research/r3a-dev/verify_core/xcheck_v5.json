@@ -1,0 +1,47 @@
+{
+ "v5": {
+  "n_present": 194,
+  "n_sounding": 371,
+  "p95_db": -21.717765361420327,
+  "n_notes": 270,
+  "allowed_drops_at_5pct": 9,
+  "P1": {
+   "drops_local_present": 37,
+   "frac_local_present": 0.19072164948453607,
+   "drops_local_allbins": 38,
+   "frac_local_allbins": 0.1958762886597938
+  },
+  "A": {
+   "drops_local_present": 12,
+   "frac_local_present": 0.061855670103092786,
+   "drops_local_allbins": 18,
+   "frac_local_allbins": 0.09278350515463918,
+   "v5b_median_db": 0.25167986078042937,
+   "v5b_n": 66
+  },
+  "B": {
+   "drops_local_present": 19,
+   "frac_local_present": 0.0979381443298969,
+   "drops_local_allbins": 26,
+   "frac_local_allbins": 0.13402061855670103,
+   "v5b_median_db": 1.631881801436105,
+   "v5b_n": 66
+  },
+  "C": {
+   "drops_local_present": 12,
+   "frac_local_present": 0.061855670103092786,
+   "drops_local_allbins": 16,
+   "frac_local_allbins": 0.08247422680412371,
+   "v5b_median_db": 11.262754364682841,
+   "v5b_n": 66
+  },
+  "D": {
+   "drops_local_present": 12,
+   "frac_local_present": 0.061855670103092786,
+   "drops_local_allbins": 16,
+   "frac_local_allbins": 0.08247422680412371,
+   "v5b_median_db": 14.265772309678,
+   "v5b_n": 66
+  }
+ }
+}

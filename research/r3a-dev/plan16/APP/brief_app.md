@@ -1,0 +1,15 @@
+# Brief APP — core v1.5 as an experimental app model (RESULTANT_CORE.md section 17)
+
+You are a Sonnet worker. Opus reviews and commits. Work ONLY in the worktree `~/r3-app` (branch `research/resultant-app-20261031`, just created at 70163ec). Do not commit, do not push, do not touch `~/r3-work` or `~/rootnote`. **No downloads of any kind** (no curl/wget/pip/gradle/bootstrap_kotlin.sh): the JVM tests run in CI; locally you only build and run the host engine tests.
+
+Spec: `~/r3-app/docs/RESULTANT_CORE.md` section 17 (17.2 items 1–3; item 4 = in-app live A/B is NOT wanted). Precedent to copy in style: commits `cc7303d` and `0c6766e` on `origin/research/p1-c1-app-20261028` (`git -C ~/r3-app show cc7303d 0c6766e`) — the first CI of that branch failed because a JVM test catalogue was not updated; avoid that.
+
+Changes:
+1. `app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/PvbModels.kt`: `const val RESULTANT = 15`; a new `Model("resultant_core_v15", RESULTANT, "Resultant 코어 v1.5 (실험)", "P1의 음 추적은 그대로 두고, 배음층을 음마다 이어지는 새 방식으로 만듭니다. 음이 다시 칠 때 층이 끊기거나 깜빡이던 것이 크게 줄었습니다(연구 측정). 어택이 약 20 ms 늦고, 베이스가 없는 곳에서 낮은 소리가 조금 더 날 수 있습니다. 지연은 P1과 같습니다.")` placed directly after the P1 entry. Default model, presets: unchanged.
+2. `app/src/main/cpp/libpvb/pvb_vb.h`: the VB_RESULTANT comment "(host research, not an app model)" -> say it is an experimental app model (app model 15, defaults of pvb_resultant.h; research params only via the host API). Comment only — no code change in C++.
+3. JVM tests in `tools/pvb-harness/jvm/`: `Alpha2JniTest.kt` (count 11 -> 12 and the message), `Alpha3SettingsTest.kt` (ID order list -> `[6, 15, 14, 11, 12, 13, 4, 7, 8, 9, 10, 3]`, distinct-key count, comment). Then grep EVERY file under `tools/pvb-harness/jvm/`, `app/src/test`, `app/src/androidTest`, `tools/*.py`, `tools/pvb-harness/*.py`, `.github/workflows/` and the app sources for anything else that depends on the model list, its size, order, ids or titles (e.g. HomeLogicTest, GeneralBuildTest, DevModeTest, LiveAbTest, TrackLevelMemoryTest, static-check scripts, reflection-name checks, PvbBuild caps that gate models) and update what must change. Report each place you checked and why it does or does not need a change.
+4. Do not change anything else. Keep comment density and style of the surrounding code.
+
+Local checks (no downloads): `cd ~/r3-app && tools/pvb-harness/build_host.sh` then the host engine test commands that `.github/workflows/build.yml` runs in the "Engine tests (host)" job **that need no new downloads** (python deps are in ~/venv-rootnote; use OPENBLAS_NUM_THREADS=1). At minimum run `tools/pvb-harness/test_engine.py` and the static checks listed in build.yml. Also confirm `git diff --stat` touches only the intended files. Save `git diff` to `~/r3a-dev/plan16/APP/app.diff`.
+
+Report in concise Korean: diff summary, every dependent place checked (needed/not needed), local test results (pass/fail with the failing output), anything you could not verify locally (the JVM tests).

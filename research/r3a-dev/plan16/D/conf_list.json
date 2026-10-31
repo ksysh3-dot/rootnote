@@ -1,0 +1,579 @@
+{
+ "chosen": [
+  "Track00094",
+  "Track00095",
+  "Track00096",
+  "Track00099",
+  "Track00101"
+ ],
+ "exclusion_count": 231,
+ "exclusion_sha256": "5f91b0e14841e2f8cd514eb2b273c37eb969d8fb4c7df49a28bc7a91fa9d0bd5",
+ "exclusion_nums": [
+  "00001",
+  "00002",
+  "00003",
+  "00004",
+  "00005",
+  "00006",
+  "00007",
+  "00008",
+  "00009",
+  "00010",
+  "00011",
+  "00012",
+  "00013",
+  "00014",
+  "00015",
+  "00016",
+  "00017",
+  "00018",
+  "00019",
+  "00020",
+  "00023",
+  "00024",
+  "00025",
+  "00026",
+  "00027",
+  "00028",
+  "00030",
+  "00031",
+  "00032",
+  "00033",
+  "00034",
+  "00035",
+  "00036",
+  "00037",
+  "00038",
+  "00039",
+  "00040",
+  "00041",
+  "00042",
+  "00043",
+  "00044",
+  "00045",
+  "00046",
+  "00048",
+  "00050",
+  "00051",
+  "00052",
+  "00053",
+  "00054",
+  "00055",
+  "00059",
+  "00060",
+  "00061",
+  "00063",
+  "00064",
+  "00065",
+  "00066",
+  "00067",
+  "00068",
+  "00069",
+  "00071",
+  "00072",
+  "00073",
+  "00074",
+  "00075",
+  "00076",
+  "00078",
+  "00080",
+  "00081",
+  "00082",
+  "00083",
+  "00084",
+  "00085",
+  "00086",
+  "00087",
+  "00088",
+  "00089",
+  "00090",
+  "00092",
+  "00093",
+  "01876",
+  "01877",
+  "01878",
+  "01880",
+  "01881",
+  "01882",
+  "01883",
+  "01884",
+  "01886",
+  "01887",
+  "01888",
+  "01889",
+  "01891",
+  "01892",
+  "01893",
+  "01895",
+  "01896",
+  "01897",
+  "01898",
+  "01899",
+  "01900",
+  "01901",
+  "01902",
+  "01903",
+  "01904",
+  "01905",
+  "01906",
+  "01907",
+  "01908",
+  "01911",
+  "01913",
+  "01916",
+  "01917",
+  "01918",
+  "01920",
+  "01925",
+  "01927",
+  "01928",
+  "01929",
+  "01930",
+  "01931",
+  "01932",
+  "01934",
+  "01935",
+  "01936",
+  "01937",
+  "01940",
+  "01943",
+  "01945",
+  "01947",
+  "01948",
+  "01949",
+  "01950",
+  "01951",
+  "01952",
+  "01954",
+  "01955",
+  "01956",
+  "01957",
+  "01959",
+  "01960",
+  "01961",
+  "01962",
+  "01963",
+  "01965",
+  "01967",
+  "01968",
+  "01972",
+  "01973",
+  "01974",
+  "01975",
+  "01976",
+  "01977",
+  "01978",
+  "01980",
+  "01981",
+  "01982",
+  "01985",
+  "01986",
+  "01987",
+  "01989",
+  "01990",
+  "01993",
+  "01994",
+  "01995",
+  "01996",
+  "01997",
+  "01998",
+  "02000",
+  "02001",
+  "02002",
+  "02003",
+  "02004",
+  "02005",
+  "02007",
+  "02008",
+  "02010",
+  "02013",
+  "02014",
+  "02016",
+  "02017",
+  "02018",
+  "02019",
+  "02020",
+  "02023",
+  "02024",
+  "02026",
+  "02029",
+  "02030",
+  "02031",
+  "02032",
+  "02036",
+  "02037",
+  "02038",
+  "02040",
+  "02042",
+  "02044",
+  "02045",
+  "02046",
+  "02047",
+  "02048",
+  "02049",
+  "02050",
+  "02051",
+  "02052",
+  "02053",
+  "02054",
+  "02056",
+  "02061",
+  "02062",
+  "02063",
+  "02064",
+  "02067",
+  "02069",
+  "02070",
+  "02074",
+  "02079",
+  "02081",
+  "02082",
+  "02083",
+  "02084",
+  "02086",
+  "02087",
+  "02088",
+  "02090",
+  "02092",
+  "02093",
+  "02094",
+  "02095",
+  "02096",
+  "02098"
+ ],
+ "errors": [
+  [
+   "Track00021",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00022",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00029",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00056",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00057",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00058",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00062",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00070",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00091",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00097",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00100",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00102",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00108",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00119",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00127",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00159",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00164",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00167",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00178",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00179",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00241",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00244",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00248",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00263",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00281",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00291",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00292",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00304",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00313",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00314",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00317",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00318",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00330",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00335",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00346",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00354",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00369",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00394",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00408",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00427",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00440",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00453",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00463",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00465",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00477",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00478",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00485",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00489",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00508",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00511",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ],
+  [
+   "Track00513",
+   "FileNotFoundError(2, 'No such file or directory')"
+  ]
+ ],
+ "first_rows": [
+  [
+   "Track00047",
+   1,
+   8.51
+  ],
+  [
+   "Track00079",
+   2,
+   9.41
+  ],
+  [
+   "Track00094",
+   3,
+   27.1
+  ],
+  [
+   "Track00095",
+   1,
+   25.93
+  ],
+  [
+   "Track00096",
+   1,
+   22.61
+  ],
+  [
+   "Track00098",
+   2,
+   0.0
+  ],
+  [
+   "Track00099",
+   1,
+   25.2
+  ],
+  [
+   "Track00101",
+   1,
+   18.73
+  ],
+  [
+   "Track00103",
+   1,
+   2.75
+  ],
+  [
+   "Track00104",
+   1,
+   19.07
+  ],
+  [
+   "Track00105",
+   1,
+   22.44
+  ],
+  [
+   "Track00106",
+   1,
+   23.12
+  ],
+  [
+   "Track00107",
+   1,
+   20.3
+  ],
+  [
+   "Track00109",
+   1,
+   22.77
+  ],
+  [
+   "Track00110",
+   1,
+   12.73
+  ],
+  [
+   "Track00111",
+   1,
+   13.16
+  ],
+  [
+   "Track00112",
+   1,
+   0.0
+  ],
+  [
+   "Track00113",
+   1,
+   20.13
+  ],
+  [
+   "Track00114",
+   1,
+   22.27
+  ],
+  [
+   "Track00115",
+   1,
+   18.56
+  ],
+  [
+   "Track00116",
+   1,
+   0.0
+  ],
+  [
+   "Track00117",
+   1,
+   8.33
+  ],
+  [
+   "Track00118",
+   1,
+   8.79
+  ],
+  [
+   "Track00120",
+   1,
+   21.29
+  ],
+  [
+   "Track00121",
+   1,
+   0.0
+  ]
+ ],
+ "n_examined": 369,
+ "note": "walk ascending; every non-excluded track examined (not stopped at 5) so that skipped/error tracks are visible"
+}

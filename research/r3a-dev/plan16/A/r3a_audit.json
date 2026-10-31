@@ -1,0 +1,20 @@
+{
+ "algo15_candidate": {
+  "bit_identical": true,
+  "max_abs_diff": 0.0,
+  "n_diff_samples": 0,
+  "out_rms": 0.0407138429582119
+ },
+ "algo6_P1_reference_lib": {
+  "bit_identical": false,
+  "max_abs_diff": 0.029655128717422485,
+  "n_diff_samples": 1032106,
+  "out_rms": 0.04048629850149155
+ },
+ "algo6_P1_candidate_lib": {
+  "bit_identical": false,
+  "max_abs_diff": 0.029655128717422485,
+  "n_diff_samples": 1032106,
+  "out_rms": 0.04048629850149155
+ }
+}

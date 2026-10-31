@@ -1,0 +1,27 @@
+stage A done 0.8
+synthetic bare100 1.6
+synthetic step25 3.6
+synthetic bass9 4.4
+synthetic bkp_0 5.8
+synthetic steady8 6.3
+synthetic pink10 7.2
+synthetic t60_36_48 23.4
+synthetic logoff_37_49 17.8
+songs Track00060 19.0
+songs Track00040 28.4
+songs Track00001 22.5
+songs Track00005 24.1
+songs Track00012 26.2
+songs Track00020 29.9
+songs Track00023 33.3
+songs Track00024 38.5
+songs Track00025 42.3
+songs Track00026 46.2
+stage C done 47.1
+band-217: V6b delta -9.82 %p CI95 [-14.59, -3.98]; without T24 -12.01 [-16.84, -6.01]; per song 20: +0.75, 23: -19.99, 24: -7.77, 25: -8.14, 26: -21.99; songs negative 4/5; right weight vs core per song 20: +22.2%, 23: -22.5%, 24: +536.8%, 25: -4.0%, 26: +21.1%
+
+OUTCOME: STOP the lookahead direction; review v1.6 (section 13) and the v2 estimator   (chosen stream band; the other stream alone would give: stop)
+
+real	0m48.328s
+user	0m46.762s
+sys	0m4.807s

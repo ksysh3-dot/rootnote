@@ -1,0 +1,20 @@
+# HAUX user windows extra controls: pairs 13862, jumps 3313
+
+### window 40 ms
+fixed-frequency input change (2 f_osc(h) in both hops): jump pairs: median 1.81 dB, share < 2 dB 53.0 % | non-jump pairs: median 1.51 dB, share < 2 dB 58.2 %
+  share of pairs with fixed-freq input change >= 6 dB: jump 12.4 %, non-jump 11.1 %
+signed correlation render dB step vs input dB step (fixed freq): all pairs 0.005, jump pairs 0.017
+signed correlation render step vs input step (follow-voice): all pairs -0.006, jump pairs -0.011
+jumps whose input (fixed freq) moved >= 6 dB: 412 (12.4 % of jumps); same direction in 50.2 %
+
+### window 85 ms
+fixed-frequency input change (2 f_osc(h) in both hops): jump pairs: median 0.73 dB, share < 2 dB 77.8 % | non-jump pairs: median 0.59 dB, share < 2 dB 81.2 %
+  share of pairs with fixed-freq input change >= 6 dB: jump 4.1 %, non-jump 3.4 %
+signed correlation render dB step vs input dB step (fixed freq): all pairs 0.006, jump pairs 0.005
+signed correlation render step vs input step (follow-voice): all pairs 0.024, jump pairs 0.028
+jumps whose input (fixed freq) moved >= 6 dB: 137 (4.1 % of jumps); same direction in 56.9 %
+
+jumps coinciding with an f_osc change > 2 Hz at the same hop: 48.7 % (non-jump pairs: 20.4 %)
+W40: unsupported (fixed-freq) jumps with f_osc change > 2 Hz: 50.1 %
+W85: unsupported (fixed-freq) jumps with f_osc change > 2 Hz: 49.8 %
+secs 30

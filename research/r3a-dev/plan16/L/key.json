@@ -1,0 +1,225 @@
+{
+ "library": "/home/ksysh/r3-work/tools/pvb-harness/build_core/libpvbcapi.so",
+ "library_sha256": "5f7f3cf7aef996b5573353bbb605a4f216dec9f4e97b49cf8e3c5cfbec968566",
+ "order": [
+  4,
+  0,
+  3,
+  6,
+  1,
+  7,
+  2,
+  5
+ ],
+ "pairs": {
+  "core_1.wav": {
+   "A": "p1",
+   "B": "core",
+   "common_scale": 1.0,
+   "kind": "test",
+   "loudness_correction_B_dB": -0.0466,
+   "pair": 1,
+   "pair_peak": 0.2942,
+   "rank": 2,
+   "spots_in_A_s": [
+    {
+     "t": 2.75,
+     "units": 0.009387943616372496
+    },
+    {
+     "t": 5.5,
+     "units": 0.00776114268805433
+    },
+    {
+     "t": 8.0,
+     "units": 0.0009139094817202646
+    }
+   ],
+   "track": "Track00026",
+   "window_start_s": 2.75
+  },
+  "core_2.wav": {
+   "A": "p1",
+   "B": "core",
+   "common_scale": 1.0,
+   "kind": "test",
+   "loudness_correction_B_dB": 0.0632,
+   "pair": 2,
+   "pair_peak": 0.2772,
+   "rank": 1,
+   "spots_in_A_s": [
+    {
+     "t": 2.5,
+     "units": 0.009668191056863298
+    },
+    {
+     "t": 4.5,
+     "units": 0.02545951320107906
+    },
+    {
+     "t": 6.75,
+     "units": 0.01582173590962111
+    }
+   ],
+   "track": "Track00025",
+   "window_start_s": 21.0
+  },
+  "core_3.wav": {
+   "A": "core",
+   "B": "p1",
+   "common_scale": 1.0,
+   "kind": "test",
+   "loudness_correction_B_dB": 0.06,
+   "pair": 3,
+   "pair_peak": 0.2783,
+   "rank": 1,
+   "spots_in_A_s": [
+    {
+     "t": 1.0,
+     "units": 0.004719451324685319
+    },
+    {
+     "t": 3.75,
+     "units": 0.008769601770821157
+    },
+    {
+     "t": 5.75,
+     "units": 0.005812959106691751
+    }
+   ],
+   "track": "Track00026",
+   "window_start_s": 21.0
+  },
+  "core_4.wav": {
+   "A": "p1",
+   "B": "p1",
+   "common_scale": 1.0,
+   "kind": "null",
+   "loudness_correction_B_dB": 0.0,
+   "pair": 4,
+   "pair_peak": 0.2405,
+   "rank": 4,
+   "spots_in_A_s": [
+    {
+     "t": 5.5,
+     "units": 9.494177215332542e-08
+    },
+    {
+     "t": 7.0,
+     "units": 0.0004344917205472275
+    },
+    {
+     "t": 8.0,
+     "units": 0.002842916212019709
+    }
+   ],
+   "track": "Track00025",
+   "window_start_s": 1.0
+  },
+  "core_5.wav": {
+   "A": "core",
+   "B": "p1",
+   "common_scale": 1.0,
+   "kind": "test",
+   "loudness_correction_B_dB": 0.0248,
+   "pair": 5,
+   "pair_peak": 0.2486,
+   "rank": 2,
+   "spots_in_A_s": [
+    {
+     "t": 4.5,
+     "units": 0.0027195503150862633
+    },
+    {
+     "t": 5.75,
+     "units": 0.003945781353653061
+    },
+    {
+     "t": 7.0,
+     "units": 0.01748985994124663
+    }
+   ],
+   "track": "Track00025",
+   "window_start_s": 12.0
+  },
+  "core_6.wav": {
+   "A": "core",
+   "B": "core",
+   "common_scale": 1.0,
+   "kind": "null",
+   "loudness_correction_B_dB": 0.0,
+   "pair": 6,
+   "pair_peak": 0.2907,
+   "rank": 4,
+   "spots_in_A_s": [
+    {
+     "t": 4.5,
+     "units": 0.009387943616372496
+    },
+    {
+     "t": 5.5,
+     "units": 0.0007771109540321001
+    },
+    {
+     "t": 7.25,
+     "units": 0.00776114268805433
+    }
+   ],
+   "track": "Track00026",
+   "window_start_s": 1.0
+  },
+  "core_7.wav": {
+   "A": "p1",
+   "B": "core",
+   "common_scale": 1.0,
+   "kind": "test",
+   "loudness_correction_B_dB": -0.0511,
+   "pair": 7,
+   "pair_peak": 0.2413,
+   "rank": 3,
+   "spots_in_A_s": [
+    {
+     "t": 5.25,
+     "units": 0.000955515532651426
+    },
+    {
+     "t": 6.25,
+     "units": 0.0028986487997665635
+    },
+    {
+     "t": 8.0,
+     "units": 0.0021757330590218608
+    }
+   ],
+   "track": "Track00025",
+   "window_start_s": 3.0
+  },
+  "core_8.wav": {
+   "A": "p1",
+   "B": "core",
+   "common_scale": 1.0,
+   "kind": "test",
+   "loudness_correction_B_dB": -0.1169,
+   "pair": 8,
+   "pair_peak": 0.2921,
+   "rank": 3,
+   "spots_in_A_s": [
+    {
+     "t": 0.0,
+     "units": 0.0018236456455665336
+    },
+    {
+     "t": 2.0,
+     "units": 0.002109981430587676
+    },
+    {
+     "t": 7.75,
+     "units": 0.005217396906506898
+    }
+   ],
+   "track": "Track00026",
+   "window_start_s": 11.75
+  }
+ },
+ "seed": 20261031
+}

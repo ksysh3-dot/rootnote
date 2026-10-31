@@ -1,0 +1,11 @@
+# Brief A5'' — onset-fast, sustain-slow phase pull (RESULTANT_CORE.md 18.15)
+
+You are a Sonnet worker. Opus designs and judges; you implement and measure. Do not commit or push. Do not touch app Kotlin code or the docs. No downloads. Never copy or commit the user's audio.
+
+Binding spec: `~/r3-work/docs/RESULTANT_CORE.md` sections **18.14 and 18.15** (context 18.7 v1.6-a base, 18.12 the rule/guards, 18.11). Start from HEAD 93d9cfb (params 1-19 committed; 17-19 = v1.6-a; the working tree must be clean of source changes — check `git status`).
+
+Code: in `pvb_resultant.h/.inc` add params 20 `betaSusMin`, 21 `betaSusMax` (0 = off → always betaMin/betaMax), 22 `betaOnsetMs` (> 0 when 20/21 are on). Find where β(SNR) between betaMin and betaMax is computed for the θ pull (θ = pred + β·e) and the f_off PLL (γ = min(0.2, 0.5/c_b)·β per v1.3 — keep that relation) and use the sustain pair instead of (betaMin, betaMax) except during the first betaOnsetMs after a per-voice onset: voice birth, REL→ON, or a change of that voice's f_track by more than 50 cents within the last 2 hops. Document exactly which β uses (θ, f_off, both) switch in CHOICES.md before results. New params 0 → bit-identical to 5c1c62c (V0 check like `~/r3a-dev/plan16/V16A/v0_check16b.py`, several signals and block sizes). Build into `tools/pvb-harness/build_core16d/`, save `git diff` to `~/r3a-dev/plan16/A5PP/a5pp.diff`, sha256, leave uncommitted. Update `research_core_api.py` PARAMS/DEFAULTS. Keep code style and comment density.
+
+Rows: v1.6-a base (17:1.5, 18:16, 19:2, psiSlew .12); the A5' best for reference (betaMin/Max .05/.1, psiSlew .03); and A5'' with psiSlew .03, sustain β ∈ {(.05,.1), (.1,.2)} × betaOnsetMs ∈ {30, 60, 100} (6 rows). Reuse all A5' measurement code in `~/r3a-dev/plan16/A5P/` (primary layer ratio on the 7 user windows, suite guards, f_osc synthetic glide/vibrato `fosc_p.py`, burst, RERISE, V3g, F, 14-song table) so numbers are comparable. Apply the 18.15 rule mechanically (same thresholds as 18.12).
+
+Rules: Slakh TRAIN only — never touch any path containing slakh2100/validation or slakh2100/test. Run suites in batches of ≤ 4 rows (memory). Long jobs in background with logs; work files in `~/r3a-dev/plan16/A5PP/`. Report in concise Korean: tables, decision, MEASURED vs INTERPRETATION, diff summary, file paths.

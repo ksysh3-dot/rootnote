@@ -1,0 +1,78 @@
+=== USER WINDOWS pooled (14 s): exclusive share % | any-match % | rate /s (in-band voices) | share per (event/s) | abs energy % of row1 total
+[b0p0] total20-150 rel row1 100% (+0.00 dB); novoice 0.0 none 18.5
+  birth      excl   0.5  any   0.5  rate   8.07/s  share/rate   0.06  abs   0.5%
+  REL>ON     excl   5.7  any   5.7  rate  19.07/s  share/rate   0.30  abs   5.7%
+  ON>REL     excl   8.0  any  10.2  rate  26.86/s  share/rate   0.30  abs   8.0%
+  release    excl   0.0  any   0.1  rate   7.93/s  share/rate   0.00  abs   0.0%
+  window     excl   6.2  any   7.8  rate  69.93/s  share/rate   0.09  abs   6.2%
+  fosc_jump  excl  57.5  any  76.8  rate 296.43/s  share/rate   0.19  abs  57.5%
+  amp_jump   excl   3.4  any  51.6  rate 240.71/s  share/rate   0.01  abs   3.4%
+  note_chg   excl   0.2  any  17.9  rate  77.14/s  share/rate   0.00  abs   0.2%
+[b3p2] total20-150 rel row1 54% (-2.68 dB); novoice 0.0 none 56.3
+  birth      excl   4.7  any   4.7  rate   7.86/s  share/rate   0.59  abs   2.5%
+  REL>ON     excl   4.9  any   4.9  rate  15.07/s  share/rate   0.32  abs   2.6%
+  ON>REL     excl   3.2  any   5.0  rate  21.93/s  share/rate   0.15  abs   1.7%
+  release    excl   0.0  any   0.0  rate   7.86/s  share/rate   0.00  abs   0.0%
+  window     excl   4.7  any   5.4  rate  61.21/s  share/rate   0.08  abs   2.6%
+  fosc_jump  excl   7.7  any  10.7  rate  39.21/s  share/rate   0.20  abs   4.2%
+  amp_jump   excl  13.9  any  26.5  rate 198.36/s  share/rate   0.07  abs   7.5%
+  note_chg   excl   4.6  any  13.2  rate  68.50/s  share/rate   0.07  abs   2.5%
+[f4] total20-150 rel row1 50% (-2.97 dB); novoice 0.0 none 62.8
+  birth      excl   1.9  any   1.9  rate   7.93/s  share/rate   0.24  abs   0.9%
+  REL>ON     excl   0.8  any   0.8  rate   8.64/s  share/rate   0.09  abs   0.4%
+  ON>REL     excl   3.8  any   3.9  rate  15.79/s  share/rate   0.24  abs   1.9%
+  release    excl   0.0  any   0.0  rate   7.86/s  share/rate   0.00  abs   0.0%
+  window     excl   6.9  any   7.1  rate  51.21/s  share/rate   0.13  abs   3.5%
+  fosc_jump  excl   2.7  any   3.1  rate  17.57/s  share/rate   0.15  abs   1.4%
+  amp_jump   excl   7.8  any  15.1  rate 191.64/s  share/rate   0.04  abs   3.9%
+  note_chg   excl  13.4  any  22.3  rate  64.07/s  share/rate   0.21  abs   6.7%
+
+=== 14 SONGS median over songs (energy-weighted per song)
+[b0p0] median novoice 0.0 none 44.9  lag(median) -1 boxes, corr 0.85
+  birth      excl   0.7  any   0.7  rate   6.15/s  share/rate(med)   0.11
+  REL>ON     excl   3.5  any   3.5  rate  10.26/s  share/rate(med)   0.33
+  ON>REL     excl   4.7  any   5.7  rate  16.15/s  share/rate(med)   0.30
+  release    excl   0.0  any   0.0  rate   6.15/s  share/rate(med)   0.00
+  window     excl  13.2  any  14.2  rate  62.52/s  share/rate(med)   0.23
+  fosc_jump  excl  29.6  any  41.1  rate 167.89/s  share/rate(med)   0.18
+  amp_jump   excl   2.3  any  25.9  rate 153.40/s  share/rate(med)   0.02
+  note_chg   excl   1.0  any  11.3  rate  62.43/s  share/rate(med)   0.02
+[b3p2] median novoice 0.0 none 70.2  lag(median) -1 boxes, corr 0.94
+  birth      excl   0.6  any   0.6  rate   5.88/s  share/rate(med)   0.10
+  REL>ON     excl   1.5  any   1.5  rate   8.77/s  share/rate(med)   0.15
+  ON>REL     excl   2.0  any   2.8  rate  14.64/s  share/rate(med)   0.14
+  release    excl   0.0  any   0.0  rate   5.88/s  share/rate(med)   0.00
+  window     excl  11.2  any  11.8  rate  57.70/s  share/rate(med)   0.20
+  fosc_jump  excl   2.0  any   2.8  rate  23.32/s  share/rate(med)   0.09
+  amp_jump   excl   5.9  any  10.8  rate 136.86/s  share/rate(med)   0.05
+  note_chg   excl   3.0  any   7.3  rate  59.66/s  share/rate(med)   0.05
+[f4] median novoice 0.0 none 72.5  lag(median) -1 boxes, corr 0.93
+  birth      excl   0.8  any   0.8  rate   5.72/s  share/rate(med)   0.15
+  REL>ON     excl   0.8  any   0.8  rate   6.49/s  share/rate(med)   0.17
+  ON>REL     excl   1.5  any   1.8  rate  11.96/s  share/rate(med)   0.14
+  release    excl   0.0  any   0.0  rate   5.72/s  share/rate(med)   0.00
+  window     excl   7.5  any   7.8  rate  52.82/s  share/rate(med)   0.17
+  fosc_jump  excl   1.2  any   1.8  rate  12.73/s  share/rate(med)   0.10
+  amp_jump   excl   6.7  any  10.3  rate 140.39/s  share/rate(med)   0.05
+  note_chg   excl   4.0  any   8.5  rate  59.67/s  share/rate(med)   0.07
+
+=== row ratios (total 20-150 energy, dB, per-song median) b3p2/b0p0, f4/b0p0
+-1.1790572431082462 -0.9743375451205805
+per-song lag/corr b0p0: [(-1, 0.89), (-1, 0.88), (-1, 0.83), (-1, 0.85), (-1, 0.85), (-1, 0.82), (-1, 0.85), (-1, 0.85), (-1, 0.85), (-1, 0.82), (-1, 0.89), (-1, 0.87), (-1, 0.89), (-1, 0.96)]
+
+=== row2 vs row1: per-type abs energy change (windows, % of row1 total) and (14-song pooled-median of per-song abs change/row1 song total)
+  birth      win b3p2-b0p0   +2.0%  f4-b0p0   +0.4% | songs med b3p2-b0p0  -0.2%
+  REL>ON     win b3p2-b0p0   -3.1%  f4-b0p0   -5.3% | songs med b3p2-b0p0  -2.1%
+  ON>REL     win b3p2-b0p0   -6.2%  f4-b0p0   -6.0% | songs med b3p2-b0p0  -3.5%
+  release    win b3p2-b0p0   -0.0%  f4-b0p0   -0.0% | songs med b3p2-b0p0  +0.0%
+  window     win b3p2-b0p0   -3.7%  f4-b0p0   -2.7% | songs med b3p2-b0p0  -4.8%
+  fosc_jump  win b3p2-b0p0  -53.3%  f4-b0p0  -56.1% | songs med b3p2-b0p0 -28.3%
+  amp_jump   win b3p2-b0p0   +4.1%  f4-b0p0   +0.5% | songs med b3p2-b0p0  +2.1%
+  note_chg   win b3p2-b0p0   +2.3%  f4-b0p0   +6.6% | songs med b3p2-b0p0  +1.0%
+  noevent    win b3p2-b0p0  +11.8%  f4-b0p0  +13.1% | songs med b3p2-b0p0 +10.6%
+  novoice    win b3p2-b0p0   +0.0%  f4-b0p0   +0.0% | songs med b3p2-b0p0  +0.0%
+
+=== "none" class split: top voice with 2*f_osc<=150 (direct in-band k=2, not splatter) -> share of total 20-150 energy %
+[b0p0] windows none 18.5 of which direct 0.0 | songs median none 44.9 direct 1.9
+[b3p2] windows none 56.3 of which direct 0.2 | songs median none 70.2 direct 3.2
+[f4] windows none 62.8 of which direct 1.4 | songs median none 72.5 direct 3.1

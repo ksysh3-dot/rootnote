@@ -1,0 +1,92 @@
+{
+ "p1": {
+  "rerise_median": 0.0,
+  "rerise_n_above6": 2,
+  "rerise_pp90": 3.10525390814381,
+  "n": 38,
+  "n_fell": 38,
+  "tail_bp_ms": 3.1354166666666665,
+  "tail_raw_ms": 3.1666666666666665
+ },
+ "v15": {
+  "rerise_median": 3.4934217066829896,
+  "rerise_n_above6": 17,
+  "rerise_pp90": 14.45991877580332,
+  "n": 38,
+  "n_fell": 38,
+  "tail_bp_ms": 46.260416666666664,
+  "tail_raw_ms": 44.17708333333333
+ },
+ "b0": {
+  "rerise_median": 0.8270841306625025,
+  "rerise_n_above6": 10,
+  "rerise_pp90": 8.491144495853822,
+  "n": 38,
+  "n_fell": 37,
+  "tail_bp_ms": 24.625,
+  "tail_raw_ms": 18.78125
+ },
+ "bb": {
+  "rerise_median": 0.46025052336957645,
+  "rerise_n_above6": 11,
+  "rerise_pp90": 12.077151449617856,
+  "n": 38,
+  "n_fell": 38,
+  "tail_bp_ms": 26.1875,
+  "tail_raw_ms": 27.6875
+ },
+ "sA30": {
+  "rerise_median": 1.3408772683841121,
+  "rerise_n_above6": 9,
+  "rerise_pp90": 10.017542011305219,
+  "n": 38,
+  "n_fell": 37,
+  "tail_bp_ms": 34.020833333333336,
+  "tail_raw_ms": 29.635416666666664
+ },
+ "sA60": {
+  "rerise_median": 0.0,
+  "rerise_n_above6": 8,
+  "rerise_pp90": 9.687244915669204,
+  "n": 38,
+  "n_fell": 37,
+  "tail_bp_ms": 31.833333333333336,
+  "tail_raw_ms": 31.572916666666668
+ },
+ "sA100": {
+  "rerise_median": 0.6233825710055234,
+  "rerise_n_above6": 11,
+  "rerise_pp90": 9.71940040183178,
+  "n": 38,
+  "n_fell": 38,
+  "tail_bp_ms": 12.572916666666668,
+  "tail_raw_ms": 12.541666666666666
+ },
+ "sB30": {
+  "rerise_median": 0.2954198291051336,
+  "rerise_n_above6": 7,
+  "rerise_pp90": 8.415297134605352,
+  "n": 38,
+  "n_fell": 37,
+  "tail_bp_ms": 36.375,
+  "tail_raw_ms": 36.5625
+ },
+ "sB60": {
+  "rerise_median": 0.7567303414471316,
+  "rerise_n_above6": 12,
+  "rerise_pp90": 10.2583237668763,
+  "n": 38,
+  "n_fell": 38,
+  "tail_bp_ms": 12.552083333333332,
+  "tail_raw_ms": 12.489583333333332
+ },
+ "sB100": {
+  "rerise_median": 0.481990616448253,
+  "rerise_n_above6": 11,
+  "rerise_pp90": 9.429254231265285,
+  "n": 38,
+  "n_fell": 37,
+  "tail_bp_ms": 19.1875,
+  "tail_raw_ms": 19.177083333333332
+ }
+}

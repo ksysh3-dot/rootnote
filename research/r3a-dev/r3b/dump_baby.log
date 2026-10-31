@@ -1,0 +1,83 @@
+ITEM 0 Track00001 {'good': 41, 'bad': 2, 'kept': 1713, 'hi_voiced': 1915, 'hi_lost_half': 1, 'hi_lost_up': 0, 'hi_lost_other': 1, 'hi_gained': 22}
+ITEM 1 Track00002 {'good': 198, 'bad': 50, 'kept': 2370, 'hi_voiced': 2808, 'hi_lost_half': 42, 'hi_lost_up': 9, 'hi_lost_other': 7, 'hi_gained': 16}
+ITEM 2 Track00003 {'good': 480, 'bad': 192, 'kept': 2632, 'hi_voiced': 3166, 'hi_lost_half': 173, 'hi_lost_up': 2, 'hi_lost_other': 3, 'hi_gained': 104}
+ITEM 3 Track00004 {'good': 119, 'bad': 5, 'kept': 1895, 'hi_voiced': 2159, 'hi_lost_half': 3, 'hi_lost_up': 0, 'hi_lost_other': 5, 'hi_gained': 55}
+ITEM 4 Track00005 {'good': 124, 'bad': 278, 'kept': 1078, 'hi_voiced': 1850, 'hi_lost_half': 275, 'hi_lost_up': 1, 'hi_lost_other': 2, 'hi_gained': 74}
+ITEM 5 Track00006 {'good': 268, 'bad': 399, 'kept': 3270, 'hi_voiced': 4086, 'hi_lost_half': 398, 'hi_lost_up': 0, 'hi_lost_other': 14, 'hi_gained': 68}
+ITEM 6 Track00007 {'good': 485, 'bad': 214, 'kept': 1969, 'hi_voiced': 2593, 'hi_lost_half': 201, 'hi_lost_up': 0, 'hi_lost_other': 8, 'hi_gained': 215}
+ITEM 7 Track00008 {'good': 156, 'bad': 284, 'kept': 3316, 'hi_voiced': 3884, 'hi_lost_half': 251, 'hi_lost_up': 2, 'hi_lost_other': 4, 'hi_gained': 64}
+ITEM 8 Track00009 {'good': 31, 'bad': 0, 'kept': 687, 'hi_voiced': 839, 'hi_lost_half': 0, 'hi_lost_up': 0, 'hi_lost_other': 0, 'hi_gained': 25}
+ITEM 9 Track00010 {'good': 593, 'bad': 410, 'kept': 2577, 'hi_voiced': 3534, 'hi_lost_half': 390, 'hi_lost_up': 0, 'hi_lost_other': 9, 'hi_gained': 274}
+ITEM 10 Track00011 {'good': 123, 'bad': 103, 'kept': 2026, 'hi_voiced': 2445, 'hi_lost_half': 102, 'hi_lost_up': 0, 'hi_lost_other': 1, 'hi_gained': 15}
+ITEM 11 Track00012 {'good': 62, 'bad': 81, 'kept': 4276, 'hi_voiced': 5399, 'hi_lost_half': 81, 'hi_lost_up': 0, 'hi_lost_other': 4, 'hi_gained': 64}
+ITEM 12 Track00013 {'good': 142, 'bad': 60, 'kept': 2454, 'hi_voiced': 2951, 'hi_lost_half': 49, 'hi_lost_up': 1, 'hi_lost_other': 17, 'hi_gained': 60}
+ITEM 13 Track00014 {'good': 212, 'bad': 7, 'kept': 2702, 'hi_voiced': 2836, 'hi_lost_half': 1, 'hi_lost_up': 0, 'hi_lost_other': 0, 'hi_gained': 34}
+ITEM 14 Track00015 {'good': 117, 'bad': 5, 'kept': 2861, 'hi_voiced': 3014, 'hi_lost_half': 5, 'hi_lost_up': 0, 'hi_lost_other': 0, 'hi_gained': 31}
+ITEM 15 Track00016 {'good': 339, 'bad': 245, 'kept': 1236, 'hi_voiced': 1696, 'hi_lost_half': 238, 'hi_lost_up': 0, 'hi_lost_other': 2, 'hi_gained': 16}
+ITEM 16 Track00018 {'good': 64, 'bad': 624, 'kept': 2595, 'hi_voiced': 3954, 'hi_lost_half': 624, 'hi_lost_up': 2, 'hi_lost_other': 35, 'hi_gained': 7}
+ITEM 17 Track00019 {'good': 405, 'bad': 146, 'kept': 1116, 'hi_voiced': 1667, 'hi_lost_half': 96, 'hi_lost_up': 0, 'hi_lost_other': 7, 'hi_gained': 63}
+ITEM 18 Track00020 {'good': 254, 'bad': 8, 'kept': 2484, 'hi_voiced': 2589, 'hi_lost_half': 1, 'hi_lost_up': 0, 'hi_lost_other': 0, 'hi_gained': 22}
+/home/ksysh/venv-rootnote/lib/python3.12/site-packages/numpy/lib/_nanfunctions_impl.py:1396: RuntimeWarning: All-NaN slice encountered
+  return _nanquantile_unchecked(
+
+feature quantiles (25 / 50 / 75), dB unless T (Hz)
+-- good: 4213 frames from 19 items
+   half                    -7.0    -3.1     1.5
+   x15                     -3.4    -0.1     3.6
+   x25                    -14.7    -9.1    -2.5
+   half_spread              2.2     3.9     7.3
+   half_peak                0.9     3.9     8.3
+   stem_half               -8.3    -4.7    -0.7
+   mix_minus_stem_half     -0.3     0.9     4.8
+   T                      130.6   146.9   162.9
+   ladder                  -0.5     5.2    11.7
+   side_half                nan     nan     nan
+   half_avg                -6.8    -2.9     1.8
+   half_pre               -12.6    -4.2     1.8
+   reg                     -0.0     0.2     0.5
+-- bad: 3113 frames from 18 items
+   half                   -17.3   -11.2    -1.8
+   x15                     -6.1    -1.5     3.6
+   x25                    -14.2    -6.9     0.0
+   half_spread              3.1     6.4    11.3
+   half_peak               -0.5     1.3     7.7
+   stem_half              -45.2   -31.9   -22.9
+   mix_minus_stem_half     13.9    26.0    34.9
+   T                       97.3   109.7   116.9
+   ladder                  -1.1     4.3     8.5
+   side_half                nan     nan     nan
+   half_avg               -15.0    -8.6    -2.4
+   half_pre               -15.0    -0.4     6.6
+   reg                     -0.5    -0.3    -0.1
+-- kept: 43257 frames from 19 items
+   half                   -35.5   -26.2   -12.5
+   x15                    -25.6   -16.9   -10.2
+   x25                    -19.1   -11.4    -4.0
+   half_spread              3.7     6.7    11.5
+   half_peak               -0.4     1.3     4.4
+   stem_half              -65.7   -43.5   -28.4
+   mix_minus_stem_half      8.7    22.8    34.5
+   T                       88.8    99.4   110.7
+   ladder                  -3.5     2.1     8.2
+   side_half                nan     nan     nan
+   half_avg               -32.8   -21.0    -8.5
+   half_pre                -6.8     3.2    14.4
+   reg                     -0.6    -0.4    -0.2
+
+AUC good > bad (1 = feature higher for correct restorations; 0 = lower; 0.5 = no separation)
+   half                 good>bad 0.717454250526627  good>kept 0.8827736177081408
+   x15                  good>bad 0.5674888938822967  good>kept 0.9290983233089284
+   x25                  good>bad 0.454643128450182  good>kept 0.5825634040666896
+   half_spread          good>bad 0.3759164362764695  good>kept 0.33469077756450977
+   half_peak            good>bad 0.5933197149019955  good>kept 0.6489490023034844
+   stem_half            good>bad 0.9827410744083771  good>kept 0.995522798478972
+   mix_minus_stem_half  good>bad 0.08640190913215935  good>kept 0.131718561665848
+   T                    good>bad 0.9543339040000476  good>kept 0.9940582712058266
+   ladder               good>bad 0.5524265255485884  good>kept 0.596251025718636
+   side_half            good>bad None  good>kept None
+   half_avg             good>bad 0.7107283995227169  good>kept 0.8554424696809717
+   half_pre             good>bad 0.4283869951427629  good>kept 0.3215058727956292
+   reg                  good>bad 0.8580403198793694  good>kept 0.9245671385459383
+
+frames (all, before sampling): {'good': 4213, 'bad': 3113, 'kept': 43257, 'hi_voiced': 53385, 'hi_lost_half': 2931, 'hi_lost_up': 17, 'hi_lost_other': 119, 'hi_gained': 1229}
+items with most bad frames: [(624, 'Track00018'), (410, 'Track00010'), (399, 'Track00006'), (284, 'Track00008'), (278, 'Track00005'), (245, 'Track00016')]

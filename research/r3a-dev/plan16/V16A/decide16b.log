@@ -1,0 +1,91 @@
+GUARDS (value, pass, worse-than-P1)   [v1.5 noREL 35/45: 5 / 1]
+
+v1.6-a base (A2 1.5): ALL PASS = True
+   V3a peak <= +2 ms                       0.000 ok   (>P1)
+   rise90 bare <= +2 ms                    0.000 ok   
+   rise90 25 dB <= +2 ms                  -0.010 ok   
+   V3b <= +1 dB                            0.000 ok   
+   V3i.trans <= 0.5 /s                     0.000 ok   
+   V4b.bass+pink <= +1 %p                 -0.357 ok   
+   V4b.bass+kick+pink <= +1 %p             0.714 ok   
+   LOGOFF 4.73 R1 <= max(3, P1+1)          2.261 ok   (>P1)
+   V3e 10 Hz beat <= +1 dB                -1.308 ok   
+   right layer F >= -0.5 dB               -0.009 ok   
+   V3g.35.noREL <= v1.5 + 5 hops           0.000 ok   
+   V3g.45.noREL <= v1.5 + 5 hops           0.000 ok   
+
+A1 8/1.5 (uncond): ALL PASS = False
+   V3a peak <= +2 ms                     -10.000 ok   (>P1)
+   rise90 bare <= +2 ms                   -0.021 ok   
+   rise90 25 dB <= +2 ms                   0.354 ok   
+   V3b <= +1 dB                            0.044 ok   
+   V3i.trans <= 0.5 /s                     0.000 ok   
+   V4b.bass+pink <= +1 %p                 -0.357 ok   
+   V4b.bass+kick+pink <= +1 %p            -0.357 ok   
+   LOGOFF 4.73 R1 <= max(3, P1+1)          2.121 ok   (>P1)
+   V3e 10 Hz beat <= +1 dB                -1.474 ok   
+   right layer F >= -0.5 dB                0.017 ok   
+   V3g.35.noREL <= v1.5 + 5 hops         242.000 FAIL 
+   V3g.45.noREL <= v1.5 + 5 hops          36.000 FAIL 
+
+A1p (i) 8: ALL PASS = True
+   V3a peak <= +2 ms                       0.000 ok   (>P1)
+   rise90 bare <= +2 ms                    0.000 ok   
+   rise90 25 dB <= +2 ms                  -1.042 ok   
+   V3b <= +1 dB                            0.000 ok   
+   V3i.trans <= 0.5 /s                     0.000 ok   
+   V4b.bass+pink <= +1 %p                 -0.357 ok   
+   V4b.bass+kick+pink <= +1 %p             0.714 ok   
+   LOGOFF 4.73 R1 <= max(3, P1+1)          2.224 ok   (>P1)
+   V3e 10 Hz beat <= +1 dB                -0.145 ok   
+   right layer F >= -0.5 dB                0.028 ok   
+   V3g.35.noREL <= v1.5 + 5 hops           0.000 ok   
+   V3g.45.noREL <= v1.5 + 5 hops           0.000 ok   
+
+A1p (i) 16: ALL PASS = False
+   V3a peak <= +2 ms                       0.000 ok   (>P1)
+   rise90 bare <= +2 ms                    0.000 ok   
+   rise90 25 dB <= +2 ms                  -0.406 ok   
+   V3b <= +1 dB                            0.000 ok   
+   V3i.trans <= 0.5 /s                     0.000 ok   
+   V4b.bass+pink <= +1 %p                 -0.357 ok   
+   V4b.bass+kick+pink <= +1 %p             1.071 FAIL 
+   LOGOFF 4.73 R1 <= max(3, P1+1)          2.232 ok   (>P1)
+   V3e 10 Hz beat <= +1 dB                -0.445 ok   
+   right layer F >= -0.5 dB                0.033 ok   
+   V3g.35.noREL <= v1.5 + 5 hops           0.000 ok   
+   V3g.45.noREL <= v1.5 + 5 hops           0.000 ok   
+
+A1p (ii) 8: ALL PASS = False
+   V3a peak <= +2 ms                       0.000 ok   (>P1)
+   rise90 bare <= +2 ms                    0.000 ok   
+   rise90 25 dB <= +2 ms                   0.323 ok   
+   V3b <= +1 dB                            0.446 ok   
+   V3i.trans <= 0.5 /s                     0.000 ok   
+   V4b.bass+pink <= +1 %p                 -0.357 ok   
+   V4b.bass+kick+pink <= +1 %p             1.429 FAIL 
+   LOGOFF 4.73 R1 <= max(3, P1+1)          2.225 ok   (>P1)
+   V3e 10 Hz beat <= +1 dB                -0.043 ok   
+   right layer F >= -0.5 dB               -0.033 ok   
+   V3g.35.noREL <= v1.5 + 5 hops           7.000 FAIL 
+   V3g.45.noREL <= v1.5 + 5 hops           0.000 ok   
+
+A1p (ii) 16: ALL PASS = True
+   V3a peak <= +2 ms                       0.000 ok   (>P1)
+   rise90 bare <= +2 ms                    0.000 ok   
+   rise90 25 dB <= +2 ms                   0.052 ok   
+   V3b <= +1 dB                            0.305 ok   
+   V3i.trans <= 0.5 /s                     0.000 ok   
+   V4b.bass+pink <= +1 %p                 -0.357 ok   
+   V4b.bass+kick+pink <= +1 %p             0.357 ok   
+   LOGOFF 4.73 R1 <= max(3, P1+1)          2.232 ok   (>P1)
+   V3e 10 Hz beat <= +1 dB                -0.955 ok   
+   right layer F >= -0.5 dB               -0.046 ok   
+   V3g.35.noREL <= v1.5 + 5 hops           5.000 ok   
+   V3g.45.noREL <= v1.5 + 5 hops           0.000 ok   
+
+V3h 25 dB tail (ms): {'v1.5': 44.18, 'v1.6-a base (A2 1.5)': 43.06, 'A1 8/1.5 (uncond)': 9.57, 'A1p (i) 8': 7.81, 'A1p (i) 16': 40.45, 'A1p (ii) 8': 9.78, 'A1p (ii) 16': 18.78}  P1 3.1666666666666665
+guards pass: ['A1p (i) 8', 'A1p (ii) 16']; tail >= 10 ms under base (43.06 -> <= 33.06): ['A1p (i) 8', 'A1p (ii) 16']
+=> adopted: A1p (i) 8
+
+RERISE (output layer, 6 dB+ notes / n, median dB): {'P1': (2, 0.0, 3.1), 'v1.5': (17, 3.49, 46.3), 'v1.6-a base (A2 1.5)': (15, 1.59, 43.8), 'A1 8/1.5 (uncond)': (5, 0.0, 7.9), 'A1p (i) 8': (17, 3.52, 9.4), 'A1p (i) 16': (15, 2.18, 39.8), 'A1p (ii) 8': (7, 0.0, 10.7), 'A1p (ii) 16': (10, 0.83, 24.6)}

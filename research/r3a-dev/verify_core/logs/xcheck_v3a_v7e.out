@@ -1,0 +1,96 @@
+{
+ "v3a": {
+  "P1": {
+   "output": {
+    "peak_ms": 21,
+    "rise50_ms": 10,
+    "fall10db_ms": 166
+   },
+   "layer": {
+    "peak_ms": 4,
+    "rise50_ms": 3,
+    "fall10db_ms": 7
+   }
+  },
+  "A": {
+   "output": {
+    "peak_ms": 41,
+    "rise50_ms": 10,
+    "fall10db_ms": 236
+   },
+   "layer": {
+    "peak_ms": 52,
+    "rise50_ms": 3,
+    "fall10db_ms": 266
+   }
+  },
+  "B": {
+   "output": {
+    "peak_ms": 21,
+    "rise50_ms": 9,
+    "fall10db_ms": 206
+   },
+   "layer": {
+    "peak_ms": 22,
+    "rise50_ms": 3,
+    "fall10db_ms": 226
+   }
+  },
+  "C": {
+   "output": {
+    "peak_ms": 52,
+    "rise50_ms": 10,
+    "fall10db_ms": 56
+   },
+   "layer": {
+    "peak_ms": 52,
+    "rise50_ms": 19,
+    "fall10db_ms": 56
+   }
+  },
+  "D": {
+   "output": {
+    "peak_ms": 52,
+    "rise50_ms": 11,
+    "fall10db_ms": 56
+   },
+   "layer": {
+    "peak_ms": 52,
+    "rise50_ms": 19,
+    "fall10db_ms": 56
+   }
+  }
+ },
+ "v7e": {
+  "P1": {
+   "4.12@input_time": -17.04649099307642,
+   "4.12@output_time_minus_latency": -23.43905727837592,
+   "4.73@input_time": -42.8793234973622,
+   "4.73@output_time_minus_latency": 4.280282322913936
+  },
+  "A": {
+   "4.12@input_time": -3.434413901281663,
+   "4.12@output_time_minus_latency": -14.995001036866194,
+   "4.73@input_time": 7.373642825975302,
+   "4.73@output_time_minus_latency": 5.7070285096841324
+  },
+  "B": {
+   "4.12@input_time": 4.591625034732842,
+   "4.12@output_time_minus_latency": -10.745692033021472,
+   "4.73@input_time": 9.416901125917725,
+   "4.73@output_time_minus_latency": 8.2909061839119
+  },
+  "C": {
+   "4.12@input_time": 7.099071842711636,
+   "4.12@output_time_minus_latency": -1.8446901506994822,
+   "4.73@input_time": 15.295652414141115,
+   "4.73@output_time_minus_latency": 13.301703536654234
+  },
+  "D": {
+   "4.12@input_time": 10.05970878680536,
+   "4.12@output_time_minus_latency": 1.1251479422674824,
+   "4.73@input_time": 17.976340043889593,
+   "4.73@output_time_minus_latency": 16.02179123982363
+  }
+ }
+}

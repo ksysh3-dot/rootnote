@@ -1,0 +1,352 @@
+diff --git a/app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/DevParams.kt b/app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/DevParams.kt
+index 006c42b..b2bd76e 100644
+--- a/app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/DevParams.kt
++++ b/app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/DevParams.kt
+@@ -127,6 +127,8 @@ object DevParams {
+         listOf(S), DevHighlight.LAYER)
+     val X_S1M = DevSpec("x_s1m", PvbSettings.KEY_X_S1M, DevGroup.TIME, DevUnit.SWITCH, 0f, 1f, 1f, 0f, 0f, 1f,
+         listOf(E), DevHighlight.RELEASE)
++    // Lower end stays 0 on purpose: the share code (RN1) stores the index from min, so a lower min would change every
++    // existing code. The main strength slider goes down to PvbSettings.VB_LEVEL_MIN (-6).
+     val STRENGTH = DevSpec("strength", PvbSettings.KEY_VB_STRENGTH_DB, DevGroup.SIZE, DevUnit.DB, 0f, DEV_VB_LEVEL_MAX, 1f,
+         4f, 2f, 6f, listOf(R, M, S), DevHighlight.LAYER)
+     val VOL_START = DevSpec("vol_start", PvbSettings.KEY_VB_VOL_REF_PCT, DevGroup.SIZE, DevUnit.PCT,
+diff --git a/app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/HomeLogic.kt b/app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/HomeLogic.kt
+index 8bb2a70..11353bc 100644
+--- a/app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/HomeLogic.kt
++++ b/app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/HomeLogic.kt
+@@ -42,9 +42,9 @@ object HomeLogic {
+     fun sliderMax(caps: SafeCaps?): Int =
+         (caps?.vbLevelMax ?: PvbSettings.VB_LEVEL_MAX).coerceIn(PvbSettings.VB_LEVEL_MIN, PvbSettings.VB_LEVEL_MAX).toInt()
+ 
+-    /** A stored level as a slider position: whole dB, inside 0..[sliderMax]; non-finite gives the default. */
++    /** A stored level as a slider position: whole dB, inside [PvbSettings.VB_LEVEL_MIN]..[sliderMax]; non-finite gives the default. */
+     fun sliderValue(levelDb: Float, caps: SafeCaps?): Int =
+-        PvbSettings.clampLevel(levelDb).roundToInt().coerceIn(0, sliderMax(caps))
++        PvbSettings.clampLevel(levelDb).roundToInt().coerceIn(PvbSettings.VB_LEVEL_MIN.toInt(), sliderMax(caps))
+ 
+     /**
+      * The selected chip, derived from model + level exactly like the preset list of the advanced screen
+@@ -96,7 +96,7 @@ object HomeLogic {
+     }
+ 
+     /** "+6 dB"-style strength label for the slider value. */
+-    fun levelLabel(level: Int): String = "+$level"
++    fun levelLabel(level: Int): String = if (level < 0) "$level" else "+$level"
+ 
+     /** Limiter working share (%, PvbMeter.LIM_ACTIVE_PCT, ~3 s) at or above which the home suggests a lower strength. */
+     const val PRESSURE_ON_PCT = 30f
+diff --git a/app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/LiveAb.kt b/app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/LiveAb.kt
+index f71fd70..a238318 100644
+--- a/app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/LiveAb.kt
++++ b/app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/LiveAb.kt
+@@ -92,7 +92,7 @@ data class LiveAbRecord(
+     companion object {
+         const val SAME = "same"
+         /** Symptom chips, in display order (saved as these strings). */
+-        val CHIPS = listOf("쿠훙", "가각", "지직", "훙훙", "저음 약함", "저음 풍성")
++        val CHIPS = listOf("쿠훙", "쿠쿠쿵", "가각", "지직", "훙훙", "저음 약함", "저음 풍성")
+ 
+         fun verdictValid(verdict: String, sides: Int): Boolean =
+             verdict == SAME || LiveAbShuffle.LETTERS.take(sides).contains(verdict)
+diff --git a/app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/LiveAbComparisons.kt b/app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/LiveAbComparisons.kt
+index 3d9fbe8..49edd51 100644
+--- a/app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/LiveAbComparisons.kt
++++ b/app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/LiveAbComparisons.kt
+@@ -46,7 +46,7 @@ object LiveAbComparisons {
+             PvbRuntime.AbCondition(side.id, side.label(base), side.trimDb, headroomDb, side.apply)
+     }
+ 
+-    /** The user's slider value as the engine reads it (whole dB, 0..12). */
++    /** The user's slider value as the engine reads it (whole dB, -6..12; the model's own level trim is added where the engine level is formed, [VolumeLevelLink.levelFor]). */
+     fun userLevel(base: PvbSettings): Float = PvbSettings.clampLevel(base.vbLevelDb)
+ 
+     /** [LOWER_DB] below the user's level, not below the volume link's floor. */
+diff --git a/app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/PvbModels.kt b/app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/PvbModels.kt
+index f86414f..12d0ed2 100644
+--- a/app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/PvbModels.kt
++++ b/app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/PvbModels.kt
+@@ -2,7 +2,8 @@ package me.timschneeberger.rootlessjamesdsp.pvb
+ 
+ /** Stable saved keys and native IDs. List positions are never engine IDs. */
+ object PvbModels {
+-    data class Model(val key: String, val id: Int, val title: String, val description: String)
++    /** [levelTrimDb]: added to the strength slider where the engine level is formed ([VolumeLevelLink.levelFor]); 0 = none. */
++    data class Model(val key: String, val id: Int, val title: String, val description: String, val levelTrimDb: Float = 0f)
+     const val GENTLE12 = 3
+     const val REFERENCE = 4
+     const val P1 = 6
+@@ -16,6 +17,13 @@ object PvbModels {
+     const val P1_C1 = 14
+     const val RESULTANT = 15
+     const val RESULTANT_V16 = 16
++    /**
++     * Level trims of the Resultant core models (RESULTANT_CORE.md 19.12): the core layer is 4-5 dB louder than P1's at
++     * the same slider value, so the same slider value should sound as loud as P1. Measured (19.12 rule, 150-600 Hz
++     * level over 37 songs, plan16/S19/TR): -3.0 dB for both.
++     */
++    const val RESULTANT_V15_TRIM_DB = -3.0f
++    const val RESULTANT_V16_TRIM_DB = -3.0f
+     const val REFERENCE_KEY = "alpha2_reference"
+     const val P1_KEY = "alpha2_p1"
+     const val GENTLE12_KEY = "alpha3_gentle12"
+@@ -24,8 +32,8 @@ object PvbModels {
+ 
+     val models: List<Model> = listOf(
+         Model(P1_KEY, P1, "연결형 (P1)", "음이 잠깐 약해질 때도 배음을 이어가며, 강약과 음정 변화를 함께 따라갑니다. 기본 모델입니다."),
+-        Model("resultant_core_v15", RESULTANT, "Resultant 코어 v1.5 (실험)", "P1의 음 추적은 그대로 두고, 배음층을 음마다 이어지는 새 방식으로 만듭니다. 음이 다시 칠 때 층이 끊기거나 깜빡이던 것이 크게 줄었습니다(연구 측정). 어택이 약 20 ms 늦고, 베이스가 없는 곳에서 낮은 소리가 조금 더 날 수 있습니다. 지연은 P1과 같습니다."),
+-        Model("resultant_core_v16", RESULTANT_V16, "Resultant 코어 v1.6 (실험)", "v1.5보다 낮은 현악곡에서 들리던 \"쿠쿠쿵\" 같은 기저음의 원인(위상을 빠르게 당기던 동작)을 줄였습니다: 150 Hz 아래 번짐이 약 11 dB 줄었습니다(연구 측정, 14곡). 음 끝의 꼬리도 v1.5보다 짧습니다. 음이 바뀔 때 새 음높이에 붙는 시간이 약 9 ms 늦습니다. 또 폰 스피커가 낼 수 없는 150 Hz 아래의 층 자체 성분을 약 9 dB 더 깎았고(연구 측정), 몸통(150-600 Hz)은 그대로입니다. 지연은 P1과 같습니다."),
++        Model("resultant_core_v15", RESULTANT, "Resultant 코어 v1.5 (실험)", "P1의 음 추적은 그대로 두고, 배음층을 음마다 이어지는 새 방식으로 만듭니다. 음이 다시 칠 때 층이 끊기거나 깜빡이던 것이 크게 줄었습니다(연구 측정). 어택이 약 20 ms 늦고, 베이스가 없는 곳에서 낮은 소리가 조금 더 날 수 있습니다. 지연은 P1과 같습니다.", RESULTANT_V15_TRIM_DB),
++        Model("resultant_core_v16", RESULTANT_V16, "Resultant 코어 v1.6 (실험)", "v1.5보다 낮은 현악곡에서 들리던 \"쿠쿠쿵\" 같은 기저음의 원인(위상을 빠르게 당기던 동작)을 줄였습니다: 150 Hz 아래 번짐이 약 11 dB 줄었습니다(연구 측정, 14곡). 음 끝의 꼬리도 v1.5보다 짧습니다. 음이 바뀔 때 새 음높이에 붙는 시간이 약 9 ms 늦습니다. 또 폰 스피커가 낼 수 없는 150 Hz 아래의 층 자체 성분을 약 9 dB 더 깎았고(연구 측정), 몸통(150-600 Hz)은 그대로입니다. 지연은 P1과 같습니다.", RESULTANT_V16_TRIM_DB),
+         Model("alpha2_p1_c1", P1_C1, "연결형 P1 · 킥 뒤 보정 (실험)", "P1과 같지만, 킥 뒤에 남는 킥의 저음 꼬리 때문에 저음층이 잘못 깎이던 것을 줄였습니다(합성 신호 확인군에서 킥 뒤 잔여 지표 8.2 dB 감소). 저음이 끝날 때 저음층이 조금 더 남을 수 있습니다. 지연은 P1과 같습니다."),
+         Model("alpha2_p1plus", P1_PLUS, "연결형 P1+ (실험)", "연결형에 위상 유지와 앞뒤를 함께 보는 분리를 더했습니다. 짧은 음의 강약 윤곽이 원음에 더 가깝습니다(합성 신호 시험). 지연이 약 0.18초로 늘어납니다."),
+         Model("alpha2_p1pp", P1PP, "연결형 P1++ (실험)", "P1+에 강한 타격 뒤에 남는 잔여를 줄이는 처리를 더했습니다(합성 신호 시험). 타격 직후 80 ms 잔여는 조금 늘 수 있습니다. 지연은 P1+와 같은 약 0.18초입니다."),
+@@ -43,6 +51,13 @@ object PvbModels {
+     fun fromKey(key: String?): Model = models.firstOrNull { it.key == key } ?: defaultModel
+     fun fromId(id: Int): Model? = models.firstOrNull { it.id == id }
+     fun isCurrent(key: String?): Boolean = models.any { it.key == key }
++    /**
++     * An engine algorithm id the status text may call "in use": the legacy ids 0..10 and every catalogue model (the
++     * engine reports the algorithm in the signal path as id + 1; no algorithm gives -1 and a bypassed one 0 - 1).
++     */
++    fun inUse(algo: Int): Boolean = algo in 0..10 || fromId(algo) != null
++    /** The level trim of an engine id (0 for an unknown id or a model without one). */
++    fun trimDb(id: Int): Float = fromId(id)?.levelTrimDb ?: 0f
+ 
+     /**
+      * A preset ("모드") only writes a model and a virtual bass level. It is a shortcut, not new processing:
+diff --git a/app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/PvbSettings.kt b/app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/PvbSettings.kt
+index f9af136..15775f6 100644
+--- a/app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/PvbSettings.kt
++++ b/app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/PvbSettings.kt
+@@ -201,7 +201,7 @@ data class PvbSettings(
+         /** Layer silent, algorithm (and its latency) kept: the reference side of the virtual bass blind comparisons. */
+         const val VB_LEVEL_OFF = -120f
+         /** Strength slider range, dB re the 'faithful' level, whole-dB steps (the engine accepts up to +12). */
+-        const val VB_LEVEL_MIN = 0f
++        const val VB_LEVEL_MIN = -6f   // was 0 until 2026-10-31 (RESULTANT_CORE.md 19.12); saved values 0..12 are unchanged
+         const val VB_LEVEL_MAX = 12f
+         const val VB_LEVEL_DEFAULT = 6f
+ 
+@@ -221,7 +221,7 @@ data class PvbSettings(
+          * - alpha 1 names / unknown -> default model (P1); the old name is kept in [KEY_VB_LEGACY_MODEL].
+          * - schema < 3 and the alpha 2 reference -> P1 (one time; [KEY_VB_ALPHA2_MODEL] records it). Any other
+          *   current model is kept, and choosing the reference again later is respected.
+-         * - the old level string (-6..+9) -> slider value clamped into 0..12; no old level -> the new default.
++         * - the old level string (-6..+9) -> slider value clamped into -6..12 (an old -6..-1 now stays negative); no old level -> the new default.
+          */
+         fun migrateVirtualBassModel(p: SharedPreferences) {
+             val all = p.all
+diff --git a/app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/PvbStatusText.kt b/app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/PvbStatusText.kt
+index d54eef8..08d7fd8 100644
+--- a/app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/PvbStatusText.kt
++++ b/app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/PvbStatusText.kt
+@@ -90,7 +90,7 @@ class PvbStatusText(private val context: Context) {
+             val vbLabel = if (PvbBuild.general) "가상 저음" else "가상 저음 (알파 3)"
+             val modelName = if (research) "${PvbSettings.vbAlgoName(vb - 1)} · " else ""
+             lines += when {
+-                vb in 1..11 ->
++                PvbModels.inUse(vb - 1) ->
+                     "$vbLabel: ${modelName}레벨 ${signed(s.vbLevelDb)} dB" +
+                         (if (s.vbVolLink) " · 볼륨 연동 −${fmt(s.vbVolReductionDb)} dB → 적용 ${signed(s.vbAppliedLevelDb)} dB" else "")
+                 else -> "$vbLabel: 켜져 있지만 지금은 쓰지 않음 (우회 중이거나 이 샘플레이트에서 지원 안 됨)"
+diff --git a/app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/SettingsSummary.kt b/app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/SettingsSummary.kt
+index 8e24af6..31a7e96 100644
+--- a/app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/SettingsSummary.kt
++++ b/app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/SettingsSummary.kt
+@@ -27,7 +27,7 @@ object SettingsSummary {
+             appendLine("EQ: hp ${f(s.hpHz, 0)} Hz · low-mid ${db(s.lowDb)} @ ${f(s.lowHz, 0)} Hz Q ${f(s.lowQ, 2)} · " +
+                 "treble ${db(s.hiDb)} @ ${f(s.hiHz, 0)} Hz Q ${f(s.hiQ, 2)} · tilt ${db(s.hsDb)} @ ${f(s.hsHz, 0)} Hz")
+             appendLine("out ${db(s.outDb)} · ceiling ${db(s.ceilDb)} · volume link ${s.volLink} · quiet bass ${s.dynOn}")
+-            appendLine("virtual bass: ${s.vbOn} · $vbModel ${db(s.vbLevelDb)} · volume link ${s.vbVolLink}")
++            appendLine("virtual bass: ${s.vbOn} · $vbModel ${db(s.vbLevelDb)}${PvbModels.trimDb(s.vbAlgo).let { if (it != 0f) " (model trim ${db(it)})" else "" }} · volume link ${s.vbVolLink}")
+             appendLine("spatial: $spatial ${db(s.xtcStrengthDb)} · ${f(s.xtcDistanceCm, 0)} cm · hat ${f(s.xtcHatCm, 0)} · " +
+                 "balance ${db(s.xtcBalLoDb)} / ${db(s.xtcBalHiDb)}")
+             append("code: $devCode")
+diff --git a/app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/VolumeLevelLink.kt b/app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/VolumeLevelLink.kt
+index f4ae53c..fc87d62 100644
+--- a/app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/VolumeLevelLink.kt
++++ b/app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/VolumeLevelLink.kt
+@@ -21,8 +21,12 @@ object VolumeLevelLink {
+     const val MAX_DB_DEFAULT = 12f
+     const val MAX_DB_MIN = 3f
+     const val MAX_DB_MAX = 12f
+-    /** Lowest level the reduction may bring the layer to (dB re the 'faithful' level). */
+-    const val FLOOR_DB = -12f
++    /**
++     * Lowest level the reduction may bring the layer to (dB re the 'faithful' level): the lowest slider value
++     * ([PvbSettings.VB_LEVEL_MIN], -6) less the largest reduction ([MAX_DB_MAX]). It was -12 while the slider stopped
++     * at 0; slider values from 0 up reach the same levels as before.
++     */
++    const val FLOOR_DB = -18f
+ 
+     /**
+      * Volume index -> percentage of the fine scale, the inverse of the reference mapping in PvbController
+@@ -61,7 +65,22 @@ object VolumeLevelLink {
+     fun reductionFor(s: PvbSettings, index: Int, max: Int): Float =
+         if (!s.vbVolLink) 0f else reductionDb(volumePct(index, max), s.vbVolRefPct, s.vbVolSlope, s.vbVolMaxDb)
+ 
+-    /** The level the engine plays for these settings at this volume (link off -> the slider value unchanged). */
+-    fun levelFor(s: PvbSettings, index: Int, max: Int): Float =
+-        if (!s.vbVolLink) s.vbLevelDb else effectiveLevelDb(s.vbLevelDb, reductionFor(s, index, max))
++    /**
++     * The slider value plus the model's own level trim ([PvbModels.Model.levelTrimDb], 0 for most models). A silent layer
++     * (slider value at or below the floor, e.g. [PvbSettings.VB_LEVEL_OFF]) or a non-finite value is left as it is.
++     */
++    fun trimmedLevelDb(sliderDb: Float, algo: Int): Float {
++        if (!sliderDb.isFinite() || sliderDb <= FLOOR_DB) return sliderDb
++        return sliderDb + PvbModels.trimDb(algo)
++    }
++
++    /**
++     * The level the engine plays for these settings at this volume: slider value + model trim, then (link on) the
++     * volume reduction. This is the one place the effective level is formed; the engine encoding, the status and the
++     * live A/B records all read it.
++     */
++    fun levelFor(s: PvbSettings, index: Int, max: Int): Float {
++        val level = trimmedLevelDb(s.vbLevelDb, s.vbAlgo)
++        return if (!s.vbVolLink) level else effectiveLevelDb(level, reductionFor(s, index, max))
++    }
+ }
+diff --git a/app/src/main/res/xml/dsp_pvb_preferences.xml b/app/src/main/res/xml/dsp_pvb_preferences.xml
+index 079898d..ce06448 100644
+--- a/app/src/main/res/xml/dsp_pvb_preferences.xml
++++ b/app/src/main/res/xml/dsp_pvb_preferences.xml
+@@ -352,7 +352,7 @@
+             android:title="@string/pvb_vb_level"
+             android:defaultValue="6"
+             android:dependency="pvb_vb_enable"
+-            app:minValue="0"
++            app:minValue="-6"
+             app:maxValue="12"
+             app:seekBarIncrement="1"
+             app:precision="0"
+diff --git a/tools/pvb-harness/jvm/Alpha3SettingsTest.kt b/tools/pvb-harness/jvm/Alpha3SettingsTest.kt
+index a8df6ea..13a15fa 100644
+--- a/tools/pvb-harness/jvm/Alpha3SettingsTest.kt
++++ b/tools/pvb-harness/jvm/Alpha3SettingsTest.kt
+@@ -41,6 +41,9 @@ fun main() {
+     // P1+ / P1++ / P1++ v0.3 (11-13), and the re-exposed gentle12 (ID 3); P1 is the default.
+     check(PvbModels.models.map { it.id } == listOf(6, 15, 16, 14, 11, 12, 13, 4, 7, 8, 9, 10, 3))
+     check(PvbModels.models.map { it.key }.distinct().size == 13)
++    // The status line shows the level for every selectable model (meter value = id + 1), not only ids 0..10.
++    check(PvbModels.models.all { PvbModels.inUse(it.id) } && (0..16).all { PvbModels.inUse(it) })
++    check(!PvbModels.inUse(-1) && !PvbModels.inUse(17) && !PvbModels.inUse(99))
+     check(PvbModels.DEFAULT_KEY == "alpha2_p1" && PvbModels.fromKey(null).id == PvbModels.P1)
+     check(PvbModels.fromKey("alpha2_reference").id == 4 && PvbModels.fromKey("alpha3_gentle12").id == 3)
+     for (model in PvbModels.models) check(PvbSettings.vbAlgoName(model.id) == model.title)
+@@ -89,10 +92,11 @@ fun main() {
+         check(p.values[key] == PvbModels.DEFAULT_KEY && PvbSettings.load(p).vbAlgo == PvbModels.P1)
+     }
+ 
+-    // 5. Old level list -> slider, clamped into 0..12 (whole dB); no old level -> the new default 6.
++    // 5. Old level list -> slider, clamped into -6..12 (whole dB); no old level -> the new default 6.
++    check(PvbSettings.VB_LEVEL_MIN == -6f && PvbSettings.VB_LEVEL_MAX == 12f)
+     val levels = mapOf<Any?, Float>(
+-        "-6" to 0f, "-3" to 0f, "0" to 0f, "3" to 3f, "6" to 6f, "9" to 9f, "15" to 12f, "12" to 12f,
+-        "7.4" to 7f, "garbage" to 6f, "NaN" to 6f, 9f to 9f, -3 to 0f, null to 6f)
++        "-9" to -6f, "-6" to -6f, "-3" to -3f, "0" to 0f, "3" to 3f, "6" to 6f, "9" to 9f, "15" to 12f, "12" to 12f,
++        "7.4" to 7f, "garbage" to 6f, "NaN" to 6f, 9f to 9f, -3 to -3f, null to 6f)
+     for ((old, want) in levels) {
+         val init = preserved + mapOf(key to "alpha2_d2", schema to 2) + (if (old == null) emptyMap() else mapOf(legacyLevel to old))
+         val p = migrated(init)
+@@ -108,7 +112,14 @@ fun main() {
+     check(migrated(mapOf(key to "alpha2_p1", schema to 3, strength to Float.NaN)).values[strength] == 6f)
+     // load() alone also clamps (e.g. a value typed into the input dialog before a migration ran).
+     check(PvbSettings.load(Prefs(mapOf(strength to 13f))).vbLevelDb == 12f)
+-    check(PvbSettings.load(Prefs(mapOf(strength to -2f))).vbLevelDb == 0f)
++    check(PvbSettings.load(Prefs(mapOf(strength to -2f))).vbLevelDb == -2f)       // negative strength is valid now
++    check(PvbSettings.load(Prefs(mapOf(strength to -9f))).vbLevelDb == -6f)
++    // Saved values from the old 0..12 range stay exactly as they are (no write, no change).
++    for (v in 0..12) {
++        val p = migrated(mapOf(key to "alpha2_p1", schema to 3, strength to v.toFloat()))
++        check(p.values[strength] == v.toFloat() && PvbSettings.load(p).vbLevelDb == v.toFloat() && p.writes == 0) { "saved $v changed" }
++    }
++    check(migrated(mapOf(key to "alpha2_p1", schema to 3, strength to -6f)).writes == 0)   // and -6 is a valid saved value
+     check(PvbSettings.load(Prefs(mapOf(strength to "x"))).vbLevelDb == 6f)
+     check(PvbSettings.clampLevel(Float.POSITIVE_INFINITY) == 6f)
+ 
+diff --git a/tools/pvb-harness/jvm/HomeLogicTest.kt b/tools/pvb-harness/jvm/HomeLogicTest.kt
+index 960264b..f915e35 100644
+--- a/tools/pvb-harness/jvm/HomeLogicTest.kt
++++ b/tools/pvb-harness/jvm/HomeLogicTest.kt
+@@ -42,7 +42,7 @@ fun main(args: Array<String>) {
+     expect(HomeLogic.sliderMax(null) == 12, "s26u slider is 0..12 dB")
+     expect(HomeLogic.sliderValue(12f, general) == 9, "12 dB shows as the 9 dB cap")
+     expect(HomeLogic.sliderValue(3.6f, general) == 4, "whole dB steps")
+-    expect(HomeLogic.sliderValue(-5f, general) == 0, "below 0 -> 0")
++    expect(HomeLogic.sliderValue(-5f, general) == -5 && HomeLogic.sliderValue(-9f, general) == -6, "negative strength stays, floor -6")
+     expect(HomeLogic.sliderValue(Float.NaN, general) == 6, "non-finite -> default 6")
+     expect(HomeLogic.sliderValue(12f, null) == 12, "s26u keeps 12")
+ 
+@@ -129,6 +129,9 @@ fun main(args: Array<String>) {
+     expect(HomeLogic.signedDb(0f) == "0", "zero")
+     expect(HomeLogic.signedDb(Float.NaN) == "?", "non-finite")
+     expect(HomeLogic.levelLabel(6) == "+6", "slider label")
++    expect(HomeLogic.levelLabel(-3) == "-3" && HomeLogic.levelLabel(0) == "+0", "slider label, negative strength")
++    expect(HomeLogic.sliderValue(-6f, null) == -6 && HomeLogic.sliderValue(-9f, null) == -6 && HomeLogic.sliderValue(4f, null) == 4,
++        "slider position: -6 is the lowest")
+ 
+     // --- strings of the screen: same keys in English and Korean, Android-safe text ---
+     fun strings(dir: String): Map<String, String> {
+diff --git a/tools/pvb-harness/jvm/LiveAbTest.kt b/tools/pvb-harness/jvm/LiveAbTest.kt
+index f5ab3d7..d654a54 100644
+--- a/tools/pvb-harness/jvm/LiveAbTest.kt
++++ b/tools/pvb-harness/jvm/LiveAbTest.kt
+@@ -212,7 +212,18 @@ private fun catalogue() {
+     check(rv.sides.map { it.apply(user).vbAlgo } == listOf(PvbModels.RESULTANT, PvbModels.RESULTANT_V16))
+     check(rv.sides.all { it.apply(user).vbLevelDb == 7f })
+     check(rv.sides.map { it.label(user) } == listOf("Resultant v1.5 (ID 15) +7 dB", "Resultant v1.6 (ID 16) +7 dB"))
++    // the level each side plays (and the record stores as effective_level_db) includes the model trim; the slider and trim_db do not
++    check(rv.sides.map { VolumeLevelLink.levelFor(it.apply(user), 13, 15) } ==
++        listOf(7f + PvbModels.RESULTANT_V15_TRIM_DB, 7f + PvbModels.RESULTANT_V16_TRIM_DB))
++    check(rv.sides.all { it.trimDb == 0f && !it.trimMeasured && it.apply(user).vbLevelDb == 7f })
++    // negative strength: the user's -6 stays -6, "3 dB smaller" is -9 (above the -18 floor)
++    check(C.userLevel(user.copy(vbLevelDb = -6f)) == -6f && C.loweredLevel(user.copy(vbLevelDb = -6f)) == -9f)
++    check(C.byId("p1_vs_p1_minus3")!!.sides[1].apply(user.copy(vbLevelDb = -6f)).vbLevelDb == -9f)
++    check(LiveAbRecord.CHIPS.containsAll(listOf("쿠훙", "가각", "지직", "훙훙", "저음 약함", "저음 풍성")) && "쿠쿠쿵" in LiveAbRecord.CHIPS &&
++        LiveAbRecord.CHIPS.toSet().size == LiveAbRecord.CHIPS.size)
+     val rv3 = C.byId("p1_vs_resultant_v15_vs_v16")!!
++    check(rv3.sides.map { VolumeLevelLink.levelFor(it.apply(user), 13, 15) } ==
++        listOf(7f, 7f + PvbModels.RESULTANT_V15_TRIM_DB, 7f + PvbModels.RESULTANT_V16_TRIM_DB))
+     check(rv3.sides.map { it.apply(user).vbAlgo } == listOf(PvbModels.P1, PvbModels.RESULTANT, PvbModels.RESULTANT_V16))
+     check(rv3.sides.all { it.apply(user).vbLevelDb == 7f } && rv3.headroomDb == PvbAbConditions.HEADROOM_DB)
+     check(C.byId("p1_vs_d2_vs_id4")!!.sides.map { it.apply(user).vbAlgo } == listOf(PvbModels.P1, PvbModels.D2, PvbModels.REFERENCE))
+diff --git a/tools/pvb-harness/jvm/VolumeLevelLinkTest.kt b/tools/pvb-harness/jvm/VolumeLevelLinkTest.kt
+index d06810d..9df4ab6 100644
+--- a/tools/pvb-harness/jvm/VolumeLevelLinkTest.kt
++++ b/tools/pvb-harness/jvm/VolumeLevelLinkTest.kt
+@@ -1,4 +1,5 @@
+ import android.content.SharedPreferences
++import me.timschneeberger.rootlessjamesdsp.pvb.PvbModels
+ import me.timschneeberger.rootlessjamesdsp.pvb.PvbSettings
+ import me.timschneeberger.rootlessjamesdsp.pvb.VolumeLevelLink
+ import kotlin.math.abs
+@@ -97,6 +98,27 @@ fun main() {
+     check(L.levelFor(on, 1, 15) == 12f)
+     check(L.levelFor(on, 0, 0) == 12f)                    // volume not read yet: no reduction
+     check(on.vbLevelDb == 12f)                            // the stored slider value itself is untouched
++
++    // 7. Model level trim (RESULTANT_CORE.md 19.12): slider + trim, then the volume reduction, floor at FLOOR_DB (-18).
++    check(L.FLOOR_DB == PvbSettings.VB_LEVEL_MIN - L.MAX_DB_MAX)
++    check(PvbModels.models.all { (it.id == PvbModels.RESULTANT || it.id == PvbModels.RESULTANT_V16) == (it.levelTrimDb != 0f) })
++    check(PvbModels.trimDb(PvbModels.RESULTANT) == PvbModels.RESULTANT_V15_TRIM_DB && PvbModels.trimDb(PvbModels.RESULTANT_V16) == PvbModels.RESULTANT_V16_TRIM_DB)
++    check(PvbModels.trimDb(PvbModels.P1) == 0f && PvbModels.trimDb(99) == 0f && PvbModels.trimDb(-1) == 0f)
++    val s6 = PvbSettings.load(LinkPrefs(mapOf(PvbSettings.KEY_VB_STRENGTH_DB to 6f)))
++    check(L.levelFor(s6.copy(vbAlgo = PvbModels.P1), 5, 15) == 6f)                       // no trim for P1
++    check(L.levelFor(s6.copy(vbAlgo = PvbModels.RESULTANT), 5, 15) == 6f + PvbModels.RESULTANT_V15_TRIM_DB)
++    check(L.levelFor(s6.copy(vbAlgo = PvbModels.RESULTANT_V16), 5, 15) == 6f + PvbModels.RESULTANT_V16_TRIM_DB)
++    val r16on = on.copy(vbAlgo = PvbModels.RESULTANT_V16)                                 // 12 + trim, volume 80% (-8 dB)
++    check(near(L.levelFor(r16on, 13, 15), 12f + PvbModels.RESULTANT_V16_TRIM_DB - 8f))
++    check(on.vbLevelDb == 12f && r16on.vbLevelDb == 12f)                                  // the slider value stays what was set
++    // slider at its lowest, trim and the largest reduction: held at the floor
++    val lowest = r16on.copy(vbLevelDb = PvbSettings.VB_LEVEL_MIN)
++    check(L.levelFor(lowest, 1, 15) == PvbSettings.VB_LEVEL_MIN + PvbModels.RESULTANT_V16_TRIM_DB)
++    check(L.levelFor(lowest, 16, 15) == L.FLOOR_DB)
++    // a silent layer is never lifted or lowered by the trim
++    check(L.levelFor(r16on.copy(vbLevelDb = PvbSettings.VB_LEVEL_OFF), 13, 15) == PvbSettings.VB_LEVEL_OFF)
++    check(L.levelFor(s6.copy(vbAlgo = PvbModels.RESULTANT, vbLevelDb = PvbSettings.VB_LEVEL_OFF), 0, 15) == PvbSettings.VB_LEVEL_OFF)
++    check(L.levelFor(s6.copy(vbLevelDb = Float.NaN, vbAlgo = PvbModels.RESULTANT), 0, 15).isNaN())
+     // Damaged / out-of-range stored values are clamped into the slider ranges; wrong types fall back.
+     val wild = PvbSettings.load(LinkPrefs(mapOf(
+         PvbSettings.KEY_VB_VOL_LINK to true, PvbSettings.KEY_VB_VOL_REF_PCT to 95.4f,

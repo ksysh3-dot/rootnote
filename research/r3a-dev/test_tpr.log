@@ -1,0 +1,8 @@
+steady {'constant': (1.0, 0), 'linear': (1.0, 0), 'burg2': (1.0, 0)}
+glide {'constant': (1.0, 0), 'linear': (1.0, 0), 'burg2': (1.0, 0)}
+vibrato {'constant': (1.0, 0), 'linear': (1.0, 0), 'burg2': (1.0, 0)}
+crossing {'constant': (0.8657407407407407, 0), 'linear': (0.8657407407407407, 0), 'burg2': (0.8657407407407407, 0)}
+near_pair {'constant': (None, 0), 'linear': (None, 0), 'burg2': (None, 0)}
+am7 {'constant': (0.9886621315192744, 0), 'linear': (0.9886621315192744, 0), 'burg2': (0.9886621315192744, 0)}
+off {'constant': (1.0, 0), 'linear': (1.0, 0), 'burg2': (1.0, 0)}
+exit=True

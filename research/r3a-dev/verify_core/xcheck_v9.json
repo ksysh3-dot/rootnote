@@ -1,0 +1,28 @@
+{
+ "v9": {
+  "A/pink_only": {
+   "on_voice_ids": 0,
+   "cand_voice_ids": 965,
+   "births": 0,
+   "births_per_s": 0.0
+  },
+  "A/music_silence_noise": {
+   "on_voice_ids": 1,
+   "cand_voice_ids": 405,
+   "births": 1,
+   "births_per_s": 0.14492753623188406
+  },
+  "B/pink_only": {
+   "on_voice_ids": 0,
+   "cand_voice_ids": 965,
+   "births": 0,
+   "births_per_s": 0.0
+  },
+  "B/music_silence_noise": {
+   "on_voice_ids": 1,
+   "cand_voice_ids": 401,
+   "births": 1,
+   "births_per_s": 0.14492753623188406
+  }
+ }
+}

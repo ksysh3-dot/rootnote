@@ -1,0 +1,14 @@
+Track00025 rendered, latency 7140
+Track00026 rendered, latency 7140
+P1(build_core) vs P1(ref build) T26 0-30 s: max abs diff 0.0
+pair 1: Track00026 start 2.75 test corr -0.047 dB peak 0.294 scale 1.0000
+pair 2: Track00025 start 21.0 test corr +0.063 dB peak 0.277 scale 1.0000
+pair 3: Track00026 start 21.0 test corr +0.060 dB peak 0.278 scale 1.0000
+pair 4: Track00025 start 1.0 null corr +0.000 dB peak 0.240 scale 1.0000
+pair 5: Track00025 start 12.0 test corr +0.025 dB peak 0.249 scale 1.0000
+pair 6: Track00026 start 1.0 null corr +0.000 dB peak 0.291 scale 1.0000
+pair 7: Track00025 start 3.0 test corr -0.051 dB peak 0.241 scale 1.0000
+pair 8: Track00026 start 11.75 test corr -0.117 dB peak 0.292 scale 1.0000
+key sha256 100f6e9afe9515b1a0590ac1fd8b1d44411ed43aa6bc9567646bbb2990b6c89e
+lib sha256 5f7f3cf7aef996b5573353bbb605a4f216dec9f4e97b49cf8e3c5cfbec968566
+listen.md written
