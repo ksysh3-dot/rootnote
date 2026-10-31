@@ -90,6 +90,19 @@ inline bool rSolve(const double (*G)[16], const double* r, int n, double* x) {
     return true;
 }
 
+// A1' (18.5): the SNR is falling when it is more than 3 dB under its maximum over the last ResultantCore::kFallHops hops, the current one included
+constexpr double kRFallDb = 3.0;
+inline void rPushSnr(double* h, int& pos, int& n, double s) {
+    h[pos] = s;
+    pos = (pos + 1) % ResultantCore::kFallHops;
+    n = std::min(n + 1, ResultantCore::kFallHops);
+}
+inline bool rSnrFalling(const double* h, int n, double s) {
+    double mx = s;
+    for (int i = 0; i < n; ++i) mx = std::max(mx, h[i]);   // unused slots are never read (n counts the valid ones, they fill from slot 0)
+    return s < mx - kRFallDb;
+}
+
 // N_snr(s) of spec 5.3: nLo from 30 dB up, kRMaxPast from 12 dB down, log-linear between
 inline int rWindowTarget(double snrDb, int nLo) {
     if (snrDb >= 30.0) return nLo;
@@ -110,6 +123,7 @@ void ResultantCore::reset() {
     std::fill(std::begin(out_), std::end(out_), 0.0);
     nextVoiceId_ = 0; hopCount_ = measCount_ = 0;
     npJ_ = npJPend_ = npJA_ = 0;
+    sMaxHp_ = sMaxHn_ = 0;
     std::fill(std::begin(lsSig_), std::end(lsSig_), 0);
     std::fill(std::begin(rejId_), std::end(rejId_), 0u);
     std::fill(std::begin(rejHop_), std::end(rejHop_), static_cast<int64_t>(0));
@@ -131,20 +145,20 @@ bool ResultantCore::setParams(const double* v, int n) {
     const ResultantParams d;
     double q[kParams] = {static_cast<double>(d.voicing), d.levelDb, static_cast<double>(d.ampSource), d.snrOnDb,
         d.snrFastDb, d.snrOffDb, d.tauOnMs, d.tauOffMs, d.betaMin, d.betaMax, d.kappa, static_cast<double>(d.nMin),
-        static_cast<double>(d.nFuture), d.psiSlew, static_cast<double>(d.crest), d.maxDfdtBirth, d.capRho, static_cast<double>(d.windowCreep)};
+        static_cast<double>(d.nFuture), d.psiSlew, static_cast<double>(d.crest), d.maxDfdtBirth, d.capRho, static_cast<double>(d.windowCreep), static_cast<double>(d.creepMode)};
     for (int i = 0; i < n; ++i) q[i] = v[i];
     auto in = [&](int i, double lo, double hi) { return std::isfinite(q[i]) && q[i] >= lo && q[i] <= hi; };
     auto flag = [&](int i) { return q[i] == 0.0 || q[i] == 1.0; };
     if (!flag(0) || !in(1, 0, 12) || !flag(2) || !in(3, 6, 30) || !in(4, 10, 40) || !in(5, 0, 20) || !in(6, 1, 100) ||
         !in(7, 5, 300) || !in(8, 0, 1) || !in(9, 0, 1) || !in(10, .5, 3) || !in(11, 16, 191) || !in(12, 0, 96) ||
         !in(13, .01, 3.2) || !flag(14) || !in(15, 20, 2000) ||
-        !(q[16] == 0.0 || in(16, 1, 10)) || !(q[17] == 0.0 || in(17, 1, 320))) return false;
+        !(q[16] == 0.0 || in(16, 1, 10)) || !(q[17] == 0.0 || in(17, 1, 320)) || !(q[18] == 0.0 || q[18] == 1.0 || q[18] == 2.0)) return false;
     p_.voicing = static_cast<int>(q[0]); p_.levelDb = q[1]; p_.ampSource = static_cast<int>(q[2]);
     p_.snrOnDb = q[3]; p_.snrFastDb = q[4]; p_.snrOffDb = q[5]; p_.tauOnMs = q[6]; p_.tauOffMs = q[7];
     p_.betaMin = q[8]; p_.betaMax = q[9]; p_.kappa = q[10];
     p_.nMin = static_cast<int>(std::lround(q[11])); p_.nFuture = static_cast<int>(std::lround(q[12]));
     p_.psiSlew = q[13]; p_.crest = static_cast<int>(q[14]); p_.maxDfdtBirth = q[15];
-    p_.capRho = q[16]; p_.windowCreep = static_cast<int>(std::lround(q[17]));
+    p_.capRho = q[16]; p_.windowCreep = static_cast<int>(std::lround(q[17])); p_.creepMode = static_cast<int>(q[18]);
     return true;
 }
 
@@ -459,6 +473,7 @@ void ResultantCore::computeSnr(Ctx& cx) {
         Voice& u = vo_[s];
         if (u.state == Empty || u.excluded) continue;
         u.snr = snrOf(cx, u);
+        rPushSnr(u.snrH, u.snrHp, u.snrHn, u.snr);
         if (cx.measured) u.prominent = evidence(cx, u.f);
     }
 }
@@ -543,16 +558,17 @@ void ResultantCore::solveLs(Ctx& cx) {
     cx.lsOk = false;
     for (int s = 0; s < kVoices; ++s) vo_[s].npUsed = 0;
     const int nv = cx.nLs;
-    if (nv == 0) { npJA_ = 0; return; }
+    if (nv == 0) { npJA_ = 0; sMaxHp_ = sMaxHn_ = 0; return; }
     const double fs = kRFs;
     double fbv[kVoices], fdv[kVoices];
-    double fLow = 1e9, dfMin = 1e9, sOn = 1e9, sAll = 1e9;
+    double fLow = 1e9, dfMin = 1e9, sOn = 1e9, sAll = 1e9, sMax = -1e9;
     for (int j = 0; j < nv; ++j) {
         const Voice& u = vo_[cx.ls[j]];
         fbv[j] = u.fb;
         fdv[j] = clampv(u.fdot, -400.0, 400.0);
         fLow = std::min(fLow, fbv[j]);
         sAll = std::min(sAll, u.snr);
+        sMax = std::max(sMax, u.snr);
         if (u.state == On) sOn = std::min(sOn, u.snr);
     }
     for (int i = 0; i < nv; ++i) for (int j = i + 1; j < nv; ++j) dfMin = std::min(dfMin, std::fabs(fbv[i] - fbv[j]));
@@ -573,8 +589,11 @@ void ResultantCore::solveLs(Ctx& cx) {
     npJ_ = std::min(kRMaxPast, std::max(nLo, npJ_));
     const int npJh = npJ_;   // the window the hysteresis holds
     int npJ = npJh;
-    if (p_.windowCreep > 0) {   // v1.6-a A1 (13.5 F5): N_J grows by at most windowCreep per hop whatever raised it (SNR, separation, N_lo, birth, set change); shrinking is immediate
-        if (npJA_ <= 0) npJA_ = nLo;
+    rPushSnr(sMaxH_, sMaxHp_, sMaxHn_, sMax);
+    if (p_.windowCreep > 0 && p_.creepMode != 1) {   // v1.6-a A1 (13.5 F5): N_J grows by at most windowCreep per hop whatever raised it (SNR, separation, N_lo, birth, set change); shrinking is immediate
+        // A1' (18.5) creepMode 2: only while the maximum SNR of the LS set is falling, otherwise N_J follows the hysteresis-held window at once as in v1.5
+        if (p_.creepMode == 2 && !rSnrFalling(sMaxH_, sMaxHn_, sMax)) npJA_ = npJh;
+        else if (npJA_ <= 0) npJA_ = nLo;
         else if (npJh > npJA_) npJA_ = std::min(npJh, npJA_ + p_.windowCreep);
         else npJA_ = npJh;
         npJ = npJA_;
@@ -658,8 +677,9 @@ void ResultantCore::solveLs(Ctx& cx) {
             else u.npvPend = 0;
             u.npv = std::min(npJh, std::max(nLov, u.npv));
             nvv = u.npv;
-            if (p_.windowCreep > 0) {   // v1.6-a A1: the same growth limit on the stage 2 window
-                if (u.npvA <= 0) u.npvA = std::min(nvv, nLov);
+            if (p_.windowCreep > 0) {   // v1.6-a A1: the same growth limit on the stage 2 window; A1' (creepMode >= 1): only while this voice's SNR is falling
+                if (p_.creepMode >= 1 && !rSnrFalling(u.snrH, u.snrHn, u.snr)) u.npvA = nvv;
+                else if (u.npvA <= 0) u.npvA = std::min(nvv, nLov);
                 else if (nvv > u.npvA) u.npvA = std::min(nvv, u.npvA + p_.windowCreep);
                 else u.npvA = nvv;
                 nvv = std::min(u.npvA, npJ);

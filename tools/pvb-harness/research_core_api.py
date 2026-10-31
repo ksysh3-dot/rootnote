@@ -1,4 +1,4 @@
-"""Python access to the Resultant core (algorithm 15, docs/RESULTANT_CORE.md): library loading, the 18 parameters, the voice
+"""Python access to the Resultant core (algorithm 15, docs/RESULTANT_CORE.md): library loading, the 19 parameters, the voice
 trace and a render helper. Host research only.
 
     import research_core_api as R
@@ -12,11 +12,11 @@ import ctypes as C
 import numpy as np
 import test_engine as T
 
-# the 18 parameters of pvb_set_resultant, in the order of spec 5.8 (capRho, windowCreep: v1.6-a, 0 = off = v1.5), with their defaults
+# the 19 parameters of pvb_set_resultant, in the order of spec 5.8 (capRho, windowCreep: v1.6-a; creepMode: A1', 0 = off = v1.5), with their defaults
 PARAMS = ('voicing', 'levelDb', 'ampSource', 'snrOnDb', 'snrFastDb', 'snrOffDb', 'tauOnMs', 'tauOffMs', 'betaMin',
-          'betaMax', 'kappa', 'nMin', 'nFuture', 'psiSlew', 'crest', 'maxDfdtBirth', 'capRho', 'windowCreep')
+          'betaMax', 'kappa', 'nMin', 'nFuture', 'psiSlew', 'crest', 'maxDfdtBirth', 'capRho', 'windowCreep', 'creepMode')
 DEFAULTS = dict(voicing=0, levelDb=0, ampSource=0, snrOnDb=15, snrFastDb=22, snrOffDb=6, tauOnMs=8, tauOffMs=30,
-                betaMin=.2, betaMax=.9, kappa=1.0, nMin=30, nFuture=24, psiSlew=.12, crest=0, maxDfdtBirth=200, capRho=0, windowCreep=0)
+                betaMin=.2, betaMax=.9, kappa=1.0, nMin=30, nFuture=24, psiSlew=.12, crest=0, maxDfdtBirth=200, capRho=0, windowCreep=0, creepMode=0)
 # one record per voice slot (8 per hop), in the order of the spec
 TRACE_FIELDS = ('hop', 'voice', 'track', 'state', 'coasting', 'f_track', 'f_osc', 'dfdt_s', 'A', 'c', 'sigma', 'Np',
                 'snr_db', 'prominent', 'raw_db', 'res_db', 'subordinate', 'theta_hat', 'psi_2', 'psi_3', 'a_2', 'a_3')
