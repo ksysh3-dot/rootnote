@@ -23,7 +23,7 @@ bool VbHpv::setAlpha2Profile(int algorithm) {
     unsigned flags=0;int mode=3;
     switch(algorithm) {
         case VB_ALPHA2_P1: case VB_ALPHA2_P1_PLUS: case VB_ALPHA2_P1PP: case VB_ALPHA2_P1PP_V03: break;
-        case VB_RESULTANT: case VB_RESULTANT_V16: break;   // P1 settings with every research flag fixed at 0 (below), the sustained path is the new core's
+        case VB_RESULTANT: case VB_RESULTANT_V16: case VB_RESULTANT_V16D: break;   // P1 settings with every research flag fixed at 0 (below), the sustained path is the new core's
         case VB_ALPHA2_P1_C1: flags=StageNominalPower;break;
         case VB_ALPHA2_D2: flags=StageShortDetail|StageConditionalGain;break;
         case VB_ALPHA2_J2: flags=StageShortDetail|StageConditionalGain|StageAmFamily|StageFamilyFilterComp;break;
@@ -31,12 +31,12 @@ bool VbHpv::setAlpha2Profile(int algorithm) {
         case VB_ALPHA2_OSC_CORRECT: mode=0;flags=StageOscillator|StageOscillatorCorrect;break;
         default:return false;
     }
-    const bool resultant=algorithm==VB_RESULTANT || algorithm==VB_RESULTANT_V16;
+    const bool resultant=algorithm==VB_RESULTANT || algorithm==VB_RESULTANT_V16 || algorithm==VB_RESULTANT_V16D;
     p1PlusProfile_=algorithm==VB_ALPHA2_P1 || algorithm==VB_ALPHA2_P1_PLUS || algorithm==VB_ALPHA2_P1PP ||
                    algorithm==VB_ALPHA2_P1PP_V03 || algorithm==VB_ALPHA2_P1_C1 || resultant;
     // 6: the original P1 (or the host's research flags); 11: P1+ (flags 6); 12: P1++ v0.2 (flags 6, impact 4);
     // 13: P1++ v0.3 (flags 6, impact 8); 14: P1 + C1 (no P1+ flags, impact 0, power-sum nominal amplitude);
-    // 15, 16: Resultant core (P1 with no research flags: fixed like 14, so later host setters cannot change them)
+    // 15, 16, 17: Resultant core (P1 with no research flags: fixed like 14, so later host setters cannot change them)
     p1PlusFixed_=algorithm==VB_ALPHA2_P1_PLUS || algorithm==VB_ALPHA2_P1PP || algorithm==VB_ALPHA2_P1PP_V03 ||
                  algorithm==VB_ALPHA2_P1_C1 || resultant;
     p1PlusFlags_=algorithm==VB_ALPHA2_P1_C1 || resultant ? 0u : p1PlusFixed_ ? 6u : p1PlusHostFlags_;
@@ -53,17 +53,20 @@ bool VbHpv::setAlpha2Profile(int algorithm) {
         gen_=resultantOn_?GenResearch52{}:genReq_;
     }
     // Algorithm 16 is 15 with the v1.6-c parameters (5.8 order: voicing .. maxDfdtBirth at the defaults, then capRho 1.5,
-    // windowCreep 16, creepMode 2, and the layer high-pass 150 Hz, order 8, phase compensated; betaMin .05, betaMax .1,
-    // psiSlew .03); every other profile, 15 included, gets the pvb_resultant.h defaults back after a 16. The list is
-    // explicit and must cover every parameter: a parameter added to the core needs a value here (the static_assert
-    // stops the build), and setParams refusing the set is a bug (the assert stops the host builds, whose NDEBUG is off).
-    if(algorithm==VB_RESULTANT_V16) {
-        const double v16[]={0,0,0,15,22,6,8,30,.05,.1,1.0,30,24,.03,0,200,1.5,16,2,150,8,1};
-        static_assert(sizeof(v16)/sizeof(v16[0])==ResultantCore::kParams,"algorithm 16 sets every Resultant parameter");
-        const bool applied=resultant_.setParams(v16,ResultantCore::kParams);
+    // windowCreep 16, creepMode 2, the layer high-pass 150 Hz, order 8, phase compensated, and the analysis frequency
+    // for the render, renderFreqMode 0, renderTauMs 10; betaMin .05, betaMax .1, psiSlew .03). Algorithm 17 (v1.6-d)
+    // is 16 with renderFreqMode 1. Every other profile, 15 included, gets the pvb_resultant.h defaults back after
+    // either. The lists are explicit and must cover every parameter: a parameter added to the core needs a value here
+    // (the static_assert stops the build), and setParams refusing a set is a bug (the assert stops the host builds,
+    // whose NDEBUG is off).
+    if(algorithm==VB_RESULTANT_V16 || algorithm==VB_RESULTANT_V16D) {
+        double v[]={0,0,0,15,22,6,8,30,.05,.1,1.0,30,24,.03,0,200,1.5,16,2,150,8,1,0,10};
+        static_assert(sizeof(v)/sizeof(v[0])==ResultantCore::kParams,"algorithms 16 and 17 set every Resultant parameter");
+        if(algorithm==VB_RESULTANT_V16D) v[22]=1;   // renderFreqMode
+        const bool applied=resultant_.setParams(v,ResultantCore::kParams);
         assert(applied);(void)applied;
-        resultantV16_=true;
-    } else leaveResultantV16();
+        resultantSet_=true;
+    } else leaveResultantSet();
     // P1 is the host research profile: an explicitly attached stage probe may
     // precede the first vbApply() call. Preserve its assignment flags there.
     stageFlags_=flags|(algorithm==VB_ALPHA2_P1 ? stageHostFlags_ : 0u);reset();return true;

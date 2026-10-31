@@ -39,11 +39,11 @@ fun main() {
 
     // Catalogue: every alpha 2 model, P1 + C1 (14, research branch), Resultant core v1.5 / v1.6 (15, 16, experimental),
     // P1+ / P1++ / P1++ v0.3 (11-13), and the re-exposed gentle12 (ID 3); P1 is the default.
-    check(PvbModels.models.map { it.id } == listOf(6, 15, 16, 14, 11, 12, 13, 4, 7, 8, 9, 10, 3))
-    check(PvbModels.models.map { it.key }.distinct().size == 13)
+    check(PvbModels.models.map { it.id } == listOf(6, 15, 16, 17, 14, 11, 12, 13, 4, 7, 8, 9, 10, 3))
+    check(PvbModels.models.map { it.key }.distinct().size == 14)
     // The status line shows the level for every selectable model (meter value = id + 1), not only ids 0..10.
-    check(PvbModels.models.all { PvbModels.inUse(it.id) } && (0..16).all { PvbModels.inUse(it) })
-    check(!PvbModels.inUse(-1) && !PvbModels.inUse(17) && !PvbModels.inUse(99))
+    check(PvbModels.models.all { PvbModels.inUse(it.id) } && (0..17).all { PvbModels.inUse(it) })
+    check(!PvbModels.inUse(-1) && !PvbModels.inUse(18) && !PvbModels.inUse(99))
     check(PvbModels.DEFAULT_KEY == "alpha2_p1" && PvbModels.fromKey(null).id == PvbModels.P1)
     check(PvbModels.fromKey("alpha2_reference").id == 4 && PvbModels.fromKey("alpha3_gentle12").id == 3)
     for (model in PvbModels.models) check(PvbSettings.vbAlgoName(model.id) == model.title)

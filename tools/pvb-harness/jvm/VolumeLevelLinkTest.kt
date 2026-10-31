@@ -101,7 +101,10 @@ fun main() {
 
     // 7. Model level trim (RESULTANT_CORE.md 19.12): slider + trim, then the volume reduction, floor at FLOOR_DB (-18).
     check(L.FLOOR_DB == PvbSettings.VB_LEVEL_MIN - L.MAX_DB_MAX)
-    check(PvbModels.models.all { (it.id == PvbModels.RESULTANT || it.id == PvbModels.RESULTANT_V16) == (it.levelTrimDb != 0f) })
+    check(PvbModels.models.all { (it.id in PvbModels.RESULTANT..PvbModels.RESULTANT_V16D) == (it.levelTrimDb != 0f) })
+    check(PvbModels.trimDb(PvbModels.RESULTANT_V16D) == PvbModels.RESULTANT_V16_TRIM_DB)
+    check(L.levelFor(PvbSettings.load(LinkPrefs(mapOf(PvbSettings.KEY_VB_STRENGTH_DB to 6f))).copy(vbAlgo = PvbModels.RESULTANT_V16D), 5, 15) ==
+        6f + PvbModels.RESULTANT_V16_TRIM_DB)
     check(PvbModels.trimDb(PvbModels.RESULTANT) == PvbModels.RESULTANT_V15_TRIM_DB && PvbModels.trimDb(PvbModels.RESULTANT_V16) == PvbModels.RESULTANT_V16_TRIM_DB)
     check(PvbModels.trimDb(PvbModels.P1) == 0f && PvbModels.trimDb(99) == 0f && PvbModels.trimDb(-1) == 0f)
     val s6 = PvbSettings.load(LinkPrefs(mapOf(PvbSettings.KEY_VB_STRENGTH_DB to 6f)))

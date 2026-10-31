@@ -221,6 +221,13 @@ private fun catalogue() {
     check(C.byId("p1_vs_p1_minus3")!!.sides[1].apply(user.copy(vbLevelDb = -6f)).vbLevelDb == -9f)
     check(LiveAbRecord.CHIPS.containsAll(listOf("쿠훙", "가각", "지직", "훙훙", "저음 약함", "저음 풍성")) && "쿠쿠쿵" in LiveAbRecord.CHIPS &&
         LiveAbRecord.CHIPS.toSet().size == LiveAbRecord.CHIPS.size)
+    // v1.6 vs v1.6-d (models 16, 17): a two-sided comparison; the three-way stays P1 / v1.5 / v1.6
+    val rd = C.byId("resultant_v16_vs_v16d")!!
+    check(PvbModels.RESULTANT_V16D == 17)
+    check(rd.sides.map { it.apply(user).vbAlgo } == listOf(PvbModels.RESULTANT_V16, PvbModels.RESULTANT_V16D))
+    check(rd.sides.map { it.label(user) } == listOf("Resultant v1.6 (ID 16) +7 dB", "Resultant v1.6-d (ID 17) +7 dB"))
+    check(rd.sides.map { VolumeLevelLink.levelFor(it.apply(user), 13, 15) } == listOf(7f + PvbModels.RESULTANT_V16_TRIM_DB, 7f + PvbModels.RESULTANT_V16_TRIM_DB))
+    check(rd.headroomDb == PvbAbConditions.HEADROOM_DB && rd.sides.all { it.trimDb == 0f && !it.trimMeasured })
     val rv3 = C.byId("p1_vs_resultant_v15_vs_v16")!!
     check(rv3.sides.map { VolumeLevelLink.levelFor(it.apply(user), 13, 15) } ==
         listOf(7f, 7f + PvbModels.RESULTANT_V15_TRIM_DB, 7f + PvbModels.RESULTANT_V16_TRIM_DB))
