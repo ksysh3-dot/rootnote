@@ -1080,6 +1080,7 @@ double VbHpv::core52(double d) {
     }
     if(devMeter_) devSnap_.gain=appliedGain;
     double y=preFilter;for(auto& s:out_) y=s.tick(y);
+    if(resultantOn_ && resultant_.hpOn()) y=resultant_.hpTick(y);   // Resultant 19.7: layer high-pass in series with the output band filter
     if(harmonicReady_) {
         harmonicTrace_.data[17]=static_cast<float>(gen_.envelope?appliedGain:gain); harmonicTrace_.data[18]=static_cast<float>(poly52_);
         harmonicTrace_.data[19]=static_cast<float>(out);
