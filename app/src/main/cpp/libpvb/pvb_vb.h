@@ -56,8 +56,8 @@ enum VbAlgo : int { VB_HPV = 0, VB_BANKSTOWN = 1, VB_HPV52M = 2, VB_GENTLE = 3,
                    // (study 2, #4, tag s2-v1-final)
                    VB_ALPHA2_P1_C1 = 14,
                    // Resultant core (docs/RESULTANT_CORE.md): P1's front end (tracker, tables, phase calibration, percussive
-                   // layer) and a new sustained-layer path; vbAlpha2_ with resultantOn_ (experimental app model 15, defaults of pvb_resultant.h;
-                   // research params only via the host API)
+                   // layer) and a new sustained-layer path; vbAlpha2_ with resultantOn_. Experimental app model 15 at the
+                   // defaults of pvb_resultant.h; its research parameters are reachable only through the host API
                    VB_RESULTANT = 15, VB_ALGO_COUNT };
 
 // Scene observations are unvalidated. Only the opt-in adaptive profile uses
