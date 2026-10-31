@@ -1964,3 +1964,11 @@ x(48k) ─▶ [P1] 3 kHz ─▶ LR4 190 Hz ─▶ HPSS ─┬─ bh ─▶ [P1] 
     - `VbLevel.of`는 모델 키만 저장하고 모델별 세기 표가 없다. 그래서 줄을 더할 필요가 없다.
     - `Alpha2JniTest`의 지연 `extra`는 P1+ 계열만 명시하고 나머지는 0이다. 모델 15는 자동으로 0이다 (P1과 같은 7140 프레임).
   - 문서 맨 위의 상태 줄을 16.16과 16.18 재판정에 맞게 고쳤다.
+- **구현 (2026-10-31, 사용자 "권장대로 구현해")**
+  - 브랜치 `research/resultant-app-20261031`에 커밋 e178a9b와 d481259를 올렸다. 바뀐 것은 모델 항목, 엔진 주석 2곳, JVM 시험 2개다.
+  - CI 실행 41167466225가 성공했다.
+    - 호스트 엔진 시험 성공
+    - JVM 시험 성공: "twelve selectable models … Resultant v1.5 ID15 … latency passed"
+    - APK 빌드 성공
+  - s26u 시험 APK는 `PVB-S26U-test301.apk`다. 패키지는 kr.ksysh3.pvb.s26u, versionCode 61, sha256 `11123706…94ca`다. 위치는 run artifact `PVB-S26U-test-apk`다.
+  - s26u 서명 인증서는 로그에 나오지 않아 확인하지 못했다. 덮어 설치가 거부되면 지우기 전에 사용자가 설정을 백업해야 한다.
