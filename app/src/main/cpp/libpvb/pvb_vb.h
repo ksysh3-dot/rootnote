@@ -59,9 +59,10 @@ enum VbAlgo : int { VB_HPV = 0, VB_BANKSTOWN = 1, VB_HPV52M = 2, VB_GENTLE = 3,
                    // layer) and a new sustained-layer path; vbAlpha2_ with resultantOn_. Experimental app model 15 at the
                    // defaults of pvb_resultant.h; its research parameters are reachable only through the host API
                    VB_RESULTANT = 15,
-                   // Resultant core v1.6-b (docs/RESULTANT_CORE.md 19.2.2, 19.5): algorithm 15 with the research parameters
-                   // capRho 1.5, windowCreep 16, creepMode 2, betaMin .05, betaMax .1, psiSlew .03, applied on entering the
-                   // algorithm and replaced by the pvb_resultant.h defaults on leaving it. Experimental app model 16
+                   // Resultant core v1.6-c (docs/RESULTANT_CORE.md 19.2.2, 19.5, 19.8): algorithm 15 with the research
+                   // parameters capRho 1.5, windowCreep 16, creepMode 2, betaMin .05, betaMax .1, psiSlew .03 and the layer
+                   // high-pass 150 Hz, order 8, compensated, applied on entering the algorithm and replaced by the
+                   // pvb_resultant.h defaults on leaving it. Experimental app model 16
                    VB_RESULTANT_V16 = 16, VB_ALGO_COUNT };
 
 // Scene observations are unvalidated. Only the opt-in adaptive profile uses
