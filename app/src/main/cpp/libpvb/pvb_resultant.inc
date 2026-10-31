@@ -129,6 +129,34 @@ void ResultantCore::reset() {
     std::fill(std::begin(rejHop_), std::end(rejHop_), static_cast<int64_t>(0));
     rejPos_ = 0;
     traceN_ = 0; traceOver_ = false;
+    for (auto& s : hp_) s.z0 = s.z1 = 0;
+}
+
+// Butterworth high-pass of order layerHpOrder (sections of Q = 1 / (2 sin((2 j + 1) pi / (2 N)))) at layerHpHz, bilinear with prewarping, fs = 3 kHz
+void ResultantCore::designHp() {
+    const int n = p_.layerHpOrder;
+    const double kw = std::tan(kPi * p_.layerHpHz / kRFs);
+    for (int j = 0; j < n / 2; ++j) {
+        const double q = 1.0 / (2 * std::sin((2 * j + 1) * kPi / (2 * n)));
+        const double nrm = 1.0 / (1 + kw / q + kw * kw);
+        HpBiquad& s = hp_[j];
+        s.b0 = nrm; s.b1 = -2 * nrm; s.b2 = nrm;
+        s.a1 = 2 * (kw * kw - 1) * nrm; s.a2 = (1 - kw / q + kw * kw) * nrm;
+    }
+}
+
+double ResultantCore::hpPhase(double f) const {
+    if (!hpOn()) return 0.0;
+    const double w = kRTwoPi * f / kRFs;
+    const double c1 = std::cos(w), s1 = std::sin(w), c2 = std::cos(2 * w), s2 = std::sin(2 * w);   // z^-1, z^-2 = c - j s
+    double ph = 0;
+    for (int j = 0; j < p_.layerHpOrder / 2; ++j) {
+        const HpBiquad& s = hp_[j];
+        const double nr = s.b0 + s.b1 * c1 + s.b2 * c2, ni = -(s.b1 * s1 + s.b2 * s2);
+        const double dr = 1 + s.a1 * c1 + s.a2 * c2, di = -(s.a1 * s1 + s.a2 * s2);
+        ph += std::atan2(ni, nr) - std::atan2(di, dr);
+    }
+    return ph;
 }
 
 #ifdef PVB_RESEARCH_CAPSTATS
@@ -145,20 +173,24 @@ bool ResultantCore::setParams(const double* v, int n) {
     const ResultantParams d;
     double q[kParams] = {static_cast<double>(d.voicing), d.levelDb, static_cast<double>(d.ampSource), d.snrOnDb,
         d.snrFastDb, d.snrOffDb, d.tauOnMs, d.tauOffMs, d.betaMin, d.betaMax, d.kappa, static_cast<double>(d.nMin),
-        static_cast<double>(d.nFuture), d.psiSlew, static_cast<double>(d.crest), d.maxDfdtBirth, d.capRho, static_cast<double>(d.windowCreep), static_cast<double>(d.creepMode)};
+        static_cast<double>(d.nFuture), d.psiSlew, static_cast<double>(d.crest), d.maxDfdtBirth, d.capRho, static_cast<double>(d.windowCreep), static_cast<double>(d.creepMode),
+        d.layerHpHz, static_cast<double>(d.layerHpOrder), static_cast<double>(d.layerHpComp)};
     for (int i = 0; i < n; ++i) q[i] = v[i];
     auto in = [&](int i, double lo, double hi) { return std::isfinite(q[i]) && q[i] >= lo && q[i] <= hi; };
     auto flag = [&](int i) { return q[i] == 0.0 || q[i] == 1.0; };
     if (!flag(0) || !in(1, 0, 12) || !flag(2) || !in(3, 6, 30) || !in(4, 10, 40) || !in(5, 0, 20) || !in(6, 1, 100) ||
         !in(7, 5, 300) || !in(8, 0, 1) || !in(9, 0, 1) || !in(10, .5, 3) || !in(11, 16, 191) || !in(12, 0, 96) ||
         !in(13, .01, 3.2) || !flag(14) || !in(15, 20, 2000) ||
-        !(q[16] == 0.0 || in(16, 1, 10)) || !(q[17] == 0.0 || in(17, 1, 320)) || !(q[18] == 0.0 || q[18] == 1.0 || q[18] == 2.0)) return false;
+        !(q[16] == 0.0 || in(16, 1, 10)) || !(q[17] == 0.0 || in(17, 1, 320)) || !(q[18] == 0.0 || q[18] == 1.0 || q[18] == 2.0) ||
+        !(q[19] == 0.0 || in(19, 20, 1000)) || !(q[20] == 4.0 || q[20] == 8.0) || !flag(21)) return false;
     p_.voicing = static_cast<int>(q[0]); p_.levelDb = q[1]; p_.ampSource = static_cast<int>(q[2]);
     p_.snrOnDb = q[3]; p_.snrFastDb = q[4]; p_.snrOffDb = q[5]; p_.tauOnMs = q[6]; p_.tauOffMs = q[7];
     p_.betaMin = q[8]; p_.betaMax = q[9]; p_.kappa = q[10];
     p_.nMin = static_cast<int>(std::lround(q[11])); p_.nFuture = static_cast<int>(std::lround(q[12]));
     p_.psiSlew = q[13]; p_.crest = static_cast<int>(q[14]); p_.maxDfdtBirth = q[15];
     p_.capRho = q[16]; p_.windowCreep = static_cast<int>(std::lround(q[17])); p_.creepMode = static_cast<int>(q[18]);
+    p_.layerHpHz = q[19]; p_.layerHpOrder = static_cast<int>(q[20]); p_.layerHpComp = static_cast<int>(q[21]);
+    if (p_.layerHpHz > 0) designHp();
     return true;
 }
 
@@ -836,8 +868,11 @@ void ResultantCore::updatePartials(VbHpv& v, Ctx& cx, Voice& u) {
             u.offF[k] = !found ? u.offF[k] + 1 : 0;
             if (u.offC[k] >= 2 || u.offF[k] >= 2) u.present[k] = false;
         }
-        const double target = u.present[k] ? std::atan2(ci, cr) - kk * u.theta + phiComp(fk)
-                                           : psi52(kk, u.f, p_.crest != 0);
+        // layer high-pass (19.7): its phase at k f_osc is taken out of both branches alike (a one-sided term would jump the target by up to pi)
+        const double hpc = p_.layerHpComp && hpOn() ? hpPhase(fk) : 0.0;
+        double target = u.present[k] ? std::atan2(ci, cr) - kk * u.theta + phiComp(fk)
+                                     : psi52(kk, u.f, p_.crest != 0);
+        if (hpc != 0.0) target -= hpc;   // the filter adds +hpc to cos(k theta + psi); sign checked with steady sinusoids (S19/HP/sign_check.py)
         if (!(u.psiSet & (1u << k))) {
             u.psi[k] = target; u.psiStart[k] = target; u.psiSet |= 1u << k;
         } else {

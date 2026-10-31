@@ -37,6 +37,9 @@ struct ResultantParams {
     int windowCreep = 0;        // v1.6-a A1 (18.3; 13.2 D4 narrowed by 13.5 F5): window growth limit, samples per hop (1..320), 0 = off (v1.5)
     int creepMode = 0;          // A1' (18.5): which windows the growth limit acts on and when. 0 = N_J and N_v always (18.3 A1), 1 = N_v only while its voice's SNR
                                 // is falling, 2 = N_v (own SNR) and N_J (max SNR over the LS set) only while falling; no effect when windowCreep = 0
+    double layerHpHz = 0;       // v1.6-c (19.7): causal Butterworth high-pass on the whole core output (3 kHz), in series with the output band filter; 0 = off (v1.6-b)
+    int layerHpOrder = 8;       // 4 or 8
+    int layerHpComp = 0;        // 1: the filter's phase at k f_osc is subtracted from psi's target (both branches), keeps the input alignment of sustained notes
 };
 
 class ResultantCore {
@@ -44,7 +47,7 @@ public:
     static constexpr int kVoices = 8;        // voice slots (V_max)
     static constexpr int kFade = 2;          // extra fade-only slots for voices pushed out of a full slot table
     static constexpr int kPartials = 7;      // harmonics k = 2..8
-    static constexpr int kParams = 19;
+    static constexpr int kParams = 22;
     static constexpr int kTraceFields = 22;
     static constexpr int kOut = 64;          // output ring, power of two (a hop writes 16 samples ahead of the read index)
     static constexpr int kTracks = 12;       // VbHpv::tr52_ capacity
@@ -65,6 +68,14 @@ public:
     // One hop (called at the end of pvFrame52 with measured = true and src/ns of that hop, and at the end of
     // missingFrame52 with measured = false). Writes the 16 samples [i, i + 16) of the output ring.
     void hop(VbHpv& v, bool measured, const double (*src)[256], const int* ns);
+    // Layer high-pass (params 20-22): true when a filter is set; hpTick filters one 3 kHz output sample (state cleared by reset()).
+    bool hpOn() const { return p_.layerHpHz > 0; }
+    double hpTick(double x) {
+        for (int s = 0; s < p_.layerHpOrder / 2; ++s) x = hp_[s].tick(x);
+        return x;
+    }
+    // Phase (rad) of the filter's 3 kHz digital response at f Hz.
+    double hpPhase(double f) const;
     // Reads and clears one output sample (index = core sample index).
     double take(int64_t index) {
         double& s = out_[index & (kOut - 1)];
@@ -173,7 +184,19 @@ private:
     void updatePhaseHistory(const Ctx& cx);
     bool eligible(const Voice& u) const { return u.state == Cand || u.state == On || (u.state == Rel && u.c > 0.1); }
 
+    struct HpBiquad {   // direct form II transposed, like VbHpv::Biquad
+        double b0 = 1, b1 = 0, b2 = 0, a1 = 0, a2 = 0, z0 = 0, z1 = 0;
+        inline double tick(double x) {
+            const double y = b0 * x + z0;
+            z0 = b1 * x - a1 * y + z1;
+            z1 = b2 * x - a2 * y;
+            return y;
+        }
+    };
+    void designHp();
+
     ResultantParams p_;
+    HpBiquad hp_[4];           // layer high-pass sections (order / 2 used)
     Voice vo_[kVoices + kFade];
     double out_[kOut];
     int nextVoiceId_ = 0;
