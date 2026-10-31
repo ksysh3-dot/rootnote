@@ -174,7 +174,7 @@ bool ResultantCore::setParams(const double* v, int n) {
     double q[kParams] = {static_cast<double>(d.voicing), d.levelDb, static_cast<double>(d.ampSource), d.snrOnDb,
         d.snrFastDb, d.snrOffDb, d.tauOnMs, d.tauOffMs, d.betaMin, d.betaMax, d.kappa, static_cast<double>(d.nMin),
         static_cast<double>(d.nFuture), d.psiSlew, static_cast<double>(d.crest), d.maxDfdtBirth, d.capRho, static_cast<double>(d.windowCreep), static_cast<double>(d.creepMode),
-        d.layerHpHz, static_cast<double>(d.layerHpOrder), static_cast<double>(d.layerHpComp)};
+        d.layerHpHz, static_cast<double>(d.layerHpOrder), static_cast<double>(d.layerHpComp), static_cast<double>(d.renderFreqMode), d.renderTauMs};
     for (int i = 0; i < n; ++i) q[i] = v[i];
     auto in = [&](int i, double lo, double hi) { return std::isfinite(q[i]) && q[i] >= lo && q[i] <= hi; };
     auto flag = [&](int i) { return q[i] == 0.0 || q[i] == 1.0; };
@@ -182,7 +182,8 @@ bool ResultantCore::setParams(const double* v, int n) {
         !in(7, 5, 300) || !in(8, 0, 1) || !in(9, 0, 1) || !in(10, .5, 3) || !in(11, 16, 191) || !in(12, 0, 96) ||
         !in(13, .01, 3.2) || !flag(14) || !in(15, 20, 2000) ||
         !(q[16] == 0.0 || in(16, 1, 10)) || !(q[17] == 0.0 || in(17, 1, 320)) || !(q[18] == 0.0 || q[18] == 1.0 || q[18] == 2.0) ||
-        !(q[19] == 0.0 || in(19, 20, 1000)) || !(q[20] == 4.0 || q[20] == 8.0) || !flag(21)) return false;
+        !(q[19] == 0.0 || in(19, 20, 1000)) || !(q[20] == 4.0 || q[20] == 8.0) || !flag(21) ||
+        !flag(22) || !in(23, 1, 500)) return false;
     p_.voicing = static_cast<int>(q[0]); p_.levelDb = q[1]; p_.ampSource = static_cast<int>(q[2]);
     p_.snrOnDb = q[3]; p_.snrFastDb = q[4]; p_.snrOffDb = q[5]; p_.tauOnMs = q[6]; p_.tauOffMs = q[7];
     p_.betaMin = q[8]; p_.betaMax = q[9]; p_.kappa = q[10];
@@ -190,6 +191,7 @@ bool ResultantCore::setParams(const double* v, int n) {
     p_.psiSlew = q[13]; p_.crest = static_cast<int>(q[14]); p_.maxDfdtBirth = q[15];
     p_.capRho = q[16]; p_.windowCreep = static_cast<int>(std::lround(q[17])); p_.creepMode = static_cast<int>(q[18]);
     p_.layerHpHz = q[19]; p_.layerHpOrder = static_cast<int>(q[20]); p_.layerHpComp = static_cast<int>(q[21]);
+    p_.renderFreqMode = static_cast<int>(q[22]); p_.renderTauMs = q[23];
     if (p_.layerHpHz > 0) designHp();
     return true;
 }
@@ -328,6 +330,7 @@ void ResultantCore::syncVoices(Ctx& cx) {
         Voice& u = vo_[s];
         if (u.state == Empty) continue;
         u.thetaStart = u.theta; u.cStart = u.c; u.sigmaStart = u.sigma;
+        if (p_.renderFreqMode) u.thetaRStart = u.thetaR;
         for (int k = 0; k < kPartials; ++k) { u.aStart[k] = u.a[k]; u.psiStart[k] = u.psi[k]; }
     }
     for (int s = 0; s < kVoices; ++s) {
@@ -799,6 +802,45 @@ void ResultantCore::updatePhase(Ctx& cx) {
     }
 }
 
+// Render frequency (v1.6-d, RESULTANT_CORE.md 20.8; the render separation of 19.2.1). Per voice a render phase theta_r integrates f_r, a
+// causal one-pole (per hop, a = 1 - exp(-hop / tau)) of f_track; synthesis uses k theta_r + psi_k, the analysis (theta, f_off, LS, psi
+// targets) is not touched. Restart (theta_r = theta, f_r = f_track): CAND hops (so the birth hop starts from theta), birth. REL -> ON: f_r = f_track only.
+// Confirmed note change: f_r = f_track, the phase goes on. A note change is a flag of 19.2.1 (f_track more than 50 cent from 2 hops
+// earlier, both hops ON or REL) at hop h, confirmed at c = h + 2 when the flag is not a continuation (no flag at h - 1), hops h + 1
+// and c are ON and the two steps h -> h + 1 -> c each stay within 15 cent; no new reset within 8 hops of the last one (the oracle
+// of S19 / SC / F, f_lib.py theta_f3 with reset_c). Called only when renderFreqMode is 1, after updateWeights.
+void ResultantCore::updateRender() {
+    const double aF = 1 - std::exp(-kRHopS * 1000.0 / p_.renderTauMs);
+    auto cents = [](double a, double b) { return 1200.0 * std::log2(a / b); };
+    for (int s = 0; s < kVoices; ++s) {
+        Voice& u = vo_[s];
+        if (u.state == Empty) continue;
+        const bool first = u.rN == 0;
+        u.rF[2] = u.rF[1]; u.rF[1] = u.rF[0]; u.rF[0] = u.f;
+        u.rSt[1] = u.rSt[0]; u.rSt[0] = u.state;
+        ++u.rN;
+        for (int i = 3; i > 0; --i) u.rNc[i] = u.rNc[i - 1];
+        u.rNc[0] = u.rN >= 3 && u.rSt[0] >= On && u.rSt[1] >= On && u.rF[0] > 0 && u.rF[2] > 0 && std::fabs(cents(u.rF[0], u.rF[2])) > 50.0;
+        // theta_r = theta only where the voice starts from silence (CAND, birth; the interval start is taken too, so the phase is continuous inside the hop).
+        // REL -> ON: the voice may still sound, theta_r stays continuous and only the filter state restarts (f_r = f_track), like the oracle's phase.
+        const bool restart = first || u.state == Cand || u.born;
+        const bool relOn = u.rPrev == Rel && u.state == On;
+        if (restart) {
+            u.thetaR = u.theta; u.thetaRStart = u.thetaStart; u.fR = u.f;
+        } else {
+            if (relOn && u.f > 0) u.fR = u.f;
+            else if (u.f > 0) {
+                const bool conf = u.rNc[2] && !u.rNc[3] && u.rF[1] > 0 && u.rSt[0] == On && u.rSt[1] == On &&
+                    std::fabs(cents(u.rF[1], u.rF[2])) <= 15.0 && std::fabs(cents(u.rF[0], u.rF[1])) <= 15.0 && hopCount_ - u.rLastC >= 8;
+                if (conf) { u.fR = u.f; u.rLastC = hopCount_; }
+                else u.fR += aF * (u.f - u.fR);
+            }
+            u.thetaR = u.thetaRStart + kRTwoPi * u.fR * kRHopS;
+        }
+        u.rPrev = u.state;
+    }
+}
+
 // c (confidence), sigma (subordinate weight) and the end of a REL voice
 void ResultantCore::updateWeights(Ctx& cx) {
     (void)cx;
@@ -923,6 +965,7 @@ void ResultantCore::fadeVoices() {
         Voice& u = vo_[s];
         if (u.state != Fade) continue;
         u.theta = u.thetaStart + kRTwoPi * u.fOsc * kRHopS;
+        if (p_.renderFreqMode) u.thetaR = u.thetaRStart + kRTwoPi * u.fR * kRHopS;   // 20.8: the fade slot inherits theta_r / f_r
         double mx = 0;
         for (int k = 0; k < kPartials; ++k) { u.a[k] = u.aStart[k] * decay; mx = std::max(mx, u.a[k]); }
         if (mx < 1e-7) { for (int k = 0; k < kPartials; ++k) u.a[k] = 0; u.dead = true; }
@@ -936,7 +979,9 @@ void ResultantCore::synthesize(const Ctx& cx) {
     for (int s = 0; s < kVoices + kFade; ++s) {
         const Voice& u = vo_[s];
         if (u.state == Empty) continue;
-        const double th0 = std::remainder(u.thetaStart, kRTwoPi), dth = (u.theta - u.thetaStart) / 16.0;
+        // renderFreqMode 1 (20.8): the render phase theta_r replaces theta (same per-sample interpolation)
+        const double thS = p_.renderFreqMode ? u.thetaRStart : u.thetaStart, thE = p_.renderFreqMode ? u.thetaR : u.theta;
+        const double th0 = std::remainder(thS, kRTwoPi), dth = (thE - thS) / 16.0;
         for (int k = 0; k < kPartials; ++k) {
             if (u.a[k] == 0 && u.aStart[k] == 0) continue;
             const double kk = k + 2, da = u.a[k] - u.aStart[k], dp = u.psi[k] - u.psiStart[k];
@@ -997,6 +1042,7 @@ void ResultantCore::hop(VbHpv& v, bool measured, const double (*src)[256], const
     updatePhaseHistory(cx);
     updatePhase(cx);
     updateWeights(cx);
+    if (p_.renderFreqMode) updateRender();
     if (cx.measured && cx.lsOk)
         for (int s = 0; s < kVoices; ++s) {
             Voice& u = vo_[s];
