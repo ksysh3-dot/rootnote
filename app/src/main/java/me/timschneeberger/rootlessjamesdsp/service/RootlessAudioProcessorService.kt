@@ -16,6 +16,7 @@ import android.media.AudioPlaybackCaptureConfiguration
 import android.media.AudioPlaybackConfiguration
 import android.media.AudioRecord
 import me.timschneeberger.rootlessjamesdsp.capture.CaptureMode
+import me.timschneeberger.rootlessjamesdsp.capture.CapturePacer
 import me.timschneeberger.rootlessjamesdsp.capture.CaptureSource
 import me.timschneeberger.rootlessjamesdsp.capture.CaptureState
 import me.timschneeberger.rootlessjamesdsp.capture.InterceptPolicy
@@ -1030,6 +1031,10 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
             var pvbWasActive = false
             var lastRoute: JdspChain.Route? = null
             var historySuspended = false
+            // "가로채기" while the output rests: no blocking write paces the reads any more, and the intercepted players
+            // are consumed at the pace this loop reads them, so they would run fast (sped-up sound and video). The
+            // reads are held to real time instead, from the start of the rest.
+            val pacer = CapturePacer(sampleRate)
 
             /** Runs the engines of [route] over [frames] frames of silence and drops the output (deep sleep). */
             fun processSilence(route: JdspChain.Route, frames: Int) {
@@ -1264,6 +1269,11 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
                     val silent = inputSilent && outputSilent
                     silenceGate.holdFrames = SilenceGate.holdFrames(holdSetting, sampleRate)
                     if (silenceGate.skip(silent, pauseAllowed, samples / 2)) {
+                        if (recorder.intercepting) {
+                            val waitNs = pacer.afterRead(samples / 2, android.os.SystemClock.elapsedRealtimeNanos())
+                            if (waitNs > 0) LockSupport.parkNanos(waitNs)
+                            if (stopRequested) return
+                        }
                         // Paused long enough (deep sleep on, no music playing anywhere): stop the capture as well.
                         // Music that is not captured (an excluded app) keeps it awake; ask at most once a second.
                         var goDeep = false
@@ -1287,6 +1297,7 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
                             Timber.d("Deep sleep: capture stopped")
                         }
                     } else {
+                        pacer.reset()
                         if (outputPaused && !resumeOutput()) return
                         if (!(if (isShort) writeAll(shortOutBuffer, samples) else writeAll(floatOutBuffer, samples))) return
                         if (silenceGate.afterBlock(silent, samples / 2, pauseAllowed)) {

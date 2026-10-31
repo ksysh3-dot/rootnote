@@ -41,6 +41,11 @@ OUTI="$HERE/../build/jvm-intercept"
 rm -rf "$OUTI"; mkdir -p "$OUTI"
 $KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/../../../app/src/main/java/me/timschneeberger/rootlessjamesdsp/capture/InterceptPolicy.kt" "$HERE/InterceptPolicyTest.kt" -d "$OUTI"
 java -cp "$OUTI:$KOTLIN_STDLIB" InterceptPolicyTestKt
+# "가로채기": real-time pacing of the reads while the output rests (pure Kotlin)
+OUTP="$HERE/../build/jvm-pacer"
+rm -rf "$OUTP"; mkdir -p "$OUTP"
+$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/../../../app/src/main/java/me/timschneeberger/rootlessjamesdsp/capture/CapturePacer.kt" "$HERE/CapturePacerTest.kt" -d "$OUTP"
+java -cp "$OUTP:$KOTLIN_STDLIB" CapturePacerTestKt
 # service silence pause (battery; pure Kotlin)
 OUTG="$HERE/../build/jvm-silence"
 rm -rf "$OUTG"; mkdir -p "$OUTG"
