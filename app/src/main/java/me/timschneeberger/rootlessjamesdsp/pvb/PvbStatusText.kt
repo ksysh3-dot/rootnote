@@ -90,7 +90,7 @@ class PvbStatusText(private val context: Context) {
             val vbLabel = if (PvbBuild.general) "가상 저음" else "가상 저음 (알파 3)"
             val modelName = if (research) "${PvbSettings.vbAlgoName(vb - 1)} · " else ""
             lines += when {
-                vb in 1..11 ->
+                PvbModels.inUse(vb - 1) ->
                     "$vbLabel: ${modelName}레벨 ${signed(s.vbLevelDb)} dB" +
                         (if (s.vbVolLink) " · 볼륨 연동 −${fmt(s.vbVolReductionDb)} dB → 적용 ${signed(s.vbAppliedLevelDb)} dB" else "")
                 else -> "$vbLabel: 켜져 있지만 지금은 쓰지 않음 (우회 중이거나 이 샘플레이트에서 지원 안 됨)"

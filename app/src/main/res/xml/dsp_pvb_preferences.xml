@@ -352,7 +352,7 @@
             android:title="@string/pvb_vb_level"
             android:defaultValue="6"
             android:dependency="pvb_vb_enable"
-            app:minValue="0"
+            app:minValue="-6"
             app:maxValue="12"
             app:seekBarIncrement="1"
             app:precision="0"

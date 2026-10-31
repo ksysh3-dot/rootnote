@@ -42,9 +42,9 @@ object HomeLogic {
     fun sliderMax(caps: SafeCaps?): Int =
         (caps?.vbLevelMax ?: PvbSettings.VB_LEVEL_MAX).coerceIn(PvbSettings.VB_LEVEL_MIN, PvbSettings.VB_LEVEL_MAX).toInt()
 
-    /** A stored level as a slider position: whole dB, inside 0..[sliderMax]; non-finite gives the default. */
+    /** A stored level as a slider position: whole dB, inside [PvbSettings.VB_LEVEL_MIN]..[sliderMax]; non-finite gives the default. */
     fun sliderValue(levelDb: Float, caps: SafeCaps?): Int =
-        PvbSettings.clampLevel(levelDb).roundToInt().coerceIn(0, sliderMax(caps))
+        PvbSettings.clampLevel(levelDb).roundToInt().coerceIn(PvbSettings.VB_LEVEL_MIN.toInt(), sliderMax(caps))
 
     /**
      * The selected chip, derived from model + level exactly like the preset list of the advanced screen
@@ -96,7 +96,7 @@ object HomeLogic {
     }
 
     /** "+6 dB"-style strength label for the slider value. */
-    fun levelLabel(level: Int): String = "+$level"
+    fun levelLabel(level: Int): String = if (level < 0) "$level" else "+$level"
 
     /** Limiter working share (%, PvbMeter.LIM_ACTIVE_PCT, ~3 s) at or above which the home suggests a lower strength. */
     const val PRESSURE_ON_PCT = 30f

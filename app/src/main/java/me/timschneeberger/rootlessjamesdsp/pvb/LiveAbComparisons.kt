@@ -46,7 +46,7 @@ object LiveAbComparisons {
             PvbRuntime.AbCondition(side.id, side.label(base), side.trimDb, headroomDb, side.apply)
     }
 
-    /** The user's slider value as the engine reads it (whole dB, 0..12). */
+    /** The user's slider value as the engine reads it (whole dB, -6..12; the model's own level trim is added where the engine level is formed, [VolumeLevelLink.levelFor]). */
     fun userLevel(base: PvbSettings): Float = PvbSettings.clampLevel(base.vbLevelDb)
 
     /** [LOWER_DB] below the user's level, not below the volume link's floor. */

@@ -201,7 +201,7 @@ data class PvbSettings(
         /** Layer silent, algorithm (and its latency) kept: the reference side of the virtual bass blind comparisons. */
         const val VB_LEVEL_OFF = -120f
         /** Strength slider range, dB re the 'faithful' level, whole-dB steps (the engine accepts up to +12). */
-        const val VB_LEVEL_MIN = 0f
+        const val VB_LEVEL_MIN = -6f   // was 0 until 2026-10-31 (RESULTANT_CORE.md 19.12); saved values 0..12 are unchanged
         const val VB_LEVEL_MAX = 12f
         const val VB_LEVEL_DEFAULT = 6f
 
@@ -221,7 +221,7 @@ data class PvbSettings(
          * - alpha 1 names / unknown -> default model (P1); the old name is kept in [KEY_VB_LEGACY_MODEL].
          * - schema < 3 and the alpha 2 reference -> P1 (one time; [KEY_VB_ALPHA2_MODEL] records it). Any other
          *   current model is kept, and choosing the reference again later is respected.
-         * - the old level string (-6..+9) -> slider value clamped into 0..12; no old level -> the new default.
+         * - the old level string (-6..+9) -> slider value clamped into -6..12 (an old -6..-1 now stays negative); no old level -> the new default.
          */
         fun migrateVirtualBassModel(p: SharedPreferences) {
             val all = p.all

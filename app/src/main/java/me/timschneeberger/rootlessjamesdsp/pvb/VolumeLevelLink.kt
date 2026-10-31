@@ -21,8 +21,12 @@ object VolumeLevelLink {
     const val MAX_DB_DEFAULT = 12f
     const val MAX_DB_MIN = 3f
     const val MAX_DB_MAX = 12f
-    /** Lowest level the reduction may bring the layer to (dB re the 'faithful' level). */
-    const val FLOOR_DB = -12f
+    /**
+     * Lowest level the reduction may bring the layer to (dB re the 'faithful' level): the lowest slider value
+     * ([PvbSettings.VB_LEVEL_MIN], -6) less the largest reduction ([MAX_DB_MAX]). It was -12 while the slider stopped
+     * at 0; slider values from 0 up reach the same levels as before.
+     */
+    const val FLOOR_DB = -18f
 
     /**
      * Volume index -> percentage of the fine scale, the inverse of the reference mapping in PvbController
@@ -61,7 +65,22 @@ object VolumeLevelLink {
     fun reductionFor(s: PvbSettings, index: Int, max: Int): Float =
         if (!s.vbVolLink) 0f else reductionDb(volumePct(index, max), s.vbVolRefPct, s.vbVolSlope, s.vbVolMaxDb)
 
-    /** The level the engine plays for these settings at this volume (link off -> the slider value unchanged). */
-    fun levelFor(s: PvbSettings, index: Int, max: Int): Float =
-        if (!s.vbVolLink) s.vbLevelDb else effectiveLevelDb(s.vbLevelDb, reductionFor(s, index, max))
+    /**
+     * The slider value plus the model's own level trim ([PvbModels.Model.levelTrimDb], 0 for most models). A silent layer
+     * (slider value at or below the floor, e.g. [PvbSettings.VB_LEVEL_OFF]) or a non-finite value is left as it is.
+     */
+    fun trimmedLevelDb(sliderDb: Float, algo: Int): Float {
+        if (!sliderDb.isFinite() || sliderDb <= FLOOR_DB) return sliderDb
+        return sliderDb + PvbModels.trimDb(algo)
+    }
+
+    /**
+     * The level the engine plays for these settings at this volume: slider value + model trim, then (link on) the
+     * volume reduction. This is the one place the effective level is formed; the engine encoding, the status and the
+     * live A/B records all read it.
+     */
+    fun levelFor(s: PvbSettings, index: Int, max: Int): Float {
+        val level = trimmedLevelDb(s.vbLevelDb, s.vbAlgo)
+        return if (!s.vbVolLink) level else effectiveLevelDb(level, reductionFor(s, index, max))
+    }
 }

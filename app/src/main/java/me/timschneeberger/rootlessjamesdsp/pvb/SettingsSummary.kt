@@ -27,7 +27,7 @@ object SettingsSummary {
             appendLine("EQ: hp ${f(s.hpHz, 0)} Hz · low-mid ${db(s.lowDb)} @ ${f(s.lowHz, 0)} Hz Q ${f(s.lowQ, 2)} · " +
                 "treble ${db(s.hiDb)} @ ${f(s.hiHz, 0)} Hz Q ${f(s.hiQ, 2)} · tilt ${db(s.hsDb)} @ ${f(s.hsHz, 0)} Hz")
             appendLine("out ${db(s.outDb)} · ceiling ${db(s.ceilDb)} · volume link ${s.volLink} · quiet bass ${s.dynOn}")
-            appendLine("virtual bass: ${s.vbOn} · $vbModel ${db(s.vbLevelDb)} · volume link ${s.vbVolLink}")
+            appendLine("virtual bass: ${s.vbOn} · $vbModel ${db(s.vbLevelDb)}${PvbModels.trimDb(s.vbAlgo).let { if (it != 0f) " (model trim ${db(it)})" else "" }} · volume link ${s.vbVolLink}")
             appendLine("spatial: $spatial ${db(s.xtcStrengthDb)} · ${f(s.xtcDistanceCm, 0)} cm · hat ${f(s.xtcHatCm, 0)} · " +
                 "balance ${db(s.xtcBalLoDb)} / ${db(s.xtcBalHiDb)}")
             append("code: $devCode")

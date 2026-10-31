@@ -42,7 +42,7 @@ fun main(args: Array<String>) {
     expect(HomeLogic.sliderMax(null) == 12, "s26u slider is 0..12 dB")
     expect(HomeLogic.sliderValue(12f, general) == 9, "12 dB shows as the 9 dB cap")
     expect(HomeLogic.sliderValue(3.6f, general) == 4, "whole dB steps")
-    expect(HomeLogic.sliderValue(-5f, general) == 0, "below 0 -> 0")
+    expect(HomeLogic.sliderValue(-5f, general) == -5 && HomeLogic.sliderValue(-9f, general) == -6, "negative strength stays, floor -6")
     expect(HomeLogic.sliderValue(Float.NaN, general) == 6, "non-finite -> default 6")
     expect(HomeLogic.sliderValue(12f, null) == 12, "s26u keeps 12")
 
@@ -129,6 +129,9 @@ fun main(args: Array<String>) {
     expect(HomeLogic.signedDb(0f) == "0", "zero")
     expect(HomeLogic.signedDb(Float.NaN) == "?", "non-finite")
     expect(HomeLogic.levelLabel(6) == "+6", "slider label")
+    expect(HomeLogic.levelLabel(-3) == "-3" && HomeLogic.levelLabel(0) == "+0", "slider label, negative strength")
+    expect(HomeLogic.sliderValue(-6f, null) == -6 && HomeLogic.sliderValue(-9f, null) == -6 && HomeLogic.sliderValue(4f, null) == 4,
+        "slider position: -6 is the lowest")
 
     // --- strings of the screen: same keys in English and Korean, Android-safe text ---
     fun strings(dir: String): Map<String, String> {

@@ -41,6 +41,9 @@ fun main() {
     // P1+ / P1++ / P1++ v0.3 (11-13), and the re-exposed gentle12 (ID 3); P1 is the default.
     check(PvbModels.models.map { it.id } == listOf(6, 15, 16, 14, 11, 12, 13, 4, 7, 8, 9, 10, 3))
     check(PvbModels.models.map { it.key }.distinct().size == 13)
+    // The status line shows the level for every selectable model (meter value = id + 1), not only ids 0..10.
+    check(PvbModels.models.all { PvbModels.inUse(it.id) } && (0..16).all { PvbModels.inUse(it) })
+    check(!PvbModels.inUse(-1) && !PvbModels.inUse(17) && !PvbModels.inUse(99))
     check(PvbModels.DEFAULT_KEY == "alpha2_p1" && PvbModels.fromKey(null).id == PvbModels.P1)
     check(PvbModels.fromKey("alpha2_reference").id == 4 && PvbModels.fromKey("alpha3_gentle12").id == 3)
     for (model in PvbModels.models) check(PvbSettings.vbAlgoName(model.id) == model.title)
@@ -89,10 +92,11 @@ fun main() {
         check(p.values[key] == PvbModels.DEFAULT_KEY && PvbSettings.load(p).vbAlgo == PvbModels.P1)
     }
 
-    // 5. Old level list -> slider, clamped into 0..12 (whole dB); no old level -> the new default 6.
+    // 5. Old level list -> slider, clamped into -6..12 (whole dB); no old level -> the new default 6.
+    check(PvbSettings.VB_LEVEL_MIN == -6f && PvbSettings.VB_LEVEL_MAX == 12f)
     val levels = mapOf<Any?, Float>(
-        "-6" to 0f, "-3" to 0f, "0" to 0f, "3" to 3f, "6" to 6f, "9" to 9f, "15" to 12f, "12" to 12f,
-        "7.4" to 7f, "garbage" to 6f, "NaN" to 6f, 9f to 9f, -3 to 0f, null to 6f)
+        "-9" to -6f, "-6" to -6f, "-3" to -3f, "0" to 0f, "3" to 3f, "6" to 6f, "9" to 9f, "15" to 12f, "12" to 12f,
+        "7.4" to 7f, "garbage" to 6f, "NaN" to 6f, 9f to 9f, -3 to -3f, null to 6f)
     for ((old, want) in levels) {
         val init = preserved + mapOf(key to "alpha2_d2", schema to 2) + (if (old == null) emptyMap() else mapOf(legacyLevel to old))
         val p = migrated(init)
@@ -108,7 +112,14 @@ fun main() {
     check(migrated(mapOf(key to "alpha2_p1", schema to 3, strength to Float.NaN)).values[strength] == 6f)
     // load() alone also clamps (e.g. a value typed into the input dialog before a migration ran).
     check(PvbSettings.load(Prefs(mapOf(strength to 13f))).vbLevelDb == 12f)
-    check(PvbSettings.load(Prefs(mapOf(strength to -2f))).vbLevelDb == 0f)
+    check(PvbSettings.load(Prefs(mapOf(strength to -2f))).vbLevelDb == -2f)       // negative strength is valid now
+    check(PvbSettings.load(Prefs(mapOf(strength to -9f))).vbLevelDb == -6f)
+    // Saved values from the old 0..12 range stay exactly as they are (no write, no change).
+    for (v in 0..12) {
+        val p = migrated(mapOf(key to "alpha2_p1", schema to 3, strength to v.toFloat()))
+        check(p.values[strength] == v.toFloat() && PvbSettings.load(p).vbLevelDb == v.toFloat() && p.writes == 0) { "saved $v changed" }
+    }
+    check(migrated(mapOf(key to "alpha2_p1", schema to 3, strength to -6f)).writes == 0)   // and -6 is a valid saved value
     check(PvbSettings.load(Prefs(mapOf(strength to "x"))).vbLevelDb == 6f)
     check(PvbSettings.clampLevel(Float.POSITIVE_INFINITY) == 6f)
 

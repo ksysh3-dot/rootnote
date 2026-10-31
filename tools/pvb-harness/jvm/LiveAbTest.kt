@@ -212,7 +212,18 @@ private fun catalogue() {
     check(rv.sides.map { it.apply(user).vbAlgo } == listOf(PvbModels.RESULTANT, PvbModels.RESULTANT_V16))
     check(rv.sides.all { it.apply(user).vbLevelDb == 7f })
     check(rv.sides.map { it.label(user) } == listOf("Resultant v1.5 (ID 15) +7 dB", "Resultant v1.6 (ID 16) +7 dB"))
+    // the level each side plays (and the record stores as effective_level_db) includes the model trim; the slider and trim_db do not
+    check(rv.sides.map { VolumeLevelLink.levelFor(it.apply(user), 13, 15) } ==
+        listOf(7f + PvbModels.RESULTANT_V15_TRIM_DB, 7f + PvbModels.RESULTANT_V16_TRIM_DB))
+    check(rv.sides.all { it.trimDb == 0f && !it.trimMeasured && it.apply(user).vbLevelDb == 7f })
+    // negative strength: the user's -6 stays -6, "3 dB smaller" is -9 (above the -18 floor)
+    check(C.userLevel(user.copy(vbLevelDb = -6f)) == -6f && C.loweredLevel(user.copy(vbLevelDb = -6f)) == -9f)
+    check(C.byId("p1_vs_p1_minus3")!!.sides[1].apply(user.copy(vbLevelDb = -6f)).vbLevelDb == -9f)
+    check(LiveAbRecord.CHIPS.containsAll(listOf("쿠훙", "가각", "지직", "훙훙", "저음 약함", "저음 풍성")) && "쿠쿠쿵" in LiveAbRecord.CHIPS &&
+        LiveAbRecord.CHIPS.toSet().size == LiveAbRecord.CHIPS.size)
     val rv3 = C.byId("p1_vs_resultant_v15_vs_v16")!!
+    check(rv3.sides.map { VolumeLevelLink.levelFor(it.apply(user), 13, 15) } ==
+        listOf(7f, 7f + PvbModels.RESULTANT_V15_TRIM_DB, 7f + PvbModels.RESULTANT_V16_TRIM_DB))
     check(rv3.sides.map { it.apply(user).vbAlgo } == listOf(PvbModels.P1, PvbModels.RESULTANT, PvbModels.RESULTANT_V16))
     check(rv3.sides.all { it.apply(user).vbLevelDb == 7f } && rv3.headroomDb == PvbAbConditions.HEADROOM_DB)
     check(C.byId("p1_vs_d2_vs_id4")!!.sides.map { it.apply(user).vbAlgo } == listOf(PvbModels.P1, PvbModels.D2, PvbModels.REFERENCE))

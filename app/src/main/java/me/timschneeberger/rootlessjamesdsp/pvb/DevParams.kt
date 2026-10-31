@@ -127,6 +127,8 @@ object DevParams {
         listOf(S), DevHighlight.LAYER)
     val X_S1M = DevSpec("x_s1m", PvbSettings.KEY_X_S1M, DevGroup.TIME, DevUnit.SWITCH, 0f, 1f, 1f, 0f, 0f, 1f,
         listOf(E), DevHighlight.RELEASE)
+    // Lower end stays 0 on purpose: the share code (RN1) stores the index from min, so a lower min would change every
+    // existing code. The main strength slider goes down to PvbSettings.VB_LEVEL_MIN (-6).
     val STRENGTH = DevSpec("strength", PvbSettings.KEY_VB_STRENGTH_DB, DevGroup.SIZE, DevUnit.DB, 0f, DEV_VB_LEVEL_MAX, 1f,
         4f, 2f, 6f, listOf(R, M, S), DevHighlight.LAYER)
     val VOL_START = DevSpec("vol_start", PvbSettings.KEY_VB_VOL_REF_PCT, DevGroup.SIZE, DevUnit.PCT,

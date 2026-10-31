@@ -92,7 +92,7 @@ data class LiveAbRecord(
     companion object {
         const val SAME = "same"
         /** Symptom chips, in display order (saved as these strings). */
-        val CHIPS = listOf("쿠훙", "가각", "지직", "훙훙", "저음 약함", "저음 풍성")
+        val CHIPS = listOf("쿠훙", "쿠쿠쿵", "가각", "지직", "훙훙", "저음 약함", "저음 풍성")
 
         fun verdictValid(verdict: String, sides: Int): Boolean =
             verdict == SAME || LiveAbShuffle.LETTERS.take(sides).contains(verdict)
