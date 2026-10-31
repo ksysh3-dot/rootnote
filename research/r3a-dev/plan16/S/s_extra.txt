@@ -1,4 +1,0 @@
-segment duration ms p10/50/90: missing [5, 62, 126] 70  covered [100, 280, 1135] 240
-missing excluding Track00040 7 199 3.5
-time-weighted excl T40 28.7
-covered segments: fraction of segment time with S1 layer p10/50/90 [0.4, 0.83, 0.97]

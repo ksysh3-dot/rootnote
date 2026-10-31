@@ -1,7 +1,0 @@
-b0p0 {'hops': 2062, 'on_frac': 0.33802133850630456, 'n_gaps': 33, 'gap_hops_total': 1365, 'longest_gap': 334}
-b3p2 {'hops': 2059, 'on_frac': 0.3370568237008256, 'n_gaps': 23, 'gap_hops_total': 1365, 'longest_gap': 333}
-nfa48 {'hops': 2061, 'on_frac': 0.3299369238233867, 'n_gaps': 29, 'gap_hops_total': 1381, 'longest_gap': 299}
-nfa72 {'hops': 2062, 'on_frac': 0.33365664403491757, 'n_gaps': 29, 'gap_hops_total': 1374, 'longest_gap': 246}
-nfa96 {'hops': 2061, 'on_frac': 0.3153808830664726, 'n_gaps': 29, 'gap_hops_total': 1411, 'longest_gap': 333}
-nfb48 {'hops': 2059, 'on_frac': 0.3428848955803788, 'n_gaps': 24, 'gap_hops_total': 1353, 'longest_gap': 333}
-nfb96 {'hops': 2059, 'on_frac': 0.33559980573093734, 'n_gaps': 27, 'gap_hops_total': 1368, 'longest_gap': 333}

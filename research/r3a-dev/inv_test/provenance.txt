@@ -1,6 +1,0 @@
-checkout 9be3d88b9b217c920b7bbcebf0e5ba031c0dcdf5
-status:
-c5142e8860ec4c664fe5482f6d62f9fcd4b8520f241285f3d702591cfd9918e2  tools/pvb-harness/research_gt_bass.py
-tracks 20
-started 2026-10-29T20:26:57+09:00
-done 2026-10-29T20:28:00+09:00

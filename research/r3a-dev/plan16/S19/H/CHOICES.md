@@ -1,8 +1,0 @@
-# S19-H CHOICES (fixed before any result was looked at)
-Rows: p1, v15, b3p2 (v1.6-b); rendering = A5P/p_primary.render_song (with_trace=False), identical to S19-L (library build_core16b for core rows). Layers are kept in memory only; numbers only are saved.
-Cut variants applied to the rendered whole-song layer (causal, sosfilt float64, realizable in the engine; no zero-phase):
- - Butterworth high-pass, fc in {120,135,150} Hz x order in {4,8}  (6 variants, -3 dB at fc)
- - extra reference: Linkwitz-Riley 4 (= two cascaded Butterworth-2, -6 dB at fc) at fc=150 Hz (the engine input HP is LR4 100 Hz). Total 7 + 'none'.
-Data / windows / excerpt / pooling: exactly S19-L CHOICES (7 user windows pooled by summing energies + per window; 12 held-out songs, 30 s from 60 s, median over songs). Filter applied to the WHOLE song, then cut to the window/excerpt.
-Measures per row x variant: (1) sub-150 absolute level = mean square of the 20-140 Hz linear-phase band (S19-L raised-cosine mask, 5 ms boxes mean) in dBFS; primary 20-150/150-600 (sosfiltfilt) dB; leakage-free ratio 20-140/150-600 (Hann FFT, S19-L bins); burst share (>2x 200 ms running median, energy share) of the 20-140 band. (2) body: 150-600, 150-200, 200-300 Hann FFT band energy change in dB vs the same row uncut (pooled windows; held-out median over songs). (3) per-window 20-140 dBFS and 20-140/150-600 dB for the 7 windows, ranked; compare to P1 uncut. (4) analytic filter response: gain, phase (deg), group delay (ms) at 150,200,300 Hz and phase at k*f (k=1..4) for f=75,100,125 Hz.
-Anchors: v1.6-b uncut, P1 uncut, v1.5 uncut. No adoption decisions.

@@ -1,7 +1,0 @@
-v1.5 {'hops': 2062, 'on_frac': 0.3268671193016489, 'n_gaps': 33, 'gap_hops_total': 1388, 'longest_gap': 278}
-A2 1.5 {'hops': 2062, 'on_frac': 0.3288069835111542, 'n_gaps': 32, 'gap_hops_total': 1384, 'longest_gap': 334}
-A1+A2 8/1.5 {'hops': 2061, 'on_frac': 0.34400776322173704, 'n_gaps': 31, 'gap_hops_total': 1352, 'longest_gap': 334}
-A1p (i) 8 {'hops': 2062, 'on_frac': 0.3394762366634336, 'n_gaps': 32, 'gap_hops_total': 1362, 'longest_gap': 291}
-A1p (i) 16 {'hops': 2062, 'on_frac': 0.3389912706110572, 'n_gaps': 32, 'gap_hops_total': 1363, 'longest_gap': 291}
-A1p (ii) 8 {'hops': 2062, 'on_frac': 0.3317167798254122, 'n_gaps': 31, 'gap_hops_total': 1378, 'longest_gap': 334}
-A1p (ii) 16 {'hops': 2062, 'on_frac': 0.33802133850630456, 'n_gaps': 33, 'gap_hops_total': 1365, 'longest_gap': 334}

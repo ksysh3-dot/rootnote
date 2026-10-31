@@ -1,6 +1,0 @@
-Track00026: base (a+b+c) proxy share 4.9 %; (c) without pitch tie: (c) proxy share 95.5 % (+90.6 pp from (d)/(e)) -> (a+b+c)_loose = 95.5 % (threshold 60)
-   control (same loose test with f shifted +-0.25 octave on the same (d)/(e) hops): +88.3 pp / +90.6 pp  (vs +90.6 pp real)
-   (e) signed cents (nearest mix peak minus voice f, +-300 search; + = peak above voice), weighted: n 6231; share peak above 49 %; below 51 %; weighted median -11; deciles 10/25/50/75/90: -101 -76 -15 +79 +130
-Track00024: base (a+b+c) proxy share 0.0 %; (c) without pitch tie: (c) proxy share 14.7 % (+14.7 pp from (d)/(e)) -> (a+b+c)_loose = 14.7 % (threshold 60)
-   control (same loose test with f shifted +-0.25 octave on the same (d)/(e) hops): +15.1 pp / +13.9 pp  (vs +14.7 pp real)
-   (e) signed cents (nearest mix peak minus voice f, +-300 search; + = peak above voice), weighted: n 5162; share peak above 38 %; below 62 %; weighted median -53; deciles 10/25/50/75/90: -210 -154 -74 +85 +164

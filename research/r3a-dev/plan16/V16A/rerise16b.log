@@ -1,8 +1,0 @@
-P1 {'rerise_median': 0.0, 'rerise_n_above6': 2, 'rerise_p90': 3.105, 'n': 38, 'n_fell': 38, 'tail_bp_ms': 3.135, 'tail_raw_ms': 3.167}
-v1.5 {'rerise_median': 3.493, 'rerise_n_above6': 17, 'rerise_p90': 14.46, 'n': 38, 'n_fell': 38, 'tail_bp_ms': 46.26, 'tail_raw_ms': 44.177}
-v1.6-a base (A2 1.5) {'rerise_median': 1.585, 'rerise_n_above6': 15, 'rerise_p90': 12.036, 'n': 38, 'n_fell': 38, 'tail_bp_ms': 43.792, 'tail_raw_ms': 43.062}
-A1 8/1.5 (uncond) {'rerise_median': 0.0, 'rerise_n_above6': 5, 'rerise_p90': 7.839, 'n': 38, 'n_fell': 38, 'tail_bp_ms': 7.885, 'tail_raw_ms': 9.573}
-A1p (i) 8 {'rerise_median': 3.523, 'rerise_n_above6': 17, 'rerise_p90': 14.287, 'n': 38, 'n_fell': 37, 'tail_bp_ms': 9.396, 'tail_raw_ms': 7.812}
-A1p (i) 16 {'rerise_median': 2.179, 'rerise_n_above6': 15, 'rerise_p90': 12.825, 'n': 38, 'n_fell': 37, 'tail_bp_ms': 39.823, 'tail_raw_ms': 40.448}
-A1p (ii) 8 {'rerise_median': 0.0, 'rerise_n_above6': 7, 'rerise_p90': 8.47, 'n': 38, 'n_fell': 38, 'tail_bp_ms': 10.667, 'tail_raw_ms': 9.781}
-A1p (ii) 16 {'rerise_median': 0.827, 'rerise_n_above6': 10, 'rerise_p90': 8.491, 'n': 38, 'n_fell': 37, 'tail_bp_ms': 24.625, 'tail_raw_ms': 18.781}

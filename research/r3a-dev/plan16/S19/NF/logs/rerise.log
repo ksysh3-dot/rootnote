@@ -1,8 +1,0 @@
-p1 {'rerise_median': 0.0, 'rerise_n_above6': 2, 'rerise_p90': 3.105, 'n': 38, 'n_fell': 38, 'tail_bp_ms': 3.135, 'tail_raw_ms': 3.167}
-b0p0 {'rerise_median': 0.827, 'rerise_n_above6': 10, 'rerise_p90': 8.491, 'n': 38, 'n_fell': 37, 'tail_bp_ms': 24.625, 'tail_raw_ms': 18.781}
-b3p2 {'rerise_median': 0.46, 'rerise_n_above6': 11, 'rerise_p90': 12.077, 'n': 38, 'n_fell': 38, 'tail_bp_ms': 26.188, 'tail_raw_ms': 27.688}
-nfa48 {'rerise_median': 4.487, 'rerise_n_above6': 10, 'rerise_p90': 12.944, 'n': 38, 'n_fell': 37, 'tail_bp_ms': 7.177, 'tail_raw_ms': 7.073}
-nfa72 {'rerise_median': 1.993, 'rerise_n_above6': 9, 'rerise_p90': 10.331, 'n': 38, 'n_fell': 37, 'tail_bp_ms': 5.688, 'tail_raw_ms': 5.312}
-nfa96 {'rerise_median': 4.748, 'rerise_n_above6': 13, 'rerise_p90': 12.265, 'n': 38, 'n_fell': 37, 'tail_bp_ms': 4.812, 'tail_raw_ms': 4.698}
-nfb48 {'rerise_median': 1.904, 'rerise_n_above6': 10, 'rerise_p90': 9.682, 'n': 38, 'n_fell': 38, 'tail_bp_ms': 21.354, 'tail_raw_ms': 19.448}
-nfb96 {'rerise_median': 5.477, 'rerise_n_above6': 17, 'rerise_p90': 13.197, 'n': 38, 'n_fell': 37, 'tail_bp_ms': 5.677, 'tail_raw_ms': 5.656}

@@ -1,9 +1,0 @@
-# trace-based (16.9 layer) vs captured layer: time-silent band energy, t >= 4 s (raw units; trace = 3 kHz synthesis scale, captured*kappa)
-core: Spearman(captured E_sil, trace-layer E_sil) = 1.000; pooled ratio captured*kappa / trace = 0.998
-  song: captured*kappa | trace  60: 0.340 | 0.324; 40: 0.004 | 0.004; 01: 0.119 | 0.133; 05: 0.199 | 0.224; 12: 0.613 | 0.606; 20: 0.038 | 0.055; 23: 0.470 | 0.487; 24: 1.150 | 0.811; 25: 2.233 | 2.352; 26: 7.789 | 7.979
-  E_act: pooled ratio 0.998; rho trace-layer pooled = 0.1869 (captured 0.1870)
-p1: Spearman(captured E_sil, trace-layer E_sil) = 0.952; pooled ratio captured*kappa / trace = 0.891
-  song: captured*kappa | trace  60: 0.184 | 0.207; 40: 0.000 | 0.001; 01: 0.021 | 0.036; 05: 0.147 | 0.214; 12: 0.264 | 0.290; 20: 0.011 | 0.020; 23: 0.431 | 0.439; 24: 0.697 | 0.605; 25: 0.338 | 0.638; 26: 4.190 | 4.598
-  E_act: pooled ratio 0.882; rho trace-layer pooled = 0.1299 (captured 0.1313)
-trace-layer rho pooled: core 0.1869, P1 0.1299, r = 0.695
-Spearman(trace-layer time-silent E_sil (core), 16.9 silence wrong_sa) = 0.636  (same definitional gap, trace side)

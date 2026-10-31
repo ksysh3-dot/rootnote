@@ -1,6 +1,0 @@
-b3p2 rem
-b0p0 rem
-b0p0 app
-b3p2 app
-b3p2 {'rendered': np.float64(-26.01), 'raw': np.float64(-23.59), 'th3': np.float64(-24.27), 'th5': np.float64(-23.7), 'th9': np.float64(-21.66), 'th15': np.float64(-19.48), 'tp9': np.float64(-21.55)}
-b0p0 {'rendered': np.float64(-22.84), 'raw': np.float64(-17.06), 'th3': np.float64(-20.51), 'th5': np.float64(-21.83), 'th9': np.float64(-21.49), 'th15': np.float64(-20.43), 'tp9': np.float64(-21.42)}

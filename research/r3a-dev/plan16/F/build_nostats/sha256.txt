@@ -1,1 +1,0 @@
-475f27b3a6863a181a3f8a51a20ee6e4e397d4afcfa20b3a77a15c10072b7de1  /home/ksysh/r3a-dev/plan16/F/build_nostats/libpvbcapi.so
