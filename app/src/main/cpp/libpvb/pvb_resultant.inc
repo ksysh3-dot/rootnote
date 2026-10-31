@@ -109,7 +109,7 @@ void ResultantCore::reset() {
     for (auto& u : vo_) u = Voice{};
     std::fill(std::begin(out_), std::end(out_), 0.0);
     nextVoiceId_ = 0; hopCount_ = measCount_ = 0;
-    npJ_ = npJPend_ = 0;
+    npJ_ = npJPend_ = npJA_ = 0;
     std::fill(std::begin(lsSig_), std::end(lsSig_), 0);
     std::fill(std::begin(rejId_), std::end(rejId_), 0u);
     std::fill(std::begin(rejHop_), std::end(rejHop_), static_cast<int64_t>(0));
@@ -117,23 +117,34 @@ void ResultantCore::reset() {
     traceN_ = 0; traceOver_ = false;
 }
 
+#ifdef PVB_RESEARCH_CAPSTATS
+// host research only: [0] voice-hops of LS sets with >= 2 voices (cap evaluated), [1] voice-hops where the cap acted; read and zeroed
+static unsigned long long gCapStats[2] = {0, 0};
+extern "C" __attribute__((visibility("default"))) void pvb_resultant_cap_stats(double* out) {
+    out[0] = static_cast<double>(gCapStats[0]); out[1] = static_cast<double>(gCapStats[1]);
+    gCapStats[0] = gCapStats[1] = 0;
+}
+#endif
+
 bool ResultantCore::setParams(const double* v, int n) {
     if (n < 0 || n > kParams || (n > 0 && !v)) return false;
     const ResultantParams d;
     double q[kParams] = {static_cast<double>(d.voicing), d.levelDb, static_cast<double>(d.ampSource), d.snrOnDb,
         d.snrFastDb, d.snrOffDb, d.tauOnMs, d.tauOffMs, d.betaMin, d.betaMax, d.kappa, static_cast<double>(d.nMin),
-        static_cast<double>(d.nFuture), d.psiSlew, static_cast<double>(d.crest), d.maxDfdtBirth};
+        static_cast<double>(d.nFuture), d.psiSlew, static_cast<double>(d.crest), d.maxDfdtBirth, d.capRho, static_cast<double>(d.windowCreep)};
     for (int i = 0; i < n; ++i) q[i] = v[i];
     auto in = [&](int i, double lo, double hi) { return std::isfinite(q[i]) && q[i] >= lo && q[i] <= hi; };
     auto flag = [&](int i) { return q[i] == 0.0 || q[i] == 1.0; };
     if (!flag(0) || !in(1, 0, 12) || !flag(2) || !in(3, 6, 30) || !in(4, 10, 40) || !in(5, 0, 20) || !in(6, 1, 100) ||
         !in(7, 5, 300) || !in(8, 0, 1) || !in(9, 0, 1) || !in(10, .5, 3) || !in(11, 16, 191) || !in(12, 0, 96) ||
-        !in(13, .01, 3.2) || !flag(14) || !in(15, 20, 2000)) return false;
+        !in(13, .01, 3.2) || !flag(14) || !in(15, 20, 2000) ||
+        !(q[16] == 0.0 || in(16, 1, 10)) || !(q[17] == 0.0 || in(17, 1, 320))) return false;
     p_.voicing = static_cast<int>(q[0]); p_.levelDb = q[1]; p_.ampSource = static_cast<int>(q[2]);
     p_.snrOnDb = q[3]; p_.snrFastDb = q[4]; p_.snrOffDb = q[5]; p_.tauOnMs = q[6]; p_.tauOffMs = q[7];
     p_.betaMin = q[8]; p_.betaMax = q[9]; p_.kappa = q[10];
     p_.nMin = static_cast<int>(std::lround(q[11])); p_.nFuture = static_cast<int>(std::lround(q[12]));
     p_.psiSlew = q[13]; p_.crest = static_cast<int>(q[14]); p_.maxDfdtBirth = q[15];
+    p_.capRho = q[16]; p_.windowCreep = static_cast<int>(std::lround(q[17]));
     return true;
 }
 
@@ -518,7 +529,7 @@ void ResultantCore::transitions(Ctx& cx) {
         Voice& u = vo_[born[i]];
         u.state = On; u.born = true; u.fOff = 0;
         u.lowSnrM = u.domCnt = u.revCnt = u.bigE = 0; u.trans = false;
-        u.npv = u.npvPend = 0; u.psiSet = 0;
+        u.npv = u.npvPend = u.npvA = 0; u.psiSet = 0;
         for (int k = 0; k < kPartials; ++k) { u.present[k] = false; u.offC[k] = u.offF[k] = 0; }
         u.c = u.cStart = 0;
         u.onHop = hopCount_; u.onMeas = 0;
@@ -532,7 +543,7 @@ void ResultantCore::solveLs(Ctx& cx) {
     cx.lsOk = false;
     for (int s = 0; s < kVoices; ++s) vo_[s].npUsed = 0;
     const int nv = cx.nLs;
-    if (nv == 0) return;
+    if (nv == 0) { npJA_ = 0; return; }
     const double fs = kRFs;
     double fbv[kVoices], fdv[kVoices];
     double fLow = 1e9, dfMin = 1e9, sOn = 1e9, sAll = 1e9;
@@ -560,7 +571,15 @@ void ResultantCore::solveLs(Ctx& cx) {
     else if (std::abs(target - npJ_) > .25 * npJ_) { if (++npJPend_ >= 3) { npJ_ = target; npJPend_ = 0; } }
     else npJPend_ = 0;
     npJ_ = std::min(kRMaxPast, std::max(nLo, npJ_));
-    const int npJ = npJ_, nf = std::min(npJ, p_.nFuture), len = npJ + nf + 1;
+    const int npJh = npJ_;   // the window the hysteresis holds
+    int npJ = npJh;
+    if (p_.windowCreep > 0) {   // v1.6-a A1 (13.5 F5): N_J grows by at most windowCreep per hop whatever raised it (SNR, separation, N_lo, birth, set change); shrinking is immediate
+        if (npJA_ <= 0) npJA_ = nLo;
+        else if (npJh > npJA_) npJA_ = std::min(npJh, npJA_ + p_.windowCreep);
+        else npJA_ = npJh;
+        npJ = npJA_;
+    }
+    const int nf = std::min(npJ, p_.nFuture), len = npJ + nf + 1;
     cx.npJ = npJ; cx.nf = nf;
 
     double xs[kRMaxLen + 8], w1[kRMaxLen + 8];
@@ -589,6 +608,32 @@ void ResultantCore::solveLs(Ctx& cx) {
     for (int j = 0; j < nv; ++j) {
         Voice& u = vo_[cx.ls[j]];
         al[j] = sol[2 * j]; be[j] = sol[2 * j + 1];
+        // v1.6-a A2 stage 1 coefficient cap (13.2 D2 as revised by 13.5 F4): A <- min(A, rho A_single) with A_single the amplitude of
+        // this voice alone from the diagonal 2x2 block of G (same weights, same ridge as rSolve, no extra pass). It acts before
+        // the residual below is built, so stage 2 and the other voices see the capped coefficients; A1 is capped with it.
+        // Only pairs matter (a single voice is its own block); the phase of the coefficient is kept.
+        if (p_.capRho > 0 && nv >= 2) {
+            const double g00 = G[2 * j][2 * j], g01 = G[2 * j][2 * j + 1], g11 = G[2 * j + 1][2 * j + 1];
+            const double lam = 1e-4 * .5 * (g00 + g11);
+            const double d00 = g00 + lam, d11 = g11 + lam, det = d00 * d11 - g01 * g01;
+            double aSingle = 0;
+            if (det > 1e-300) {
+                const double sa = (d11 * rhs[2 * j] - g01 * rhs[2 * j + 1]) / det;
+                const double sb = (d00 * rhs[2 * j + 1] - g01 * rhs[2 * j]) / det;
+                aSingle = std::hypot(sa, sb);
+            }
+            const double a1 = std::hypot(al[j], be[j]), lim = p_.capRho * aSingle;
+#ifdef PVB_RESEARCH_CAPSTATS
+            ++gCapStats[0];
+#endif
+            if (det > 1e-300 && a1 > lim) {
+                const double k = lim / a1;
+                al[j] *= k; be[j] *= k;
+#ifdef PVB_RESEARCH_CAPSTATS
+                ++gCapStats[1];
+#endif
+            }
+        }
         u.A = u.A1 = std::hypot(al[j], be[j]);
         u.thetaMeas = std::atan2(-be[j], al[j]);
         u.npUsed = npJ;
@@ -605,14 +650,20 @@ void ResultantCore::solveLs(Ctx& cx) {
         int nvv;
         if (u.trans) {   // the pitch is moving: the shortest window
             nvv = std::min(nLov, npJ);
-            u.npv = nvv; u.npvPend = 0;
+            u.npv = nvv; u.npvPend = 0; u.npvA = nvv;
         } else {
-            const int tgt = std::min(npJ, std::max(nLov, rWindowTarget(u.snr, nLov)));
+            const int tgt = std::min(npJh, std::max(nLov, rWindowTarget(u.snr, nLov)));
             if (u.npv <= 0) { u.npv = tgt; u.npvPend = 0; }
             else if (std::abs(tgt - u.npv) > .25 * u.npv) { if (++u.npvPend >= 3) { u.npv = tgt; u.npvPend = 0; } }
             else u.npvPend = 0;
-            u.npv = std::min(npJ, std::max(nLov, u.npv));
+            u.npv = std::min(npJh, std::max(nLov, u.npv));
             nvv = u.npv;
+            if (p_.windowCreep > 0) {   // v1.6-a A1: the same growth limit on the stage 2 window
+                if (u.npvA <= 0) u.npvA = std::min(nvv, nLov);
+                else if (nvv > u.npvA) u.npvA = std::min(nvv, u.npvA + p_.windowCreep);
+                else u.npvA = nvv;
+                nvv = std::min(u.npvA, npJ);
+            }
         }
         const bool nuis2 = 2 * fbv[j] < 200.0, nuis3 = 3 * fbv[j] < 200.0;
         if (nv == 1 && nvv == npJ && !nuis2) continue;   // would reproduce stage 1
