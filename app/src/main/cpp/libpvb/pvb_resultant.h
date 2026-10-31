@@ -40,6 +40,8 @@ struct ResultantParams {
     double layerHpHz = 0;       // v1.6-c (19.7): causal Butterworth high-pass on the whole core output (3 kHz), in series with the output band filter; 0 = off (v1.6-b)
     int layerHpOrder = 8;       // 4 or 8
     int layerHpComp = 0;        // 1: the filter's phase at k f_osc is subtracted from psi's target (both branches), keeps the input alignment of sustained notes
+    int renderFreqMode = 0;     // v1.6-d (RESULTANT_CORE.md 20.8): 1 = synthesis uses a render phase theta_r that integrates a low-passed f_track (render only, analysis unchanged); 0 = theta
+    double renderTauMs = 10;    // renderFreqMode 1: time constant of the causal one-pole on f_track (1..500 ms)
 };
 
 class ResultantCore {
@@ -47,7 +49,7 @@ public:
     static constexpr int kVoices = 8;        // voice slots (V_max)
     static constexpr int kFade = 2;          // extra fade-only slots for voices pushed out of a full slot table
     static constexpr int kPartials = 7;      // harmonics k = 2..8
-    static constexpr int kParams = 22;
+    static constexpr int kParams = 24;
     static constexpr int kTraceFields = 22;
     static constexpr int kOut = 64;          // output ring, power of two (a hop writes 16 samples ahead of the read index)
     static constexpr int kTracks = 12;       // VbHpv::tr52_ capacity
@@ -115,6 +117,15 @@ private:
         int histN = 0;             // consecutive measured hops with a LS phase in thHist (at most 8)
         int64_t onHop = -1;        // hop at which the voice was born ON (same-hop births are subordinate by ratio alone)
         double thHist[8] = {};     // LS phase theta_v at n_h of the last measured hops, slot = measCount_ & 7
+        // render frequency (renderFreqMode 1, 20.8): render phase at the start / end of the hop, low-passed frequency, and the
+        // note-change history of the 19.2.1 definition (f_track of the last 3 hops and the state of the last 2, newest first;
+        // nc flags of the last 4 hops, newest first; hops in the slot; hop of the last reset; state of the previous hop)
+        double thetaR = 0, thetaRStart = 0, fR = 0;
+        double rF[3] = {};
+        int rSt[2] = {};
+        bool rNc[4] = {};
+        int rN = 0, rPrev = 0;
+        int64_t rLastC = -(int64_t(1) << 40);
         int dfN = 0, dfPos = 0;
         int npv = 0, npvPend = 0;  // per-voice past window (stage 2) and its hysteresis counter
         int npvA = 0;              // window creep: the stage 2 window actually applied (follows npv up by at most windowCreep per hop)
@@ -171,6 +182,7 @@ private:
     void solveLs(Ctx& cx);
     void updatePhase(Ctx& cx);
     void updateWeights(Ctx& cx);
+    void updateRender();
     void updatePartials(VbHpv& v, Ctx& cx, Voice& u);
     void amplitudes(const VbHpv& v, Voice& u) const;
     void fadeVoices();
