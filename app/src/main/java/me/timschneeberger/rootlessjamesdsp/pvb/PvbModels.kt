@@ -15,6 +15,7 @@ object PvbModels {
     const val P1PP_V03 = 13
     const val P1_C1 = 14
     const val RESULTANT = 15
+    const val RESULTANT_V16 = 16
     const val REFERENCE_KEY = "alpha2_reference"
     const val P1_KEY = "alpha2_p1"
     const val GENTLE12_KEY = "alpha3_gentle12"
@@ -24,6 +25,7 @@ object PvbModels {
     val models: List<Model> = listOf(
         Model(P1_KEY, P1, "연결형 (P1)", "음이 잠깐 약해질 때도 배음을 이어가며, 강약과 음정 변화를 함께 따라갑니다. 기본 모델입니다."),
         Model("resultant_core_v15", RESULTANT, "Resultant 코어 v1.5 (실험)", "P1의 음 추적은 그대로 두고, 배음층을 음마다 이어지는 새 방식으로 만듭니다. 음이 다시 칠 때 층이 끊기거나 깜빡이던 것이 크게 줄었습니다(연구 측정). 어택이 약 20 ms 늦고, 베이스가 없는 곳에서 낮은 소리가 조금 더 날 수 있습니다. 지연은 P1과 같습니다."),
+        Model("resultant_core_v16", RESULTANT_V16, "Resultant 코어 v1.6 (실험)", "v1.5보다 낮은 현악곡에서 들리던 \"쿠쿠쿵\" 같은 기저음의 원인(위상을 빠르게 당기던 동작)을 줄였습니다: 150 Hz 아래 번짐이 약 11 dB 줄었습니다(연구 측정, 14곡). 음 끝의 꼬리도 v1.5보다 짧습니다. 음이 바뀔 때 새 음높이에 붙는 시간이 약 9 ms 늦습니다. 지연은 P1과 같습니다."),
         Model("alpha2_p1_c1", P1_C1, "연결형 P1 · 킥 뒤 보정 (실험)", "P1과 같지만, 킥 뒤에 남는 킥의 저음 꼬리 때문에 저음층이 잘못 깎이던 것을 줄였습니다(합성 신호 확인군에서 킥 뒤 잔여 지표 8.2 dB 감소). 저음이 끝날 때 저음층이 조금 더 남을 수 있습니다. 지연은 P1과 같습니다."),
         Model("alpha2_p1plus", P1_PLUS, "연결형 P1+ (실험)", "연결형에 위상 유지와 앞뒤를 함께 보는 분리를 더했습니다. 짧은 음의 강약 윤곽이 원음에 더 가깝습니다(합성 신호 시험). 지연이 약 0.18초로 늘어납니다."),
         Model("alpha2_p1pp", P1PP, "연결형 P1++ (실험)", "P1+에 강한 타격 뒤에 남는 잔여를 줄이는 처리를 더했습니다(합성 신호 시험). 타격 직후 80 ms 잔여는 조금 늘 수 있습니다. 지연은 P1+와 같은 약 0.18초입니다."),

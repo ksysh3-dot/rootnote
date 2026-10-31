@@ -37,10 +37,10 @@ fun main() {
     val legacyLevel = PvbSettings.KEY_VB_LEVEL_DB
     val strength = PvbSettings.KEY_VB_STRENGTH_DB
 
-    // Catalogue: every alpha 2 model, P1 + C1 (14, research branch), Resultant core v1.5 (15, experimental),
+    // Catalogue: every alpha 2 model, P1 + C1 (14, research branch), Resultant core v1.5 / v1.6 (15, 16, experimental),
     // P1+ / P1++ / P1++ v0.3 (11-13), and the re-exposed gentle12 (ID 3); P1 is the default.
-    check(PvbModels.models.map { it.id } == listOf(6, 15, 14, 11, 12, 13, 4, 7, 8, 9, 10, 3))
-    check(PvbModels.models.map { it.key }.distinct().size == 12)
+    check(PvbModels.models.map { it.id } == listOf(6, 15, 16, 14, 11, 12, 13, 4, 7, 8, 9, 10, 3))
+    check(PvbModels.models.map { it.key }.distinct().size == 13)
     check(PvbModels.DEFAULT_KEY == "alpha2_p1" && PvbModels.fromKey(null).id == PvbModels.P1)
     check(PvbModels.fromKey("alpha2_reference").id == 4 && PvbModels.fromKey("alpha3_gentle12").id == 3)
     for (model in PvbModels.models) check(PvbSettings.vbAlgoName(model.id) == model.title)

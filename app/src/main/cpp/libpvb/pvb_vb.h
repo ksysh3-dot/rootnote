@@ -58,7 +58,11 @@ enum VbAlgo : int { VB_HPV = 0, VB_BANKSTOWN = 1, VB_HPV52M = 2, VB_GENTLE = 3,
                    // Resultant core (docs/RESULTANT_CORE.md): P1's front end (tracker, tables, phase calibration, percussive
                    // layer) and a new sustained-layer path; vbAlpha2_ with resultantOn_. Experimental app model 15 at the
                    // defaults of pvb_resultant.h; its research parameters are reachable only through the host API
-                   VB_RESULTANT = 15, VB_ALGO_COUNT };
+                   VB_RESULTANT = 15,
+                   // Resultant core v1.6-b (docs/RESULTANT_CORE.md 19.2.2, 19.5): algorithm 15 with the research parameters
+                   // capRho 1.5, windowCreep 16, creepMode 2, betaMin .05, betaMax .1, psiSlew .03, applied on entering the
+                   // algorithm and replaced by the pvb_resultant.h defaults on leaving it. Experimental app model 16
+                   VB_RESULTANT_V16 = 16, VB_ALGO_COUNT };
 
 // Scene observations are unvalidated. Only the opt-in adaptive profile uses
 // them to select a harmonic attenuation budget; they are not buzz labels.
@@ -257,6 +261,9 @@ public:
     // App listening profiles, applied only by the audio owner while switching.
     // All use the same gentle24 placement. Legacy research setters remain separate.
     bool setAlpha2Profile(int algorithm);
+    // Algorithm 16 only: back to the pvb_resultant.h defaults when the engine leaves it for a module that does not
+    // call setAlpha2Profile (setAlpha2Profile does it itself for every other profile). Realtime safe.
+    void leaveResultantV16() { if(resultantV16_) { resultant_.setParams(nullptr,0); resultantV16_=false; } }
     void setStageCapture(StageCapture52::Sink sink,void* user) {stageSink_=sink;stageUser_=user;}
     // Host-only study 1 (#4) counterfactuals: replace the selected HPSS outputs (InjectHpss, inside [hStart,hEnd)
     // of the core clock) and/or the envelope targets (InjectEnvelope, inside [eStart,eEnd)) by host buffers indexed
@@ -532,6 +539,7 @@ private:
     // Resultant core: algorithm 15 skips P1's grain renderer and reads its voices' output instead (setAlpha2Profile)
     ResultantCore resultant_;
     bool resultantOn_=false;
+    bool resultantV16_=false;   // resultant_ holds the algorithm 16 parameter set (applied by setAlpha2Profile(16))
     double genGain_=0, genFastE_=0, genSlowE_=0, lastFc_=60, lastGk_=0;
     int64_t genLastOnset_=-1000000;
     static constexpr int kBurstDelay=45; // 15 ms look-ahead for the burst amplitude, inside the hp read delay

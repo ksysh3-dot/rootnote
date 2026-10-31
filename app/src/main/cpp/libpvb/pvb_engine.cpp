@@ -252,7 +252,10 @@ void Engine::updateLatency() {
 void Engine::vbApply(int algo, bool force) {
     const bool gen = algo >= 0 && genWanted(algo);
     if (algo == vbCur_ && gen == genCur_ && !force) return;
+    const int prev = vbCur_;
     vbCur_ = algo;
+    // Leaving algorithm 16 for a module that setAlpha2Profile does not serve: the Resultant parameters go back to the defaults.
+    if (prev == VB_RESULTANT_V16 && algo < VB_ALPHA2_P1) vbAlpha2_.leaveResultantV16();
     // vbAlpha2_ serves all five Alpha2 profiles: the S1m envelope is set (or cleared) before the profile resets it.
     genCur_ = gen;
     // Host research (setGenResearch) keeps its own GenResearch52; the app option never overrides it.

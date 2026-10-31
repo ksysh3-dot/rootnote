@@ -206,7 +206,15 @@ private fun catalogue() {
     check(lower.sides[1].apply(user.copy(vbLevelDb = 0f)).vbLevelDb == -3f)
     check(C.byId("p1_vs_d2")!!.sides.map { it.apply(user).vbAlgo } == listOf(PvbModels.P1, PvbModels.D2))
     check(C.byId("p1_vs_id4")!!.sides.map { it.apply(user).vbAlgo } == listOf(PvbModels.P1, PvbModels.REFERENCE))
-    check(PvbModels.D2 == 7 && PvbModels.REFERENCE == 4)
+    check(PvbModels.D2 == 7 && PvbModels.REFERENCE == 4 && PvbModels.RESULTANT == 15 && PvbModels.RESULTANT_V16 == 16)
+    // Resultant v1.5 / v1.6 (experimental models 15, 16): only the model differs, at the user's level
+    val rv = C.byId("resultant_v15_vs_v16")!!
+    check(rv.sides.map { it.apply(user).vbAlgo } == listOf(PvbModels.RESULTANT, PvbModels.RESULTANT_V16))
+    check(rv.sides.all { it.apply(user).vbLevelDb == 7f })
+    check(rv.sides.map { it.label(user) } == listOf("Resultant v1.5 (ID 15) +7 dB", "Resultant v1.6 (ID 16) +7 dB"))
+    val rv3 = C.byId("p1_vs_resultant_v15_vs_v16")!!
+    check(rv3.sides.map { it.apply(user).vbAlgo } == listOf(PvbModels.P1, PvbModels.RESULTANT, PvbModels.RESULTANT_V16))
+    check(rv3.sides.all { it.apply(user).vbLevelDb == 7f } && rv3.headroomDb == PvbAbConditions.HEADROOM_DB)
     check(C.byId("p1_vs_d2_vs_id4")!!.sides.map { it.apply(user).vbAlgo } == listOf(PvbModels.P1, PvbModels.D2, PvbModels.REFERENCE))
     // link comparison: at 80 % (index 13 of 15) the "on" side plays (80-30)*0.3 = 15 -> max 9 dB less, the "off" side not
     val link = C.byId("p1_link_on_vs_off")!!

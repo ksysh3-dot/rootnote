@@ -65,7 +65,8 @@ enum Param : int {
     P_TAG,            // opaque condition tag (integer); openMs() counts audible time per tag (blind comparison)
     P_VB_ON,          // virtual bass (experimental): 1 = the algorithm below is in the path (with its latency)
     P_VB_ALGO,        // IDs0-5 legacy; 4 Alpha2 reference,6 P1,7 D2,8 J2,9 free oscillator,10 corrected oscillator,
-                      // 11 P1+, 12 P1++ v0.2, 13 P1++ v0.3, 14 P1 + C1, 15 Resultant core v1.5 (experimental)
+                      // 11 P1+, 12 P1++ v0.2, 13 P1++ v0.3, 14 P1 + C1, 15 Resultant core v1.5 (experimental),
+                      // 16 Resultant core v1.6-b (experimental: 15 with the v1.6-b parameter set)
     P_VB_LEVEL_DB,    // layer level re the 'faithful' level, dB (-120..+12; the app offers -6..+9); <= -90 = layer
                       // silent (algorithm and latency stay)
     P_FLAT,           // 1 = the bypass path is 'flat' (input x loudness-match gain, limiter) instead of the plain input
@@ -340,7 +341,7 @@ private:
     VbHpv vbAlpha2_{true, true, 1};
     VbModule* vbMods_[VB_ALGO_COUNT] = {&vbHpv_, &vbBank_, &vb52_, &vbGentle_, &vbGentleStrong_, &vbGentleAdaptive_,
                                      &vbAlpha2_, &vbAlpha2_, &vbAlpha2_, &vbAlpha2_, &vbAlpha2_, &vbAlpha2_, &vbAlpha2_, &vbAlpha2_,
-                                     &vbAlpha2_, &vbAlpha2_};
+                                     &vbAlpha2_, &vbAlpha2_, &vbAlpha2_};
     bool vbOk_[VB_ALGO_COUNT] = {};   // available at the current rate
     int vbCur_ = -1;                  // algorithm in the signal path, -1 = none
     bool genCur_ = false;             // S1m running in vbAlpha2_ (P1 only); switched like an algorithm (faded)

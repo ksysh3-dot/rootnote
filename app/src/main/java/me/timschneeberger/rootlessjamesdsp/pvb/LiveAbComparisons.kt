@@ -74,6 +74,12 @@ object LiveAbComparisons {
     val D2 = Side("d2", UNMEASURED, false, { "D2 (ID 7) ${dbText(userLevel(it))}" }) {
         PvbAbConditions.v11vb(it, PvbModels.D2, userLevel(it))
     }
+    val RESULTANT_V15 = Side("resultant_v15", UNMEASURED, false, { "Resultant v1.5 (ID 15) ${dbText(userLevel(it))}" }) {
+        PvbAbConditions.v11vb(it, PvbModels.RESULTANT, userLevel(it))
+    }
+    val RESULTANT_V16 = Side("resultant_v16", UNMEASURED, false, { "Resultant v1.6 (ID 16) ${dbText(userLevel(it))}" }) {
+        PvbAbConditions.v11vb(it, PvbModels.RESULTANT_V16, userLevel(it))
+    }
     val ID4 = Side("id4", UNMEASURED, false, { "기준형 (ID 4) ${dbText(userLevel(it))}" }) {
         PvbAbConditions.v11vb(it, PvbModels.REFERENCE, userLevel(it))
     }
@@ -123,6 +129,12 @@ object LiveAbComparisons {
         Comparison("p1_vs_d2_vs_id4", "P1 vs D2 vs 기준형 (셋)",
             "같은 크기에서 세 모델을 A·B·C로 비교합니다. $MODEL_NOTE $TRIM_NOTE",
             PvbAbConditions.HEADROOM_DB, listOf(P1, D2, ID4)),
+        Comparison("resultant_v15_vs_v16", "Resultant v1.5 vs v1.6 (실험)",
+            "같은 크기에서 모델만 다릅니다. $MODEL_NOTE $TRIM_NOTE",
+            PvbAbConditions.HEADROOM_DB, listOf(RESULTANT_V15, RESULTANT_V16)),
+        Comparison("p1_vs_resultant_v15_vs_v16", "P1 vs Resultant v1.5 vs v1.6 (셋)",
+            "같은 크기에서 세 모델을 A·B·C로 비교합니다. $MODEL_NOTE $TRIM_NOTE",
+            PvbAbConditions.HEADROOM_DB, listOf(P1, RESULTANT_V15, RESULTANT_V16)),
         Comparison("xtc_centre_vs_ms", "공간감 중앙 보존 vs 같은 크기 좌우 넓히기",
             "크로스토크 제거(중앙 보존)가 단순히 좌우 성분을 키운 것보다 나은지 봅니다. $SPATIAL_NOTE",
             PvbAbConditions.HEADROOM_DB, listOf(XTC_CENTRE, MS_CENTRE)),
