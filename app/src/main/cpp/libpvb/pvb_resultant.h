@@ -42,6 +42,8 @@ struct ResultantParams {
     int layerHpComp = 0;        // 1: the filter's phase at k f_osc is subtracted from psi's target (both branches), keeps the input alignment of sustained notes
     int renderFreqMode = 0;     // v1.6-d (RESULTANT_CORE.md 20.8): 1 = synthesis uses a render phase theta_r that integrates a low-passed f_track (render only, analysis unchanged); 0 = theta
     double renderTauMs = 10;    // renderFreqMode 1: time constant of the causal one-pole on f_track (1..500 ms)
+    int redistMode = 0;         // RESULTANT_CORE.md 22: 0 off, 1 uniform receiver power, 2 proportional to original receiver power
+    double redistAlpha = 0;     // maximum donor power fraction (0..1), tapered at the donor / receiver band edges
 };
 
 class ResultantCore {
@@ -49,7 +51,7 @@ public:
     static constexpr int kVoices = 8;        // voice slots (V_max)
     static constexpr int kFade = 2;          // extra fade-only slots for voices pushed out of a full slot table
     static constexpr int kPartials = 7;      // harmonics k = 2..8
-    static constexpr int kParams = 24;
+    static constexpr int kParams = 26;
     static constexpr int kTraceFields = 22;
     static constexpr int kOut = 64;          // output ring, power of two (a hop writes 16 samples ahead of the read index)
     static constexpr int kTracks = 12;       // VbHpv::tr52_ capacity
@@ -206,6 +208,7 @@ private:
         }
     };
     void designHp();
+    double outputMagnitude(double f) const;   // RESULTANT_CORE.md 22: kOutSos times the layer high-pass
 
     ResultantParams p_;
     HpBiquad hp_[4];           // layer high-pass sections (order / 2 used)
