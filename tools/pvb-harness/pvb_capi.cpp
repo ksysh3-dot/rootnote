@@ -95,6 +95,10 @@ int pvb_set_layer_gain_research(void* e,double gain,double cap) {
     return e && static_cast<pvb::Engine*>(e)->setLayerGainResearch(gain,cap) ? 1 : 0;
 }
 
+// S32: three default-OFF P1 layer attenuators. Configure before processing.
+int pvb_set_p1_wrong_note_research(void* e,int flags) {
+    return e && flags>=0 && static_cast<pvb::Engine*>(e)->setP1WrongNoteResearch(static_cast<unsigned>(flags)) ? 1 : 0;
+}
 int pvb_set_resultant(void* e,const double* v,int n) {
     if(!e || n<0 || (n>0 && !v)) return 0;
     return static_cast<pvb::Engine*>(e)->setResultantParams(v,n) ? 1 : 0;

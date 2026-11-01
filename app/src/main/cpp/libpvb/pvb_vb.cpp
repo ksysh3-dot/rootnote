@@ -31,6 +31,8 @@ bool VbHpv::setAlpha2Profile(int algorithm) {
         case VB_ALPHA2_OSC_CORRECT: mode=0;flags=StageOscillator|StageOscillatorCorrect;break;
         default:return false;
     }
+    s32Profile_=algorithm==VB_ALPHA2_P1;
+    s32Flags_=s32Profile_?s32HostFlags_:0;
     const bool resultant=algorithm==VB_RESULTANT || algorithm==VB_RESULTANT_V16 || algorithm==VB_RESULTANT_V16D;
     p1PlusProfile_=algorithm==VB_ALPHA2_P1 || algorithm==VB_ALPHA2_P1_PLUS || algorithm==VB_ALPHA2_P1PP ||
                    algorithm==VB_ALPHA2_P1PP_V03 || algorithm==VB_ALPHA2_P1_C1 || resultant;
@@ -387,6 +389,8 @@ void VbHpv::reset() {
     envA_.b0 = envP_.b0 = 1.0 - al;
     envA_.z = envP_.z = 0.0;
     nt52_=apkCount_=histCount_=holdCount_=holdPos_=onsetLeft_=0;
+    s32MaxA_=s32FocusHz_=0; s32FocusLeft_=0;
+    std::fill(std::begin(s32RawSlow_),std::end(s32RawSlow_),0.);
     impactCtx52_=preImpactN52_=lowGridHold52_=0; percSlow52_=0; graveN52_=0; hop52_=0; onsetBlend52_=1;
     for (auto& row : hold52_) std::fill(std::begin(row),std::end(row),-200.0);
     for (double* r : {md52_,md2_52_,max52_}) std::fill(r,r+kRing,0.0);

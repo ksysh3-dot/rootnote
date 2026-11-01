@@ -202,6 +202,7 @@ public:
         for(VbHpv* m : {&vb52_, &vbGentle_, &vbGentleStrong_, &vbGentleAdaptive_}) m->setModulationResearch(mode,tonalOnly);
     }
     // Before processing, host only. Only profile 6 may apply these controls.
+    bool setP1WrongNoteResearch(unsigned flags) { return vbAlpha2_.setP1WrongNoteResearch(flags); }
     void setP1PlusResearch(unsigned flags) {
         vbAlpha2_.setP1PlusResearch(flags);
         if(vbCur_==VB_ALPHA2_P1) {

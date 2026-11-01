@@ -219,6 +219,12 @@ public:
     }
     // Host research only: configure before processing; not a saved app algorithm.
     void setContinuityResearch(const ContinuityParams& p) { continuity_ = p; reset(); }
+    // S32 host-only, before processing. 1=current fit, 2=salience, 4=dry novelty focus.
+    // No truth/MIDI/stem inputs. Only profile 6 applies these controls.
+    bool setP1WrongNoteResearch(unsigned flags) {
+        if(flags>7) return false;
+        s32HostFlags_=flags; if(s32Profile_) s32Flags_=flags; reset(); return true;
+    }
     // Host-only controls, no JNI/UI; bit0=synthesis, bit1=analysis.
     void setModulationResearch(int mode, bool tonalOnly=false) { modulationMode_=mode&3; tonalOnly_=tonalOnly; reset(); }
     // Host-only P1+ experiments, off by default. Bit0: exclude a valid
@@ -458,6 +464,7 @@ private:
     // hpv52m: all state is fixed-size and owned by the module; no audio-thread allocations.
     struct Track52 {
         double f=0, phi=0, off[7]={}, fade=0, a=0;
+        double s32Gain=1; // independent render attenuation; nominal normalization stays original
         bool impactRecoveryPending=false;
         int steadyHops=0;               // P1++ mode 8: hops of steady frequency and amplitude while unconfirmed
         bool guarded=false;             // P1++ v0.4 bit 16: held back by the fit guard in this hop
@@ -480,6 +487,13 @@ private:
         double r4Share=1; // Resultant R4-L v2: share of the register corner and level (StageReentrySlow; 1 otherwise)
     };
     Track52 tr52_[12];
+    unsigned s32HostFlags_=0, s32Flags_=0;
+    bool s32Profile_=false;
+    double s32MaxA_=0, s32FocusHz_=0;
+    int s32FocusLeft_=0;
+    double s32RawSlow_[kHalfFft+1]={};
+    void s32Focus52(const double* frequencies,const double* amplitudes,int count);
+    double s32Gate52(Track52& track,bool observed);
     ContinuityParams continuity_;
     int modulationMode_=0;
     bool tonalOnly_=false;

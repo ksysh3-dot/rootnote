@@ -67,6 +67,50 @@ void VbHpv::traceTrack52(int slot,const Track52& t,int state,int reason) {
     r[8]=static_cast<float>(t.age); r[9]=static_cast<float>(t.missing);
     r[10]=static_cast<float>(reason); r[11]=static_cast<float>(t.life); r[12]=static_cast<float>(t.rawResidual); r[13]=static_cast<float>(t.id>>16);
 }
+// S32 reads only the already available dry spectrum (same source time as the P1 frame).
+// A newly prominent pitch can suppress a still-observed old pitch: missing-track release alone cannot.
+void VbHpv::s32Focus52(const double* frequencies,const double* amplitudes,int count) {
+    if(s32FocusLeft_>0) --s32FocusLeft_;
+    double raw[8]={},flux[8]={},rawMax=0; int strongest=0;
+    for(int p=0;p<count;++p) {
+        const int lo=std::max(1,static_cast<int>(std::floor((frequencies[p]-3)/binHz_)));
+        const int hi=std::min(kHalfFft-1,static_cast<int>(std::ceil((frequencies[p]+3)/binHz_)));
+        int best=lo; for(int b=lo;b<=hi;++b) if(sm52_[b]>sm52_[best]) best=b;
+        raw[p]=sm52_[best]; flux[p]=std::max(0.,raw[p]-s32RawSlow_[best]);
+        if(raw[p]>rawMax) {rawMax=raw[p];strongest=p;}
+    }
+    double focusFlux=0; bool present=false;
+    for(int p=0;p<count;++p) if(s32FocusHz_>0 &&
+        std::abs(1200*std::log2(frequencies[p]/s32FocusHz_))<=75) {
+        focusFlux=std::max(focusFlux,flux[p]);
+        present |= raw[p]>=.02*rawMax;
+    }
+    int chosen=-1; double bestFlux=0;
+    for(int p=0;p<count;++p) {
+        if(amplitudes[p]<.03*s32MaxA_ || raw[p]<.03*rawMax) continue;
+        if(s32FocusHz_>0 && std::abs(1200*std::log2(frequencies[p]/s32FocusHz_))<100) continue;
+        if(flux[p]>=.05*rawMax && flux[p]>1.5*focusFlux && flux[p]>bestFlux) {chosen=p;bestFlux=flux[p];}
+    }
+    if(s32FocusHz_<=0 && count>0) chosen=strongest;
+    if(chosen>=0) {s32FocusHz_=frequencies[chosen];s32FocusLeft_=150;}
+    else if(!present) s32FocusLeft_=0;
+    const double c=std::exp(-1000.*kPvH/kFsd/100.);
+    for(int b=0;b<=kHalfFft;++b) s32RawSlow_[b]=c*s32RawSlow_[b]+(1-c)*sm52_[b];
+}
+double VbHpv::s32Gate52(Track52& tr,bool observed) {
+    double target=1;
+    if(s32Flags_&1) target*=observed?clampv((-6-tr.rawResidual)/12.,0.,1.):0.;
+    if(s32Flags_&2) target*=observed?clampv((tr.a/std::max(s32MaxA_,1e-20)-.10)/.15,0.,1.):0.;
+    if((s32Flags_&4) && s32FocusLeft_>0 && s32FocusHz_>0) {
+        bool related=false;
+        for(int k=1;k<=5;++k)
+            if(std::abs(1200*std::log2(tr.f/(k*s32FocusHz_)))<=75) related=true;
+        if(!related) target*=.10;
+    }
+    const double tau=target<tr.s32Gain?5.:20.;
+    tr.s32Gain+=(target-tr.s32Gain)*(1-std::exp(-1000.*kPvH/kFsd/tau));
+    return tr.s32Gain;
+}
 void VbHpv::renderTrack52(Track52& tr,const double src[2][256],const int ns[2],
                         bool observed,bool fast,int traceSlot,double* grain,double& agrain) {
     const double tc=2.*80/48000+(192.+15+191)/3000-7052./48000;
@@ -90,7 +134,9 @@ void VbHpv::renderTrack52(Track52& tr,const double src[2][256],const int ns[2],
         gain*=1+share*(std::pow(10.,r4LevelDb52_*clampv(s,0.,1.)/20)-1);
     }
     // S1 research: the per-harmonic envelope below is the only time gate.
-    const double amp=gen_.envelope?tr.a*gain:tr.a*gain*tr.fade*tr.life;
+    const double ampBase=gen_.envelope?tr.a*gain:tr.a*gain*tr.fade*tr.life;
+    const double s32Gate=s32Flags_?s32Gate52(tr,observed):1.;
+    const double amp=s32Flags_?ampBase*s32Gate:ampBase;
     // P1++ v0.4 bit 16: a track held back only by the fit guard emits the harmonics found in the input at k f
     const double ampHeld=tr.guarded && !gen_.envelope ? tr.a*gain*tr.life : 0.;
     double heldW=0,allW=0;
@@ -273,6 +319,7 @@ void VbHpv::renderTrack52(Track52& tr,const double src[2][256],const int ns[2],
     agrain+=(stageFlags_&StageNominalPower)?nominal*nominal:nominal;
 }
 void VbHpv::missingFrame52(int reason,bool fast) {
+    if(s32Flags_ && s32FocusLeft_>0) --s32FocusLeft_;
     std::fill(std::begin(oscillatorNominal52_),std::end(oscillatorNominal52_),0.);
     if(harmonicCapture_) { harmonicTrace_.data[13]=static_cast<float>(reason); harmonicTrace_.data[22]=static_cast<float>(nt52_); }
     if(!continuity_.enabled && !(stageFlags_&StageOscillator)) {
@@ -679,6 +726,14 @@ void VbHpv::pvFrame52() {
             impactCtx52_=impactHold52_;
         } else if(impactCtx52_>0) --impactCtx52_;
     }
+    if(s32Flags_) {
+        s32MaxA_=am;
+        if(s32Flags_&4) {
+            double frequencies[8],amplitudes[8];
+            for(int p=0;p<np;++p) {frequencies[p]=pk[p].f;amplitudes[p]=pk[p].a;}
+            s32Focus52(frequencies,amplitudes,np);
+        }
+    }
     Track52 next[12]; bool used[12]={}; double grain[32]={},agrain=0;
     int nextCount=np;int global[6]={};
     if(stageFlags_&StageGlobalTrack) {
@@ -750,6 +805,7 @@ void VbHpv::pvFrame52() {
         tr.guarded=v04 && (p1ppV04_&16) && q.res>-15 && ownRes<=-15;
         if(best>=0) {
             used[best]=true; const auto& prev=tr52_[best];
+            if(s32Flags_) tr.s32Gain=prev.s32Gain;
             // Held tracks already advance phi once on each missing hop below.
             const double pred=prev.phi+kPi*(prev.f+q.f)*16/3000;
             tr.phi=q.ph+2*kPi*std::nearbyint((pred-q.ph)/(2*kPi));
