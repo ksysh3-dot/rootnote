@@ -87,6 +87,14 @@ int pvb_set_dry_low_cut(void* e,int dryLowCutMode,double dryLowCutHz,double dryL
     return static_cast<pvb::Engine*>(e)->setDryLowCutResearch(dryLowCutMode,dryLowCutHz,dryLowCutDb) ? 1 : 0;
 }
 
+// S31 host-only controls; set before the first processing call.
+int pvb_set_dry_low_cut_order(void* e,int order) {
+    return e && static_cast<pvb::Engine*>(e)->setDryLowCutOrderResearch(order) ? 1 : 0;
+}
+int pvb_set_layer_gain_research(void* e,double gain,double cap) {
+    return e && static_cast<pvb::Engine*>(e)->setLayerGainResearch(gain,cap) ? 1 : 0;
+}
+
 int pvb_set_resultant(void* e,const double* v,int n) {
     if(!e || n<0 || (n>0 && !v)) return 0;
     return static_cast<pvb::Engine*>(e)->setResultantParams(v,n) ? 1 : 0;

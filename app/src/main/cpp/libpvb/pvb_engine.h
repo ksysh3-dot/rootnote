@@ -226,6 +226,10 @@ public:
     // Two Butterworth sections form the fourth-order Linkwitz-Riley transfer.
     // Shelf Hz denotes its upper (pole) corner; DC gain is dryLowCutDb.
     bool setDryLowCutResearch(int dryLowCutMode, double dryLowCutHz, double dryLowCutDb);
+    // S31 host-only, configure before processing. Default order4/gain1/cap0 preserves all old bits.
+    bool setDryLowCutOrderResearch(int order);
+    bool setLayerGainResearch(double requestedGain, double gainCap);
+
     // Host research (Resultant core, algorithm 15; docs/RESULTANT_CORE.md 4.2, 5.8). Not reachable from JNI.
     // v: up to ResultantCore::kParams values in the order of the spec (n may be shorter: the rest are the defaults); false = out of range, nothing
     // applied. Kept whichever algorithm runs. The trace holds 8 voice rows of 22 values per hop (allocated in enable).
@@ -317,8 +321,10 @@ private:
     RampedValue outGain_, mix_, fade_, lowDbNow_;
     int dryLowCutMode_ = 0;
     double dryLowCutHz_ = 80.0, dryLowCutDb_ = -6.0;
-    RampedSvf dryLowCut_[2];
-    SvfState sDryLowCut_[2][2];
+    int dryLowCutOrder_ = 4;
+    double researchLayerGain_ = 1.0, researchLayerGainCap_ = 0.0;
+    RampedSvf dryLowCut_[4];
+    SvfState sDryLowCut_[2][4];
     void configureDryLowCut();
     TruePeakLimiter lim_;
     TruePeakLimiter limSolo_; // parallel, same latency; protects an isolated layer that may exceed the sum

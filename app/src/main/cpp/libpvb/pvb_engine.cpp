@@ -219,17 +219,49 @@ void Engine::configureDryLowCut() {
         const double r = std::pow(10.0, dryLowCutDb_ / 80.0);
         c.m0 = 1.0; c.m1 = std::sqrt(2.0) * (r - 1.0); c.m2 = r*r - 1.0;
     }
-    for (auto& f : dryLowCut_) f.snap(c);
+    if (dryLowCutOrder_ == 4) {
+        // Exact S30 coefficient operations, including rounding, are retained above.
+        for (auto& f : dryLowCut_) f.snap(c);
+    } else {
+        // Squared fourth-order Butterworth prototype, zero frequencies scaled
+        // by r. Four biquads, DC=r^8, high-frequency gain=1. Minimum phase.
+        constexpr double q[4] = {0.541196100146197, 1.306562964876377,
+                                 0.541196100146197, 1.306562964876377};
+        const double r = std::pow(10.0, dryLowCutDb_ / 160.0);
+        for (int j=0; j<4; ++j) {
+            auto c8 = svfHighpass(sr_, dryLowCutHz_, q[j]);
+            if (dryLowCutMode_ == 2) {
+                c8.m0=1.0; c8.m1=(r-1.0)/q[j]; c8.m2=r*r-1.0;
+            }
+            dryLowCut_[j].snap(c8);
+        }
+    }
     for (auto& channel : sDryLowCut_) for (auto& state : channel) state.reset();
 }
 
 bool Engine::setDryLowCutResearch(int mode, double hz, double db) {
     if (mode < 0 || mode > 2 || !std::isfinite(hz) || !std::isfinite(db) ||
-        (hz != 80.0 && hz != 100.0 && hz != 120.0) ||
+        (hz != 60.0 && hz != 80.0 && hz != 100.0 && hz != 120.0) ||
         (db != -6.0 && db != -12.0 && db != -18.0)) return false;
     if (mode == dryLowCutMode_ && hz == dryLowCutHz_ && db == dryLowCutDb_) return true;
     dryLowCutMode_ = mode; dryLowCutHz_ = hz; dryLowCutDb_ = db;
     configureDryLowCut();
+    return true;
+}
+
+bool Engine::setDryLowCutOrderResearch(int order) {
+    if (order != 4 && order != 8) return false;
+    if (order == dryLowCutOrder_) return true;
+    dryLowCutOrder_ = order;
+    configureDryLowCut();
+    return true;
+}
+
+bool Engine::setLayerGainResearch(double requestedGain, double gainCap) {
+    if (!std::isfinite(requestedGain) || !std::isfinite(gainCap) ||
+        requestedGain < 0.0 || requestedGain > 4.0 ||
+        (gainCap != 0.0 && (gainCap < 1.0 || gainCap > 4.0))) return false;
+    researchLayerGain_ = requestedGain; researchLayerGainCap_ = gainCap;
     return true;
 }
 
@@ -634,7 +666,14 @@ void Engine::process(float* io, int frames) {
             alignedR = vbDR_[rd];
         }
         if (++vbPos_ >= kVbDelayLen) vbPos_ = 0;
-        const double vg = vbGain_.next();
+        double vg = vbGain_.next();
+        // Bypass the multiply at the default. This changes only post-generator
+        // gain, including the isolated diagnostics; it never feeds tracking.
+        if (researchLayerGain_ != 1.0 || researchLayerGainCap_ != 0.0) {
+            const double rg = researchLayerGainCap_ > 0.0
+                ? std::min(researchLayerGain_, researchLayerGainCap_) : researchLayerGain_;
+            if (rg != 1.0) vg *= rg;
+        }
 
         if (dynOn) {
             // Slow level follower: above the reference take boost back (the phone limiter would squash it),
@@ -743,7 +782,7 @@ void Engine::process(float* io, int frames) {
         // and before summation. P1 (6) and Resultant (15) share this point.
         // OFF executes no filter/arithmetic on eqL/R; old bits are preserved.
         if (dryLowCutMode_ != 0) {
-            for (int section = 0; section < 2; ++section) {
+            for (int section = 0; section < dryLowCutOrder_ / 2; ++section) {
                 eqL = dryLowCut_[section].tick(sDryLowCut_[0][section], eqL);
                 eqR = dryLowCut_[section].tick(sDryLowCut_[1][section], eqR);
             }
