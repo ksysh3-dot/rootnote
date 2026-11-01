@@ -222,6 +222,10 @@ public:
     void setR4Research(int holdHops, double floorBlend, double tauUpMs) { vbAlpha2_.setR4Research(holdHops, floorBlend, tauUpMs); }
     void setR4Level(double gainDb) { vbAlpha2_.setR4Level(gainDb); }
     void setR4Reentry(double tauMs) { vbAlpha2_.setR4Reentry(tauMs); }
+    // S30 host research; set before processing, no JNI/UI connection. Default off.
+    // Two Butterworth sections form the fourth-order Linkwitz-Riley transfer.
+    // Shelf Hz denotes its upper (pole) corner; DC gain is dryLowCutDb.
+    bool setDryLowCutResearch(int dryLowCutMode, double dryLowCutHz, double dryLowCutDb);
     // Host research (Resultant core, algorithm 15; docs/RESULTANT_CORE.md 4.2, 5.8). Not reachable from JNI.
     // v: up to ResultantCore::kParams values in the order of the spec (n may be shorter: the rest are the defaults); false = out of range, nothing
     // applied. Kept whichever algorithm runs. The trace holds 8 voice rows of 22 values per hop (allocated in enable).
@@ -311,6 +315,11 @@ private:
     RampedSvf hp_, lo_, hi_, hs_;
     SvfState sHp1_[2], sHp2_[2], sLo_[2], sHi_[2], sHs_[2];
     RampedValue outGain_, mix_, fade_, lowDbNow_;
+    int dryLowCutMode_ = 0;
+    double dryLowCutHz_ = 80.0, dryLowCutDb_ = -6.0;
+    RampedSvf dryLowCut_[2];
+    SvfState sDryLowCut_[2][2];
+    void configureDryLowCut();
     TruePeakLimiter lim_;
     TruePeakLimiter limSolo_; // parallel, same latency; protects an isolated layer that may exceed the sum
     RampedValue soloX_;

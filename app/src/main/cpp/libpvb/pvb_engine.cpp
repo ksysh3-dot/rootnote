@@ -210,6 +210,29 @@ Engine::Engine(int sampleRate) {
     configure(sampleRate);
 }
 
+void Engine::configureDryLowCut() {
+    SvfCoef c = svfHighpass(sr_, dryLowCutHz_, kButterworthQ);
+    if (dryLowCutMode_ == 2) {
+        // H(z) = [(s^2 + sqrt(2)*r*w*s + r^2*w^2) /
+        //          (s^2 + sqrt(2)*w*s + w^2)]^2, prewarped w.
+        // r = 10^(dB/80): two biquads give the requested DC attenuation.
+        const double r = std::pow(10.0, dryLowCutDb_ / 80.0);
+        c.m0 = 1.0; c.m1 = std::sqrt(2.0) * (r - 1.0); c.m2 = r*r - 1.0;
+    }
+    for (auto& f : dryLowCut_) f.snap(c);
+    for (auto& channel : sDryLowCut_) for (auto& state : channel) state.reset();
+}
+
+bool Engine::setDryLowCutResearch(int mode, double hz, double db) {
+    if (mode < 0 || mode > 2 || !std::isfinite(hz) || !std::isfinite(db) ||
+        (hz != 80.0 && hz != 100.0 && hz != 120.0) ||
+        (db != -6.0 && db != -12.0 && db != -18.0)) return false;
+    if (mode == dryLowCutMode_ && hz == dryLowCutHz_ && db == dryLowCutDb_) return true;
+    dryLowCutMode_ = mode; dryLowCutHz_ = hz; dryLowCutDb_ = db;
+    configureDryLowCut();
+    return true;
+}
+
 void Engine::setSampleRate(int sampleRate) {
     std::lock_guard<std::mutex> lock(mtx_);
     pendingSr_ = sampleRate;
@@ -312,6 +335,7 @@ void Engine::applyDev(const float* v) {
 
 void Engine::configure(int sampleRate) {
     sr_ = clampv(sampleRate, 8000, 192000);
+    configureDryLowCut();
     devBinLen_ = std::max(1, static_cast<int>(std::lround(0.005 * sr_)));
     devPowCoef_ = 1.0 - std::exp(-1.0 / (0.05 * sr_));
     devBp_.snap(svfBandpass(sr_, 245.0, 0.65));
@@ -385,6 +409,7 @@ void Engine::resetState() {
     std::fill(std::begin(dryL_), std::end(dryL_), 0.0);
     std::fill(std::begin(dryR_), std::end(dryR_), 0.0);
     dryPos_ = 0;
+    for (auto& channel : sDryLowCut_) for (auto& state : channel) state.reset();
     lim_.reset();
     limSolo_.reset();
     std::fill(std::begin(layerDelayL_), std::end(layerDelayL_), 0.0);
@@ -714,6 +739,15 @@ void Engine::process(float* io, int frames) {
         if (layerRead < 0) layerRead += kDryLen;
         const double delayedLayerL = layerDelayL_[layerRead], delayedLayerR = layerDelayR_[layerRead];
         if (++layerPos_ >= kDryLen) layerPos_ = 0;
+        // S30: cut only the processed dry signal, after generator input/trace
+        // and before summation. P1 (6) and Resultant (15) share this point.
+        // OFF executes no filter/arithmetic on eqL/R; old bits are preserved.
+        if (dryLowCutMode_ != 0) {
+            for (int section = 0; section < 2; ++section) {
+                eqL = dryLowCut_[section].tick(sDryLowCut_[0][section], eqL);
+                eqR = dryLowCut_[section].tick(sDryLowCut_[1][section], eqR);
+            }
+        }
         // EQ output plus the layer, then the output gain: what the limiter sees.
         const double preLimitL = (eqL + vg * layL) * og;
         const double preLimitR = (eqR + vg * layR) * og;

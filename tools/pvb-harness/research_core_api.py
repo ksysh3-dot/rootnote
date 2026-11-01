@@ -139,3 +139,13 @@ def render(lib, x, sr=48000, algo=VB_RESULTANT, params=None, trace=False, block=
     finally:
         e.close()
     return y, tr, lat
+
+
+def set_dry_low_cut(lib, engine, dryLowCutMode=0, dryLowCutHz=80, dryLowCutDb=-6):
+    """S30 host-only dry LR4 HP/shelf; call before processing, default off."""
+    lib.pvb_set_dry_low_cut.argtypes = [C.c_void_p, C.c_int, C.c_double, C.c_double]
+    lib.pvb_set_dry_low_cut.restype = C.c_int
+    if dryLowCutMode not in (0, 1, 2):
+        raise ValueError('dryLowCutMode must be 0, 1 or 2')
+    if lib.pvb_set_dry_low_cut(getattr(engine, 'h', engine), dryLowCutMode, dryLowCutHz, dryLowCutDb) != 1:
+        raise ValueError('invalid dry low-cut parameters')

@@ -82,6 +82,11 @@ int pvb_set_r4_reentry(void* e,double tauMs) {
 // spec (voicing, levelDb, ampSource, snrOnDb, snrFastDb (unused since v1.3), snrOffDb, tauOnMs, tauOffMs, betaMin, betaMax,
 // kappa, nMin, nFuture, psiSlew, crest, maxDfdtBirth); n may be shorter, the rest are then the defaults. 1 = accepted,
 // 0 = a value out of range (nothing applied). The setting is kept whichever algorithm runs.
+int pvb_set_dry_low_cut(void* e,int dryLowCutMode,double dryLowCutHz,double dryLowCutDb) {
+    if (!e) return 0;
+    return static_cast<pvb::Engine*>(e)->setDryLowCutResearch(dryLowCutMode,dryLowCutHz,dryLowCutDb) ? 1 : 0;
+}
+
 int pvb_set_resultant(void* e,const double* v,int n) {
     if(!e || n<0 || (n>0 && !v)) return 0;
     return static_cast<pvb::Engine*>(e)->setResultantParams(v,n) ? 1 : 0;
