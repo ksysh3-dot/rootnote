@@ -33,6 +33,8 @@
 #include "pvb_layer_condition.h"
 #include "pvb_vb.h"
 #include "pvb_xtc.h"
+#include "pvb_layer_peak42.h"
+#include "pvb_dry_peak44.h"
 
 namespace pvb {
 
@@ -202,6 +204,9 @@ public:
         for(VbHpv* m : {&vb52_, &vbGentle_, &vbGentleStrong_, &vbGentleAdaptive_}) m->setModulationResearch(mode,tonalOnly);
     }
     // Before processing, host only. Only profile 6 may apply these controls.
+    bool setPhase41(int mode,double* trace,int capacity) { return vbAlpha2_.setPhase41(mode,trace,capacity); }
+    int phase41Count() const { return vbAlpha2_.phase41Count(); }
+    bool setN2Research(unsigned flags,int mode,double value,const double* tape,int count) { return vbAlpha2_.setN2Research(flags,mode,value,tape,count); }
     bool setP1WrongNoteResearch(unsigned flags) { return vbAlpha2_.setP1WrongNoteResearch(flags); }
     void setP1PlusResearch(unsigned flags) {
         vbAlpha2_.setP1PlusResearch(flags);
@@ -230,6 +235,24 @@ public:
     // S31 host-only, configure before processing. Default order4/gain1/cap0 preserves all old bits.
     bool setDryLowCutOrderResearch(int order);
     bool setLayerGainResearch(double requestedGain, double gainCap);
+    // S34 host-only, set before processing. Disabled is exact legacy arithmetic.
+    // blend is an offline certified interpolation toward P1, not a realtime TP guarantee.
+    int copyPeak42Inputs(double* out,int capacity) const {
+        const int n=std::min(capacity,peak42InputSamples_);
+        std::copy_n(peak42Inputs_,n,out);return n;
+    }
+    bool setDryPeak44Research(int mode) {
+        if(mode<0 || mode>2 || (mode && sr_!=48000))return false;
+        dryPeak44Mode_=mode;dryPeak44_.reset();
+        for(auto& a:sDryPeak44Eq_)for(auto& v:a)v.reset();
+        for(auto& a:sDryPeak44Shelf_)for(auto& v:a)v.reset();
+        if(mode){peak44P1_.configure(sr_);peak44P1_.setAlpha2Profile(VB_ALPHA2_P1);peak44P1_.bindEq(&hp_,&lo_,&hi_,&hs_,sr_);}
+        return true;
+    }
+    int copyPeak44Inputs(double* out,int cap)const {int n=std::min(cap,peak44InputSamples_);std::copy_n(peak44Inputs_,n,out);return n;}
+    bool setLayerPeak42Research(int mode,double releaseMs) { return layerPeak42_.configure(mode,sr_,releaseMs); }
+    bool setPeakBudgetResearch(int enabled, double cap, double ceilingDb,
+                               double referenceOutDb, double releaseMs, double blend);
 
     // Host research (Resultant core, algorithm 15; docs/RESULTANT_CORE.md 4.2, 5.8). Not reachable from JNI.
     // v: up to ResultantCore::kParams values in the order of the spec (n may be shorter: the rest are the defaults); false = out of range, nothing
@@ -324,9 +347,19 @@ private:
     double dryLowCutHz_ = 80.0, dryLowCutDb_ = -6.0;
     int dryLowCutOrder_ = 4;
     double researchLayerGain_ = 1.0, researchLayerGainCap_ = 0.0;
+    bool peakBudgetOn_ = false;
+    double peakBudgetCap_ = 2.0, peakBudgetCeilingDb_ = -3.0;
+    double peakBudgetReferenceOutDb_ = -5.0, peakBudgetReleaseMs_ = 80.0, peakBudgetBlend_ = 1.0;
+    double peakBudgetDryEnv_ = 0.0, peakBudgetLayerEnv_ = 0.0;
     RampedSvf dryLowCut_[4];
     SvfState sDryLowCut_[2][4];
     void configureDryLowCut();
+    double peak42Inputs_[6*4096]={};int peak42InputSamples_=0;
+    LayerPeak42 layerPeak42_;
+    int dryPeak44Mode_=0;DryPeak44 dryPeak44_;
+    VbHpv peak44P1_{true,true,1};
+    SvfState sDryPeak44Eq_[2][5],sDryPeak44Shelf_[2][4];
+    double peak44Inputs_[5*4096]={};int peak44InputSamples_=0;
     TruePeakLimiter lim_;
     TruePeakLimiter limSolo_; // parallel, same latency; protects an isolated layer that may exceed the sum
     RampedValue soloX_;

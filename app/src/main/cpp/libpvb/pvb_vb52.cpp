@@ -111,8 +111,14 @@ double VbHpv::s32Gate52(Track52& tr,bool observed) {
     tr.s32Gain+=(target-tr.s32Gain)*(1-std::exp(-1000.*kPvH/kFsd/tau));
     return tr.s32Gain;
 }
-void VbHpv::renderTrack52(Track52& tr,const double src[2][256],const int ns[2],
+void VbHpv::renderTrack52(Track52& actual,const double src[2][256],const int ns[2],
                         bool observed,bool fast,int traceSlot,double* grain,double& agrain) {
+    Track52 frozen;
+    const bool freezeTrack=(s38Flags_&1) && actual.id<static_cast<unsigned>(s38TapeN_) && s38Tape_ && s38Tape_[2*actual.id]>0;
+    if(freezeTrack) frozen=actual;
+    Track52& tr=freezeTrack?frozen:actual;
+    if(freezeTrack) {tr.f=s38Tape_[2*tr.id];tr.phi=s38Tape_[2*tr.id+1]+2*kPi*tr.f*static_cast<double>(i_)/kFsd;}
+    const double trackFade=(s38Flags_&32)?1.:tr.fade,trackLife=(s38Flags_&32)?1.:tr.life;
     const double tc=2.*80/48000+(192.+15+191)/3000-7052./48000;
     double w[7],gain; lookup(tr.f,w,gain);
     if(devHarm_) devWeights(w);   // developer mode: per-harmonic offsets (off: untouched)
@@ -134,11 +140,11 @@ void VbHpv::renderTrack52(Track52& tr,const double src[2][256],const int ns[2],
         gain*=1+share*(std::pow(10.,r4LevelDb52_*clampv(s,0.,1.)/20)-1);
     }
     // S1 research: the per-harmonic envelope below is the only time gate.
-    const double ampBase=gen_.envelope?tr.a*gain:tr.a*gain*tr.fade*tr.life;
+    const double ampBase=gen_.envelope?tr.a*gain:tr.a*gain*trackFade*trackLife;
     const double s32Gate=s32Flags_?s32Gate52(tr,observed):1.;
     const double amp=s32Flags_?ampBase*s32Gate:ampBase;
     // P1++ v0.4 bit 16: a track held back only by the fit guard emits the harmonics found in the input at k f
-    const double ampHeld=tr.guarded && !gen_.envelope ? tr.a*gain*tr.life : 0.;
+    const double ampHeld=tr.guarded && !gen_.envelope ? tr.a*gain*trackLife : 0.;
     double heldW=0,allW=0;
     const double hopMs=1000.*kPvH/kFsd;
     // S1 per-harmonic envelope: the harmonic's own amplitude (a x table gain x weight x
@@ -157,7 +163,7 @@ void VbHpv::renderTrack52(Track52& tr,const double src[2][256],const int ns[2],
     };
     const bool alive=!tr.fastEnding && tr.missing<=continuity_.hold;
     const bool oscillator=stageFlags_&StageOscillator;
-    const bool preserveUnreferencedPhase=p1PlusProfile_ && (p1PlusFlags_&2);
+    const bool preserveUnreferencedPhase=(p1PlusProfile_ && (p1PlusFlags_&2)) || (s38Flags_&16);
     double targetAmplitude[7]={},targetPhase[7]={};
     for(int j=0;j<7;++j) targetPhase[j]=(j+2)*tr.phi+tr.off[j];
     // Resultant R4: the roll-off factor for a corner; the register corner is blended in by onsetBlend52_ (1 without
@@ -225,7 +231,7 @@ void VbHpv::renderTrack52(Track52& tr,const double src[2][256],const int ns[2],
             if(supported) e.missing=0; else ++e.missing;
             const bool target=!weightOff && alive && tr.residual<=-15 && (supported || e.missing<=continuity_.hold);
             mask=envelope(e,w[k-2],target);
-        } else mask=(stageFlags_&StageBypassPermission)?1.:
+        } else mask=((stageFlags_&StageBypassPermission) || (s38Flags_&2))?1.:
             continuity_.enabled?tr.permission[k-2].step(evidence,continuity_,fast):(on?1.:0.);
         if(ht) {
             ht[1]=static_cast<float>(amp*w[k-2]*mask); ht[2]=static_cast<float>(mask);
@@ -236,13 +242,14 @@ void VbHpv::renderTrack52(Track52& tr,const double src[2][256],const int ns[2],
         const double tol=std::max(3.,.02*fk);
         const int b0=std::max(1,static_cast<int>(std::floor((fk-tol)/binHz_)));
         const int b1=std::min(kHalfFft,static_cast<int>(std::ceil((fk+tol)/binHz_))+1);
-        bool found=false; int ii=b0;
+        bool found=false; double refRatio41=0,refFreq41=0; int ii=b0;
         if(observed && on && b1-b0>=3) {
             for(int b=b0+1;b<b1;++b) if(sm52_[b]>sm52_[ii]) ii=b;
             if(sm52_[ii]>=sm52_[ii-1] && sm52_[ii]>sm52_[ii+1]) {
                 const double a=std::log(sm52_[ii-1]+1e-30),b=std::log(sm52_[ii]+1e-30),c=std::log(sm52_[ii+1]+1e-30);
                 const double off=offset52(a,b,c),fe=ii*binHz_+off*binHz_,ae=std::exp(b-.25*(a-c)*off)*2/pvWsum_;
                 found=std::abs(fe-fk)<=tol && ae>=tr.a*.01 && ae>=pvAbs_;
+                if(s41Mode_ || s41Log_) {refRatio41=ae/std::max(tr.a,1e-20);refFreq41=fe;}
             }
         }
         const double ak=ampHeld>amp && found ? ampHeld : amp;
@@ -254,7 +261,55 @@ void VbHpv::renderTrack52(Track52& tr,const double src[2][256],const int ns[2],
         // No stale source phase is advanced or claimed as a new observation.
         if(preserveUnreferencedPhase && !found) target=tr.off[k-2];
         const double d=target-tr.off[k-2];
-        const double adjustment=(stageFlags_&StageFreezePhase)?0.:clampv(std::atan2(std::sin(d),std::cos(d)),-.12,.12);
+        double adjustment=((stageFlags_&StageFreezePhase) || (s38Flags_&4))?0.:clampv(std::atan2(std::sin(d),std::cos(d)),-.12,.12);
+        if(s41Mode_ || s41Log_) {
+            const int j=k-2; auto& st=tr.s41;
+            const bool prevFound=st.found[j] && st.last[j]+kPvH==i_,same=prevFound && st.bin[j]==ii;
+            const int reason=tr.age==1?0:found?(!prevFound?1:!same?2:3):(!observed || !on?5:4);
+            if(s41Mode_==1) {
+                if(tr.age>10 || !found) adjustment=0.;
+            } else if(s41Mode_==2 || s41Mode_==3 || s41Mode_>=10) {
+                const bool good=found && (s41Mode_!=3 || (refRatio41>=.03 && std::abs(refFreq41-fk)<=.005*fk));
+                st.stable[j]=good?(same?st.stable[j]+1:1):0;
+                adjustment=0.;
+                if(good) {
+                    const bool first43=s41Mode_>=10 && st.pending43[j];
+                    if(first43) {
+                        st.pending43[j]=false;
+                        st.c[j]=std::cos(target); st.s[j]=std::sin(target); st.n[j]=5;
+                        st.until43[j]=s41Mode_==12?i_+4*kPvH:0;
+                    }
+                    const bool fast43=s41Mode_==12 && i_<st.until43[j];
+                    const double tau=fast43?.010:s41Mode_==3?.120:.250;
+                    const double beta=1-std::exp(-kPvH/(kFsd*tau));
+                    if(st.n[j]==0) {st.c[j]=std::cos(target);st.s[j]=std::sin(target);}
+                    else {st.c[j]+=beta*(std::cos(target)-st.c[j]);st.s[j]+=beta*(std::sin(target)-st.s[j]);}
+                    ++st.n[j];
+                    const double coherence=std::hypot(st.c[j],st.s[j]);
+                    const double error=std::atan2(std::sin(std::atan2(st.s[j],st.c[j])-tr.off[j]),std::cos(std::atan2(st.s[j],st.c[j])-tr.off[j]));
+                    const double dead=fast43?0.:s41Mode_==3?.15:.20,limit=fast43?.8:s41Mode_==3?.012:.006;
+                    const bool accepted=s41Mode_!=3?st.n[j]>=5 && coherence>=.6:st.stable[j]>=3 && coherence>=.85;
+                    if(accepted && std::abs(error)>dead) adjustment=clampv(error-std::copysign(dead,error),-limit,limit);
+                    if(first43 && s41Mode_!=12) adjustment=std::atan2(std::sin(d),std::cos(d));
+                }
+            } else if(s41Mode_==4) adjustment=0.;
+            else if(s41Mode_==5 && !found) adjustment=0.;
+            else if(s41Mode_==6 && reason==2) adjustment=0.;
+            else if(s41Mode_==7 && reason==3) adjustment=0.;
+            else if(s41Mode_==8 && found) adjustment=0.;
+            else if(s41Mode_==9 && reason==1) adjustment=0.;
+            if(s41Log_ && s41LogCount_<s41LogCapacity_) {
+                double* r=s41Log_+32*s41LogCount_++;
+                const double values[32]={static_cast<double>(i_),static_cast<double>(tr.id),static_cast<double>(tr.age),static_cast<double>(k),
+                    observed?1.:0.,on?1.:0.,found?1.:0.,static_cast<double>(ii),refRatio41,refFreq41,tr.f,tr.phi,
+                    found?std::atan2(si52_[ii],sr52_[ii]):0.,target,tr.off[j],adjustment,amp*w[j]*mask,mask,
+                    prevFound?1.:0.,static_cast<double>(st.bin[j]),static_cast<double>(reason),std::atan2(std::sin(d),std::cos(d)),
+                    found?target-std::atan2(si52_[ii],sr52_[ii])+k*tr.phi:0.,tr.fade,tr.life,static_cast<double>(traceSlot),
+                    st.c[j],st.s[j],static_cast<double>(st.n[j]),static_cast<double>(st.stable[j]),refFreq41-fk,s41Mode_>=10?static_cast<double>((observed?st.event43:0) | (st.pending43[j]?8:0) | (s41Mode_==12 && i_<st.until43[j]?16:0)):0.};
+                std::copy(values,values+32,r);
+            }
+            st.found[j]=found;st.bin[j]=ii;st.last[j]=i_;
+        }
         tr.off[k-2]+=adjustment;
         // Trace field3 describes the old offset step, not the oscillator's
         // separate bounded endpoint correction. Do not report it as applied.
@@ -313,10 +368,11 @@ void VbHpv::renderTrack52(Track52& tr,const double src[2][256],const int ns[2],
     const double envPeak=refSum>1e-12?envSum/refSum:(envSum>0?1.:0.);
     tr.envPeak=envPeak;
     const double nominal=gen_.envelope?tr.a*envPeak:
-        tr.a*std::max(tr.fade,ampHeld>0 && allW>0 ? heldW/allW : 0.)*tr.life;
+        tr.a*std::max(trackFade,ampHeld>0 && allW>0 ? heldW/allW : 0.)*trackLife;
     if(oscillator) tr.oscillator.add(tr.f,targetAmplitude,targetPhase,nominal,
         stageFlags_&StageOscillatorCorrect,grain,oscillatorNominal52_);
     agrain+=(stageFlags_&StageNominalPower)?nominal*nominal:nominal;
+    if(freezeTrack) std::copy(tr.off,tr.off+7,actual.off);
 }
 void VbHpv::missingFrame52(int reason,bool fast) {
     if(s32Flags_ && s32FocusLeft_>0) --s32FocusLeft_;
@@ -557,6 +613,9 @@ void VbHpv::pvFrame52() {
     const bool falling=apkCount_>0 && am<recent/1.19;
     const bool ampOnset=apkCount_>8 && am>1.41*past; // S1 research: amplitude onset for the true-onset test
     if(apkCount_<=8 || am>1.41*past || born) onsetLeft_=24;
+    // S43 reuses P1's current-hop events; no truth, new analysis or lookahead.
+    const bool onset43=s41Mode_>=10 && (ampOnset || born) && !s43OnsetPrev_;
+    if(s41Mode_>=10) s43OnsetPrev_=ampOnset || born;
     // R01 host-only identity protection: arm only long, confirmed stationary
     // tracks at a strong percussive onset. A transient peak crossing their
     // previous frequency may not inherit their ID when it walks away.
@@ -806,6 +865,7 @@ void VbHpv::pvFrame52() {
         if(best>=0) {
             used[best]=true; const auto& prev=tr52_[best];
             if(s32Flags_) tr.s32Gain=prev.s32Gain;
+            if(s41Mode_ || s41Log_) tr.s41=prev.s41;
             // Held tracks already advance phi once on each missing hop below.
             const double pred=prev.phi+kPi*(prev.f+q.f)*16/3000;
             tr.phi=q.ph+2*kPi*std::nearbyint((pred-q.ph)/(2*kPi));
@@ -837,6 +897,13 @@ void VbHpv::pvFrame52() {
             if(resumed) tr.fade=1;
             tr.id=++nextTrackId_; tr.age=1;
             if(protectIdentity) tr.protection.observe(q.f);
+        }
+        if(s41Mode_>=10) {
+            const bool pitch43=best>=0 && std::abs(std::log(q.f/tr52_[best].f))>=std::log(1.03);
+            tr.s41.event43=(best<0?1:0) | (pitch43?2:0) | (s41Mode_>=11 && onset43?4:0);
+            if(tr.s41.event43) for(int j=0;j<7;++j) {
+                tr.s41.pending43[j]=true; tr.s41.until43[j]=0;
+            }
         }
         // A track admitted after quarantine should begin like any other valid
         // birth. Otherwise a fake slow attack survives into a recovered tone.
@@ -1117,6 +1184,7 @@ double VbHpv::core52(double d) {
         const double c=std::exp(-1./((appliedGain>devGain_?.003:rel)*kFsd));
         devGain_=c*devGain_+(1-c)*appliedGain; appliedGain=devGain_;
     }
+    if(s38Flags_&8) appliedGain=apv>0?1.:0.;
     if(resultantOn_) appliedGain=1.;   // Resultant core: the layer's level is the input's own, no envelope imposition
     const int pslot=(i-defer)&(kRing-1);
     const double target=i>=defer?polyT52_[pslot]:1.; if(i>=defer) polyT52_[pslot]=1;

@@ -219,7 +219,14 @@ void Engine::configureDryLowCut() {
         const double r = std::pow(10.0, dryLowCutDb_ / 80.0);
         c.m0 = 1.0; c.m1 = std::sqrt(2.0) * (r - 1.0); c.m2 = r*r - 1.0;
     }
-    if (dryLowCutOrder_ == 4) {
+    if (dryLowCutOrder_ == 2) {
+        auto c2 = svfHighpass(sr_, dryLowCutHz_, kButterworthQ);
+        if (dryLowCutMode_ == 2) {
+            const double r = std::pow(10.0, dryLowCutDb_ / 40.0);
+            c2.m0=1.0; c2.m1=std::sqrt(2.0)*(r-1.0); c2.m2=r*r-1.0;
+        }
+        dryLowCut_[0].snap(c2);
+    } else if (dryLowCutOrder_ == 4) {
         // Exact S30 coefficient operations, including rounding, are retained above.
         for (auto& f : dryLowCut_) f.snap(c);
     } else {
@@ -237,6 +244,11 @@ void Engine::configureDryLowCut() {
         }
     }
     for (auto& channel : sDryLowCut_) for (auto& state : channel) state.reset();
+    peakBudgetDryEnv_ = peakBudgetLayerEnv_ = 0.0;
+    layerPeak42_.reset();dryPeak44_.reset();
+    for(auto& a:sDryPeak44Eq_)for(auto& v:a)v.reset();
+    for(auto& a:sDryPeak44Shelf_)for(auto& v:a)v.reset();
+    if(dryPeak44Mode_)peak44P1_.reset();
 }
 
 bool Engine::setDryLowCutResearch(int mode, double hz, double db) {
@@ -250,7 +262,7 @@ bool Engine::setDryLowCutResearch(int mode, double hz, double db) {
 }
 
 bool Engine::setDryLowCutOrderResearch(int order) {
-    if (order != 4 && order != 8) return false;
+    if (order != 2 && order != 4 && order != 8) return false;
     if (order == dryLowCutOrder_) return true;
     dryLowCutOrder_ = order;
     configureDryLowCut();
@@ -262,6 +274,24 @@ bool Engine::setLayerGainResearch(double requestedGain, double gainCap) {
         requestedGain < 0.0 || requestedGain > 4.0 ||
         (gainCap != 0.0 && (gainCap < 1.0 || gainCap > 4.0))) return false;
     researchLayerGain_ = requestedGain; researchLayerGainCap_ = gainCap;
+    return true;
+}
+
+bool Engine::setPeakBudgetResearch(int enabled, double cap, double ceilingDb,
+                                  double referenceOutDb, double releaseMs, double blend) {
+    if ((enabled != 0 && enabled != 1) || !std::isfinite(cap) ||
+        !std::isfinite(ceilingDb) || !std::isfinite(referenceOutDb) ||
+        !std::isfinite(releaseMs) || !std::isfinite(blend) ||
+        cap < 1.0 || cap > 4.0 || ceilingDb < -20.0 || ceilingDb > 0.0 ||
+        referenceOutDb < -30.0 || referenceOutDb > 0.0 ||
+        releaseMs < 1.0 || releaseMs > 1000.0 || blend < 0.0 || blend > 1.0) return false;
+    peakBudgetOn_ = enabled != 0; peakBudgetCap_ = cap; peakBudgetCeilingDb_ = ceilingDb;
+    peakBudgetReferenceOutDb_ = referenceOutDb; peakBudgetReleaseMs_ = releaseMs; peakBudgetBlend_ = blend;
+    peakBudgetDryEnv_ = peakBudgetLayerEnv_ = 0.0;
+    layerPeak42_.reset();dryPeak44_.reset();
+    for(auto& a:sDryPeak44Eq_)for(auto& v:a)v.reset();
+    for(auto& a:sDryPeak44Shelf_)for(auto& v:a)v.reset();
+    if(dryPeak44Mode_)peak44P1_.reset();
     return true;
 }
 
@@ -442,6 +472,11 @@ void Engine::resetState() {
     std::fill(std::begin(dryR_), std::end(dryR_), 0.0);
     dryPos_ = 0;
     for (auto& channel : sDryLowCut_) for (auto& state : channel) state.reset();
+    peakBudgetDryEnv_ = peakBudgetLayerEnv_ = 0.0;
+    layerPeak42_.reset();dryPeak44_.reset();
+    for(auto& a:sDryPeak44Eq_)for(auto& v:a)v.reset();
+    for(auto& a:sDryPeak44Shelf_)for(auto& v:a)v.reset();
+    if(dryPeak44Mode_)peak44P1_.reset();
     lim_.reset();
     limSolo_.reset();
     std::fill(std::begin(layerDelayL_), std::end(layerDelayL_), 0.0);
@@ -589,6 +624,8 @@ void Engine::process(float* io, int frames) {
     const uint64_t tapBase = tapFrames_.load(std::memory_order_relaxed);  // only this thread writes it
     const bool capture = diagnosticCapture_ && frames <= kDiagnosticSamples / 2;
     diagnosticSamples_ = capture ? frames * 2 : 0;
+    peak42InputSamples_ = capture && frames<=4096 ? frames*6 : 0;
+    peak44InputSamples_=capture && frames<=4096?frames*5:0;
     harmonicCount_=0; harmonicOverflow_=false;
     for(auto* module:vbMods_) module->setHarmonicCapture(capture);
     double powers[5] = {}, peaks[5] = {}, mainMin = 1.0, extraMin = 1.0;
@@ -667,6 +704,7 @@ void Engine::process(float* io, int frames) {
         }
         if (++vbPos_ >= kVbDelayLen) vbPos_ = 0;
         double vg = vbGain_.next();
+        const double peak42BaseVg=vg;
         // Bypass the multiply at the default. This changes only post-generator
         // gain, including the isolated diagnostics; it never feeds tracking.
         if (researchLayerGain_ != 1.0 || researchLayerGainCap_ != 0.0) {
@@ -771,13 +809,27 @@ void Engine::process(float* io, int frames) {
                 devBinN_ = 0;
             }
         }
-        // Keep this small delay warm even when diagnostics are off: exact component alignment on arming.
-        const double preL = vg * layL * og, preR = vg * layR * og;
-        layerDelayL_[layerPos_] = preL; layerDelayR_[layerPos_] = preR;
-        int layerRead = layerPos_ - lat;  // lat < kDryLen
-        if (layerRead < 0) layerRead += kDryLen;
-        const double delayedLayerL = layerDelayL_[layerRead], delayedLayerR = layerDelayR_[layerRead];
-        if (++layerPos_ >= kDryLen) layerPos_ = 0;
+        double peak44UncutL=eqL,peak44UncutR=eqR,peak44DryL=eqL,peak44DryR=eqR;
+        double peak44RefLayL=layL,peak44RefLayR=layR;
+        if(dryPeak44Mode_ && vbCur_==VB_ALPHA2_P1) {
+            if(dryPeak44Mode_==1) {
+            // Current fixed EQ is evaluated on undelayed dry in parallel.
+            double ed[2]={xl,xr},es[2];
+            for(int c=0;c<2;++c) {
+                auto* st=sDryPeak44Eq_[c];
+                ed[c]=hp_.tick(st[1],hp_.tick(st[0],ed[c]));
+                ed[c]=hs_.tick(st[4],hi_.tick(st[3],lo_.tick(st[2],ed[c])));
+                es[c]=ed[c];
+                if(dryLowCutMode_)for(int q=0;q<dryLowCutOrder_/2;++q)es[c]=dryLowCut_[q].tick(sDryPeak44Shelf_[c][q],es[c]);
+            }
+            dryPeak44_.process(ed[0],ed[1],es[0],es[1],vbDelay_,peak44DryL,peak44DryR);
+            }
+            // Original phase0 P1; candidate phase12 must never define its own budget.
+            peak44P1_.tick(xl,xr,peak44RefLayL,peak44RefLayR);
+        }
+        // S34 retains the uncut P1 dry for exact fallback and affine certification.
+        const double budgetDryL = eqL, budgetDryR = eqR;
+        const double peak42RefL=(eqL+peak42BaseVg*peak44RefLayL)*og,peak42RefR=(eqR+peak42BaseVg*peak44RefLayR)*og;
         // S30: cut only the processed dry signal, after generator input/trace
         // and before summation. P1 (6) and Resultant (15) share this point.
         // OFF executes no filter/arithmetic on eqL/R; old bits are preserved.
@@ -787,12 +839,54 @@ void Engine::process(float* io, int frames) {
                 eqR = dryLowCut_[section].tick(sDryLowCut_[1][section], eqR);
             }
         }
+
+        if(peak44InputSamples_>0) {
+            const double vals[5]={peak44UncutL*og,peak44UncutR*og,eqL*og,eqR*og,dryPeak44_.alpha()};
+            std::copy_n(vals,5,peak44Inputs_+5*n);
+        }
+        if(dryPeak44Mode_==1 && vbCur_==VB_ALPHA2_P1 && dryLowCutMode_) {eqL=peak44DryL;eqR=peak44DryR;}
+        if (peakBudgetOn_) {
+            const double release = std::exp(-1.0 / (peakBudgetReleaseMs_ * 0.001 * sr_));
+            peakBudgetDryEnv_ = std::max(std::max(std::fabs(eqL), std::fabs(eqR)), peakBudgetDryEnv_ * release);
+            peakBudgetLayerEnv_ = std::max(std::max(std::fabs(layL), std::fabs(layR)), peakBudgetLayerEnv_ * release);
+            const double budget = dbToLin(peakBudgetCeilingDb_ - peakBudgetReferenceOutDb_);
+            const double room = (budget - peakBudgetDryEnv_) /
+                                std::max(peakBudgetLayerEnv_ * std::fabs(vg), 1e-30);
+            const double target = clampv(room, 1.0, peakBudgetCap_);
+            if (peakBudgetBlend_ == 0.0) {
+                // Restores P1 without extra add/subtract rounding, including when shelf ON.
+                eqL = budgetDryL; eqR = budgetDryR;
+            } else {
+                eqL = budgetDryL + peakBudgetBlend_ * (eqL - budgetDryL);
+                eqR = budgetDryR + peakBudgetBlend_ * (eqR - budgetDryR);
+                vg *= 1.0 + peakBudgetBlend_ * (target - 1.0);
+            }
+        }
+        // Keep this small delay warm even when diagnostics are off: exact component alignment on arming.
+        const double preL = vg * layL * og, preR = vg * layR * og;
+        layerDelayL_[layerPos_] = preL; layerDelayR_[layerPos_] = preR;
+        int layerRead = layerPos_ - lat;  // lat < kDryLen
+        if (layerRead < 0) layerRead += kDryLen;
+        const double delayedLayerL = layerDelayL_[layerRead], delayedLayerR = layerDelayR_[layerRead];
+        if (++layerPos_ >= kDryLen) layerPos_ = 0;
         // EQ output plus the layer, then the output gain: what the limiter sees.
         const double preLimitL = (eqL + vg * layL) * og;
         const double preLimitR = (eqR + vg * layR) * og;
 
         double limitedL = 0.0, limitedR = 0.0;
         lim_.process(preLimitL, preLimitR, limitedL, limitedR);
+        double peak42LayerL=delayedLayerL,peak42LayerR=delayedLayerR;
+        if(peak42InputSamples_>0) {
+            const double vals[6]={eqL*og,eqR*og,preL,preR,peak42RefL,peak42RefR};
+            std::copy_n(vals,6,peak42Inputs_+6*n);
+        }
+        if(layerPeak42_.enabled()) {
+            double ddL=0.,ddR=0.;
+            layerPeak42_.process(eqL*og,eqR*og,preL,preR,peak42RefL,peak42RefR,lat,
+                                 ddL,ddR,peak42LayerL,peak42LayerR);
+            limitedL=(ddL+peak42LayerL)*lim_.currentGain();
+            limitedR=(ddR+peak42LayerR)*lim_.currentGain();
+        }
 
         // Isolate the actual generator contribution, not the difference between two reruns.
         // The full sum above still drives its original limiter and the loudness matcher below.
@@ -848,7 +942,7 @@ void Engine::process(float* io, int frames) {
 
         if (capture) {
             const double sharedGate = mix * fade * gate * vbx * lim_.currentGain();
-            const double gl = delayedLayerL * sharedGate, gr = delayedLayerR * sharedGate;
+            const double gl = peak42LayerL * sharedGate, gr = peak42LayerR * sharedGate;
             const double fullL = normalL * fade * gate * vbx, fullR = normalR * fade * gate * vbx;
             diagnosticLayer_[2*n] = static_cast<float>(gl); diagnosticLayer_[2*n+1] = static_cast<float>(gr);
             diagnosticFull_[2*n] = static_cast<float>(fullL); diagnosticFull_[2*n+1] = static_cast<float>(fullR);

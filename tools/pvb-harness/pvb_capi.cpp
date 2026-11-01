@@ -55,6 +55,16 @@ struct HostStageCapture {
 }
 
 extern "C" {
+int pvb_set_phase41(void* e,int mode,double* trace,int capacity) {
+    return e && static_cast<pvb::Engine*>(e)->setPhase41(mode,trace,capacity) ? 1 : 0;
+}
+int pvb_phase41_count(void* e) { return e?static_cast<pvb::Engine*>(e)->phase41Count():-1; }
+
+int pvb_set_n2_research(void* e,unsigned flags,int mode,double value,const double* tape,int count) {
+    return e && static_cast<pvb::Engine*>(e)->setN2Research(flags,mode,value,tape,count) ? 1 : 0;
+}
+
+
 
 int pvb_set_p1plus_research(void* e,unsigned flags) {
     if(!e || flags>15 || ((flags&8) && !(flags&4))) return 0;
@@ -90,6 +100,11 @@ int pvb_set_dry_low_cut(void* e,int dryLowCutMode,double dryLowCutHz,double dryL
 // S31 host-only controls; set before the first processing call.
 int pvb_set_dry_low_cut_order(void* e,int order) {
     return e && static_cast<pvb::Engine*>(e)->setDryLowCutOrderResearch(order) ? 1 : 0;
+}
+int pvb_set_peak_budget_research(void* e,int enabled,double cap,double ceilingDb,
+                                 double referenceOutDb,double releaseMs,double blend) {
+    return e && static_cast<pvb::Engine*>(e)->setPeakBudgetResearch(
+        enabled,cap,ceilingDb,referenceOutDb,releaseMs,blend) ? 1 : 0;
 }
 int pvb_set_layer_gain_research(void* e,double gain,double cap) {
     return e && static_cast<pvb::Engine*>(e)->setLayerGainResearch(gain,cap) ? 1 : 0;
@@ -373,3 +388,70 @@ void pvb_vb_process(void* m, const double* inL, const double* inR, double* outL,
 }
 
 
+
+extern "C" int pvb_set_layer_peak42(void* ptr,int mode,double releaseMs) {
+ return ptr && static_cast<pvb::Engine*>(ptr)->setLayerPeak42Research(mode,releaseMs)?1:0;
+}
+// Streaming component replay: the exact same state machine as Engine, no track peak argument.
+extern "C" void pvb_peak42_replay(const double* d,const double* l,const double* ref,int n,int mode,
+ double* y,double* outl,double* gains,double* stats) {
+ pvb::LayerPeak42 c;c.configure(mode,48000.,100.);
+ for(int i=0;i<n+88;++i) {
+  double ddL,ddR,ll,rr;
+  c.process(i<n?d[2*i]:0.,i<n?d[2*i+1]:0.,i<n?l[2*i]:0.,i<n?l[2*i+1]:0.,
+            i<n?ref[2*i]:0.,i<n?ref[2*i+1]:0.,88,ddL,ddR,ll,rr);
+  if(i>=88) {int j=i-88;y[2*j]=ddL+ll;y[2*j+1]=ddR+rr;outl[2*j]=ll;outl[2*j+1]=rr;gains[j]=c.gain();}
+ }
+ stats[0]=static_cast<double>(c.infeasible());stats[1]=static_cast<double>(c.lower());
+}
+
+extern "C" void pvb_peak42_replay3(const double* d,const double* l,const double* ref,int n,
+ double* y,double* outl,double* gains,double* stats) {
+ pvb::LayerPeak42 c;c.configure(1,48000.,100.);
+ for(int i=0;i<n+88;++i) {
+  double ddL,ddR,ll,rr;
+  c.process(i<n?d[2*i]:0.,i<n?d[2*i+1]:0.,i<n?l[2*i]:0.,i<n?l[2*i+1]:0.,
+            i<n?ref[2*i]:0.,i<n?ref[2*i+1]:0.,88,ddL,ddR,ll,rr);
+  if(i>=88) {int j=i-88;
+   for(int m=0;m<3;++m) {
+    double g=c.gainFor(m+1);gains[j*3+m]=g;
+    for(int ch=0;ch<2;++ch) {
+     double z=l[2*j+ch]*g;outl[j*6+m*2+ch]=z;y[j*6+m*2+ch]=(ch==0?ddL:ddR)+z;
+    }
+   }
+  }
+ }
+ stats[0]=static_cast<double>(c.infeasible());stats[1]=static_cast<double>(c.lower());
+}
+
+extern "C" int pvb_copy_peak42_inputs(void* e,double* out,int capacity) {
+ return e?static_cast<pvb::Engine*>(e)->copyPeak42Inputs(out,capacity):0;
+}
+
+extern "C" int pvb_set_dry_peak44(void* e,int mode){return e && static_cast<pvb::Engine*>(e)->setDryPeak44Research(mode)?1:0;}
+extern "C" int pvb_copy_peak44_inputs(void* e,double* out,int cap){return e?static_cast<pvb::Engine*>(e)->copyPeak44Inputs(out,cap):0;}
+extern "C" void pvb_dry44_replay(const double* d,const double* s,int n,double* y,double* a){
+ pvb::DryPeak44 c;
+ for(int i=0;i<n+7052;++i){double l,r;c.process(i<n?d[2*i]:0.,i<n?d[2*i+1]:0.,i<n?s[2*i]:0.,i<n?s[2*i+1]:0.,7052,l,r);
+  if(i>=7052){int j=i-7052;y[2*j]=l;y[2*j+1]=r;a[j]=c.alpha();}}
+}
+extern "C" void pvb_limiter44_replay(const double* y,const double* l,int n,double drive,double ceiling,double* out,double* outl,double* gains){
+ pvb::TruePeakLimiter lim;lim.configure(48000.,1.5);lim.setCeilingDb(ceiling);lim.setReleaseMs(60.);
+ for(int i=0;i<n+lim.latency();++i){double a,b;lim.process(i<n?y[2*i]*drive:0.,i<n?y[2*i+1]*drive:0.,a,b);
+  if(i>=lim.latency()){int j=i-lim.latency();out[2*j]=a;out[2*j+1]=b;outl[2*j]=l[2*j]*drive*lim.currentGain();outl[2*j+1]=l[2*j+1]*drive*lim.currentGain();gains[j]=lim.currentGain();}}
+}
+
+// S47: one host-only pre-processing preset for the confirmed S30 FULL combo.
+// Caller selects P1 algorithm6, flags0, level0, output -5dB, fixed EQ, 48kHz.
+// No app/JNI/default change. OFF restores the P1 research controls.
+extern "C" int pvb_set_s30_full_research(void* ptr,int enabled) {
+ if(!ptr || (enabled!=0 && enabled!=1)) return 0;
+ auto& e=*static_cast<pvb::Engine*>(ptr);
+ return e.setDryLowCutResearch(enabled?2:0,80.,-6.) &&
+        e.setDryLowCutOrderResearch(4) &&
+        e.setLayerGainResearch(enabled?4.:1.,0.) &&
+        e.setPeakBudgetResearch(0,2.,-6.,-5.,80.,1.) &&
+        e.setLayerPeak42Research(enabled,100.) &&
+        e.setPhase41(enabled?12:0,nullptr,0) &&
+        e.setDryPeak44Research(enabled) ? 1 : 0;
+}

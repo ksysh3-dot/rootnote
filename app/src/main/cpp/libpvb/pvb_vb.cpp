@@ -33,6 +33,8 @@ bool VbHpv::setAlpha2Profile(int algorithm) {
     }
     s32Profile_=algorithm==VB_ALPHA2_P1;
     s32Flags_=s32Profile_?s32HostFlags_:0;
+    s41Mode_=s32Profile_?s41HostMode_:0;
+    s38Flags_=s32Profile_?s38HostFlags_:0; s38Mode_=s32Profile_?s38HostMode_:0;
     const bool resultant=algorithm==VB_RESULTANT || algorithm==VB_RESULTANT_V16 || algorithm==VB_RESULTANT_V16D;
     p1PlusProfile_=algorithm==VB_ALPHA2_P1 || algorithm==VB_ALPHA2_P1_PLUS || algorithm==VB_ALPHA2_P1PP ||
                    algorithm==VB_ALPHA2_P1PP_V03 || algorithm==VB_ALPHA2_P1_C1 || resultant;
@@ -390,6 +392,8 @@ void VbHpv::reset() {
     envA_.z = envP_.z = 0.0;
     nt52_=apkCount_=histCount_=holdCount_=holdPos_=onsetLeft_=0;
     s32MaxA_=s32FocusHz_=0; s32FocusLeft_=0;
+    s41LogCount_=0; s43OnsetPrev_=false;
+    s38LogGain_=s38Fast_=s38Slow_=s38PrevApv_=0; s38OnsetLeft_=0; s38GainValid_=false;
     std::fill(std::begin(s32RawSlow_),std::end(s32RawSlow_),0.);
     impactCtx52_=preImpactN52_=lowGridHold52_=0; percSlow52_=0; graveN52_=0; hop52_=0; onsetBlend52_=1;
     for (auto& row : hold52_) std::fill(std::begin(row),std::end(row),-200.0);

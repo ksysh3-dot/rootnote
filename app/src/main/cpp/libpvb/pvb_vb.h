@@ -219,6 +219,21 @@ public:
     }
     // Host research only: configure before processing; not a saved app algorithm.
     void setContinuityResearch(const ContinuityParams& p) { continuity_ = p; reset(); }
+    // S41 host research, set before processing; caller owns optional trace storage.
+    // mode0 OFF; 1 onset50,2 slow250,3 confidence,4 table;5..9 diagnostic ablations;10..12 S43 event realignment.
+    bool setPhase41(int mode,double* trace,int capacity) {
+        if(mode<0 || mode>12 || capacity<0 || (capacity && !trace)) return false;
+        s41HostMode_=mode; s41Mode_=s32Profile_?mode:0;
+        s41Log_=trace; s41LogCapacity_=capacity; s41LogCount_=0; return true;
+    }
+    int phase41Count() const { return s41LogCount_; }
+    // S38 host-only stage diagnosis, all zero by default. Tape is baseline-derived
+    // ID-indexed (frequency, circular phase intercept), owned by the host.
+    bool setN2Research(unsigned flags,int mode,double value,const double* tape,int count) {
+        if(flags>63 || mode<0 || mode>10 || !std::isfinite(value) || value<0 || count<0 || (count && !tape)) return false;
+        s38HostFlags_=flags; s38HostMode_=mode; s38Value_=value; s38Tape_=tape; s38TapeN_=count;
+        s38Flags_=s32Profile_?flags:0; s38Mode_=s32Profile_?mode:0; if(flags || mode || count) reset(); return true;
+    }
     // S32 host-only, before processing. 1=current fit, 2=salience, 4=dry novelty focus.
     // No truth/MIDI/stem inputs. Only profile 6 applies these controls.
     bool setP1WrongNoteResearch(unsigned flags) {
@@ -464,6 +479,11 @@ private:
     // hpv52m: all state is fixed-size and owned by the module; no audio-thread allocations.
     struct Track52 {
         double f=0, phi=0, off[7]={}, fade=0, a=0;
+        struct Phase41 {
+            double c[7]={},s[7]={}; int n[7]={},bin[7]={},stable[7]={};
+            bool found[7]={}; uint64_t last[7]={};
+            bool pending43[7]={}; uint64_t until43[7]={}; int event43=0;
+        } s41;
         double s32Gain=1; // independent render attenuation; nominal normalization stays original
         bool impactRecoveryPending=false;
         int steadyHops=0;               // P1++ mode 8: hops of steady frequency and amplitude while unconfirmed
@@ -488,6 +508,15 @@ private:
     };
     Track52 tr52_[12];
     unsigned s32HostFlags_=0, s32Flags_=0;
+    int s41HostMode_=0,s41Mode_=0,s41LogCapacity_=0,s41LogCount_=0;
+    double* s41Log_=nullptr;
+    bool s43OnsetPrev_=false;
+    unsigned s38HostFlags_=0,s38Flags_=0;
+    int s38HostMode_=0,s38Mode_=0,s38TapeN_=0;
+    const double* s38Tape_=nullptr;
+    double s38Value_=0,s38LogGain_=0,s38Fast_=0,s38Slow_=0,s38PrevApv_=0;
+    int s38OnsetLeft_=0; bool s38GainValid_=false;
+
     bool s32Profile_=false;
     double s32MaxA_=0, s32FocusHz_=0;
     int s32FocusLeft_=0;
