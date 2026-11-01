@@ -60,7 +60,7 @@ bool VbHpv::setAlpha2Profile(int algorithm) {
     // (the static_assert stops the build), and setParams refusing a set is a bug (the assert stops the host builds,
     // whose NDEBUG is off).
     if(algorithm==VB_RESULTANT_V16 || algorithm==VB_RESULTANT_V16D) {
-        double v[]={0,0,0,15,22,6,8,30,.05,.1,1.0,30,24,.03,0,200,1.5,16,2,150,8,1,0,10};
+        double v[]={0,0,0,15,22,6,8,30,.05,.1,1.0,30,24,.03,0,200,1.5,16,2,150,8,1,0,10,0,0,0,0,0,0};
         static_assert(sizeof(v)/sizeof(v[0])==ResultantCore::kParams,"algorithms 16 and 17 set every Resultant parameter");
         if(algorithm==VB_RESULTANT_V16D) v[22]=1;   // renderFreqMode
         const bool applied=resultant_.setParams(v,ResultantCore::kParams);

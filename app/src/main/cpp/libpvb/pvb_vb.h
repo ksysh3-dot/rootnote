@@ -303,7 +303,7 @@ public:
     void setGenEnvelope(bool on) { genReq_=GenResearch52{}; genReq_.envelope=on; if(!resultantOn_) gen_=genReq_; }
     bool genEnvelope() const { return gen_.envelope; }
 
-    // Resultant core (algorithm 15, host research only): 16 parameters in the order of docs/RESULTANT_CORE.md 5.8 (false:
+    // Resultant core (algorithm 15, host research only): parameters (see ResultantCore::kParams) in the order of docs/RESULTANT_CORE.md 5.8 (false:
     // out of range, nothing applied; kept for any algorithm), and the per-hop voice trace (allocation in enable only).
     bool setResultantParams(const double* v, int n) { return resultant_.setParams(v, n); }
     bool resultantTraceEnable(int hops) { return resultant_.traceEnable(hops); }

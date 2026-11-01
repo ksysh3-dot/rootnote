@@ -223,7 +223,7 @@ public:
     void setR4Level(double gainDb) { vbAlpha2_.setR4Level(gainDb); }
     void setR4Reentry(double tauMs) { vbAlpha2_.setR4Reentry(tauMs); }
     // Host research (Resultant core, algorithm 15; docs/RESULTANT_CORE.md 4.2, 5.8). Not reachable from JNI.
-    // v: 16 values in the order of the spec (n may be shorter: the rest are the defaults); false = out of range, nothing
+    // v: up to ResultantCore::kParams values in the order of the spec (n may be shorter: the rest are the defaults); false = out of range, nothing
     // applied. Kept whichever algorithm runs. The trace holds 8 voice rows of 22 values per hop (allocated in enable).
     bool setResultantParams(const double* v, int n) { return vbAlpha2_.setResultantParams(v, n); }
     bool resultantTraceEnable(int hops) { return vbAlpha2_.resultantTraceEnable(hops); }

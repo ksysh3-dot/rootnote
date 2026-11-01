@@ -159,6 +159,32 @@ double ResultantCore::hpPhase(double f) const {
     return ph;
 }
 
+// RESULTANT_CORE.md 22: steady output magnitude at k f_osc, core rate 3 kHz (fixed band filter, then layer high-pass).
+double ResultantCore::outputMagnitude(const VbHpv& v, double f) const {
+    const double w = kRTwoPi * f / kRFs;
+    const double c1 = std::cos(w), s1 = std::sin(w), c2 = std::cos(2 * w), s2 = std::sin(2 * w);
+    double h2 = 1;
+    auto section = [&](double b0, double b1, double b2, double a1, double a2) {
+        const double nr = b0 + b1 * c1 + b2 * c2, ni = -(b1 * s1 + b2 * s2);
+        const double dr = 1 + a1 * c1 + a2 * c2, di = -(a1 * s1 + a2 * s2);
+        h2 *= (nr * nr + ni * ni) / (dr * dr + di * di);
+    };
+    for (int j = 0; j < 3; ++j) {
+        if (p_.redistActualFilter) {
+            const auto& b = v.out_[j];
+            section(b.b0, b.b1, b.b2, b.a1, b.a2);
+        } else {
+            const double* b = vbt::kOutSos + 6 * j;
+            section(b[0], b[1], b[2], b[4], b[5]);
+        }
+    }
+    if (hpOn()) for (int j = 0; j < p_.layerHpOrder / 2; ++j) {
+        const HpBiquad& s = hp_[j];
+        section(s.b0, s.b1, s.b2, s.a1, s.a2);
+    }
+    return std::sqrt(h2);
+}
+
 #ifdef PVB_RESEARCH_CAPSTATS
 // host research only: [0] voice-hops of LS sets with >= 2 voices (cap evaluated), [1] voice-hops where the cap acted; read and zeroed
 static unsigned long long gCapStats[2] = {0, 0};
@@ -174,7 +200,8 @@ bool ResultantCore::setParams(const double* v, int n) {
     double q[kParams] = {static_cast<double>(d.voicing), d.levelDb, static_cast<double>(d.ampSource), d.snrOnDb,
         d.snrFastDb, d.snrOffDb, d.tauOnMs, d.tauOffMs, d.betaMin, d.betaMax, d.kappa, static_cast<double>(d.nMin),
         static_cast<double>(d.nFuture), d.psiSlew, static_cast<double>(d.crest), d.maxDfdtBirth, d.capRho, static_cast<double>(d.windowCreep), static_cast<double>(d.creepMode),
-        d.layerHpHz, static_cast<double>(d.layerHpOrder), static_cast<double>(d.layerHpComp), static_cast<double>(d.renderFreqMode), d.renderTauMs};
+        d.layerHpHz, static_cast<double>(d.layerHpOrder), static_cast<double>(d.layerHpComp), static_cast<double>(d.renderFreqMode), d.renderTauMs, static_cast<double>(d.redistMode), d.redistAlpha,
+        static_cast<double>(d.psiRenderReference), static_cast<double>(d.birthPhaseUnwrap), static_cast<double>(d.fadeRejectBan), static_cast<double>(d.redistActualFilter)};
     for (int i = 0; i < n; ++i) q[i] = v[i];
     auto in = [&](int i, double lo, double hi) { return std::isfinite(q[i]) && q[i] >= lo && q[i] <= hi; };
     auto flag = [&](int i) { return q[i] == 0.0 || q[i] == 1.0; };
@@ -183,7 +210,7 @@ bool ResultantCore::setParams(const double* v, int n) {
         !in(13, .01, 3.2) || !flag(14) || !in(15, 20, 2000) ||
         !(q[16] == 0.0 || in(16, 1, 10)) || !(q[17] == 0.0 || in(17, 1, 320)) || !(q[18] == 0.0 || q[18] == 1.0 || q[18] == 2.0) ||
         !(q[19] == 0.0 || in(19, 20, 1000)) || !(q[20] == 4.0 || q[20] == 8.0) || !flag(21) ||
-        !flag(22) || !in(23, 1, 500)) return false;
+        !flag(22) || !in(23, 1, 500) || !(q[24] == 0.0 || q[24] == 1.0 || q[24] == 2.0) || !in(25, 0, 1) || !flag(26) || !flag(27) || !flag(28) || !flag(29)) return false;
     p_.voicing = static_cast<int>(q[0]); p_.levelDb = q[1]; p_.ampSource = static_cast<int>(q[2]);
     p_.snrOnDb = q[3]; p_.snrFastDb = q[4]; p_.snrOffDb = q[5]; p_.tauOnMs = q[6]; p_.tauOffMs = q[7];
     p_.betaMin = q[8]; p_.betaMax = q[9]; p_.kappa = q[10];
@@ -192,6 +219,9 @@ bool ResultantCore::setParams(const double* v, int n) {
     p_.capRho = q[16]; p_.windowCreep = static_cast<int>(std::lround(q[17])); p_.creepMode = static_cast<int>(q[18]);
     p_.layerHpHz = q[19]; p_.layerHpOrder = static_cast<int>(q[20]); p_.layerHpComp = static_cast<int>(q[21]);
     p_.renderFreqMode = static_cast<int>(q[22]); p_.renderTauMs = q[23];
+    p_.redistMode = static_cast<int>(q[24]); p_.redistAlpha = q[25];
+    p_.psiRenderReference = static_cast<int>(q[26]); p_.birthPhaseUnwrap = static_cast<int>(q[27]); p_.fadeRejectBan = static_cast<int>(q[28]);
+    p_.redistActualFilter = static_cast<int>(q[29]);
     if (p_.layerHpHz > 0) designHp();
     return true;
 }
@@ -303,6 +333,7 @@ int ResultantCore::allocateSlot(const Ctx& cx, double trackAmp) {
     }
     if (!(trackAmp > wv)) return -1;
     Voice victim = vo_[weak];
+    if (p_.fadeRejectBan) rejectTrack(victim.trackId); // section 24: Fade clears trackId below
     bool audible = false;
     for (int k = 0; k < kPartials; ++k) if (victim.a[k] != 0 || victim.aStart[k] != 0) audible = true;
     if (audible) {
@@ -318,7 +349,7 @@ int ResultantCore::allocateSlot(const Ctx& cx, double trackAmp) {
         victim.state = Fade; victim.trackId = 0; victim.inLs = victim.born = victim.dead = false;
         vo_[fs] = victim;
     }
-    rejectTrack(victim.trackId);
+    if (!p_.fadeRejectBan) rejectTrack(victim.trackId); // legacy path preserved when disabled
     vo_[weak] = Voice{};
     return weak;
 }
@@ -772,12 +803,18 @@ void ResultantCore::updatePhase(Ctx& cx) {
         if (u.state == Empty) continue;
         if (u.born) {
             if (!cx.lsOk) { u.state = Cand; u.born = false; u.c = u.cStart = 0; u.fOsc = u.f; continue; }   // not reached after a fit
-            u.theta = u.thetaMeas; u.fOff = 0; u.fOsc = u.f; u.bigE = 0;
+            if (p_.birthPhaseUnwrap) {
+                const double pred = u.theta + kRTwoPi * u.fOsc * kRHopS;
+                u.theta = pred + std::remainder(u.thetaMeas - pred, kRTwoPi);
+            } else u.theta = u.thetaMeas;
+            u.fOff = 0; u.fOsc = u.f; u.bigE = 0;
             continue;
         }
         const double pred = u.theta + kRTwoPi * u.fOsc * kRHopS;
         if (u.state == Cand) {
-            u.theta = (cx.lsOk && u.inLs) ? u.thetaMeas : pred;
+            if (p_.birthPhaseUnwrap && cx.lsOk && u.inLs)
+                u.theta = pred + std::remainder(u.thetaMeas - pred, kRTwoPi);
+            else u.theta = (cx.lsOk && u.inLs) ? u.thetaMeas : pred;
             u.fOff = 0; u.fOsc = u.f;
             continue;
         }
@@ -804,7 +841,7 @@ void ResultantCore::updatePhase(Ctx& cx) {
 
 // Render frequency (v1.6-d, RESULTANT_CORE.md 20.8; the render separation of 19.2.1). Per voice a render phase theta_r integrates f_r, a
 // causal one-pole (per hop, a = 1 - exp(-hop / tau)) of f_track; synthesis uses k theta_r + psi_k, the analysis (theta, f_off, LS, psi
-// targets) is not touched. Restart (theta_r = theta, f_r = f_track): CAND hops (so the birth hop starts from theta), birth. REL -> ON: f_r = f_track only.
+// projection) is not touched; psiRenderReference optionally corrects present-partial targets. Restart (theta_r = theta, f_r = f_track): CAND hops (so the birth hop starts from theta), birth. REL -> ON: f_r = f_track only.
 // Confirmed note change: f_r = f_track, the phase goes on. A note change is a flag of 19.2.1 (f_track more than 50 cent from 2 hops
 // earlier, both hops ON or REL) at hop h, confirmed at c = h + 2 when the flag is not a continuation (no flag at h - 1), hops h + 1
 // and c are ON and the two steps h -> h + 1 -> c each stay within 15 cent; no new reset within 8 hops of the last one (the oracle
@@ -912,7 +949,10 @@ void ResultantCore::updatePartials(VbHpv& v, Ctx& cx, Voice& u) {
         }
         // layer high-pass (19.7): its phase at k f_osc is taken out of both branches alike (a one-sided term would jump the target by up to pi)
         const double hpc = p_.layerHpComp && hpOn() ? hpPhase(fk) : 0.0;
-        double target = u.present[k] ? std::atan2(ci, cr) - kk * u.theta + phiComp(fk)
+        // section 24: present partials reference the phase actually used by synthesize().
+        // Analysis/projection frequencies and the absent-partial table retain their original definitions.
+        const double thetaRef = p_.psiRenderReference && p_.renderFreqMode ? u.thetaR : u.theta;
+        double target = u.present[k] ? std::atan2(ci, cr) - kk * thetaRef + phiComp(fk)
                                      : psi52(kk, u.f, p_.crest != 0);
         if (hpc != 0.0) target -= hpc;   // the filter adds +hpc to cos(k theta + psi); sign checked with steady sinusoids (S19/HP/sign_check.py)
         if (!(u.psiSet & (1u << k))) {
@@ -956,9 +996,39 @@ void ResultantCore::amplitudes(const VbHpv& v, Voice& u) const {
         }
         u.a[kk - 2] = gl * g * w[kk - 2] * r * base;
     }
+    if (!p_.redistMode || !(p_.redistAlpha > 0)) return;   // RESULTANT_CORE.md 22: off skips the entire new amplitude path
+    auto step = [](double lo, double hi, double x) {
+        return x <= lo ? 0.0 : x >= hi ? 1.0 : .5 * (1 - std::cos(kPi * (x - lo) / (hi - lo)));
+    };
+    double d[kPartials] = {}, r[kPartials] = {}, h[kPartials] = {}, power[kPartials] = {};
+    double eta = 0, sumR = 0, sumRP = 0, donor = 0;
+    for (int kk = 2; kk <= 8 && kk * f <= 700.0; ++kk) {
+        const int k = kk - 2;
+        if (!(u.psiSet & (1u << k))) continue;
+        const double fk = kk * f;
+        d[k] = step(150, 160, fk) * (1 - step(250, 260, fk));
+        r[k] = step(260, 280, fk) * (1 - step(580, 600, fk));
+        if (d[k] == 0 && r[k] == 0) continue;
+        h[k] = outputMagnitude(v, fk);
+        if (p_.redistActualFilter && (!(h[k] > 1e-12) || !std::isfinite(h[k]))) {
+            d[k] = r[k] = 0; // no invertible output response: exclude this bin from donors and receivers
+            continue;
+        }
+        power[k] = .5 * u.a[k] * u.a[k] * h[k] * h[k];
+        eta = std::max(eta, r[k]); sumR += r[k]; sumRP += r[k] * power[k]; donor += d[k] * power[k];
+    }
+    const double moved = p_.redistAlpha * eta * donor;
+    if (!(sumR > 0) || !(moved > 0)) return;   // no receiver or no donor: preserve the voice exactly
+    for (int k = 0; k < kPartials; ++k) {
+        if (d[k] == 0 && r[k] == 0) continue;
+        const double q = p_.redistMode == 2 && sumRP > 0 ? r[k] * power[k] / sumRP : r[k] / sumR;
+        const double pk = (1 - p_.redistAlpha * eta * d[k]) * power[k] + moved * q;
+        u.a[k] = std::sqrt(2 * pk) / h[k];
+    }
 }
 
-// Voices pushed out of a full table fade with tau 5 ms (synthesis only)
+// Voices pushed out of a full table fade with tau 5 ms (synthesis only).
+// RESULTANT_CORE.md 22: the inherited endpoint is already redistributed; a common decay commutes with either mode (fixed f_osc / psiSet).
 void ResultantCore::fadeVoices() {
     const double decay = std::exp(-kRHopS / .005);
     for (int s = kVoices; s < kVoices + kFade; ++s) {

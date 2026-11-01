@@ -42,6 +42,12 @@ struct ResultantParams {
     int layerHpComp = 0;        // 1: the filter's phase at k f_osc is subtracted from psi's target (both branches), keeps the input alignment of sustained notes
     int renderFreqMode = 0;     // v1.6-d (RESULTANT_CORE.md 20.8): 1 = synthesis uses a render phase theta_r that integrates a low-passed f_track (render only, analysis unchanged); 0 = theta
     double renderTauMs = 10;    // renderFreqMode 1: time constant of the causal one-pole on f_track (1..500 ms)
+    int redistMode = 0;         // RESULTANT_CORE.md 22: 0 off, 1 uniform receiver power, 2 proportional to original receiver power
+    double redistAlpha = 0;     // maximum donor power fraction (0..1), tapered at the donor / receiver band edges
+    int psiRenderReference = 0; // 27, section 24: present partial targets use the synthesis phase theta_r in render mode 1
+    int birthPhaseUnwrap = 0;   // 28, section 24: CAND/birth measurements unwrap about the predicted next phase
+    int fadeRejectBan = 0;      // 29, section 24: reject an evicted track before clearing its ID for the Fade slot
+    int redistActualFilter = 0; // 30, section 24: redistribution uses the active output SOS instead of the fixed table
 };
 
 class ResultantCore {
@@ -49,7 +55,7 @@ public:
     static constexpr int kVoices = 8;        // voice slots (V_max)
     static constexpr int kFade = 2;          // extra fade-only slots for voices pushed out of a full slot table
     static constexpr int kPartials = 7;      // harmonics k = 2..8
-    static constexpr int kParams = 24;
+    static constexpr int kParams = 30;
     static constexpr int kTraceFields = 22;
     static constexpr int kOut = 64;          // output ring, power of two (a hop writes 16 samples ahead of the read index)
     static constexpr int kTracks = 12;       // VbHpv::tr52_ capacity
@@ -60,7 +66,8 @@ public:
     ResultantCore() { reset(); }
     // Forgets voices, rings and the recorded trace; keeps the parameters and the trace allocation.
     void reset();
-    // v[0..n) in the order of spec 5.8, the rest at the defaults. false (nothing applied) when a value is out of range.
+    // v[0..n) in API order, the rest at defaults. Set before processing; live state migration is not supported.
+    // false (nothing applied) when a value is out of range.
     bool setParams(const double* v, int n);
     const ResultantParams& params() const { return p_; }
     // Host research trace: kVoices rows of kTraceFields doubles per hop. Allocation here only. hops <= 0 frees it.
@@ -206,6 +213,7 @@ private:
         }
     };
     void designHp();
+    double outputMagnitude(const VbHpv& v, double f) const; // output SOS (fixed or active) times the layer high-pass
 
     ResultantParams p_;
     HpBiquad hp_[4];           // layer high-pass sections (order / 2 used)
