@@ -112,6 +112,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import me.timschneeberger.rootlessjamesdsp.R
 import me.timschneeberger.rootlessjamesdsp.pvb.HomeLogic
+import me.timschneeberger.rootlessjamesdsp.pvb.PvbSettings
 import kotlin.math.roundToInt
 import me.timschneeberger.rootlessjamesdsp.ui.RnMotion
 import me.timschneeberger.rootlessjamesdsp.ui.rn
@@ -460,7 +461,7 @@ private fun PressureTip(state: HomeUiState, actions: HomeActions) {
         )
         FlowRowActions {
             BannerAction(stringResource(R.string.home_pressure_action), bold = true,
-                onClick = { actions.onLevel((state.level - 1).coerceAtLeast(0)) })
+                onClick = { actions.onLevel((state.level - 1).coerceAtLeast(PvbSettings.VB_LEVEL_MIN.toInt())) })
         }
     }
 }
@@ -749,6 +750,7 @@ private fun StrengthSection(state: HomeUiState, actions: HomeActions) {
         }
         StepSlider(
             value = state.level,
+            min = PvbSettings.VB_LEVEL_MIN.toInt(),
             max = state.levelMax,
             enabled = state.masterOn,
             label = title,
@@ -867,7 +869,7 @@ private fun PresetChip(label: String, selected: Boolean, enabled: Boolean, onCli
 }
 
 /**
- * Whole-step slider 0..[max]: the shared slider track (ui/RnSlider.kt) with a 28 dp thumb. The thumb follows the finger
+ * Whole-step slider [min]..[max]: the shared slider track (ui/RnSlider.kt) with a 28 dp thumb. The thumb follows the finger
  * exactly and the value snaps to its step; a light tick on every step. Accessibility: range info, value text,
  * set-progress (TalkBack volume keys/swipes).
  */
@@ -875,6 +877,7 @@ private fun PresetChip(label: String, selected: Boolean, enabled: Boolean, onCli
 private fun StepSlider(
     value: Int,
     max: Int,
+    min: Int = 0,
     enabled: Boolean,
     label: String,
     valueText: String,
@@ -882,7 +885,7 @@ private fun StepSlider(
 ) {
     val c = LocalPalette.current
     RnSliderTrack(
-        value = value.toFloat(), range = 0f..max.toFloat(), step = 1f, enabled = enabled, name = label, valueText = valueText,
+        value = value.toFloat(), range = min.toFloat()..max.toFloat(), step = 1f, enabled = enabled, name = label, valueText = valueText,
         snap = { it.roundToInt().toFloat() },
         colors = RnSliderColors(c.fill, c.sliderInactive, c.thumb, c.textSecondary),
         thumbSize = 28.dp, thumbShadow = 4.dp,

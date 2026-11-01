@@ -147,13 +147,20 @@ object LiveAbTally {
     fun signTestP(k: Int, n: Int): Double {
         if (n <= 0) return 1.0
         val m = minOf(k, n - k)
-        var tail = 0.0
-        var c = 1.0
-        for (i in 0..m) {
-            if (i > 0) c = c * (n - i + 1) / i
-            tail += c
+        if (m < 0) return 0.0
+        if (m == n / 2) return 1.0
+        // log P(X=m), then sum the smaller tail relative to its largest term.
+        // Neither binomial coefficients nor 2^n are formed (both overflow for large sessions).
+        var logMass = -n.toDouble() * Math.log(2.0)
+        for (i in 1..m) logMass += Math.log((n - i + 1).toDouble() / i)
+        var term = 1.0
+        var tail = 1.0
+        for (i in m downTo 1) {
+            term *= i.toDouble() / (n - i + 1)
+            tail += term
+            if (term < tail * 1e-16) break
         }
-        return minOf(1.0, 2.0 * tail / Math.pow(2.0, n.toDouble()))
+        return minOf(1.0, 2.0 * Math.exp(logMass + Math.log(tail)))
     }
 }
 

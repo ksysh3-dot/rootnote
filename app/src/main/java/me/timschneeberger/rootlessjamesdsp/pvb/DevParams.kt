@@ -127,9 +127,8 @@ object DevParams {
         listOf(S), DevHighlight.LAYER)
     val X_S1M = DevSpec("x_s1m", PvbSettings.KEY_X_S1M, DevGroup.TIME, DevUnit.SWITCH, 0f, 1f, 1f, 0f, 0f, 1f,
         listOf(E), DevHighlight.RELEASE)
-    // Lower end stays 0 on purpose: the share code (RN1) stores the index from min, so a lower min would change every
-    // existing code. The main strength slider goes down to PvbSettings.VB_LEVEL_MIN (-6).
-    val STRENGTH = DevSpec("strength", PvbSettings.KEY_VB_STRENGTH_DB, DevGroup.SIZE, DevUnit.DB, 0f, DEV_VB_LEVEL_MAX, 1f,
+    // DevShareCode keeps the old RN1 value-set 1 indexes; signed strengths use value-set 2.
+    val STRENGTH = DevSpec("strength", PvbSettings.KEY_VB_STRENGTH_DB, DevGroup.SIZE, DevUnit.DB, PvbSettings.VB_LEVEL_MIN, DEV_VB_LEVEL_MAX, 1f,
         4f, 2f, 6f, listOf(R, M, S), DevHighlight.LAYER)
     val VOL_START = DevSpec("vol_start", PvbSettings.KEY_VB_VOL_REF_PCT, DevGroup.SIZE, DevUnit.PCT,
         VolumeLevelLink.REF_PCT_MIN, VolumeLevelLink.REF_PCT_MAX, 1f, VolumeLevelLink.REF_PCT_DEFAULT, 30f, 50f,
@@ -148,6 +147,10 @@ object DevParams {
      */
     val TABLE_FLOOR = DevSpec("table_floor", KEY_TABLE_FLOOR, DevGroup.BAND, DevUnit.HZ, 115f, 260f, 5f, 150f, 120f, 220f,
         listOf(S, E), DevHighlight.LAYER)
+
+    /** A warning action must also work below 0 dB, down to the common strength floor. */
+    fun lowerStrength(value: Float, amountDb: Float = 2f): Float =
+        STRENGTH.snap(STRENGTH.snap(value) - amountDb)
 
     /** Share-code order (RN1). Append only. */
     val ALL: List<DevSpec> = listOf(

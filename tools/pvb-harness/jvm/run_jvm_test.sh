@@ -137,3 +137,9 @@ OUTV="$HERE/../build/jvm-devmode"
 rm -rf "$OUTV"; mkdir -p "$OUTV"
 $KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/DevParams.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/DeviceProfiles.kt" "$APP/PvbNative.kt" "$APP/PvbEngine.kt" "$APP/DevShareCode.kt" "$APP/SettingsSummary.kt" "$APP/DevWarnings.kt" "$APP/DevTestSound.kt" "$HERE/DevModeTest.kt" -d "$OUTV"
 java -Djava.library.path="$HERE/../build" -cp "$OUTV:$KOTLIN_STDLIB" DevModeTestKt "$HERE/../../.." --jni
+
+# Section-24 signed strengths, RN1 compatibility, UI wiring and large-session sign test.
+OUTN="$HERE/../build/jvm-negative-strength"
+mkdir -p "$OUTN"
+$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/DevParams.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/HomeLogic.kt" "$APP/DevShareCode.kt" "$APP/PvbNative.kt" "$APP/PvbEngine.kt" "$APP/PvbRuntime.kt" "$APP/PvbAbConditions.kt" "$APP/LiveAb.kt" "$APP/LiveAbComparisons.kt" "$HERE/NegativeStrengthTest.kt" -d "$OUTN"
+java -cp "$OUTN:$KOTLIN_STDLIB" NegativeStrengthTestKt "$HERE/../../.."

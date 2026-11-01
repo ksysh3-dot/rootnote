@@ -554,7 +554,7 @@ class DevModeActivity : BaseActivity() {
             DevWarning.BUZZ_ZONE, DevWarning.NEAR_CEILING -> {
                 pushUndo()
                 val cur = ui?.values?.get(DevParams.ALL.indexOf(DevParams.STRENGTH)) ?: DevParams.STRENGTH.default
-                write(DevParams.STRENGTH, (cur - 2f).coerceAtLeast(0f))
+                write(DevParams.STRENGTH, DevParams.lowerStrength(cur))
             }
             DevWarning.TAIL -> {
                 pushUndo()
