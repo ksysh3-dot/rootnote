@@ -56,6 +56,8 @@ public:
     static constexpr int kFade = 2;          // extra fade-only slots for voices pushed out of a full slot table
     static constexpr int kPartials = 7;      // harmonics k = 2..8
     static constexpr int kParams = 30;
+    // Models16/17 specify this historical prefix; appended parameters use defaults.
+    static constexpr int kV16PresetParams = 30;
     static constexpr int kTraceFields = 22;
     static constexpr int kOut = 64;          // output ring, power of two (a hop writes 16 samples ahead of the read index)
     static constexpr int kTracks = 12;       // VbHpv::tr52_ capacity

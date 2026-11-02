@@ -197,11 +197,12 @@ extern "C" __attribute__((visibility("default"))) void pvb_resultant_cap_stats(d
 bool ResultantCore::setParams(const double* v, int n) {
     if (n < 0 || n > kParams || (n > 0 && !v)) return false;
     const ResultantParams d;
-    double q[kParams] = {static_cast<double>(d.voicing), d.levelDb, static_cast<double>(d.ampSource), d.snrOnDb,
+    double q[] = {static_cast<double>(d.voicing), d.levelDb, static_cast<double>(d.ampSource), d.snrOnDb,
         d.snrFastDb, d.snrOffDb, d.tauOnMs, d.tauOffMs, d.betaMin, d.betaMax, d.kappa, static_cast<double>(d.nMin),
         static_cast<double>(d.nFuture), d.psiSlew, static_cast<double>(d.crest), d.maxDfdtBirth, d.capRho, static_cast<double>(d.windowCreep), static_cast<double>(d.creepMode),
         d.layerHpHz, static_cast<double>(d.layerHpOrder), static_cast<double>(d.layerHpComp), static_cast<double>(d.renderFreqMode), d.renderTauMs, static_cast<double>(d.redistMode), d.redistAlpha,
         static_cast<double>(d.psiRenderReference), static_cast<double>(d.birthPhaseUnwrap), static_cast<double>(d.fadeRejectBan), static_cast<double>(d.redistActualFilter)};
+    static_assert(sizeof(q)/sizeof(q[0])==kParams,"Resultant defaults must cover the exact API length");
     for (int i = 0; i < n; ++i) q[i] = v[i];
     auto in = [&](int i, double lo, double hi) { return std::isfinite(q[i]) && q[i] >= lo && q[i] <= hi; };
     auto flag = [&](int i) { return q[i] == 0.0 || q[i] == 1.0; };

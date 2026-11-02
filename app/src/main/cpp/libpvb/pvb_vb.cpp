@@ -13,6 +13,7 @@
 #include <cmath>
 #include <complex>
 #include <initializer_list>
+#include <iterator>
 
 #include "pvb_dsp.h"
 #include "pvb_simd.h"
@@ -60,14 +61,15 @@ bool VbHpv::setAlpha2Profile(int algorithm) {
     // windowCreep 16, creepMode 2, the layer high-pass 150 Hz, order 8, phase compensated, and the analysis frequency
     // for the render, renderFreqMode 0, renderTauMs 10; betaMin .05, betaMax .1, psiSlew .03). Algorithm 17 (v1.6-d)
     // is 16 with renderFreqMode 1. Every other profile, 15 included, gets the pvb_resultant.h defaults back after
-    // either. The lists are explicit and must cover every parameter: a parameter added to the core needs a value here
-    // (the static_assert stops the build), and setParams refusing a set is a bug (the assert stops the host builds,
-    // whose NDEBUG is off).
+    // either. The explicit historical prefix has an exact length assertion. Appended API parameters retain their
+    // receiver defaults; passing the array length prevents an API extension from reading past this prefix.
+    // setParams refusing a set is a bug (the assert stops host builds, whose NDEBUG is off).
     if(algorithm==VB_RESULTANT_V16 || algorithm==VB_RESULTANT_V16D) {
         double v[]={0,0,0,15,22,6,8,30,.05,.1,1.0,30,24,.03,0,200,1.5,16,2,150,8,1,0,10,0,0,0,0,0,0};
-        static_assert(sizeof(v)/sizeof(v[0])==ResultantCore::kParams,"algorithms 16 and 17 set every Resultant parameter");
+        static_assert(std::size(v)==ResultantCore::kV16PresetParams,"model16/17 explicit preset length changed");
+        static_assert(std::size(v)<=ResultantCore::kParams,"preset exceeds Resultant API");
         if(algorithm==VB_RESULTANT_V16D) v[22]=1;   // renderFreqMode
-        const bool applied=resultant_.setParams(v,ResultantCore::kParams);
+        const bool applied=resultant_.setParams(v,static_cast<int>(std::size(v)));
         assert(applied);(void)applied;
         resultantSet_=true;
     } else leaveResultantSet();
