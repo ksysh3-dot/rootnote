@@ -493,3 +493,9 @@ extern "C" int pvb_engine_cancellation50(float* out,int frames,double* stats) {
  if(!out || !stats || frames<8192)return 0;
  pvb::Sum50TestAccess::cancellation(out,frames,stats);return 1;
 }
+
+#ifdef PVB_HOST_RESEARCH
+extern "C" int pvb_set_allocation66(void* p,int mode,int high,int recovery) {
+ return p && static_cast<pvb::Engine*>(p)->setAllocation66(mode,high!=0,recovery)?1:0;
+}
+#endif

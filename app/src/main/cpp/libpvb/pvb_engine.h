@@ -22,6 +22,9 @@
 //
 // Copyright (C) 2026 PVB project. Licensed under the GNU GPL v3 (same as RootlessJamesDSP).
 #pragma once
+#ifdef PVB_HOST_RESEARCH
+#include "pvb_allocation66.h"
+#endif
 
 #include <atomic>
 #include <cstdint>
@@ -214,6 +217,14 @@ public:
     bool setPhase41(int mode,double* trace,int capacity) { return vbAlpha2_.setPhase41(mode,trace,capacity); }
     int phase41Count() const { return vbAlpha2_.phase41Count(); }
     bool setN2Research(unsigned flags,int mode,double value,const double* tape,int count) { return vbAlpha2_.setN2Research(flags,mode,value,tape,count); }
+#ifdef PVB_HOST_RESEARCH
+    // Configure before processing; mode0 preserves P1/B arithmetic exactly.
+    bool setAllocation66(int mode,bool high,int recovery) {
+        if(sr_!=48000 || (recovery!=100 && recovery!=20))return false;
+        if(!allocation66_.set(mode,high))return false;
+        recovery66_=recovery;return true;
+    }
+#endif
     bool setP1WrongNoteResearch(unsigned flags) { return vbAlpha2_.setP1WrongNoteResearch(flags); }
     void setP1PlusResearch(unsigned flags) {
         vbAlpha2_.setP1PlusResearch(flags);
@@ -368,6 +379,10 @@ private:
     RampedSvf hp_, lo_, hi_, hs_;
     SvfState sHp1_[2], sHp2_[2], sLo_[2], sHi_[2], sHs_[2];
     RampedValue outGain_, mix_, fade_, lowDbNow_;
+#ifdef PVB_HOST_RESEARCH
+    Allocation66 allocation66_;
+    int recovery66_=100;
+#endif
     int dryLowCutMode_ = 0;
     double dryLowCutHz_ = 80.0, dryLowCutDb_ = -6.0;
     int dryLowCutOrder_ = 4;

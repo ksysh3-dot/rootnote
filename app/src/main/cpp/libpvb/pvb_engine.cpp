@@ -346,6 +346,9 @@ void Engine::setP1pppControls(bool on) {
     researchLayerGain_=on?4.:1.;researchLayerGainCap_=0.;peakBudgetOn_=false;
     dryPeak44Mode_=on?1:0;layerPeak42_.configure(on?1:0,sr_,100.);
     genHost_=false;vbAlpha2_.prepareP1pppResearch(on);
+#ifdef PVB_HOST_RESEARCH
+    if(on && recovery66_!=100)layerPeak42_.setRecovery66(recovery66_);
+#endif
     configureDryLowCut();boundedPeak50_.reset();
     boundedPeak50_.setCeilingDb(-1.);boundedPeak50_.setReleaseMs(60.,sr_);
 }
@@ -551,6 +554,9 @@ void Engine::resetState() {
     for(auto& a:sDryPeak44Shelf_)for(auto& v:a)v.reset();
     if(dryPeak44Mode_)peak44P1_.reset();
     boundedPeak50_.reset();
+#ifdef PVB_HOST_RESEARCH
+    allocation66_.reset();
+#endif
     lim_.reset();
     limSolo_.reset();
     std::fill(std::begin(layerDelayL_), std::end(layerDelayL_), 0.0);
@@ -953,6 +959,10 @@ void Engine::process(float* io, int frames) {
                 vg *= 1.0 + peakBudgetBlend_ * (target - 1.0);
             }
         }
+#ifdef PVB_HOST_RESEARCH
+        if(p1pppEffective_ && allocation66_.mode())
+            allocation66_.tick(eqL,eqR,layL,layR,sr_);
+#endif
         // Keep this small delay warm even when diagnostics are off: exact component alignment on arming.
         const double preL = vg * layL * og, preR = vg * layR * og;
         layerDelayL_[layerPos_] = preL; layerDelayR_[layerPos_] = preR;

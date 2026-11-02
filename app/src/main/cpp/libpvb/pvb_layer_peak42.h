@@ -30,6 +30,7 @@ public:
   bgDown_=1.-std::exp(-1./(.020*fs_));bgUp_=1.-std::exp(-1./(.200*fs_));
   releaseCoef_=1.-std::exp(-1./(.001*release_*fs_));reset();return true;
  }
+ bool setRecovery66(int ms) {if(ms!=20 && ms!=100)return false;releaseCoef_=1.-std::exp(-1./(.001*ms*fs_));return true;}
  void reset() {
   for(double& v:gains_)v=0.;
   n_=-1;refPeak_=dp_=lp_=bg_=gain_=0.;infeasible_=0;lower_=0;
