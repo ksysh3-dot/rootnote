@@ -30,6 +30,7 @@
 
 #include "pvb_analysis.h"
 #include "pvb_dsp.h"
+#include "pvb_level54.h"
 #include "pvb_layer_condition.h"
 #include "pvb_vb.h"
 #include "pvb_xtc.h"
@@ -242,6 +243,11 @@ public:
     // S31 host-only, configure before processing. Default order4/gain1/cap0 preserves all old bits.
     bool setDryLowCutOrderResearch(int order);
     bool setLayerGainResearch(double requestedGain, double gainCap);
+    // S54 default-OFF host-only parameters. Set before processing, or disable then reset.
+    bool setLevel54Research(int mode,double knee,double slope,double enter,double exit,double attackMs,double releaseMs) {
+        return level54_.configure(mode,sr_,knee,slope,enter,exit,attackMs,releaseMs);
+    }
+    int copyLevel54State(double* out,int cap)const{return level54_.state(out,cap);}
     // S34 host-only, set before processing. Disabled is exact legacy arithmetic.
     // blend is an offline certified interpolation toward P1, not a realtime TP guarantee.
     int copyPeak42Inputs(double* out,int capacity) const {
@@ -372,6 +378,7 @@ private:
     double dryLowCutHz_ = 80.0, dryLowCutDb_ = -6.0;
     int dryLowCutOrder_ = 4;
     double researchLayerGain_ = 1.0, researchLayerGainCap_ = 0.0;
+    Level54 level54_;
     bool peakBudgetOn_ = false;
     double peakBudgetCap_ = 2.0, peakBudgetCeilingDb_ = -3.0;
     double peakBudgetReferenceOutDb_ = -5.0, peakBudgetReleaseMs_ = 80.0, peakBudgetBlend_ = 1.0;

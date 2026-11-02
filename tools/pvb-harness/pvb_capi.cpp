@@ -82,6 +82,12 @@ struct HostStageCapture {
 }
 
 extern "C" {
+int pvb_set_level54(void* e,int mode,double knee,double slope,double enter,double exit,double attackMs,double releaseMs) {
+    return e && static_cast<pvb::Engine*>(e)->setLevel54Research(mode,knee,slope,enter,exit,attackMs,releaseMs)?1:0;
+}
+int pvb_copy_level54_state(void* e,double* out,int cap) {
+    return e?static_cast<pvb::Engine*>(e)->copyLevel54State(out,cap):0;
+}
 int pvb_set_phase41(void* e,int mode,double* trace,int capacity) {
     return e && static_cast<pvb::Engine*>(e)->setPhase41(mode,trace,capacity) ? 1 : 0;
 }

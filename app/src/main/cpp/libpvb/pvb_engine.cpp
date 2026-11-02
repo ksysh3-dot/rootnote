@@ -528,6 +528,7 @@ void Engine::publishFilters() {
 }
 
 void Engine::resetState() {
+    level54_.reset();
     for (int c = 0; c < 2; ++c) {
         sHp1_[c].reset();
         sHp2_[c].reset();
@@ -953,6 +954,10 @@ void Engine::process(float* io, int frames) {
                 vg *= 1.0 + peakBudgetBlend_ * (target - 1.0);
             }
         }
+        // Evaluate the unmodified proposal, so backoff cannot chase its own detector.
+        // No audio buffering; OFF avoids all new arithmetic. Research is P1/48k only.
+        if(level54_.enabled() && vbCur_==VB_ALPHA2_P1 && sr_==48000 && vg>=peak42BaseVg)
+            vg=level54_.tick(eqL,eqR,layL,layR,vg,peak42BaseVg,og);
         // Keep this small delay warm even when diagnostics are off: exact component alignment on arming.
         const double preL = vg * layL * og, preR = vg * layR * og;
         layerDelayL_[layerPos_] = preL; layerDelayR_[layerPos_] = preR;
