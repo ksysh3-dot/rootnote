@@ -5,32 +5,24 @@ import android.net.Uri
 import android.provider.OpenableColumns
 import timber.log.Timber
 import java.io.File
-import java.io.FileOutputStream
 import java.io.InputStream
 
 
 object StorageUtils {
 
     fun importFile(context: Context, targetDir: String, uri: Uri): File? {
-        // DISPLAY_NAME comes from another app: keep only a plain file name, and stay inside targetDir
-        val dir = File(targetDir).apply { mkdirs() }
-        val destinationFile = SafePaths.childFile(dir, queryName(context, uri))
-        if(destinationFile == null) {
-            Timber.e("importFile: no usable file name")
-            return null
-        }
-
-        try {
-            context.contentResolver.openInputStream(uri)?.use { ins ->
-                if(!createFileFromStream(ins, destinationFile))
-                    return null
+        return try {
+            // DISPLAY_NAME comes from another app: keep a plain file name inside targetDir.
+            val dir = File(targetDir)
+            val destination = SafePaths.childFile(dir, queryName(context, uri))
+                ?: return null.also { Timber.e("importFile: no usable file name") }
+            AtomicFileImport.copy(destination, querySize(context, uri)) {
+                context.contentResolver.openInputStream(uri)
             }
         } catch (ex: Exception) {
-            Timber.e(ex.message)
-            ex.printStackTrace()
-            return null
+            Timber.e(ex, "importFile failed; destination preserved")
+            null
         }
-        return destinationFile
     }
 
     fun openInputStreamSafe(context: Context, uri: Uri): InputStream? {
@@ -43,22 +35,16 @@ object StorageUtils {
         }
     }
 
-    private fun createFileFromStream(ins: InputStream, destination: File?): Boolean {
-        try {
-            FileOutputStream(destination).use { os ->
-                val buffer = ByteArray(4096)
-                var length: Int
-                while (ins.read(buffer).also { length = it } > 0) {
-                    os.write(buffer, 0, length)
-                }
-                os.flush()
-            }
-        } catch (ex: Exception) {
-            Timber.e(ex.message)
-            ex.printStackTrace()
-            return false
+    /** Providers may omit SIZE. If supplied, reject premature EOF as well as extra bytes. */
+    private fun querySize(context: Context, uri: Uri): Long? = try {
+        context.contentResolver.query(uri, arrayOf(OpenableColumns.SIZE), null, null, null)?.use { c ->
+            val index = c.getColumnIndex(OpenableColumns.SIZE)
+            if (index < 0 || !c.moveToFirst() || c.isNull(index)) null
+            else c.getLong(index).takeIf { it >= 0 }
         }
-        return true
+    } catch (ex: Exception) {
+        Timber.w(ex, "Provider size unavailable; verifying copied size and hash")
+        null
     }
 
     /** The display name offered by the provider, reduced to a plain file name (see [SafePaths.sanitizeFileName]). */
