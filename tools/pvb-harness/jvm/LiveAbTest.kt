@@ -160,9 +160,9 @@ private fun catalogue() {
     val C = LiveAbComparisons
     val ids = C.ALL.map { it.id }
     check(ids.toSet().size == ids.size)
-    check(C.ALL.size >= 4 && C.ALL.any { it.sides.size == 3 })
+    check(C.ALL.size == 4 && C.ALL.all { it.sides.size == 2 })
     val user = PvbSettings(xtcMode = PvbSettings.XTC_FULL, xtcStrengthDb = -4.5f, xtcPortrait = PvbSettings.XTC_PORTRAIT_MONO,
-        xtcDistanceCm = 33f, xtcHatCm = 60f, vbOn = false, vbAlgo = PvbModels.GENTLE12, vbLevelDb = 7f, vbVolLink = true,
+        xtcDistanceCm = 33f, xtcHatCm = 60f, vbOn = false, vbAlgo = 3, vbLevelDb = 7f, vbVolLink = true,
         vbVolRefPct = 30f, vbVolSlope = 0.3f, vbVolMaxDb = 9f, outDb = -9f, hsDb = -4f, hpHz = 150f, dynOn = true, volLink = true)
     for (cmp in C.ALL) {
         check(cmp.sides.size in 2..3)
@@ -204,36 +204,13 @@ private fun catalogue() {
     check(lower.sides[0].apply(user).vbAlgo == PvbModels.P1 && lower.sides[1].apply(user).vbAlgo == PvbModels.P1)
     check(lower.sides.map { it.label(user) } == listOf("P1 +7 dB", "P1 +4 dB (3 dB 작게)"))
     check(lower.sides[1].apply(user.copy(vbLevelDb = 0f)).vbLevelDb == -3f)
-    check(C.byId("p1_vs_d2")!!.sides.map { it.apply(user).vbAlgo } == listOf(PvbModels.P1, PvbModels.D2))
-    check(C.byId("p1_vs_id4")!!.sides.map { it.apply(user).vbAlgo } == listOf(PvbModels.P1, PvbModels.REFERENCE))
-    check(PvbModels.D2 == 7 && PvbModels.REFERENCE == 4 && PvbModels.RESULTANT == 15 && PvbModels.RESULTANT_V16 == 16)
-    // Resultant v1.5 / v1.6 (experimental models 15, 16): only the model differs, at the user's level
-    val rv = C.byId("resultant_v15_vs_v16")!!
-    check(rv.sides.map { it.apply(user).vbAlgo } == listOf(PvbModels.RESULTANT, PvbModels.RESULTANT_V16))
-    check(rv.sides.all { it.apply(user).vbLevelDb == 7f })
-    check(rv.sides.map { it.label(user) } == listOf("Resultant v1.5 (ID 15) +7 dB", "Resultant v1.6 (ID 16) +7 dB"))
-    // the level each side plays (and the record stores as effective_level_db) includes the model trim; the slider and trim_db do not
-    check(rv.sides.map { VolumeLevelLink.levelFor(it.apply(user), 13, 15) } ==
-        listOf(7f + PvbModels.RESULTANT_V15_TRIM_DB, 7f + PvbModels.RESULTANT_V16_TRIM_DB))
-    check(rv.sides.all { it.trimDb == 0f && !it.trimMeasured && it.apply(user).vbLevelDb == 7f })
+    check(C.byId("p1_vs_d2")==null && C.byId("p1_vs_id4")==null)
+    check(C.byId("resultant_v16_vs_v16d")==null)
     // negative strength: the user's -6 stays -6, "3 dB smaller" is -9 (above the -18 floor)
     check(C.userLevel(user.copy(vbLevelDb = -6f)) == -6f && C.loweredLevel(user.copy(vbLevelDb = -6f)) == -9f)
     check(C.byId("p1_vs_p1_minus3")!!.sides[1].apply(user.copy(vbLevelDb = -6f)).vbLevelDb == -9f)
     check(LiveAbRecord.CHIPS.containsAll(listOf("쿠훙", "가각", "지직", "훙훙", "저음 약함", "저음 풍성")) && "쿠쿠쿵" in LiveAbRecord.CHIPS &&
         LiveAbRecord.CHIPS.toSet().size == LiveAbRecord.CHIPS.size)
-    // v1.6 vs v1.6-d (models 16, 17): a two-sided comparison; the three-way stays P1 / v1.5 / v1.6
-    val rd = C.byId("resultant_v16_vs_v16d")!!
-    check(PvbModels.RESULTANT_V16D == 17)
-    check(rd.sides.map { it.apply(user).vbAlgo } == listOf(PvbModels.RESULTANT_V16, PvbModels.RESULTANT_V16D))
-    check(rd.sides.map { it.label(user) } == listOf("Resultant v1.6 (ID 16) +7 dB", "Resultant v1.6-d (ID 17) +7 dB"))
-    check(rd.sides.map { VolumeLevelLink.levelFor(it.apply(user), 13, 15) } == listOf(7f + PvbModels.RESULTANT_V16_TRIM_DB, 7f + PvbModels.RESULTANT_V16_TRIM_DB))
-    check(rd.headroomDb == PvbAbConditions.HEADROOM_DB && rd.sides.all { it.trimDb == 0f && !it.trimMeasured })
-    val rv3 = C.byId("p1_vs_resultant_v15_vs_v16")!!
-    check(rv3.sides.map { VolumeLevelLink.levelFor(it.apply(user), 13, 15) } ==
-        listOf(7f, 7f + PvbModels.RESULTANT_V15_TRIM_DB, 7f + PvbModels.RESULTANT_V16_TRIM_DB))
-    check(rv3.sides.map { it.apply(user).vbAlgo } == listOf(PvbModels.P1, PvbModels.RESULTANT, PvbModels.RESULTANT_V16))
-    check(rv3.sides.all { it.apply(user).vbLevelDb == 7f } && rv3.headroomDb == PvbAbConditions.HEADROOM_DB)
-    check(C.byId("p1_vs_d2_vs_id4")!!.sides.map { it.apply(user).vbAlgo } == listOf(PvbModels.P1, PvbModels.D2, PvbModels.REFERENCE))
     // link comparison: at 80 % (index 13 of 15) the "on" side plays (80-30)*0.3 = 15 -> max 9 dB less, the "off" side not
     val link = C.byId("p1_link_on_vs_off")!!
     val on = link.sides[0].apply(user)

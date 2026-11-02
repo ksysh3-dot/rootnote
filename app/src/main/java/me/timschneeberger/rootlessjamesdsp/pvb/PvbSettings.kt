@@ -203,11 +203,10 @@ data class PvbSettings(
         fun vbAlgoName(algo: Int) = PvbModels.fromId(algo)?.title ?: "연결형 (P1)"
 
         /**
-         * Upgrade the virtual bass model and level once. EQ, output, enable and historical A/B results are untouched.
-         * - alpha 1 names / unknown -> default model (P1); the old name is kept in [KEY_VB_LEGACY_MODEL].
-         * - schema < 3 and the alpha 2 reference -> P1 (one time; [KEY_VB_ALPHA2_MODEL] records it). Any other
-         *   current model is kept, and choosing the reference again later is respected.
-         * - the old level string (-6..+9) -> slider value clamped into -6..12 (an old -6..-1 now stays negative); no old level -> the new default.
+         * Schema 4: only P1 is current. Removed/unknown/string/numeric model values migrate to P1;
+         * obsolete derived presets are discarded and reserved X values become false. EQ, strength,
+         * enable state and historical records survive. This never writes KEY_P1PPP.
+         * Repeating it also cleans a restored schema-4 file, and writes nothing when already clean.
          */
         fun migrateVirtualBassModel(p: SharedPreferences) {
             val all = p.all

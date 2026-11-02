@@ -3,21 +3,11 @@ package me.timschneeberger.rootlessjamesdsp.pvb
 import kotlin.math.roundToInt
 
 /**
- * Alpha 3.3 "실청 블라인드 비교": the predefined comparisons. Same level-matching scheme as the existing blind
- * comparison ([PvbAbConditions]): every condition starts from EQ v1.1 ([PvbAbConditions.v11vb], which also switches the
- * alpha 3.2 volume link off), carries a loudness trim on the output gain, and plays behind a common headroom in the
- * engine's final gate (the listener turns the volume up instead), so the phone's own processor before the volume
- * control hardly compresses either side.
- *
- * Trims: no album measurement exists yet for the P1 / D2 / reference conditions, so they are 0 dB and every record
- * says so ([Side.trimMeasured] = false). Within one model only the layer level differs; the measured hpv trims for
- * that difference are 0.01-0.13 dB (PvbAbConditions), far below the 0.6 dB song-to-song spread of the EQ trims.
- *
- * Exception: "volume link on vs off" runs without the common headroom ([Comparison.headroomDb] = 0), because the link
- * reads the media volume: with the headroom the listener would raise the volume and the link would take off more
- * than it does at the usual listening level. Only this comparison turns the link on, on one side.
- *
- * Pure Kotlin (no Android types): host-tested in tools/pvb-harness/jvm/LiveAbTest.kt.
+ * Current live blind comparisons: P1 strength, P1 volume link, and the independent spatial pairs.
+ * No measured loudness trims exist for the P1 comparisons (0 dB, trimMeasured=false).
+ * They use common output headroom except volume-link on/off (0 dB headroom), where raising the
+ * volume would alter the tested link. Historical records remain readable after pair removal.
+ * Pure Kotlin; tested by tools/pvb-harness/jvm/LiveAbTest.kt.
  */
 object LiveAbComparisons {
     /** The size step of the "lower level" condition. */
@@ -96,8 +86,7 @@ object LiveAbComparisons {
         "공간감 세기·듣는 거리·머리 크기는 내 설정을 씁니다."
 
     private const val TRIM_NOTE = "음량 보정값은 아직 측정하지 않아 0 dB입니다."
-    private const val MODEL_NOTE = "모델이 바뀔 때마다 엔진이 짧게(30 ms) 페이드하고 모델을 새로 시작합니다. 어느 쪽으로 바꿔도 같으므로 " +
-        "그 자체로는 구분되지 않습니다."
+
 
     val ALL: List<Comparison> = listOf(
         Comparison("p1_vs_p1_minus3", "P1 vs P1 3 dB 작게 (크기)",

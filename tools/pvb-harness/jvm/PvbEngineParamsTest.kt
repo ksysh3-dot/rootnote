@@ -116,11 +116,11 @@ fun main() {
     }
 
     // developer options: on outside a comparison; experimental layer options only with virtual bass
-    encode(dev.copy(devH2Db = -4f, xSmooth = true), inputs(devMeter = true)).params.let {
+    encode(dev.copy(devH2Db = -4f), inputs(devMeter = true)).params.let {
         check(it.on(PvbParam.DEV_ON) && it[PvbParam.D_H2_DB] == -4f && it.on(PvbParam.DEV_METER)) { "developer on" }
-        check(it.on(PvbParam.X_SMOOTH)) { "layer option with virtual bass" }
+        check(!it.on(PvbParam.X_SMOOTH)) { "layer option with virtual bass" }
     }
-    check(!encode(base.copy(vbOn = false, xSmooth = true)).params.on(PvbParam.X_SMOOTH)) { "layer option needs vb" }
+    check(!encode(base.copy(vbOn = false)).params.on(PvbParam.X_SMOOTH)) { "layer option needs vb" }
     check(!encode(base).params.on(PvbParam.DEV_ON)) { "developer off" }
 
     println("PvbEngineParamsTest: all checks passed")

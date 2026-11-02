@@ -188,7 +188,7 @@ class PvbStatusText(private val context: Context) {
                 .put("policy_version", 2)
                 .put("note", "P1 observations only; no automatic harmonic-budget selection; " +
                     "not pitch labels, buzz detection, learned quality scores or a listening result. " +
-                    "Both budgets share analysis and oscillator phases. Counters reset with algorithm/rate.")
+                    "Observation counters reset with algorithm/rate.")
             val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
             clipboard.setPrimaryClip(ClipData.newPlainText("PVB 저음 연구", report.toString(2)))
             Toast.makeText(context, "저음 연구 기록을 복사했습니다", Toast.LENGTH_SHORT).show()

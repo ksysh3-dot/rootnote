@@ -1,7 +1,10 @@
 import me.timschneeberger.rootlessjamesdsp.pvb.*
 fun main() {
  val input=PvbEngineParams.Inputs(20f,true,false,1,12,15,12f,-6f,false,false,false,0,0f,false,false)
- val s=PvbSettings(vbOn=true,p1ppp=true,vbAlgo=17,vbLevelDb=9f,lowDb=9f,outDb=0f,dynOn=true,xtcMode=2,xRise=true,devOn=true,vbVolLink=true)
+ val s=PvbSettings(vbOn=true,p1ppp=true,vbAlgo=17,vbLevelDb=9f,lowDb=9f,outDb=0f,dynOn=true,xtcMode=2,devOn=true,vbVolLink=true)
+ val unsupported=PvbEngineParams.encode(s,input.copy(sampleRate=44100)).params
+ check(unsupported[PvbParam.P1PPP]==0f && unsupported[PvbParam.VB_ALGO]==6f && unsupported[PvbParam.VB_ON]==1f)
+ check(unsupported[PvbParam.OUT_DB]==s.outDb && unsupported[PvbParam.VB_LEVEL_DB]!=0f) // original saved P1 settings
  val p=PvbEngineParams.encode(s,input).params;val d=PvbEngine.defaultParams()
  check(BuzzRing.DETAIL_FIELDS==32+PvbParam.COUNT)
  check(p.size==58 && d.size==58 && d[PvbParam.P1PPP]==0f)

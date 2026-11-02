@@ -17,10 +17,7 @@ object PvbModels {
     fun fromKey(key: String?): Model = models.firstOrNull { it.key == key } ?: defaultModel
     fun fromId(id: Int): Model? = models.firstOrNull { it.id == id }
     fun isCurrent(key: String?): Boolean = models.any { it.key == key }
-    /**
-     * An engine algorithm id the status text may call "in use": the legacy ids 0..10 and every catalogue model (the
-     * engine reports the algorithm in the signal path as id + 1; no algorithm gives -1 and a bypassed one 0 - 1).
-     */
+    /** Only stable P1 ID 6 is available in the app; P1+++ has its own state meter, not a new model ID. */
     fun inUse(algo: Int): Boolean = algo == P1
     /** The level trim of an engine id (0 for an unknown id or a model without one). */
     fun trimDb(id: Int): Float = fromId(id)?.levelTrimDb ?: 0f

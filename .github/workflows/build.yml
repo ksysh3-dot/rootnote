@@ -57,44 +57,29 @@ jobs:
           {
             tools/pvb-harness/build_host.sh &&
             python3 tools/pvb-harness/test_engine.py --report engine-report.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_p1plus_baseline.py --report p1plus-baseline-ci.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/check_p1pp_impact_controls.py --out p1pp-impact-controls-ci &&
-            g++ -std=c++17 -O2 -Wall -Wextra -Werror -Iapp/src/main/cpp/libpvb tools/pvb-harness/vb_quality/test_track_protection.cpp -o /tmp/pvb-track-protection && /tmp/pvb-track-protection &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/research_p1pp_track_identity.py --report track-identity-report.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_alpha2_profiles.py --lib tools/pvb-harness/build/libpvbcapi.so --report alpha2-profiles-ci.json &&
+            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/s56/test_supported.py --report supported-models.json &&
             OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_diagnostic_solo.py &&
             OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_xtc.py &&
             python3 tools/xtc/check_eel_port.py &&
             python3 tools/xtc/xtc_native_check.py &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_experimental.py --baseline-ref 9978f145317183527b15f83d91fe9c6de748ae14 --report experimental-report.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_devmode.py --baseline-ref 65c0086f01caaeffc8fdea1614560076f9a860cd --report devmode-report.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_harmonic_continuity.py --report harmonic-continuity-report.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_native_renderer.py --report native-renderer-q0.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_native_stream.py --report native-stream-q0.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_oscillator_research.py --lib tools/pvb-harness/build/libpvbcapi.so --report oscillator-ci.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_q0_native_mutation.py --report native-mutation-q0.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_modulation_research.py --report modulation-p1-report.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_detail_research.py --report detail-research-ci.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_am_family_research.py --lib tools/pvb-harness/build/libpvbcapi.so --report am-family-ci.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_track_assignment_research.py --lib tools/pvb-harness/build/libpvbcapi.so --report track-assignment-ci.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_track_prediction_research.py --lib tools/pvb-harness/build/libpvbcapi.so --report track-prediction-ci.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_track_prediction_mutation.py --report track-prediction-mutation-ci.json &&
-            g++ -std=c++17 -O2 -Wall -Wextra -Werror -Iapp/src/main/cpp/libpvb tools/pvb-harness/vb_quality/test_track_prediction.cpp -o /tmp/pvb-track-prediction && /tmp/pvb-track-prediction &&
             g++ -std=c++17 -O2 -Wall -Wextra -Werror -Iapp/src/main/cpp/libpvb tools/pvb-harness/vb_quality/test_continuity_policy.cpp -o /tmp/pvb-continuity-policy && /tmp/pvb-continuity-policy &&
             g++ -std=c++17 -O2 -Wall -Wextra -Werror -Iapp/src/main/cpp/libpvb -Itools/pvb-harness tools/pvb-harness/fit_equivalence.cpp -o /tmp/pvb-fit-equivalence && /tmp/pvb-fit-equivalence &&
             g++ -std=c++17 -O2 -Wall -Wextra -Werror -Iapp/src/main/cpp/libpvb tools/pvb-harness/fastmath_check.cpp -o /tmp/pvb-fastmath-check && /tmp/pvb-fastmath-check &&
-            clang++ -std=c++17 -O2 -mfma -ffp-contract=on -fno-fast-math -Iapp/src/main/cpp/libpvb -Itools/pvb-harness tools/pvb-harness/fit_equivalence.cpp -o /tmp/pvb-fit-equivalence-fma && /tmp/pvb-fit-equivalence-fma &&
-            clang++ -std=c++17 -O2 -mfma -ffp-contract=on -fno-fast-math -Iapp/src/main/cpp/libpvb tools/pvb-harness/fastmath_check.cpp -o /tmp/pvb-fastmath-check-fma && /tmp/pvb-fastmath-check-fma &&
-            python3 tools/pvb-harness/vb51/test_port52.py port52-report.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/vb_quality/test_gentle_port.py --report gentle-port-report.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/vb_quality/test_adaptive_port.py --report adaptive-port-report.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/vb_quality/test_quality.py --report quality-report.json &&
-            python3 tools/pvb-harness/match/test_match.py &&
             tools/pvb-harness/build_host_jdsp.sh &&
             tools/rootfx/build_host.sh &&
             OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_jdsp_chain.py --report jdsp-chain-report.json &&
             tools/pvb-harness/jvm/run_jvm_test.sh
           } 2>&1 | tee ci-build.log
+
+      - name: Fixed modified Resultant c (host only, never APK/JNI)
+        run: |
+          tools/pvb-harness/build_host.sh /tmp/pvb-reference-c --reference
+          g++ -std=c++17 -O1 -fno-fast-math -fsanitize=address,undefined -fno-omit-frame-pointer \
+            -DPVB_HOST_RESULTANT_REFERENCE=1 -Iapp/src/main/cpp/libpvb -Itools/pvb-harness/reference \
+            app/src/main/cpp/libpvb/pvb_engine.cpp app/src/main/cpp/libpvb/pvb_analysis.cpp \
+            app/src/main/cpp/libpvb/pvb_vb.cpp app/src/main/cpp/libpvb/pvb_vb52.cpp \
+            tools/pvb-harness/s50/resultant_length_test.cpp -o /tmp/pvb-reference-c/length-test
+          ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 /tmp/pvb-reference-c/length-test
 
       - name: Save log to the ci-log branch (so it can be read without the web UI)
         if: failure()
@@ -108,28 +93,8 @@ jobs:
         with:
           name: engine-report
           path: |
-            harmonic-continuity-report.json
-            modulation-p1-report.json
-            native-renderer-q0.json
-            native-stream-q0.json
-            oscillator-ci.json
-            native-mutation-q0.json
             engine-report.json
-            p1plus-baseline-ci.json
-            p1pp-impact-controls-ci/controls.json
-            track-identity-report.json
-            experimental-report.json
-            devmode-report.json
-            alpha2-profiles-ci.json
-            detail-research-ci.json
-            am-family-ci.json
-            track-assignment-ci.json
-            track-prediction-ci.json
-            track-prediction-mutation-ci.json
-            port52-report.json
-            gentle-port-report.json
-            adaptive-port-report.json
-            quality-report.json
+            supported-models.json
             jdsp-chain-report.json
             ci-build.log
 

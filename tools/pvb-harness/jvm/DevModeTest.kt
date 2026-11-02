@@ -166,12 +166,12 @@ fun main(args: Array<String>) {
         check(s.snap(Float.NaN) == s.snap(s.default) && s.snap(1e9f) == s.valueAt(s.steps) && s.snap(-1e9f) == s.valueAt(0),
             "${s.id}: NaN -> default, out of range -> clamped")
     }
-    check(DevParams.group(DevGroup.BAND).size == 12 && DevParams.group(DevGroup.TIME).size == 5 &&
-        DevParams.group(DevGroup.SIZE).size == 5, "groups: band 12, time 5, level 5")
+    check(DevParams.group(DevGroup.BAND).size == 12 && DevParams.group(DevGroup.TIME).size == 2 &&
+        DevParams.group(DevGroup.SIZE).size == 4, "groups: band 12, time 5, level 5")
     check(DevParams.STRENGTH.max == 12f && DevParams.HP.min == 80f, "strength up to +12, high-pass from 80 Hz (general cap)")
     check(DevParams.ATTACK.default == 32f / 3f && abs(DevParams.RELEASE.snap(DevParams.RELEASE.default) - 32f) < 1e-4f,
         "attack 2 hops (10.7 ms), release 6 hops (32 ms) = model")
-    check(DevParams.rolloffRange(PvbModels.P1) == -24f..24f && DevParams.rolloffRange(PvbModels.GENTLE12) == -12f..24f,
+    check(DevParams.rolloffRange(PvbModels.P1) == -24f..24f && DevParams.rolloffRange(3) == -24f..24f,
         "roll-off offset range keeps the absolute slope within 0..48 dB/oct")
     // engine indices and defaults
     check(PvbParam.DEV_ON == 33 && PvbParam.DEV_METER == 34 && PvbParam.D_BOUNDARY_HZ == 35 && PvbParam.D_RELEASE_MS == 46 &&
@@ -250,9 +250,15 @@ fun main(args: Array<String>) {
     val decDef = DevShareCode.decode(allDef, defaults)
     check(decDef is DevShareCode.Result.Ok && decDef.moved == 0 && decDef.model == "Pixel_9", "all defaults: short code, 0 moved")
     check(allDef.length < code.length, "unchanged values are not stored")
+    // Historical RN1 fixture: four old X switch bits ON, no slider payload.
+    check(specs.withIndex().filter { DevParams.retired(it.value) }.map { it.index } == listOf(13,14,15,20),
+        "RN1 reserved X positions remain stable")
+    val archived = DevShareCode.decode("RN1-Archive-1.0-040E-0400-4553", defaults)
+    check(archived is DevShareCode.Result.Ok && archived.values.contentEquals(defaults) && archived.moved==0,
+        "legacy RN1 X ON values import OFF without shifting any slider")
     // every value at both ends of its range
     for (end in listOf(0, 1)) {
-        val v = FloatArray(specs.size) { specs[it].valueAt(if (end == 0) 0 else specs[it].steps) }
+        val v = FloatArray(specs.size) { if (DevParams.retired(specs[it])) 0f else specs[it].valueAt(if (end == 0) 0 else specs[it].steps) }
         val r = DevShareCode.decode(DevShareCode.encode("X", "1", v, defaults), defaults)
         check(r is DevShareCode.Result.Ok && r.values.contentEquals(v), "round trip with every value at its ${if (end == 0) "minimum" else "maximum"}")
     }
@@ -260,7 +266,7 @@ fun main(args: Array<String>) {
     val rnd = java.util.Random(20261022)
     var allOk = true
     repeat(300) {
-        val v = FloatArray(specs.size) { specs[it].valueAt(rnd.nextInt(specs[it].steps + 1)) }
+        val v = FloatArray(specs.size) { if (DevParams.retired(specs[it])) 0f else specs[it].valueAt(rnd.nextInt(specs[it].steps + 1)) }
         val r = DevShareCode.decode(DevShareCode.encode("SM-A546E", "0.9.${rnd.nextInt(9)}", v, defaults), defaults)
         if (r !is DevShareCode.Result.Ok || !r.values.contentEquals(v) || r.model != "SM-A546E") allOk = false
     }

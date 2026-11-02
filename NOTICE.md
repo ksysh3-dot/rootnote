@@ -32,9 +32,10 @@ submodule at the commit recorded in that tag (`git clone --recursive`).
 The engine's sine/cosine (`app/src/main/cpp/libpvb/pvb_fastmath.h`) uses the range reduction and kernel polynomials of
 **fdlibm** (Sun Microsystems, 1993; permissive notice preserved in the file and in the third-party list).
 
-One of the engine's virtual bass algorithms (`VbBankstown` in `app/src/main/cpp/libpvb/pvb_vb.cpp`) is a C++ port of
-**Bankstown** by James Calligeros (https://github.com/chadmed/bankstown), MIT License; the notice is in the third-party
-list.
+The historical `VbBankstown` port of **Bankstown** by James Calligeros
+(https://github.com/chadmed/bankstown), MIT License, was removed from current builds.
+It remains at `archive/models-pre-prune-20261102`; its notice is retained in the
+third-party list for provenance.
 
 The intercept capture (`app/src/main/java/me/timschneeberger/rootlessjamesdsp/capture/InterceptServer.kt`) adapts parts
 of **scrcpy** by Genymobile and Romain Vimont (https://github.com/Genymobile/scrcpy), Apache License 2.0: the audio

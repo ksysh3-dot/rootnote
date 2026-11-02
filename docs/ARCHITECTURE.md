@@ -1,3 +1,8 @@
+> Current model scope (2026-11-02): both app flavors use P1 (ID 6), with a
+> default-OFF P1+++ experimental switch. Other model IDs and params 29-32 are
+> reserved and cannot activate legacy code. Resultant c is host-only.
+> See [MODEL_PRUNING.md](MODEL_PRUNING.md) for migration, ABI and archive details.
+
 # How Rootnote processes sound (current structure)
 
 What runs where, who owns what, and in which order a sample is processed. Written from the code at the time of the
@@ -39,8 +44,8 @@ The full owner table (who writes, who clears, who reads, on which thread) is the
 | 2 | `alignedL/R` | Input delayed by the generator latency, so the dry path lines up with the layer. |
 | 3 | `spatialL/R` | Spatial stage (`Xtc::tick`) on the delayed input: landscape cancel, or upright mono / two-way split, or (comparison only) the matched M/S widener or the canceller aligned to its 256-sample delay (both sides of a spatial comparison have the same latency, not reported to the engine); not run at all when off. |
 | 4 | `eqL/R` | Protective high-pass (two stages), low-mid bell, high bell, high shelf. |
-| 5 | `layL/layR` | Virtual-bass layer: from the undelayed input (`xl/xr`) or, for models whose `VbModule::inputAfterEq()` is true (Bankstown), from `eqL/R`. Then the experimental trims. |
-| 6 | `layL/layR` | Upright only, input-based models only: `Xtc::routeLayer` sends the layer where the music's low part goes (split: the low channel, +3 dB; mono: both). Models generating from `eqL/R` already follow the split. |
+| 5 | `layL/layR` | P1 harmonic layer from the undelayed input (`xl/xr`); P1+++ additionally applies its frozen layer controller. Removed X_* slots never affect this path. |
+| 6 | `layL/layR` | Upright only: `Xtc::routeLayer` sends the P1 layer where the music's low part goes (split: the low channel, +3 dB; mono: both). P1+++ suspends spatial processing. |
 | 7 | `preLimitL/R` | `(EQ output + layer level × layer) × output gain`. |
 | 8 | `limitedL/R` | Look-ahead limiter (its latency `lat`); the solo monitor has its own limiter. |
 | 9 | `dryDelayedL/R` | Dry input delayed by `lat`; loudness matcher fed with dry and limited; matched bypass through its own limiter. |

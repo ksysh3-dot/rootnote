@@ -25,6 +25,12 @@ while it processes and come back when it is off. When it is off, the JamesDSP fe
 before. Processing applies to the built-in speaker
 only; headphones and Bluetooth are bypassed.
 
+Current model scope: **P1 is the default**. Both general and s26u offer **P1+++**
+as an experimental switch, **off by default**, for 48 kHz only. The preset fixes
+EQ/strength/output and suspends conflicting effects; unsupported states are shown.
+Legacy app models and the Deep bass preset have been removed. A fixed modified
+Resultant v1.6-c remains host-only. See [model scope and migration](docs/MODEL_PRUNING.md).
+
 ## Status
 
 **Beta** (`0.9.0-beta.13`, Android 10 or later, arm64).
@@ -158,6 +164,12 @@ RootlessJamesDSP의 루트 없는 시스템 오디오 캡처는 그대로 쓰고
 내장 스피커에서만 적용되며 이어폰·블루투스에서는 우회합니다.
 
 ### 상태
+
+현재 앱은 **P1을 기본 모델**로 사용합니다. general·s26u 모두 **P1+++ 실험 스위치**를 제공하며,
+기본은 꺼짐이고 48 kHz에서만 지원합니다. 켜면 검증한 EQ·층 세기·출력으로 고정하고 상충 기능을
+잠시 끕니다. 지원하지 않는 상태는 표시됩니다. 예전 모델과 초저역 강조 프리셋은 제거했고,
+수정 Resultant v1.6-c 하나만 PC 호스트 참조로 남겼습니다.
+[모델 범위·설정 이행](docs/MODEL_PRUNING.md)에 상세 계약이 있습니다.
 
 **베타**(`0.9.0-beta.13`, Android 10 이상, arm64)입니다.
 

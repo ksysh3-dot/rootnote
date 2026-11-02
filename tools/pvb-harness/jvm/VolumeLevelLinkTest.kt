@@ -101,27 +101,24 @@ fun main() {
 
     // 7. Model level trim (RESULTANT_CORE.md 19.12): slider + trim, then the volume reduction, floor at FLOOR_DB (-18).
     check(L.FLOOR_DB == PvbSettings.VB_LEVEL_MIN - L.MAX_DB_MAX)
-    check(PvbModels.models.all { (it.id in PvbModels.RESULTANT..PvbModels.RESULTANT_V16D) == (it.levelTrimDb != 0f) })
-    check(PvbModels.trimDb(PvbModels.RESULTANT_V16D) == PvbModels.RESULTANT_V16_TRIM_DB)
-    check(L.levelFor(PvbSettings.load(LinkPrefs(mapOf(PvbSettings.KEY_VB_STRENGTH_DB to 6f))).copy(vbAlgo = PvbModels.RESULTANT_V16D), 5, 15) ==
-        6f + PvbModels.RESULTANT_V16_TRIM_DB)
-    check(PvbModels.trimDb(PvbModels.RESULTANT) == PvbModels.RESULTANT_V15_TRIM_DB && PvbModels.trimDb(PvbModels.RESULTANT_V16) == PvbModels.RESULTANT_V16_TRIM_DB)
+    check(PvbModels.models.all { it.levelTrimDb == 0f })
+    check((0..18).all { PvbModels.trimDb(it) == 0f }) // removed -3 dB trims never transfer to P1
     check(PvbModels.trimDb(PvbModels.P1) == 0f && PvbModels.trimDb(99) == 0f && PvbModels.trimDb(-1) == 0f)
     val s6 = PvbSettings.load(LinkPrefs(mapOf(PvbSettings.KEY_VB_STRENGTH_DB to 6f)))
     check(L.levelFor(s6.copy(vbAlgo = PvbModels.P1), 5, 15) == 6f)                       // no trim for P1
-    check(L.levelFor(s6.copy(vbAlgo = PvbModels.RESULTANT), 5, 15) == 6f + PvbModels.RESULTANT_V15_TRIM_DB)
-    check(L.levelFor(s6.copy(vbAlgo = PvbModels.RESULTANT_V16), 5, 15) == 6f + PvbModels.RESULTANT_V16_TRIM_DB)
-    val r16on = on.copy(vbAlgo = PvbModels.RESULTANT_V16)                                 // 12 + trim, volume 80% (-8 dB)
-    check(near(L.levelFor(r16on, 13, 15), 12f + PvbModels.RESULTANT_V16_TRIM_DB - 8f))
+    check(L.levelFor(s6.copy(vbAlgo = 15), 5, 15) == 6f + 0f)
+    check(L.levelFor(s6.copy(vbAlgo = 16), 5, 15) == 6f + 0f)
+    val r16on = on.copy(vbAlgo = 16)                                 // 12 + trim, volume 80% (-8 dB)
+    check(near(L.levelFor(r16on, 13, 15), 12f + 0f - 8f))
     check(on.vbLevelDb == 12f && r16on.vbLevelDb == 12f)                                  // the slider value stays what was set
     // slider at its lowest, trim and the largest reduction: held at the floor
     val lowest = r16on.copy(vbLevelDb = PvbSettings.VB_LEVEL_MIN)
-    check(L.levelFor(lowest, 1, 15) == PvbSettings.VB_LEVEL_MIN + PvbModels.RESULTANT_V16_TRIM_DB)
+    check(L.levelFor(lowest, 1, 15) == PvbSettings.VB_LEVEL_MIN + 0f)
     check(L.levelFor(lowest, 16, 15) == L.FLOOR_DB)
     // a silent layer is never lifted or lowered by the trim
     check(L.levelFor(r16on.copy(vbLevelDb = PvbSettings.VB_LEVEL_OFF), 13, 15) == PvbSettings.VB_LEVEL_OFF)
-    check(L.levelFor(s6.copy(vbAlgo = PvbModels.RESULTANT, vbLevelDb = PvbSettings.VB_LEVEL_OFF), 0, 15) == PvbSettings.VB_LEVEL_OFF)
-    check(L.levelFor(s6.copy(vbLevelDb = Float.NaN, vbAlgo = PvbModels.RESULTANT), 0, 15).isNaN())
+    check(L.levelFor(s6.copy(vbAlgo = 15, vbLevelDb = PvbSettings.VB_LEVEL_OFF), 0, 15) == PvbSettings.VB_LEVEL_OFF)
+    check(L.levelFor(s6.copy(vbLevelDb = Float.NaN, vbAlgo = 15), 0, 15).isNaN())
     // Damaged / out-of-range stored values are clamped into the slider ranges; wrong types fall back.
     val wild = PvbSettings.load(LinkPrefs(mapOf(
         PvbSettings.KEY_VB_VOL_LINK to true, PvbSettings.KEY_VB_VOL_REF_PCT to 95.4f,
