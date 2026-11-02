@@ -88,6 +88,13 @@ def main():
  '재현: 보존 원등록/정정 이력 확인 → s66_setup/engine → s66_phone 및 v2 정정·도메인 제한 → s66_validate_v2 → s66_eval --rest --shards 2 --shard 0/1 → s66_summary/detail → s66_qa/kit 분석 → s66_report_write. 정확한 CLI와 버전 순서는 worktree tools/pvb-harness/s66/README.md에 있다.',
  '주 파일: REGISTRATION*, MODEL_CORRECTION*/MODEL_DOMAIN*, PCM_PHONE, MODEL_VALIDATION, WAVEFORM_CLOSURE_v2, results87개, SUMMARY/PAIRED_DEV, DETAILED_DEV3, V0_AND_CAUSALITY, FINAL_QA, INPUTS, KIT_QA, LOCAL_COMMIT. 미사용·실패 버전은 삭제하지 않았다.'
  ]
+ formatted=[]
+ for i,line in enumerate(lines):
+  table_header=line.startswith('|') and i+1<len(lines) and lines[i+1].startswith('|---')
+  after_table=formatted and formatted[-1].startswith('|') and not line.startswith('|')
+  if (table_header or after_table) and formatted and formatted[-1]!='':formatted.append('')
+  formatted.append(line)
+ lines=formatted
  assert len(lines)-11<=120,(len(lines),len(lines)-11)
  text='\n'.join(lines)+'\n';(O/'s66_report.md').write_text(text,encoding='utf-8');(G/'s66_report.md').write_text(text,encoding='utf-8')
  section='## 66. 폰 압축 인지 출력 배분: DEV87 탐색과15cm 특성 측정 준비\n\n'+text
