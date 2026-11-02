@@ -25,6 +25,7 @@ class PvbStatusText(private val context: Context) {
     private val meters = FloatArray(PvbMeter.COUNT)
     private var lastBlocks = -1f
     private var lastBlockChangeMs = 0L
+    private var lastPresetStatus = ""
 
     /** [offText]: the body while the service is off (each screen says where its power control is). */
     fun render(offText: String): Rendered {
@@ -33,6 +34,15 @@ class PvbStatusText(private val context: Context) {
         if (PvbRuntime.abHidden)
             return Rendered("블라인드 비교 중입니다. 어떤 설정이 재생되는지 드러나지 않게 상태를 숨깁니다.", false)
         val haveMeters = engine.readMeters(meters)
+        if (haveMeters) {
+            val presetStatus = "requested=${s.p1pppRequested} state=${meters[PvbMeter.P1PPP_STATE].toInt()} " +
+                "rate=${meters[PvbMeter.SAMPLE_RATE].toInt()} speaker=${s.speaker} latency=${engine.latencyFrames}"
+            if (presetStatus != lastPresetStatus) {
+                if (s.p1pppRequested || meters[PvbMeter.P1PPP_STATE] > 0f || lastPresetStatus.contains("requested=true"))
+                    android.util.Log.i("P1PPP", presetStatus)
+                lastPresetStatus = presetStatus
+            }
+        }
         val research = PvbBuild.researchUi
         // The S26U speaker/limiter model applies only on the S26U (general build: measured profile only).
         val phoneModel = PvbGeneral.phoneModelCurves(context)

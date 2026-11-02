@@ -1026,7 +1026,7 @@ void Engine::process(float* io, int frames) {
         if (capture) {
             const double sharedGate = mix * fade * gate * vbx * pppFade * lim_.currentGain();
             const double gl = peak42LayerL * sharedGate, gr = peak42LayerR * sharedGate;
-            const double fullL = normalL * fade * gate * vbx, fullR = normalR * fade * gate * vbx * pppFade;
+            const double fullL = normalL * fade * gate * vbx * pppFade, fullR = normalR * fade * gate * vbx * pppFade;
             diagnosticLayer_[2*n] = static_cast<float>(gl); diagnosticLayer_[2*n+1] = static_cast<float>(gr);
             diagnosticFull_[2*n] = static_cast<float>(fullL); diagnosticFull_[2*n+1] = static_cast<float>(fullR);
             const double pairs[10] = {xl,xr,preL,preR,gl,gr,fullL,fullR,yl,yr};

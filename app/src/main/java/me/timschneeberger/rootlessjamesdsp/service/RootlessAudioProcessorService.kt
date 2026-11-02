@@ -1068,6 +1068,11 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
                     recreateRecorderRequested = false
                     Timber.d("Recreating recorder without stopping thread...")
                     if (!replaceRecorder()) return
+                    // Recreated capture is a new source clock: clear the shared PVB histories
+                    // on its next block even when the processing route did not change.
+                    pvbWasActive = false
+                    buzzDiagnostics.audioDiscontinuity("capture_recreated")
+                    Timber.d("PVB stream reset: capture_recreated")
                     carry = 0
                 }
 
@@ -1114,6 +1119,11 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
                 if (rebuildOnResume) {
                     rebuildOnResume = false
                     if (!replaceRecorder()) return
+                    // Recreated capture is a new source clock: clear the shared PVB histories
+                    // on its next block even when the processing route did not change.
+                    pvbWasActive = false
+                    buzzDiagnostics.audioDiscontinuity("capture_recreated")
+                    Timber.d("PVB stream reset: capture_recreated")
                     carry = 0
                 }
 

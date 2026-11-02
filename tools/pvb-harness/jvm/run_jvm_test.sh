@@ -149,3 +149,7 @@ OUT50="$HERE/../build/jvm-p1ppp"
 mkdir -p "$OUT50"
 $KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/DevParams.kt" "$APP/StrengthDisplay.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/PvbEngine.kt" "$APP/PvbNative.kt" "$APP/PvbEngineParams.kt" "$APP/BuzzRing.kt" "$HERE/../s50/P1pppParamsTest.kt" -d "$OUT50"
 java -cp "$OUT50:$KOTLIN_STDLIB" P1pppParamsTestKt
+
+# Stream/rate/route lifecycle, transition diagnostics and closed PCM passthrough (actual JNI).
+$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/DevParams.kt" "$APP/StrengthDisplay.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/PvbEngine.kt" "$APP/PvbNative.kt" "$APP/PvbEngineParams.kt" "$HERE/P1pppLifecycleJniTest.kt" -d "$OUT50"
+java -Djava.library.path="$HERE/../build" -cp "$OUT50:$KOTLIN_STDLIB" P1pppLifecycleJniTestKt "$HERE/../../.."

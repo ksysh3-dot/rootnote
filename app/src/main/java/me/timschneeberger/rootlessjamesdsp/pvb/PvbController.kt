@@ -334,7 +334,10 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
             track?.removeOnRoutingChangedListener(routingListener)
             track = newTrack
             newTrack.addOnRoutingChangedListener(routingListener, main)
-            updateRoute(push = true)
+            // A new stream can change rate without changing the output device. Re-encode the
+            // complete preset/fallback packet even when updateRoute sees the same route.
+            updateRoute(push = false)
+            push(rampMs = EDIT_RAMP_MS)
         }
     }
 
