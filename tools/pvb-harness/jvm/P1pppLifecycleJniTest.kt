@@ -57,8 +57,9 @@ fun main(args: Array<String>) {
     // Structural owner checks are labelled separately from executed JNI lifecycle checks.
     val controller=File(root,"app/src/main/java/me/timschneeberger/rootlessjamesdsp/pvb/PvbController.kt").readText()
     val attach=controller.substringAfter("fun attachTrack(").substringBefore("// ----")
-    check67(attach.contains("updateRoute(push = false)") && attach.contains("push(rampMs = EDIT_RAMP_MS)"),"structural unconditional stream packet")
+    check67(attach.contains("updateRoute(push = false)") && attach.contains("push(rampMs = EDIT_RAMP_MS)") && !attach.contains("main.post"),"structural synchronous unconditional stream packet")
     val service=File(root,"app/src/main/java/me/timschneeberger/rootlessjamesdsp/service/RootlessAudioProcessorService.kt").readText()
+    check67(service.indexOf("pvbController.attachTrack(track)") < service.indexOf("w.thread.start()"),"structural packet before worker start")
     val recreate=service.substringAfter("if(recreateRecorderRequested)").substringBefore("// Suspend core")
     check67(recreate.contains("pvbWasActive = false") && recreate.contains("capture_recreated"),"structural recorder reset contract")
     println("P1pppLifecycleJniTest passed")

@@ -328,17 +328,17 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
     }
 
     /** Called by the service whenever it creates the output track; its routed device tells us where sound goes. */
+    @androidx.annotation.MainThread
     fun attachTrack(newTrack: AudioTrack) {
-        main.post {
-            if (!started) return@post
-            track?.removeOnRoutingChangedListener(routingListener)
-            track = newTrack
-            newTrack.addOnRoutingChangedListener(routingListener, main)
-            // A new stream can change rate without changing the output device. Re-encode the
-            // complete preset/fallback packet even when updateRoute sees the same route.
-            updateRoute(push = false)
-            push(rampMs = EDIT_RAMP_MS)
-        }
+        if (!started) return
+        track?.removeOnRoutingChangedListener(routingListener)
+        track = newTrack
+        newTrack.addOnRoutingChangedListener(routingListener, main)
+        // The service calls this on main before starting its new audio worker. Enqueue the
+        // complete rate-specific packet now, including when the route itself did not change;
+        // posting it would let the first new-rate block run with the old frozen settings.
+        updateRoute(push = false)
+        push(rampMs = EDIT_RAMP_MS)
     }
 
     // ------------------------------------------------------------------------------------------ inputs
