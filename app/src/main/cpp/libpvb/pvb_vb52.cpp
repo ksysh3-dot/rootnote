@@ -1,3 +1,5 @@
+#include <optional>
+#include <climits>
 // hpv52m strictly causal port; vb51/PORT_SPEC.md and hpv51.py are the reference.
 #include "pvb_vb.h"
 #include "pvb_dsp.h"
@@ -113,10 +115,10 @@ double VbHpv::s32Gate52(Track52& tr,bool observed) {
 }
 void VbHpv::renderTrack52(Track52& actual,const double src[2][256],const int ns[2],
                         bool observed,bool fast,int traceSlot,double* grain,double& agrain) {
-    Track52 frozen;
+    std::optional<Track52> frozen;
     const bool freezeTrack=(s38Flags_&1) && actual.id<static_cast<unsigned>(s38TapeN_) && s38Tape_ && s38Tape_[2*actual.id]>0;
-    if(freezeTrack) frozen=actual;
-    Track52& tr=freezeTrack?frozen:actual;
+    if(freezeTrack) frozen.emplace(actual);
+    Track52& tr=freezeTrack?*frozen:actual;
     if(freezeTrack) {tr.f=s38Tape_[2*tr.id];tr.phi=s38Tape_[2*tr.id+1]+2*kPi*tr.f*static_cast<double>(i_)/kFsd;}
     const double trackFade=(s38Flags_&32)?1.:tr.fade,trackLife=(s38Flags_&32)?1.:tr.life;
     const double tc=2.*80/48000+(192.+15+191)/3000-7052./48000;
@@ -270,7 +272,7 @@ void VbHpv::renderTrack52(Track52& actual,const double src[2][256],const int ns[
                 if(tr.age>10 || !found) adjustment=0.;
             } else if(s41Mode_==2 || s41Mode_==3 || s41Mode_>=10) {
                 const bool good=found && (s41Mode_!=3 || (refRatio41>=.03 && std::abs(refFreq41-fk)<=.005*fk));
-                st.stable[j]=good?(same?st.stable[j]+1:1):0;
+                st.stable[j]=good?(same?st.stable[j]+(st.stable[j]<INT_MAX):1):0;
                 adjustment=0.;
                 if(good) {
                     const bool first43=s41Mode_>=10 && st.pending43[j];

@@ -151,6 +151,19 @@ object PvbEngineParams {
         val balanceSign = if (s.xtcBalRotation != 0 && landscape && i.rotation != s.xtcBalRotation) -1f else 1f
         p[PvbParam.XTC_BAL_LO_DB] = if (i.upright) 0f else balanceSign * s.xtcBalLoDb   // the balance is a sideways one
         p[PvbParam.XTC_BAL_HI_DB] = if (i.upright) 0f else balanceSign * s.xtcBalHiDb
+        // One atomic packet. Saved EQ/model/links survive OFF; this preset locks only effective values.
+        // Comparisons, measurements, solo and bypass exit through the same native fade/reset path.
+        val preset = s.p1ppp && processing && s.vbOn && !i.abActive && !i.measuring && !diagnosticSolo
+        if (preset) {
+            val frozen = PvbEngine.defaultParams()
+            for (k in intArrayOf(PvbParam.HP_HZ, PvbParam.LOW_HZ, PvbParam.LOW_DB, PvbParam.LOW_Q,
+                PvbParam.HI_HZ, PvbParam.HI_DB, PvbParam.HI_Q, PvbParam.HS_HZ, PvbParam.HS_DB,
+                PvbParam.OUT_DB, PvbParam.CEIL_DB, PvbParam.REL_MS, PvbParam.DYN_ON, PvbParam.FLAT,
+                PvbParam.X_SMOOTH, PvbParam.X_RISE, PvbParam.X_S1M, PvbParam.X_DENSE, PvbParam.DEV_ON,
+                PvbParam.XTC_MODE, PvbParam.VB_LEVEL_DB)) p[k] = frozen[k]
+            p[PvbParam.VB_ALGO] = PvbModels.P1.toFloat()
+            p[PvbParam.P1PPP] = 1f
+        }
         return Encoded(p, diagnosticSolo)
     }
 }

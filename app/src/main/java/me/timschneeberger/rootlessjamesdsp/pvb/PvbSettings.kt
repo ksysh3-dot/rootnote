@@ -40,6 +40,7 @@ data class PvbSettings(
     val vbVolMaxDb: Float = VolumeLevelLink.MAX_DB_DEFAULT,
     // Experimental layer options ("실험 기능"), all off by default; the engine ignores them while virtual bass is off.
     // Not part of device profiles (DeviceProfiles.FLOAT_KEYS / BOOL_KEYS) nor of the blind-comparison conditions.
+    val p1ppp: Boolean = false,       // frozen P1+++; effective overrides only, never rewrites saved settings
     val xSmooth: Boolean = false,       // 층 출렁임 완화
     val xRise: Boolean = false,         // 급상승 완화
     val xS1m: Boolean = false,          // 배음별 단일 포락선 (P1 only)
@@ -128,6 +129,7 @@ data class PvbSettings(
         const val KEY_VB_VOL_SLOPE = "pvb_vb_vol_slope"
         const val KEY_VB_VOL_MAX_DB = "pvb_vb_vol_max_db"
         /** Experimental layer options (switches in the "실험 기능" group, default off). */
+        const val KEY_P1PPP = "pvb_p1ppp"
         const val KEY_X_SMOOTH = "pvb_x_smooth"
         const val KEY_X_RISE = "pvb_x_rise"
         const val KEY_X_S1M = "pvb_x_s1m"
@@ -260,6 +262,7 @@ data class PvbSettings(
             val d = PvbSettings()
             return PvbBuild.finish(PvbSettings(
                 enabled = p.bool(KEY_ENABLE, d.enabled),
+                p1ppp = p.bool(KEY_P1PPP, false),
                 matchOnDisable = p.bool(KEY_MATCH_ON_DISABLE, d.matchOnDisable),
                 speakerOnly = p.bool(KEY_SPEAKER_ONLY, d.speakerOnly),
                 hpHz = p.float(KEY_HP_HZ, d.hpHz),

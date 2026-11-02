@@ -31,6 +31,33 @@ struct HarmonicRendererTestAccess {
         return 32;
     }
 };
+// Exact algebraic F5 fixture through Engine::process, with fixed dry/layer
+// boundary components. All delay, controller, native limiter and output code run.
+struct Sum50TestAccess {
+ struct Fixed final : VbModule {
+  double value=0.;bool configure(int)override{return true;}void reset()override{}
+  int latencyFrames()const override{return 7052;}bool inputAfterEq()const override{return false;}
+  void tick(double,double,double& l,double& r)override{l=r=value;}
+ };
+ static void cancellation(float* out,int frames,double* stats) {
+  Fixed fixed;const double ceiling=dbToLin(-1.);fixed.value=-.1*ceiling;
+  auto* e=new Engine(48000);float p[P_COUNT];defaultParams(p);
+  p[P_VB_ON]=1;p[P_VB_ALGO]=6;p[P_RAMP_MS]=0;p[P_P1PPP]=1;e->setParams(p,P_COUNT);
+  float block[128]={};for(int i=0;i<49152;i+=64)e->process(block,64);
+  // Only component construction is replaced. No alternate limiter or offline
+  // replay is used; controller A sees D=1.2C, L=-.4C, reference=1.1C.
+  SvfCoef identity;identity.m0=1.;identity.m1=identity.m2=0.;
+  e->hp_.snap(identity);e->lo_.snap(identity);e->hi_.snap(identity);e->hs_.snap(identity);
+  e->outGain_.snap(1.);e->dryLowCutMode_=e->dryPeak44Mode_=0;
+  e->vbMods_[VB_ALPHA2_P1]=&fixed;
+  for(int i=0;i<frames;) {
+   const int n=std::min(64,frames-i);std::fill(block,block+2*n,static_cast<float>(1.2*ceiling));
+   e->process(block,n);std::copy_n(block,2*n,out+2*i);i+=n;
+  }
+  stats[0]=.8*ceiling;stats[1]=1.2*ceiling;stats[2]=e->layerPeak42_.gain();
+  stats[3]=e->latencyFrames();stats[4]=e->lim_.currentGain();delete e;
+ }
+};
 struct RendererProbe {
     VbHpv vb{true,false};
     int64_t nextCentre=16,readPosition=0,finalized=0;
@@ -407,7 +434,7 @@ extern "C" void pvb_peak42_replay(const double* d,const double* l,const double* 
 
 extern "C" void pvb_peak42_replay3(const double* d,const double* l,const double* ref,int n,
  double* y,double* outl,double* gains,double* stats) {
- pvb::LayerPeak42 c;c.configure(1,48000.,100.);
+ pvb::LayerPeak42 c;c.configure(3,48000.,100.);
  for(int i=0;i<n+88;++i) {
   double ddL,ddR,ll,rr;
   c.process(i<n?d[2*i]:0.,i<n?d[2*i+1]:0.,i<n?l[2*i]:0.,i<n?l[2*i+1]:0.,
@@ -441,17 +468,28 @@ extern "C" void pvb_limiter44_replay(const double* y,const double* l,int n,doubl
   if(i>=lim.latency()){int j=i-lim.latency();out[2*j]=a;out[2*j+1]=b;outl[2*j]=l[2*j]*drive*lim.currentGain();outl[2*j+1]=l[2*j+1]*drive*lim.currentGain();gains[j]=lim.currentGain();}}
 }
 
-// S47: one host-only pre-processing preset for the confirmed S30 FULL combo.
-// Caller selects P1 algorithm6, flags0, level0, output -5dB, fixed EQ, 48kHz.
-// No app/JNI/default change. OFF restores the P1 research controls.
+// S50: same atomic pending path as JNI; no partial application on failure.
 extern "C" int pvb_set_s30_full_research(void* ptr,int enabled) {
- if(!ptr || (enabled!=0 && enabled!=1)) return 0;
- auto& e=*static_cast<pvb::Engine*>(ptr);
- return e.setDryLowCutResearch(enabled?2:0,80.,-6.) &&
-        e.setDryLowCutOrderResearch(4) &&
-        e.setLayerGainResearch(enabled?4.:1.,0.) &&
-        e.setPeakBudgetResearch(0,2.,-6.,-5.,80.,1.) &&
-        e.setLayerPeak42Research(enabled,100.) &&
-        e.setPhase41(enabled?12:0,nullptr,0) &&
-        e.setDryPeak44Research(enabled) ? 1 : 0;
+ if(!ptr || (enabled!=0 && enabled!=1))return 0;
+ return static_cast<pvb::Engine*>(ptr)->setP1pppPreset(enabled!=0)?1:0;
+}
+extern "C" int pvb_try_set_params(void* ptr,const float* p,int n) {
+ return ptr && static_cast<pvb::Engine*>(ptr)->trySetParams(p,n)?1:0;
+}
+extern "C" int pvb_copy_peak50_state(void* p,double* out,int n) {return p?static_cast<pvb::Engine*>(p)->copyPeak50State(out,n):0;}
+extern "C" int pvb_p1ppp_state(void* ptr) {return ptr?static_cast<pvb::Engine*>(ptr)->p1pppState():-1;}
+// Algebraic component injection through exactly the native parallel limiter schedule.
+extern "C" void pvb_bound50_replay(const double* d,const double* l,const double* a,int n,double* y,double* g) {
+ pvb::TruePeakLimiter lim;lim.configure(48000.,1.5);lim.setCeilingDb(-1.);lim.setReleaseMs(60.);
+ pvb::BoundedPeak50 bound;bound.setCeilingDb(-1.);bound.setReleaseMs(60.,48000.);
+ for(int i=0;i<n+88;++i) {
+  const double dl=i<n?d[2*i]:0.,dr=i<n?d[2*i+1]:0.,ll=i<n?l[2*i]:0.,lr=i<n?l[2*i+1]:0.;
+  double ol,orr;lim.process(dl+ll,dr+lr,ol,orr);lim.capCurrentGain(bound.process(dl,dr,ll,lr));
+  if(i>=88) {const int j=i-88;g[j]=lim.currentGain();y[2*j]=(d[2*j]+a[j]*l[2*j])*g[j];y[2*j+1]=(d[2*j+1]+a[j]*l[2*j+1])*g[j];}
+ }
+}
+
+extern "C" int pvb_engine_cancellation50(float* out,int frames,double* stats) {
+ if(!out || !stats || frames<8192)return 0;
+ pvb::Sum50TestAccess::cancellation(out,frames,stats);return 1;
 }

@@ -38,6 +38,12 @@ class PvbStatusText(private val context: Context) {
         val phoneModel = PvbGeneral.phoneModelCurves(context)
         val canCopy = research && haveMeters && s.vbOn && !s.matchedBypass && PvbModels.fromId(s.vbAlgo) != null
         val lines = ArrayList<String>()
+        if (haveMeters && meters[PvbMeter.P1PPP_STATE] > 0f) lines += when (meters[PvbMeter.P1PPP_STATE].toInt()) {
+            1 -> "P1+++ ?? ? EQ ?? ? ?? 0 dB ? ?? ?5 dB"
+            2 -> "P1+++ ?? ? 48 kHz??? ??"
+            4 -> "P1+++ ?? ?"
+            else -> "P1+++ ??"
+        }
         if (PvbGeneral.unmeasured(context))
             lines += context.getString(me.timschneeberger.rootlessjamesdsp.R.string.unmeasured_status)
         val back = PvbRuntime.abReturnVolume
@@ -72,19 +78,20 @@ class PvbStatusText(private val context: Context) {
             lines += "음량 맞춤 ${signed(db)} dB" + if (measured.isFinite()) " (최근 재생 기준 추정)" else " (초기 추정·음악 재생 후 갱신)"
         }
 
+        val presetPacket = haveMeters && meters[PvbMeter.P1PPP_STATE] > 0f
         val applied = if (flowing) meters[PvbMeter.LOW_DB_NOW] else s.targetLowDb
-        if (s.processing) lines += if (s.volLink) {
+        if (s.processing && !presetPacket) lines += if (s.volLink) {
             "저중역 보정: ${signed(applied)} dB (볼륨 연동: 기준보다 ${fmt(s.dropDb)} dB ${if (s.dropDb >= 0f) "작음" else "큼"})"
         } else {
             "저중역 보정: ${signed(applied)} dB (볼륨 연동 꺼짐)"
         }
 
-        if (s.processing && s.dynRefDb.isFinite()) {
+        if (s.processing && s.dynRefDb.isFinite() && !presetPacket) {
             val dynNow = if (haveMeters) meters[PvbMeter.DYN_DB] else 0f
             val level = if (haveMeters && meters[PvbMeter.DYN_LEVEL_DB] > -119f) meters[PvbMeter.DYN_LEVEL_DB] else Float.NaN
             lines += "조용한 구간 저음 추가: ${signed(dynNow)} dB · 기준 ${fmt(s.dynRefDb)} dB (지금 레벨 ${fmt(level)} dB)"
         }
-        if (s.vbOn && !s.matchedBypass) {
+        if (s.vbOn && !s.matchedBypass && !presetPacket) {
             val vb = if (haveMeters) meters[PvbMeter.VB].toInt() else 0
             // General build without the research tools: no internal alpha names or model codenames.
             val vbLabel = if (PvbBuild.general) "가상 저음" else "가상 저음 (알파 3)"

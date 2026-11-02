@@ -448,6 +448,11 @@
             android:persistent="false"
             android:selectable="false"
             app:iconSpaceReserved="false" />
+        <androidx.preference.SwitchPreferenceCompat
+            android:key="pvb_p1ppp"
+            android:title="@string/pvb_p1ppp"
+            android:summary="@string/pvb_p1ppp_summary"
+            android:defaultValue="false" />
         <me.timschneeberger.rootlessjamesdsp.preference.MaterialSwitchPreference
             android:key="pvb_x_smooth"
             android:title="@string/pvb_x_smooth"

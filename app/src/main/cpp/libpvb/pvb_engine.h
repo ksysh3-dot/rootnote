@@ -35,6 +35,7 @@
 #include "pvb_xtc.h"
 #include "pvb_layer_peak42.h"
 #include "pvb_dry_peak44.h"
+#include "pvb_bounded_peak50.h"
 
 namespace pvb {
 
@@ -118,6 +119,7 @@ enum Param : int {
     // than the S26 Ultra gives notes up to k x higher the layer the model gives the S26 Ultra's. 1 (and 0, so a
     // zero-filled array stays the model) = the model, bit-identical; 0.75..1.75. Needs P_DEV_ON like every P_D_*.
     P_D_TABLE_SCALE,
+    P_P1PPP,          // S50 atomic frozen P1+++; default0, supported at48kHz only
     P_COUNT
 };
 
@@ -150,6 +152,7 @@ enum Meter : int {
     M_DIAGNOSTIC_SOLO_BLEND,
     M_DIAGNOSTIC_SOLO_EXTRA_GR_DB,
     M_LIM_ACTIVE_PCT,  // share of the last few seconds (3 s time constant) the limiter took off > 0.5 dB, %; not reset by reads
+    M_P1PPP_STATE,    // 0 OFF,1 effective,2 unsupported rate,4 transition
     M_COUNT
 };
 
@@ -182,6 +185,10 @@ public:
 
     void setSampleRate(int sampleRate);
     void setParams(const float* values, int count);
+    // Atomic validation/enqueue; rejection leaves all pending and audio state unchanged.
+    bool trySetParams(const float* values,int count);
+    bool setP1pppPreset(bool enabled);
+    int p1pppState()const{return p1pppPublished_.load(std::memory_order_relaxed);}
     void process(float* interleavedStereo, int frames);
     void processInt16(const int16_t* in, int16_t* out, int frames);
     void readMeters(float* out, int count);
@@ -249,6 +256,11 @@ public:
         if(mode){peak44P1_.configure(sr_);peak44P1_.setAlpha2Profile(VB_ALPHA2_P1);peak44P1_.bindEq(&hp_,&lo_,&hi_,&hs_,sr_);}
         return true;
     }
+    int copyPeak50State(double* out,int cap)const {
+        if(!out || cap<5)return 0;
+        out[0]=dryPeak44_.peak();out[1]=dryPeak44_.alpha();out[2]=layerPeak42_.referencePeak();
+        out[3]=layerPeak42_.gain();out[4]=boundedPeak50_.gain();return 5;
+    }
     int copyPeak44Inputs(double* out,int cap)const {int n=std::min(cap,peak44InputSamples_);std::copy_n(peak44Inputs_,n,out);return n;}
     bool setLayerPeak42Research(int mode,double releaseMs) { return layerPeak42_.configure(mode,sr_,releaseMs); }
     bool setPeakBudgetResearch(int enabled, double cap, double ceilingDb,
@@ -307,6 +319,12 @@ public:
                 double dtSeconds);
 
 private:
+    friend struct Sum50TestAccess; // host boundary fixture, no production injection path
+    static bool validP1ppp(const float* p);
+    void setP1pppControls(bool on);
+    void queueP1ppp(const float* p);
+    void commitP1ppp();
+    void publishP1ppp();
     void configure(int sampleRate);
     void applyParams(const float* v, bool snap);
     void resetState();
@@ -337,6 +355,13 @@ private:
     double layerDelayL_[TruePeakLimiter::kDelayLen] = {}, layerDelayR_[TruePeakLimiter::kDelayLen] = {};
     int layerPos_ = 0;
 
+    // P1+++ mutations below belong exclusively to the audio owner.
+    bool p1pppEffective_=false,processed_=false,p1pppQueued_=false;
+    enum PppPhase { PPP_STEADY,PPP_FADE_OUT,PPP_HOLD,PPP_FADE_IN };
+    PppPhase p1pppPhase_=PPP_STEADY;
+    float p1pppNext_[P_COUNT]={};RampedValue p1pppFade_;int p1pppHold_=0;
+    std::atomic<int> p1pppPublished_{0};BoundedPeak50 boundedPeak50_;
+
     // Audio-thread state.
     int sr_ = 48000;
     float active_[P_COUNT] = {};
@@ -354,12 +379,17 @@ private:
     RampedSvf dryLowCut_[4];
     SvfState sDryLowCut_[2][4];
     void configureDryLowCut();
-    double peak42Inputs_[6*4096]={};int peak42InputSamples_=0;
+#if defined(PVB_HOST_RESEARCH)
+    static constexpr int kResearchCaptureFrames=4096;
+#else
+    static constexpr int kResearchCaptureFrames=0;
+#endif
+    double peak42Inputs_[6*kResearchCaptureFrames+1]={};int peak42InputSamples_=0;
     LayerPeak42 layerPeak42_;
     int dryPeak44Mode_=0;DryPeak44 dryPeak44_;
     VbHpv peak44P1_{true,true,1};
     SvfState sDryPeak44Eq_[2][5],sDryPeak44Shelf_[2][4];
-    double peak44Inputs_[5*4096]={};int peak44InputSamples_=0;
+    double peak44Inputs_[5*kResearchCaptureFrames+1]={};int peak44InputSamples_=0;
     TruePeakLimiter lim_;
     TruePeakLimiter limSolo_; // parallel, same latency; protects an isolated layer that may exceed the sum
     RampedValue soloX_;

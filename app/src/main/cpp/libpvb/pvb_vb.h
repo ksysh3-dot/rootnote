@@ -227,6 +227,17 @@ public:
         s41Log_=trace; s41LogCapacity_=capacity; s41LogCount_=0; return true;
     }
     int phase41Count() const { return s41LogCount_; }
+    // Audio owner, muted batch only. One following joint reset replaces repeated
+    // research setter resets; no host flags can leak into the frozen preset.
+    void prepareP1pppResearch(bool on) {
+        s41HostMode_=on?12:0;s41Mode_=s32Profile_?s41HostMode_:0;
+        s41Log_=nullptr;s41LogCapacity_=s41LogCount_=0;
+        s32HostFlags_=s32Flags_=0;s38HostFlags_=s38Flags_=0;
+        s38HostMode_=s38Mode_=s38TapeN_=0;s38Value_=0.;s38Tape_=nullptr;
+        p1PlusHostFlags_=p1PlusFlags_=0;p1ppHostImpact_=p1ppImpactMode_=0;
+        p1ppV04Host_=p1ppV04_=0;stageHostFlags_=stageFlags_=0;
+        stageSink_=nullptr;stageUser_=nullptr;genReq_=gen_=GenResearch52{};
+    }
     // S38 host-only stage diagnosis, all zero by default. Tape is baseline-derived
     // ID-indexed (frequency, circular phase intercept), owned by the host.
     bool setN2Research(unsigned flags,int mode,double value,const double* tape,int count) {

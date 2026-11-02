@@ -73,7 +73,8 @@ object PvbParam {
     const val XTC_BAL_HI_DB = 55
     /** Developer: speaker-floor scale of the virtual-bass table (1 or 0 = model; 0.75..1.75). See pvb_engine.h. */
     const val D_TABLE_SCALE = 56
-    const val COUNT = 57
+    const val P1PPP = 57
+    const val COUNT = 58
 }
 
 /** Index of each value in the meter array (same order as pvb::Meter in pvb_engine.h). */
@@ -108,7 +109,8 @@ object PvbMeter {
     const val DIAGNOSTIC_SOLO_EXTRA_GR_DB = 25
     /** Share of the last few seconds (3 s smoothing) the limiter took off more than 0.5 dB, %; reads do not reset it. */
     const val LIM_ACTIVE_PCT = 26
-    const val COUNT = 27
+    const val P1PPP_STATE = 27
+    const val COUNT = 28
 }
 
 /** Developer-mode meter layout (same order as pvb::DevMeter in pvb_engine.h), then [RING] (dry, layer) pairs. */
@@ -318,6 +320,7 @@ class PvbEngine(sampleRate: Int) : AutoCloseable {
             15.5f, 400f, 8000f, // speaker spacing, feedback band
             0f, 0f,             // speaker balance (speakers taken as equal)
             1f,                 // developer speaker-floor table scale (1 = model)
+            0f,                 // P1+++ atomic preset off
         )
     }
 }
