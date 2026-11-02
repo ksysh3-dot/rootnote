@@ -33,9 +33,9 @@ object PvbModels {
     /**
      * Level of the "풍성함 증가" preset: +4 in the general build (2026-10-22 listening on the S26U, LOGOFF at volume
      * 100/150 with the volume link on: the buzz of +6 drops clearly at +3..+4, and +3 is still much better than off),
-     * +6 in the s26u research build.
+     * +4 in the s26u research build too since 2026-11-02 (was +6; user decision).
      */
-    val fullnessLevelDb: Float get() = if (PvbBuild.general) 4f else 6f
+    val fullnessLevelDb: Float get() = 4f
 
     val presets: List<Preset> get() = listOf(
         Preset(PRESET_FULLNESS, "풍성함 증가 (권장)",

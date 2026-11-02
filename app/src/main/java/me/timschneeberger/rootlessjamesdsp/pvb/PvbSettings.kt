@@ -194,7 +194,7 @@ data class PvbSettings(
         /** Strength slider range, dB re the 'faithful' level, whole-dB steps (the engine accepts up to +12). */
         const val VB_LEVEL_MIN = -6f   // was 0 until 2026-10-31 (RESULTANT_CORE.md 19.12); saved values 0..12 are unchanged
         const val VB_LEVEL_MAX = 12f
-        const val VB_LEVEL_DEFAULT = 6f
+        const val VB_LEVEL_DEFAULT = 4f   // was 6 until 2026-11-02 (user: pvb-s26u round 19 noise at +6 drops at +3..4; general S26U profile already +4)
 
         /** Any number to a slider value: whole dB, clamped into the slider range; non-finite gives the default. */
         fun clampLevel(v: Float): Float =

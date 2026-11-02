@@ -350,7 +350,7 @@
         <me.timschneeberger.rootlessjamesdsp.preference.MaterialSeekbarPreference
             android:key="pvb_vb_strength_db"
             android:title="@string/pvb_vb_level"
-            android:defaultValue="6"
+            android:defaultValue="4"
             android:dependency="pvb_vb_enable"
             app:minValue="-6"
             app:maxValue="12"
