@@ -71,22 +71,6 @@ object LiveAbComparisons {
     val P1_LINK_OFF = Side("p1_link_off", UNMEASURED, false, { "P1 ${dbText(userLevel(it))} · 볼륨 연동 끔" }) {
         PvbAbConditions.v11vb(it, PvbModels.P1, userLevel(it))
     }
-    val D2 = Side("d2", UNMEASURED, false, { "D2 (ID 7) ${dbText(userLevel(it))}" }) {
-        PvbAbConditions.v11vb(it, PvbModels.D2, userLevel(it))
-    }
-    val RESULTANT_V15 = Side("resultant_v15", UNMEASURED, false, { "Resultant v1.5 (ID 15) ${dbText(userLevel(it))}" }) {
-        PvbAbConditions.v11vb(it, PvbModels.RESULTANT, userLevel(it))
-    }
-    val RESULTANT_V16 = Side("resultant_v16", UNMEASURED, false, { "Resultant v1.6 (ID 16) ${dbText(userLevel(it))}" }) {
-        PvbAbConditions.v11vb(it, PvbModels.RESULTANT_V16, userLevel(it))
-    }
-    val RESULTANT_V16D = Side("resultant_v16d", UNMEASURED, false, { "Resultant v1.6-d (ID 17) ${dbText(userLevel(it))}" }) {
-        PvbAbConditions.v11vb(it, PvbModels.RESULTANT_V16D, userLevel(it))
-    }
-    val ID4 = Side("id4", UNMEASURED, false, { "기준형 (ID 4) ${dbText(userLevel(it))}" }) {
-        PvbAbConditions.v11vb(it, PvbModels.REFERENCE, userLevel(it))
-    }
-
     // Spatial (review 2026-10-23, questions 1-2): the canceller against the M/S widener with the same mid and side
     // magnitude per frequency (pvb_xtc.h MS_*), at the user's strength, distance and head size, virtual bass off.
     // Equal level by construction (test_xtc.py: within 0.4 dB per third octave, total within 0.2 dB), so 0 dB trim;
@@ -123,24 +107,6 @@ object LiveAbComparisons {
             "한쪽만 「볼륨 연동 세기」를 켭니다(내 설정의 시작 볼륨·감소 기울기·최대 감소). 이 비교만 출력을 낮추지 않으니 " +
                 "평소 듣는 볼륨 그대로 들으세요. 볼륨이 시작 볼륨보다 높아야 차이가 생깁니다. $TRIM_NOTE",
             0f, listOf(P1_LINK_ON, P1_LINK_OFF)),
-        Comparison("p1_vs_d2", "P1 vs D2 (ID 7)",
-            "같은 크기에서 모델만 다릅니다. $MODEL_NOTE $TRIM_NOTE",
-            PvbAbConditions.HEADROOM_DB, listOf(P1, D2)),
-        Comparison("p1_vs_id4", "P1 vs 기준형 (ID 4)",
-            "같은 크기에서 모델만 다릅니다. $MODEL_NOTE $TRIM_NOTE",
-            PvbAbConditions.HEADROOM_DB, listOf(P1, ID4)),
-        Comparison("p1_vs_d2_vs_id4", "P1 vs D2 vs 기준형 (셋)",
-            "같은 크기에서 세 모델을 A·B·C로 비교합니다. $MODEL_NOTE $TRIM_NOTE",
-            PvbAbConditions.HEADROOM_DB, listOf(P1, D2, ID4)),
-        Comparison("resultant_v15_vs_v16", "Resultant v1.5 vs v1.6 (실험)",
-            "같은 크기에서 모델만 다릅니다. $MODEL_NOTE $TRIM_NOTE",
-            PvbAbConditions.HEADROOM_DB, listOf(RESULTANT_V15, RESULTANT_V16)),
-        Comparison("p1_vs_resultant_v15_vs_v16", "P1 vs Resultant v1.5 vs v1.6 (셋)",
-            "같은 크기에서 세 모델을 A·B·C로 비교합니다. $MODEL_NOTE $TRIM_NOTE",
-            PvbAbConditions.HEADROOM_DB, listOf(P1, RESULTANT_V15, RESULTANT_V16)),
-        Comparison("resultant_v16_vs_v16d", "Resultant v1.6 vs v1.6-d (실험)",
-            "같은 크기에서 모델만 다릅니다. $MODEL_NOTE $TRIM_NOTE",
-            PvbAbConditions.HEADROOM_DB, listOf(RESULTANT_V16, RESULTANT_V16D)),
         Comparison("xtc_centre_vs_ms", "공간감 중앙 보존 vs 같은 크기 좌우 넓히기",
             "크로스토크 제거(중앙 보존)가 단순히 좌우 성분을 키운 것보다 나은지 봅니다. $SPATIAL_NOTE",
             PvbAbConditions.HEADROOM_DB, listOf(XTC_CENTRE, MS_CENTRE)),

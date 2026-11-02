@@ -134,8 +134,6 @@
     <string name="dev_hidden_restored">Hidden warnings will show again</string>
     <string name="dev_turn_off">Turn off developer mode</string>
     <string name="dev_turn_off_summary">Resets every value and turns developer mode off.</string>
-    <string name="dev_time_s1m_note">With per-harmonic envelope on, its own envelope (10/70 ms) is used instead of attack and release.</string>
-    <string name="dev_time_model_note">Attack and release only act on the P1-family models.</string>
     <string name="dev_unit_hz">%1$s Hz</string>
     <string name="dev_unit_db">%1$s dB</string>
     <string name="dev_unit_db_oct">%1$s dB/oct</string>

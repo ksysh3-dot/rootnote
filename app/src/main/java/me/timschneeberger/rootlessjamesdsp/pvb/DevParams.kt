@@ -89,7 +89,7 @@ object DevParams {
     /** Strength cap in developer mode (the general build otherwise stops at [SafeCaps.GENERAL] +9). */
     const val DEV_VB_LEVEL_MAX = 12f
     /** Sustained upper roll-off of the model (P1 family 24 dB/oct, "부드러운 저음" 12 dB/oct). */
-    fun rolloffBase(vbAlgo: Int): Float = if (vbAlgo == PvbModels.GENTLE12) 12f else 24f
+    fun rolloffBase(vbAlgo: Int): Float = 24f
     /** Recommended absolute roll-off (dB/oct), whatever the model. */
     const val ROLLOFF_REC_MIN = 12f
     const val ROLLOFF_REC_MAX = 30f
@@ -121,11 +121,11 @@ object DevParams {
         HOP_MS, 6 * HOP_MS, listOf(E), DevHighlight.ATTACK)
     val RELEASE = DevSpec("release", KEY_RELEASE, DevGroup.TIME, DevUnit.MS, HOP_MS, 56 * HOP_MS, HOP_MS, RELEASE_DEFAULT,
         4 * HOP_MS, 23 * HOP_MS, listOf(S, E), DevHighlight.RELEASE)
-    val X_RISE = DevSpec("x_rise", PvbSettings.KEY_X_RISE, DevGroup.TIME, DevUnit.SWITCH, 0f, 1f, 1f, 0f, 0f, 1f,
+    private val RESERVED_X_RISE = DevSpec("x_rise", PvbSettings.KEY_X_RISE, DevGroup.TIME, DevUnit.SWITCH, 0f, 1f, 1f, 0f, 0f, 1f,
         listOf(S), DevHighlight.ATTACK)
-    val X_SMOOTH = DevSpec("x_smooth", PvbSettings.KEY_X_SMOOTH, DevGroup.TIME, DevUnit.SWITCH, 0f, 1f, 1f, 0f, 0f, 1f,
+    private val RESERVED_X_SMOOTH = DevSpec("x_smooth", PvbSettings.KEY_X_SMOOTH, DevGroup.TIME, DevUnit.SWITCH, 0f, 1f, 1f, 0f, 0f, 1f,
         listOf(S), DevHighlight.LAYER)
-    val X_S1M = DevSpec("x_s1m", PvbSettings.KEY_X_S1M, DevGroup.TIME, DevUnit.SWITCH, 0f, 1f, 1f, 0f, 0f, 1f,
+    private val RESERVED_X_S1M = DevSpec("x_s1m", PvbSettings.KEY_X_S1M, DevGroup.TIME, DevUnit.SWITCH, 0f, 1f, 1f, 0f, 0f, 1f,
         listOf(E), DevHighlight.RELEASE)
     // DevShareCode keeps the old RN1 value-set 1 indexes; signed strengths use value-set 2.
     val STRENGTH = DevSpec("strength", PvbSettings.KEY_VB_STRENGTH_DB, DevGroup.SIZE, DevUnit.DB, PvbSettings.VB_LEVEL_MIN, DEV_VB_LEVEL_MAX, 1f,
@@ -139,7 +139,7 @@ object DevParams {
     val VOL_MAX = DevSpec("vol_max", PvbSettings.KEY_VB_VOL_MAX_DB, DevGroup.SIZE, DevUnit.DB,
         VolumeLevelLink.MAX_DB_MIN, VolumeLevelLink.MAX_DB_MAX, 0.5f, VolumeLevelLink.MAX_DB_DEFAULT, 6f, 12f,
         listOf(M, S), DevHighlight.THRESHOLD)
-    val X_DENSE = DevSpec("x_dense", PvbSettings.KEY_X_DENSE, DevGroup.SIZE, DevUnit.SWITCH, 0f, 1f, 1f, 0f, 0f, 1f,
+    private val RESERVED_X_DENSE = DevSpec("x_dense", PvbSettings.KEY_X_DENSE, DevGroup.SIZE, DevUnit.SWITCH, 0f, 1f, 1f, 0f, 0f, 1f,
         listOf(E, S), DevHighlight.LAYER)
     /**
      * Speaker floor the virtual-bass weight/gain table is matched to (P_D_TABLE_SCALE = value / 150): 150 Hz is the
@@ -155,13 +155,15 @@ object DevParams {
     /** Share-code order (RN1). Append only. */
     val ALL: List<DevSpec> = listOf(
         BOUNDARY, OUT_LO, OUT_HI, HP, H2, H3, H4, H5, ROLLOFF, SUST, PERC,
-        ATTACK, RELEASE, X_RISE, X_SMOOTH, X_S1M,
-        STRENGTH, VOL_START, VOL_SLOPE, VOL_MAX, X_DENSE,
+        ATTACK, RELEASE, RESERVED_X_RISE, RESERVED_X_SMOOTH, RESERVED_X_S1M,
+        STRENGTH, VOL_START, VOL_SLOPE, VOL_MAX, RESERVED_X_DENSE,
         TABLE_FLOOR,
     )
 
-    fun byId(id: String): DevSpec? = ALL.firstOrNull { it.id == id }
-    fun group(g: DevGroup): List<DevSpec> = ALL.filter { it.group == g }
+    fun retired(spec: DevSpec): Boolean = spec === RESERVED_X_RISE || spec === RESERVED_X_SMOOTH ||
+        spec === RESERVED_X_S1M || spec === RESERVED_X_DENSE
+    fun byId(id: String): DevSpec? = ALL.firstOrNull { !retired(it) && it.id == id }
+    fun group(g: DevGroup): List<DevSpec> = ALL.filter { !retired(it) && it.group == g }
 
     /** Default of [spec] on this phone: the device profile's high-pass and strength, else the model's value. */
     fun defaultValue(spec: DevSpec, profileSettings: Map<String, Any>): Float {
@@ -194,14 +196,14 @@ object DevParams {
         PERC -> s.devPercDb
         ATTACK -> s.devAttackMs
         RELEASE -> s.devReleaseMs
-        X_RISE -> if (s.xRise) 1f else 0f
-        X_SMOOTH -> if (s.xSmooth) 1f else 0f
-        X_S1M -> if (s.xS1m) 1f else 0f
+        RESERVED_X_RISE -> 0f
+        RESERVED_X_SMOOTH -> 0f
+        RESERVED_X_S1M -> 0f
         STRENGTH -> s.vbLevelDb
         VOL_START -> s.vbVolRefPct
         VOL_SLOPE -> s.vbVolSlope
         VOL_MAX -> s.vbVolMaxDb
-        X_DENSE -> if (s.xDense) 1f else 0f
+        RESERVED_X_DENSE -> 0f
         TABLE_FLOOR -> s.devTableFloorHz
         else -> spec.default
     }
@@ -210,13 +212,12 @@ object DevParams {
     fun apply(s: PvbSettings, values: FloatArray): PvbSettings {
         require(values.size == ALL.size) { "expected ${ALL.size} values" }
         fun v(spec: DevSpec) = spec.snap(values[ALL.indexOf(spec)])
-        fun b(spec: DevSpec) = v(spec) >= 0.5f
         return s.copy(
             devBoundaryHz = v(BOUNDARY), devOutLoHz = v(OUT_LO), devOutHiHz = v(OUT_HI), hpHz = v(HP),
             devH2Db = v(H2), devH3Db = v(H3), devH4Db = v(H4), devH5Db = v(H5), devRolloffOffset = v(ROLLOFF),
             devSustDb = v(SUST), devPercDb = v(PERC), devAttackMs = v(ATTACK), devReleaseMs = v(RELEASE),
-            xRise = b(X_RISE), xSmooth = b(X_SMOOTH), xS1m = b(X_S1M), vbLevelDb = v(STRENGTH),
-            vbVolRefPct = v(VOL_START), vbVolSlope = v(VOL_SLOPE), vbVolMaxDb = v(VOL_MAX), xDense = b(X_DENSE),
+            vbLevelDb = v(STRENGTH),
+            vbVolRefPct = v(VOL_START), vbVolSlope = v(VOL_SLOPE), vbVolMaxDb = v(VOL_MAX),
             devTableFloorHz = v(TABLE_FLOOR),
         )
     }
@@ -225,14 +226,14 @@ object DevParams {
     fun write(values: FloatArray, putFloat: (String, Float) -> Unit, putBoolean: (String, Boolean) -> Unit) {
         require(values.size == ALL.size) { "expected ${ALL.size} values" }
         ALL.forEachIndexed { i, spec ->
-            val v = spec.snap(values[i])
+            val v = if (retired(spec)) 0f else spec.snap(values[i])
             if (spec.isSwitch) putBoolean(spec.key, v >= 0.5f) else putFloat(spec.key, v)
         }
     }
 
     /** True when every value equals its default (nothing for the "되돌리기" buttons to do). */
     fun allDefault(values: FloatArray, defaults: FloatArray): Boolean =
-        values.indices.all { ALL[it].indexOf(values[it]) == ALL[it].indexOf(defaults[it]) }
+        values.indices.all { retired(ALL[it]) || ALL[it].indexOf(values[it]) == ALL[it].indexOf(defaults[it]) }
 
     /** [values] with every value of [group] (or all, null) back at [defaults]. */
     fun reset(values: FloatArray, defaults: FloatArray, group: DevGroup?): FloatArray =

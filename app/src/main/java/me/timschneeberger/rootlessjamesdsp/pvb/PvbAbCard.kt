@@ -235,7 +235,7 @@ class PvbAbCard @JvmOverloads constructor(
 
     private fun updateNote() {
         val vbNote = if (isVbPair()) "\n가상 저음은 실험 기능입니다. 두 쪽 모두 같은 지연" +
-            (if (pair().second.condition.apply(PvbSettings()).vbAlgo != PvbSettings.VB_BANKSTOWN) "(약 0.15초)" else "(없음)") +
+            "(약 0.15초)" +
             "으로 재생하므로 지연으로는 구분되지 않습니다. 윙윙거림·잡음이 들리면 '거슬리는 소리'에 표시하세요." else ""
         volumeNote.text = (if (pair().stage) {
             "이 비교는 앱이 볼륨을 직접 바꿉니다. 평소 듣는 볼륨으로 맞춘 뒤 시작하고, 비교하는 동안 볼륨 버튼은 누르지 마세요. " +

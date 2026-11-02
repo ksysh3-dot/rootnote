@@ -21,10 +21,8 @@
     <string name="home_db_value">%1$s dB</string>
     <string name="home_presets_label">프리셋</string>
     <string name="home_chip_fullness">풍성함 증가</string>
-    <string name="home_chip_deep">초저역 강조</string>
     <string name="home_chip_custom">사용자 지정</string>
     <string name="home_hint_fullness">대부분의 음악에 무난한 세기예요.</string>
-    <string name="home_hint_deep">조용한 곡이나 어쿠스틱에 진하게 더해요.</string>
     <string name="home_hint_custom">슬라이더로 원하는 세기를 맞춰요.</string>
     <string name="home_link_title">볼륨 연동</string>
     <string name="home_link_reduced">볼륨 %1$d%%에서 %2$s dB · 적용 %3$s dB</string>

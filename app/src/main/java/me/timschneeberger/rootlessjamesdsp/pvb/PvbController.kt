@@ -516,6 +516,7 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
             gateDb = gateDb(),
             measuring = PvbRuntime.measuring,
             devMeter = PvbRuntime.devMeter,
+            sampleRate = engine.sampleRateHz,
         )
         val encoded = PvbEngineParams.encode(effectiveSettings, inputs)
         diagnosticSolo = encoded.diagnosticSolo
@@ -560,6 +561,7 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
             targetLowDb = lowDb,
             dynRefDb = if (s.enabled && s.dynOn) dynRefNow() else Float.NaN,
             abActive = PvbRuntime.abActive,
+            p1pppRequested = userSettings.p1ppp,
             vbOn = s.vbOn,
             vbAlgo = s.vbAlgo,
             vbLevelDb = s.vbLevelDb,

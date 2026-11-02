@@ -50,6 +50,8 @@ object PvbEngineParams {
         val gateDb: Float,
         val measuring: Boolean,
         val devMeter: Boolean,
+        /** Requested stream rate; unsupported presets fall back to saved P1 settings before JNI. */
+        val sampleRate: Int = 48000,
     )
 
     class Encoded(
@@ -93,7 +95,7 @@ object PvbEngineParams {
         // In matched bypass, retain the processed reference and equal delay, but only the flat path is audible.
         // A route bypass still removes virtual bass and its delay.
         p[PvbParam.VB_ON] = if (s.vbOn && (processing || matchedBypassReady)) 1f else 0f
-        p[PvbParam.VB_ALGO] = s.vbAlgo.toFloat()
+        p[PvbParam.VB_ALGO] = PvbModels.P1.toFloat() // only supported app model
         p[PvbParam.VB_LEVEL_DB] = vbAppliedLevelDb
         p[PvbParam.FLAT] = if (matchedBypassReady) 1f else 0f
         p[PvbParam.MATCH_HOLD] = if (i.abActive || i.measuring || !routeAllowed) 1f else 0f
@@ -101,12 +103,7 @@ object PvbEngineParams {
         val soloAllowed = processing && s.vbOn && !i.abActive && !i.measuring
         val diagnosticSolo = i.diagnosticSolo && soloAllowed
         p[PvbParam.DIAGNOSTIC_SOLO] = if (diagnosticSolo) 1f else 0f
-        // Experimental layer options: only with virtual bass on (the engine also ignores them without it).
-        val vbIn = p[PvbParam.VB_ON] == 1f
-        p[PvbParam.X_SMOOTH] = if (vbIn && s.xSmooth) 1f else 0f
-        p[PvbParam.X_RISE] = if (vbIn && s.xRise) 1f else 0f
-        p[PvbParam.X_S1M] = if (vbIn && s.xS1m) 1f else 0f
-        p[PvbParam.X_DENSE] = if (vbIn && s.xDense) 1f else 0f
+        // Reserved JNI slots 29-32 stay zero; legacy X_* settings cannot reach the engine.
         // Developer mode (general build only: PvbSettings.load keeps devOn false elsewhere). Off = every value ignored.
         val dev = s.devOn && !i.abActive
         p[PvbParam.DEV_ON] = if (dev) 1f else 0f
@@ -153,7 +150,7 @@ object PvbEngineParams {
         p[PvbParam.XTC_BAL_HI_DB] = if (i.upright) 0f else balanceSign * s.xtcBalHiDb
         // One atomic packet. Saved EQ/model/links survive OFF; this preset locks only effective values.
         // Comparisons, measurements, solo and bypass exit through the same native fade/reset path.
-        val preset = s.p1ppp && processing && s.vbOn && !i.abActive && !i.measuring && !diagnosticSolo
+        val preset = s.p1ppp && i.sampleRate == 48000 && processing && s.vbOn && !i.abActive && !i.measuring && !diagnosticSolo
         if (preset) {
             val frozen = PvbEngine.defaultParams()
             for (k in intArrayOf(PvbParam.HP_HZ, PvbParam.LOW_HZ, PvbParam.LOW_DB, PvbParam.LOW_Q,

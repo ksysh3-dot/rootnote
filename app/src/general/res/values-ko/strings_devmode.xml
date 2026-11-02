@@ -134,8 +134,6 @@
     <string name="dev_hidden_restored">숨긴 경고를 다시 표시해요</string>
     <string name="dev_turn_off">개발자 모드 끄기</string>
     <string name="dev_turn_off_summary">모든 값을 기본값으로 돌리고 개발자 모드를 꺼요.</string>
-    <string name="dev_time_s1m_note">배음별 단일 포락선이 켜져 있으면 어택·릴리즈 대신 그 포락선(10/70 ms)이 쓰여요.</string>
-    <string name="dev_time_model_note">어택·릴리즈는 연결형(P1) 계열 모델에서만 작동해요.</string>
     <string name="dev_unit_hz">%1$s Hz</string>
     <string name="dev_unit_db">%1$s dB</string>
     <string name="dev_unit_db_oct">%1$s dB/oct</string>

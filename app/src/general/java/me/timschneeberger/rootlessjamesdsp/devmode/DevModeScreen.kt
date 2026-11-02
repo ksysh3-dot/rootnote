@@ -153,7 +153,6 @@ data class DevUiState(
     val values: FloatArray,
     val defaults: FloatArray,
     val vbAlgo: Int,
-    val s1mOn: Boolean,
     val volumeLinkOn: Boolean,
     val measuredBadge: DevEvidenceText.MeasuredBadge,
     val thresholdMeasured: Boolean,
@@ -327,11 +326,6 @@ private fun DevContent(state: DevUiState, actions: DevActions) {
                 horizontalArrangement = Arrangement.End,
             ) {
                 TextAction(stringResource(R.string.dev_reset_group), onClick = { actions.onResetGroup(group) })
-            }
-            if (group == DevGroup.TIME) {
-                if (state.s1mOn) Note(stringResource(R.string.dev_time_s1m_note))
-                if (state.vbAlgo == me.timschneeberger.rootlessjamesdsp.pvb.PvbModels.GENTLE12)
-                    Note(stringResource(R.string.dev_time_model_note))
             }
             for (spec in DevParams.group(group)) {
                 val i = DevParams.ALL.indexOf(spec)

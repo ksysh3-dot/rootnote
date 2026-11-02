@@ -232,7 +232,7 @@ fun PvbSection(host: RnAdvancedActivity, showIcons: Boolean) {
         if (research) {
             val model = PvbModels.fromKey(p.string(P.KEY_VB_ALGO, PvbModels.DEFAULT_KEY))
             RnChoiceRow(stringResource(R.string.pvb_vb_algo), PvbModels.models.map { RnChoice(it.key, it.title, it.description) },
-                model.key, { p.put(P.KEY_VB_ALGO, it) }, line = "${model.title} · 약 ${if (model.id == PvbModels.P1_PLUS || model.id == PvbModels.P1PP || model.id == PvbModels.P1PP_V03) "0.18" else "0.15"}초 지연\n${model.description}",
+                model.key, { p.put(P.KEY_VB_ALGO, it) }, line = "${model.title} · 약 0.15초 지연\n${model.description}",
                 enabled = vbOn && !s.p1ppp)
         }
         PrefSlider(p, P.KEY_VB_STRENGTH_DB, stringResource(R.string.pvb_vb_level), P.VB_LEVEL_DEFAULT,
@@ -252,10 +252,6 @@ fun PvbSection(host: RnAdvancedActivity, showIcons: Boolean) {
         // 실험 기능
         RnSectionTitle(stringResource(R.string.pvb_x_header))
         RnParagraph(stringResource(R.string.pvb_x_header_summary))
-        PrefSwitch(p, P.KEY_X_SMOOTH, stringResource(R.string.pvb_x_smooth), false, stringResource(R.string.pvb_x_smooth_summary), enabled = vbOn && !s.p1ppp)
-        PrefSwitch(p, P.KEY_X_RISE, stringResource(R.string.pvb_x_rise), false, stringResource(R.string.pvb_x_rise_summary), enabled = vbOn && !s.p1ppp)
-        PrefSwitch(p, P.KEY_X_S1M, stringResource(R.string.pvb_x_s1m), false, stringResource(R.string.pvb_x_s1m_summary), enabled = vbOn && !s.p1ppp)
-        PrefSwitch(p, P.KEY_X_DENSE, stringResource(R.string.pvb_x_dense), false, stringResource(R.string.pvb_x_dense_summary), enabled = vbOn && !s.p1ppp)
         RnNavRow(stringResource(R.string.pvb_x_feedback), stringResource(R.string.pvb_x_feedback_summary)) {
             PvbGeneral.openUrl(context, FEEDBACK_URL)
         }
@@ -277,12 +273,10 @@ fun PvbSection(host: RnAdvancedActivity, showIcons: Boolean) {
 private fun VbModeRow(p: RnPrefsFile, s: PvbSettings, research: Boolean, vbOn: Boolean) {
     fun titleRes(key: String) = when (key) {
         PvbModels.PRESET_FULLNESS -> R.string.vb_preset_fullness_title
-        PvbModels.PRESET_DEEP -> R.string.vb_preset_deep_title
         else -> R.string.vb_preset_custom_title
     }
     fun descRes(key: String) = when (key) {
         PvbModels.PRESET_FULLNESS -> R.string.vb_preset_fullness_desc
-        PvbModels.PRESET_DEEP -> R.string.vb_preset_deep_desc
         else -> R.string.vb_preset_custom_desc
     }
     // "사용자 지정" is listed only with the research tools (the model list is visible then)

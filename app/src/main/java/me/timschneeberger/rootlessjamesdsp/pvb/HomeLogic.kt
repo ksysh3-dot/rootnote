@@ -25,7 +25,6 @@ object HomeLogic {
     /** The three preset chips. [presetKey] is the PvbModels preset key ([PvbModels.PRESET_CUSTOM] for the last). */
     enum class Chip(val presetKey: String) {
         FULLNESS(PvbModels.PRESET_FULLNESS),
-        DEEP(PvbModels.PRESET_DEEP),
         CUSTOM(PvbModels.PRESET_CUSTOM),
     }
 
@@ -55,7 +54,6 @@ object HomeLogic {
         if (customPinned) return Chip.CUSTOM
         return when (PvbModels.presetFor(modelKey, levelDb)?.key) {
             PvbModels.PRESET_FULLNESS -> Chip.FULLNESS
-            PvbModels.PRESET_DEEP -> Chip.DEEP
             else -> Chip.CUSTOM
         }
     }

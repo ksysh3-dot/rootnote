@@ -39,11 +39,16 @@ class PvbStatusText(private val context: Context) {
         val canCopy = research && haveMeters && s.vbOn && !s.matchedBypass && PvbModels.fromId(s.vbAlgo) != null
         val lines = ArrayList<String>()
         if (haveMeters && meters[PvbMeter.P1PPP_STATE] > 0f) lines += when (meters[PvbMeter.P1PPP_STATE].toInt()) {
-            1 -> "P1+++ ?? ? EQ ?? ? ?? 0 dB ? ?? ?5 dB"
-            2 -> "P1+++ ?? ? 48 kHz??? ??"
-            4 -> "P1+++ ?? ?"
-            else -> "P1+++ ??"
+            1 -> "P1+++ 적용 중 · EQ 고정 · 층 0 dB · 출력 −5 dB"
+            2 -> "P1+++ 지원 안 됨 · 48 kHz에서만 지원"
+            3 -> "P1+++ 지원 안 됨 · 처리·가상 저음·고정 설정을 확인하세요"
+            4 -> "P1+++ 전환 중"
+            else -> "P1+++ 지원 안 됨"
         }
+        if (s.p1pppRequested && (!haveMeters || meters[PvbMeter.P1PPP_STATE] == 0f))
+            lines += if (haveMeters && meters[PvbMeter.SAMPLE_RATE] != 48000f)
+                "P1+++ 지원 안 됨 · 48 kHz에서만 지원"
+            else "P1+++ 지원 안 됨 · 처리·가상 저음·출력 경로 또는 비교·측정 상태를 확인하세요"
         if (PvbGeneral.unmeasured(context))
             lines += context.getString(me.timschneeberger.rootlessjamesdsp.R.string.unmeasured_status)
         val back = PvbRuntime.abReturnVolume
@@ -102,13 +107,7 @@ class PvbStatusText(private val context: Context) {
                         (if (s.vbVolLink) " · 볼륨 연동 −${fmt(s.vbVolReductionDb)} dB → 적용 ${signed(s.vbAppliedLevelDb)} dB" else "")
                 else -> "$vbLabel: 켜져 있지만 지금은 쓰지 않음 (우회 중이거나 이 샘플레이트에서 지원 안 됨)"
             }
-            if (research && flowing && vb == 1 + PvbSettings.VB_GENTLE) {
-                lines += "구간 분석: ${sceneName(meters[PvbMeter.VB_SCENE].toInt())} · 소리에 미적용"
-            }
-            if (research && flowing && vb == 1 + PvbSettings.VB_GENTLE_ADAPTIVE) {
-                val weight = (meters[PvbMeter.VB_UPPER_BLEND] * 100).toInt()
-                lines += "고차배음 더 억제 설정: ${weight}% · 적응형 시험"
-            }
+
         }
         if (research) lines += "볼륨: ${s.volumeIndex}/${s.volumeMax} 단계 · 약 ${fmt(s.volumeDb)} dB, 기준 ${fmt(s.referenceDb)} dB"
         if (research) lines += if (s.volumeDbSource == "system") {
@@ -182,12 +181,12 @@ class PvbStatusText(private val context: Context) {
                 .put("analysis_core_sample_rate", 3000)
                 .put("counts_since_algorithm_reset", true)
                 .put("trained_selector", false)
-                .put("automatic_audio_switching_applied", snapshot[PvbMeter.VB].toInt() == 1 + PvbSettings.VB_GENTLE_ADAPTIVE && s.processing && !s.matchedBypass)
+                .put("automatic_audio_switching_applied", false)
                 .put("strong_budget_weight", snapshot[PvbMeter.VB_UPPER_BLEND])
                 .put("strong_budget_target", snapshot[PvbMeter.VB_UPPER_TARGET].toInt())
                 .put("budget_transitions", snapshot[PvbMeter.VB_UPPER_TRANSITIONS].toLong())
                 .put("policy_version", 2)
-                .put("note", "Rule-based experimental harmonic-budget selection only in algorithm 5; " +
+                .put("note", "P1 observations only; no automatic harmonic-budget selection; " +
                     "not pitch labels, buzz detection, learned quality scores or a listening result. " +
                     "Both budgets share analysis and oscillator phases. Counters reset with algorithm/rate.")
             val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager

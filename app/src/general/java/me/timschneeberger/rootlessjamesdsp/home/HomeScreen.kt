@@ -714,7 +714,6 @@ private fun linkText(line: HomeLogic.LinkLine): String = when (line) {
 private fun chipLabel(chip: HomeLogic.Chip): String = stringResource(
     when (chip) {
         HomeLogic.Chip.FULLNESS -> R.string.home_chip_fullness
-        HomeLogic.Chip.DEEP -> R.string.home_chip_deep
         HomeLogic.Chip.CUSTOM -> R.string.home_chip_custom
     }
 )
@@ -723,7 +722,6 @@ private fun chipLabel(chip: HomeLogic.Chip): String = stringResource(
 private fun chipHint(chip: HomeLogic.Chip): String = stringResource(
     when (chip) {
         HomeLogic.Chip.FULLNESS -> R.string.home_hint_fullness
-        HomeLogic.Chip.DEEP -> R.string.home_hint_deep
         HomeLogic.Chip.CUSTOM -> R.string.home_hint_custom
     }
 )
@@ -1038,7 +1036,7 @@ private fun HomePreviewOff() {
     HomeScreen(
         previewOn.copy(
             headline = HomeLogic.Headline.ORIGINAL, masterOn = false, measuredDeviceName = null,
-            level = 9, chip = HomeLogic.Chip.DEEP, linkOn = false, linkLine = HomeLogic.LinkLine.Off,
+            level = 9, chip = HomeLogic.Chip.CUSTOM, linkOn = false, linkLine = HomeLogic.LinkLine.Off,
         ),
         previewActions,
     )

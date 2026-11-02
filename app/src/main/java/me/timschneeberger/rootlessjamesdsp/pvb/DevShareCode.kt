@@ -56,7 +56,7 @@ object DevShareCode {
         val bitmap = IntArray(bitmapBytes)
         val payload = ArrayList<Int>()
         specs.forEachIndexed { i, spec ->
-            val idx = spec.indexOf(values[i])
+            val idx = if (DevParams.retired(spec)) 0 else spec.indexOf(values[i])
             if (spec.isSwitch) {
                 if (idx == 1) bitmap[i / 8] = bitmap[i / 8] or (1 shl (i % 8))
             } else if (idx != spec.indexOf(defaults[i])) {
@@ -108,7 +108,7 @@ object DevShareCode {
         specs.forEachIndexed { i, spec ->
             val bit = (bytes[1 + i / 8] shr (i % 8)) and 1 == 1
             if (spec.isSwitch) {
-                values[i] = if (bit) 1f else 0f
+                values[i] = if (bit && !DevParams.retired(spec)) 1f else 0f
                 if (spec.indexOf(values[i]) != spec.indexOf(defaults[i])) moved++
             } else if (bit) {
                 if (p >= bytes.size) return Result.Error(Reason.BAD_LENGTH)

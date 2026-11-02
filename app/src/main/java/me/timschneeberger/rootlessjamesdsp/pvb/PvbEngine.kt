@@ -162,6 +162,9 @@ object PvbAnaInfo {
  * and no call ever waits for another. After close, processing passes audio through and the other calls do nothing.
  */
 class PvbEngine(sampleRate: Int) : AutoCloseable {
+    /** Stream rate requested by the owner; native reconfiguration takes effect at the next block. */
+    @Volatile var sampleRateHz: Int = sampleRate
+        private set
     private val handle: Long = PvbNative.create(sampleRate)
     /** Immutable requested controls for opt-in diagnostics. Native ramp/application may lag this snapshot. */
     @Volatile var diagnosticParams: FloatArray? = null
@@ -210,7 +213,7 @@ class PvbEngine(sampleRate: Int) : AutoCloseable {
     val latencyFrames: Int
         get() = use(0) { PvbNative.latency(it) }
 
-    fun setSampleRate(sampleRate: Int) = use(Unit) { PvbNative.setSampleRate(it, sampleRate) }
+    fun setSampleRate(sampleRate: Int) = use(Unit) { PvbNative.setSampleRate(it, sampleRate); sampleRateHz = sampleRate }
 
     fun setParams(values: FloatArray) {
         require(values.size == PvbParam.COUNT) { "expected ${PvbParam.COUNT} values, got ${values.size}" }
@@ -306,7 +309,7 @@ class PvbEngine(sampleRate: Int) : AutoCloseable {
             2500f, 0f,     // treble tilt: high shelf corner, gain (0 = off)
             0f,      // final output gate, dB (0 = open)
             0f,      // condition tag (blind comparison)
-            0f, 0f, 0f,    // virtual bass: off, hpv, 0 dB
+            0f, 6f, 0f,    // virtual bass: off, P1 (stable ID 6), 0 dB
             0f, 0f, -6f,   // flat bypass off (controller selects it), match running, initial estimate
             0f,           // generated-layer diagnostic monitor off
             0f, 0f, 0f, 0f,   // experimental layer options off: smooth, rise, S1m, dense

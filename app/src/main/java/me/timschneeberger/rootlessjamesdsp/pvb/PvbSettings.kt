@@ -41,10 +41,6 @@ data class PvbSettings(
     // Experimental layer options ("실험 기능"), all off by default; the engine ignores them while virtual bass is off.
     // Not part of device profiles (DeviceProfiles.FLOAT_KEYS / BOOL_KEYS) nor of the blind-comparison conditions.
     val p1ppp: Boolean = false,       // frozen P1+++; effective overrides only, never rewrites saved settings
-    val xSmooth: Boolean = false,       // 층 출렁임 완화
-    val xRise: Boolean = false,         // 급상승 완화
-    val xS1m: Boolean = false,          // 배음별 단일 포락선 (P1 only)
-    val xDense: Boolean = false,        // 복합음 감응 세기
     // Developer mode ("개발자 모드", general build only; DevParams). devOn = the user consented and the values below
     // reach the engine (P_DEV_ON); each value at its default is the model itself. Not part of device profiles.
     val devOn: Boolean = false,
@@ -190,16 +186,9 @@ data class PvbSettings(
         const val KEY_VB_LEGACY_MODEL = "pvb_vb_alpha1_model"
         /** The alpha 2 model a schema-3 migration replaced (only the reference is replaced). */
         const val KEY_VB_ALPHA2_MODEL = "pvb_vb_alpha2_model"
-        /** 2 = alpha 2 model keys; 3 = alpha 3 (reference -> P1 once, level slider). */
-        const val VB_MODEL_SCHEMA = 3
+        /** 4 = option B: P1 only, retired X keys OFF, obsolete derived mode removed. */
+        const val VB_MODEL_SCHEMA = 4
 
-        /** Virtual bass algorithms (same numbers as pvb::VbAlgo). */
-        const val VB_HPV = 0
-        const val VB_BANKSTOWN = 1
-        const val VB_HPV52M = 2
-        const val VB_GENTLE = 3
-        const val VB_GENTLE_STRONG = 4
-        const val VB_GENTLE_ADAPTIVE = 5
         /** Layer silent, algorithm (and its latency) kept: the reference side of the virtual bass blind comparisons. */
         const val VB_LEVEL_OFF = -120f
         /** Strength slider range, dB re the 'faithful' level, whole-dB steps (the engine accepts up to +12). */
@@ -211,12 +200,7 @@ data class PvbSettings(
         fun clampLevel(v: Float): Float =
             if (v.isFinite()) Math.round(v).toFloat().coerceIn(VB_LEVEL_MIN, VB_LEVEL_MAX) else VB_LEVEL_DEFAULT
 
-        fun vbAlgoName(algo: Int) = PvbModels.fromId(algo)?.title ?: when (algo) {
-            VB_BANKSTOWN -> "Bankstown"
-            VB_HPV52M -> "hpv52m"
-            VB_GENTLE_ADAPTIVE -> "적응형 배음 완화 (시험)"
-            else -> "hpv"
-        }
+        fun vbAlgoName(algo: Int) = PvbModels.fromId(algo)?.title ?: "연결형 (P1)"
 
         /**
          * Upgrade the virtual bass model and level once. EQ, output, enable and historical A/B results are untouched.
@@ -228,18 +212,23 @@ data class PvbSettings(
         fun migrateVirtualBassModel(p: SharedPreferences) {
             val all = p.all
             val raw = all[KEY_VB_ALGO]
-            val old = raw as? String ?: PvbModels.DEFAULT_KEY
+            val old = raw?.toString() ?: PvbModels.DEFAULT_KEY
             val schema = try { p.getInt(KEY_VB_MODEL_SCHEMA, 0) } catch (_: ClassCastException) { 0 }
-            val fromReference = schema < VB_MODEL_SCHEMA && old == PvbModels.REFERENCE_KEY
+            val fromReference = schema < VB_MODEL_SCHEMA && old == "alpha2_reference"
             val current = if (fromReference) PvbModels.DEFAULT_KEY else PvbModels.fromKey(old).key
             val strength = all[KEY_VB_STRENGTH_DB]
             val strengthOk = strength is Float && strength.isFinite() && clampLevel(strength) == strength
-            if (old == current && schema == VB_MODEL_SCHEMA && raw is String && strengthOk) return
+            val retired = listOf(KEY_X_SMOOTH, KEY_X_RISE, KEY_X_S1M, KEY_X_DENSE)
+            val retiredClean = retired.all { all[it] == false }
+            val presetClean = KEY_VB_MODE !in all
+            if (old == current && schema == VB_MODEL_SCHEMA && raw is String && strengthOk && retiredClean && presetClean) return
             val edit = p.edit().putString(KEY_VB_ALGO, current).putInt(KEY_VB_MODEL_SCHEMA, VB_MODEL_SCHEMA)
             if (old != current && !fromReference && p.str(KEY_VB_LEGACY_MODEL, "").isEmpty())
                 edit.putString(KEY_VB_LEGACY_MODEL, old)
             if (fromReference) edit.putString(KEY_VB_ALPHA2_MODEL, old)
             if (!strengthOk) edit.putFloat(KEY_VB_STRENGTH_DB, migratedLevel(all[KEY_VB_LEVEL_DB], strength))
+            retired.forEach { edit.putBoolean(it, false) }
+            edit.remove(KEY_VB_MODE) // old deep/custom mode is derived; never restore it
             edit.apply()
         }
 
@@ -295,10 +284,6 @@ data class PvbSettings(
                     .coerceIn(VolumeLevelLink.SLOPE_MIN, VolumeLevelLink.SLOPE_MAX),
                 vbVolMaxDb = p.float(KEY_VB_VOL_MAX_DB, d.vbVolMaxDb)
                     .coerceIn(VolumeLevelLink.MAX_DB_MIN, VolumeLevelLink.MAX_DB_MAX),
-                xSmooth = p.bool(KEY_X_SMOOTH, d.xSmooth),
-                xRise = p.bool(KEY_X_RISE, d.xRise),
-                xS1m = p.bool(KEY_X_S1M, d.xS1m),
-                xDense = p.bool(KEY_X_DENSE, d.xDense),
                 devOn = PvbBuild.general && p.bool(DevParams.KEY_DEV_ON, false),
                 devBoundaryHz = DevParams.clampStored(DevParams.KEY_BOUNDARY, p.float(DevParams.KEY_BOUNDARY, d.devBoundaryHz)),
                 devOutLoHz = DevParams.clampStored(DevParams.KEY_OUT_LO, p.float(DevParams.KEY_OUT_LO, d.devOutLoHz)),

@@ -380,12 +380,10 @@ class PreferenceGroupFragment : PreferenceFragmentCompat(), KoinComponent {
                 // only listed with the research tools (the model list is visible then).
                 fun title(key: String) = when (key) {
                     PvbModels.PRESET_FULLNESS -> getString(R.string.vb_preset_fullness_title)
-                    PvbModels.PRESET_DEEP -> getString(R.string.vb_preset_deep_title)
                     else -> getString(R.string.vb_preset_custom_title)
                 }
                 fun desc(key: String) = when (key) {
                     PvbModels.PRESET_FULLNESS -> getString(R.string.vb_preset_fullness_desc)
-                    PvbModels.PRESET_DEEP -> getString(R.string.vb_preset_deep_desc)
                     else -> getString(R.string.vb_preset_custom_desc)
                 }
                 val keys = PvbModels.presets.map { it.key } +

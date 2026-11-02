@@ -448,39 +448,12 @@
             android:persistent="false"
             android:selectable="false"
             app:iconSpaceReserved="false" />
-        <androidx.preference.SwitchPreferenceCompat
+        <me.timschneeberger.rootlessjamesdsp.preference.MaterialSwitchPreference
             android:key="pvb_p1ppp"
             android:title="@string/pvb_p1ppp"
             android:summary="@string/pvb_p1ppp_summary"
+            android:dependency="pvb_vb_enable"
             android:defaultValue="false" />
-        <me.timschneeberger.rootlessjamesdsp.preference.MaterialSwitchPreference
-            android:key="pvb_x_smooth"
-            android:title="@string/pvb_x_smooth"
-            android:summary="@string/pvb_x_smooth_summary"
-            android:defaultValue="false"
-            android:dependency="pvb_vb_enable"
-            app:iconSpaceReserved="false" />
-        <me.timschneeberger.rootlessjamesdsp.preference.MaterialSwitchPreference
-            android:key="pvb_x_rise"
-            android:title="@string/pvb_x_rise"
-            android:summary="@string/pvb_x_rise_summary"
-            android:defaultValue="false"
-            android:dependency="pvb_vb_enable"
-            app:iconSpaceReserved="false" />
-        <me.timschneeberger.rootlessjamesdsp.preference.MaterialSwitchPreference
-            android:key="pvb_x_s1m"
-            android:title="@string/pvb_x_s1m"
-            android:summary="@string/pvb_x_s1m_summary"
-            android:defaultValue="false"
-            android:dependency="pvb_vb_enable"
-            app:iconSpaceReserved="false" />
-        <me.timschneeberger.rootlessjamesdsp.preference.MaterialSwitchPreference
-            android:key="pvb_x_dense"
-            android:title="@string/pvb_x_dense"
-            android:summary="@string/pvb_x_dense_summary"
-            android:defaultValue="false"
-            android:dependency="pvb_vb_enable"
-            app:iconSpaceReserved="false" />
         <Preference
             android:key="pvb_x_feedback"
             android:title="@string/pvb_x_feedback"
