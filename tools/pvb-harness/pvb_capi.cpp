@@ -387,21 +387,9 @@ double pvb_ana_point_hz(int i, int n) { return pvb::anaPointHz(i, n); }
 
 // Virtual bass modules on their own (layer only), for the comparison with the Python reference.
 void* pvb_vb_create(int algo, int sampleRate) {
-    if(algo<0 || algo>=pvb::VB_ALGO_COUNT) return nullptr;
-    if(algo>=pvb::VB_ALPHA2_P1) {
-        auto* m=new pvb::VbHpv(true,true,1);
-        if(!m->configure(sampleRate) || !m->setAlpha2Profile(algo)) {delete m;return nullptr;}
-        return m;
-    }
-    pvb::VbModule* m = algo == pvb::VB_BANKSTOWN ? static_cast<pvb::VbModule*>(new pvb::VbBankstown())
-                                                 : static_cast<pvb::VbModule*>(new pvb::VbHpv(
-                                                     algo >= pvb::VB_HPV52M && algo <= pvb::VB_GENTLE_ADAPTIVE,
-                                                     algo >= pvb::VB_GENTLE && algo <= pvb::VB_GENTLE_ADAPTIVE,
-                                                     algo == pvb::VB_GENTLE_STRONG ? 1 : algo == pvb::VB_GENTLE_ADAPTIVE ? 2 : 0));
-    if (!m->configure(sampleRate)) {
-        delete m;
-        return nullptr;
-    }
+    if(!pvb::supportedVbAlgo(algo)) return nullptr;
+    auto* m=new pvb::VbHpv(true,true,1);
+    if(!m->configure(sampleRate) || !m->setAlpha2Profile(algo)) {delete m;return nullptr;}
     return m;
 }
 void pvb_vb_destroy(void* m) { delete static_cast<pvb::VbModule*>(m); }

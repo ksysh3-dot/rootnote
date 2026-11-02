@@ -409,7 +409,9 @@ void VbHpv::missingFrame52(int reason,bool fast) {
     if(!resultantOn_) addGrain52(static_cast<int64_t>(i_)+16,grain,agrain);
     if(harmonicCapture_) { harmonicTrace_.data[12]=static_cast<float>(n); harmonicTrace_.data[20]=static_cast<float>(std::sqrt(energy/32)); }
     if(devMeter_) devEndFrame();
+#if defined(PVB_HOST_RESULTANT_REFERENCE)
     if(resultantOn_) resultant_.hop(*this,false,nullptr,nullptr);   // a hop without a measurement (Absolute, NoPeak, Relative)
+#endif
 }
 
 double VbHpv::phaseDelta52(double f) const {
@@ -1038,7 +1040,9 @@ void VbHpv::pvFrame52() {
     histN52_[histCount_++]=n;
     if(!resultantOn_) addGrain52(centre,grain,agrain);
     if(devMeter_) devEndFrame();
+#if defined(PVB_HOST_RESULTANT_REFERENCE)
     if(resultantOn_) resultant_.hop(*this,true,src,ns);   // after the hop counter and the track list: the core reads both
+#endif
 }
 
 struct VbHpv::TrackTape52 {
@@ -1164,7 +1168,12 @@ double VbHpv::core52(double d) {
         for(int64_t j=std::max<int64_t>(0,t-90);j<=t+90;++j) ac=std::min(ac,max52_[j&(kRing-1)]);
     }
     double out=0,apv=0;
-    if(i>=defer) { if(resultantOn_) out=resultant_.take(i-defer); else takeGrain52(i-defer,out,apv); }
+    if(i>=defer) {
+#if defined(PVB_HOST_RESULTANT_REFERENCE)
+        if(resultantOn_) out=resultant_.take(i-defer); else
+#endif
+        takeGrain52(i-defer,out,apv);
+    }
     double as=envA_.tick(ac),ps=envP_.tick(apv);
     if(inject_.active(StageInject52::InjectEnvelope,i)) {as=inject_.as[i];ps=inject_.ps[i];}
     const double gain=apv>0?clampv(as/(ps+1e-9),0.,1.):0;
@@ -1206,7 +1215,9 @@ double VbHpv::core52(double d) {
     }
     if(devMeter_) devSnap_.gain=appliedGain;
     double y=preFilter;for(auto& s:out_) y=s.tick(y);
+#if defined(PVB_HOST_RESULTANT_REFERENCE)
     if(resultantOn_ && resultant_.hpOn()) y=resultant_.hpTick(y);   // Resultant 19.7: layer high-pass in series with the output band filter
+#endif
     if(harmonicReady_) {
         harmonicTrace_.data[17]=static_cast<float>(gen_.envelope?appliedGain:gain); harmonicTrace_.data[18]=static_cast<float>(poly52_);
         harmonicTrace_.data[19]=static_cast<float>(out);
@@ -1282,6 +1293,8 @@ void VbHpv::spectrum52(const double* ring, int64_t s0, double* re, double* im) {
 }
 
 // Resultant core (algorithm 15): defined here, in this translation unit, to use the helpers above and the privates of VbHpv
+#if defined(PVB_HOST_RESULTANT_REFERENCE)
 #include "pvb_resultant.inc"
+#endif
 
 

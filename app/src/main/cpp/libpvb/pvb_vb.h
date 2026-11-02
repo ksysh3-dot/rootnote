@@ -13,15 +13,11 @@
 //   - the latency is fixed for a given rate;
 //   - tick() is called once per frame, from the audio thread only.
 //
-// Algorithms:
-//   VbHpv        'hpv' from tools/pvb-harness/vb5 (frozen reference: tools/pvb-harness/vb_port/hpv_ref.py):
-//                mono input -> 3 kHz (polyphase, exact for 44.1 and 48 kHz) -> band 32-190 Hz -> causal median HPSS
-//                -> percussive part: 1-band analytic generator (u^k, k = 2..8); harmonic part: sinusoidal / phase
-//                vocoder path (128 ms frames, <= 4 peaks, harmonic k at phase k*Phi) with envelope imposition
-//                -> output band 150-600 Hz -> back to the host rate. Latency 146.9 ms (see hpv_ref.py).
-//   VbBankstown  chadmed/bankstown (MIT), per channel, no latency, on the EQ output:
-//                p = LP2(ceil)(HP2(floor)(x)), sat = K [blend tanh(s3 p) + (1 - blend) tanh(s2 p) (p <= 0)],
-//                K = pi / (0.5 + e), layer = LP2(3 ceil)(HP2(final_hp)(amt sat)); RBJ Butterworth biquads.
+// The app renders only P1 and the opt-in atomic P1+++ preset.
+// Older algorithms are recoverable at archive/models-pre-prune-20261102.
+// The optional fixed Resultant c source lives under tools/pvb-harness/reference.
+// VbHpv: mono -> 3 kHz -> causal HPSS -> tracked/percussive harmonics -> output band.
+// Existing P1 arithmetic and rate-conversion tables are retained for V0.
 //
 // Copyright (C) 2026 PVB project. Licensed under the GNU GPL v3 (same as RootlessJamesDSP).
 #pragma once
@@ -30,7 +26,6 @@
 #include <cmath>
 #include <cstdint>
 #include "pvb_dsp.h"
-#include "pvb_vb_policy.h"
 #include "pvb_harmonic_trace.h"
 #include "pvb_vb_continuity.h"
 #include "pvb_vb_modulation.h"
@@ -39,34 +34,21 @@
 #include "pvb_track_prediction.h"
 #include "pvb_track_protection.h"
 #include "pvb_harmonic_renderer.h"
+#if defined(PVB_HOST_RESULTANT_REFERENCE)
 #include "pvb_resultant.h"
+#endif
 
 namespace pvb {
 
-enum VbAlgo : int { VB_HPV = 0, VB_BANKSTOWN = 1, VB_HPV52M = 2, VB_GENTLE = 3,
-                   VB_GENTLE_STRONG = 4, VB_GENTLE_ADAPTIVE = 5,
-                   VB_ALPHA2_P1 = 6, VB_ALPHA2_D2 = 7, VB_ALPHA2_J2 = 8,
-                   VB_ALPHA2_OSC = 9, VB_ALPHA2_OSC_CORRECT = 10,
-                   // P1 with the P1+ research flags 6 (phase hold + centred HPSS, +26.7 ms) and P1++ v0.2
-                   // (flags 6, impact mode 4): app models, "실험" (research/p1pp, docs/P1PP_RESEARCH.md)
-                   VB_ALPHA2_P1_PLUS = 11, VB_ALPHA2_P1PP = 12,
-                   // P1++ v0.3: flags 6, impact mode 8 (research/p1pp/2026-10-26-v03)
-                   VB_ALPHA2_P1PP_V03 = 13,
-                   // P1 + C1: P1 (no research flags) with the power-sum nominal amplitude of the envelope target
-                   // (study 2, #4, tag s2-v1-final)
-                   VB_ALPHA2_P1_C1 = 14,
-                   // Resultant core (docs/RESULTANT_CORE.md): P1's front end (tracker, tables, phase calibration, percussive
-                   // layer) and a new sustained-layer path; vbAlpha2_ with resultantOn_. Experimental app model 15 at the
-                   // defaults of pvb_resultant.h; its research parameters are reachable only through the host API
-                   VB_RESULTANT = 15,
-                   // Resultant core v1.6-c (docs/RESULTANT_CORE.md 19.2.2, 19.5, 19.8): algorithm 15 with the research
-                   // parameters capRho 1.5, windowCreep 16, creepMode 2, betaMin .05, betaMax .1, psiSlew .03 and the layer
-                   // high-pass 150 Hz, order 8, compensated, applied on entering the algorithm and replaced by the
-                   // pvb_resultant.h defaults on leaving it. Experimental app model 16
-                   VB_RESULTANT_V16 = 16,
-                   // Resultant core v1.6-d (docs/RESULTANT_CORE.md 20.8): algorithm 16 plus renderFreqMode 1 (renderTauMs 10),
-                   // the render phase integrating a low-passed tracked frequency. Experimental app model 17
-                   VB_RESULTANT_V16D = 17, VB_ALGO_COUNT };
+// Stable JNI IDs: deleted slots 0-5, 7-15 and 17 stay reserved, never reused.
+enum VbAlgo : int { VB_ALPHA2_P1 = 6, VB_RESULTANT_V16 = 16, VB_ALGO_COUNT = 18 };
+inline bool supportedVbAlgo(int id) {
+    return id == VB_ALPHA2_P1
+#if defined(PVB_HOST_RESULTANT_REFERENCE)
+        || id == VB_RESULTANT_V16
+#endif
+        ;
+}
 
 // Scene observations are unvalidated. Only the opt-in adaptive profile uses
 // them to select a harmonic attenuation budget; they are not buzz labels.
@@ -299,7 +281,11 @@ public:
     bool setAlpha2Profile(int algorithm);
     // Algorithms 16 and 17 only: back to the pvb_resultant.h defaults when the engine leaves them for a module that does
     // not call setAlpha2Profile (setAlpha2Profile does it itself for every other profile). Realtime safe.
-    void leaveResultantSet() { if(resultantSet_) { resultant_.setParams(nullptr,0); resultantSet_=false; } }
+    void leaveResultantSet() {
+#if defined(PVB_HOST_RESULTANT_REFERENCE)
+        if(resultantSet_) { resultant_.setParams(nullptr,0); resultantSet_=false; }
+#endif
+    }
     void setStageCapture(StageCapture52::Sink sink,void* user) {stageSink_=sink;stageUser_=user;}
     // Host-only study 1 (#4) counterfactuals: replace the selected HPSS outputs (InjectHpss, inside [hStart,hEnd)
     // of the core clock) and/or the envelope targets (InjectEnvelope, inside [eStart,eEnd)) by host buffers indexed
@@ -337,9 +323,15 @@ public:
 
     // Resultant core (algorithm 15, host research only): parameters (see ResultantCore::kParams) in the order of docs/RESULTANT_CORE.md 5.8 (false:
     // out of range, nothing applied; kept for any algorithm), and the per-hop voice trace (allocation in enable only).
-    bool setResultantParams(const double* v, int n) { return resultant_.setParams(v, n); }
+#if defined(PVB_HOST_RESULTANT_REFERENCE)
+    bool setResultantParams(const double*, int) { return false; } // fixed c only; no arbitrary variants
     bool resultantTraceEnable(int hops) { return resultant_.traceEnable(hops); }
     int resultantTraceCopy(double* out, int capacity) const { return resultant_.traceCopy(out, capacity); }
+#else
+    bool setResultantParams(const double*, int) { return false; }
+    bool resultantTraceEnable(int) { return false; }
+    int resultantTraceCopy(double*, int) const { return 0; }
+#endif
 
     // Developer mode (masked modules only; ignored by the legacy hpv). No allocation; filter memory is kept.
     void setDev(const DevVoicing& d) override;
@@ -404,27 +396,20 @@ private:
     void pvFrame52();
     int polyCausal52(int64_t s0);
     void spectrum52(const double* ring, int64_t start, double* re, double* im);
-    bool masked_ = false;
-    bool gentle_ = false;
-    int upperMode_ = 0; // 0 fixed12, 1 fixed24, 2 experimental adaptive12/24
-    UpperHarmonicPolicy upperPolicy_;
+    const bool masked_ = true;
+    const bool gentle_ = true;
+    static constexpr int upperMode_ = 1; // P1 fixed 24 dB/oct
     VbResearchStats research_;
     void observeScene(int scene) {
         if (!gentle_) return;
         research_.scene = scene;
         ++research_.frames[scene];
-        if(upperMode_==2) {
-            upperPolicy_.step(scene==VB_SCENE_STEADY);
-            research_.upperBlend=upperPolicy_.blend();
-            research_.upperTarget=upperPolicy_.target();
-            research_.transitions=upperPolicy_.switches();
-        }
+
     }
     const RampedSvf* eq52_[4] = {};
     int eqFs52_ = 48000;
     double phaseDelta52(double f) const;
     void hpssFrame();            // a 192-sample HPSS frame is complete
-    void pvFrame();              // a 384-sample vocoder frame is complete
     void lookup(double f, double* wk, double& gk) const;
     void fft64(double* re, double* im) const;                   // in place, natural order in and out
     void dft192(const double* xr, const double* xi, double* yr, double* yi, int nOut);  // forward, first nOut bins
@@ -595,7 +580,9 @@ private:
     GenResearch52 gen_;
     GenResearch52 genReq_;   // what setGenResearch / setGenEnvelope asked for; gen_ equals it except while resultantOn_
     // Resultant core: algorithm 15 skips P1's grain renderer and reads its voices' output instead (setAlpha2Profile)
+#if defined(PVB_HOST_RESULTANT_REFERENCE)
     ResultantCore resultant_;
+#endif
     bool resultantOn_=false;
     bool resultantSet_=false;   // resultant_ holds the parameter set of algorithm 16 or 17 (applied by setAlpha2Profile)
     double genGain_=0, genFastE_=0, genSlowE_=0, lastFc_=60, lastGk_=0;
@@ -624,44 +611,4 @@ private:
     void devEndFrame() { for(int i=0;i<devFrame_.n;++i) devSnap_.add(devFrame_.f[i],devFrame_.amp[i],devFrame_.sum[i]); }
 };
 
-// ------------------------------------------------------------------------------------------------ Bankstown
-struct BankstownParams {  // defaults: Asahi Linux tuning for the MacBook Pro 14 (to be replaced by phone values)
-    double amt = 1.45;
-    double s2 = 1.35;
-    double s3 = 2.25;
-    double blend = 0.67;
-    double floorHz = 20.0;
-    double ceilHz = 200.0;
-    double finalHpHz = 200.0;
-};
-
-class VbBankstown final : public VbModule {
-public:
-    bool configure(int sampleRate) override;
-    void reset() override;
-    int latencyFrames() const override { return 0; }
-    bool inputAfterEq() const override { return true; }
-    void tick(double inL, double inR, double& outL, double& outR) override;
-
-    BankstownParams params;  // read at configure()
-
-private:
-    struct Biquad {
-        double b0 = 1, b1 = 0, b2 = 0, a1 = 0, a2 = 0, z0 = 0, z1 = 0;
-        inline double tick(double x) {
-            const double y = b0 * x + z0;
-            z0 = b1 * x - a1 * y + z1;
-            z1 = b2 * x - a2 * y;
-            return y;
-        }
-    };
-    static Biquad rbj(double fs, double f, bool lowpass);
-    double chan(int c, double x);
-    Biquad hp_[2], lp_[2], hpOut_[2], lpOut_[2];
-    double k_ = 0;
-    int sr_ = 0;
-};
-
 }  // namespace pvb
-
-

@@ -32,3 +32,6 @@ tools/pvb-harness/study/private/
 /tools/rootfx/build/
 /tools/rootfx/build-android/
 /dist-root/
+
+# Explicit fixed Resultant reference host build (local binaries only)
+/tools/pvb-harness/build-reference/

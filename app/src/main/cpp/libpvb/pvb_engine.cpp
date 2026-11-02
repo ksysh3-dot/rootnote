@@ -80,14 +80,19 @@ void sanitizeParams(float* v) {
     v[P_GATE_DB] = clampv(v[P_GATE_DB], -120.f, 0.f);
     v[P_TAG] = std::nearbyint(clampv(v[P_TAG], 0.f, 1.0e7f));
     v[P_VB_ON] = v[P_VB_ON] >= 0.5f ? 1.f : 0.f;
-    v[P_VB_ALGO] = clampv(std::nearbyint(v[P_VB_ALGO]), 0.f, static_cast<float>(VB_ALGO_COUNT - 1));
+    v[P_VB_ALGO] = (v[P_VB_ALGO] == VB_ALPHA2_P1
+#if defined(PVB_HOST_RESULTANT_REFERENCE)
+        || v[P_VB_ALGO] == VB_RESULTANT_V16
+#endif
+        )
+        ? v[P_VB_ALGO] : static_cast<float>(VB_ALPHA2_P1);
     v[P_VB_LEVEL_DB] = clampv(v[P_VB_LEVEL_DB], -120.f, 12.f);
     v[P_DIAGNOSTIC_SOLO] = v[P_DIAGNOSTIC_SOLO] >= 0.5f ? 1.f : 0.f;
     v[P_FLAT] = v[P_FLAT] >= 0.5f ? 1.f : 0.f;
     v[P_MATCH_HOLD] = v[P_MATCH_HOLD] >= 0.5f ? 1.f : 0.f;
     v[P_MATCH_SEED_DB] = clampv(v[P_MATCH_SEED_DB], static_cast<float>(LoudnessMatcher::kMinDb),
                                 static_cast<float>(LoudnessMatcher::kMaxDb));
-    for (int i : {P_X_SMOOTH, P_X_RISE, P_X_S1M, P_X_DENSE}) v[i] = v[i] >= 0.5f ? 1.f : 0.f;
+    for (int i : {P_X_SMOOTH, P_X_RISE, P_X_S1M, P_X_DENSE}) v[i] = 0.f; // reserved, retired
     // Developer mode: hard engine limits (the app's sliders stay inside them).
     v[P_DEV_ON] = v[P_DEV_ON] >= 0.5f ? 1.f : 0.f;
     v[P_DEV_METER] = v[P_DEV_METER] >= 0.5f ? 1.f : 0.f;
@@ -153,7 +158,7 @@ void defaultParams(float* v) {
     v[P_GATE_DB] = 0.f;          // output gate open
     v[P_TAG] = 0.f;
     v[P_VB_ON] = 0.f;            // virtual bass: off (experimental)
-    v[P_VB_ALGO] = 0.f;          // hpv
+    v[P_VB_ALGO] = VB_ALPHA2_P1; // stable default, including short JNI/root packets
     v[P_VB_LEVEL_DB] = 0.f;      // 'faithful' level
     v[P_FLAT] = 0.f;             // bypass = the plain input
     v[P_MATCH_HOLD] = 0.f;
@@ -386,14 +391,10 @@ int Engine::vbWanted() const {
 }
 
 bool Engine::genWanted(int algo) const {
-    return algo == VB_ALPHA2_P1 && active_[P_X_S1M] >= 0.5f;
+    (void)algo; return false; // retired S1m app option; slot 31 reserved
 }
 
 // Experimental layer options: only while a virtual bass algorithm is in the path (they blend out otherwise).
-void Engine::updateCondWanted() {
-    const bool vb = vbCur_ >= 0;
-    cond_.setWanted(vb && active_[P_X_SMOOTH] >= 0.5f, vb && active_[P_X_RISE] >= 0.5f, vb && active_[P_X_DENSE] >= 0.5f);
-}
 
 bool Engine::vbSwitchPending() const {
     const int w = vbWanted();
@@ -410,13 +411,11 @@ void Engine::vbApply(int algo, bool force) {
     const int prev = vbCur_;
     vbCur_ = algo;
     // Leaving algorithm 16 or 17 for a module that setAlpha2Profile does not serve: the Resultant parameters go back to the defaults.
-    if ((prev == VB_RESULTANT_V16 || prev == VB_RESULTANT_V16D) && algo < VB_ALPHA2_P1) vbAlpha2_.leaveResultantSet();
+    if ((prev == VB_RESULTANT_V16) && algo < VB_ALPHA2_P1) vbAlpha2_.leaveResultantSet();
     // vbAlpha2_ serves all five Alpha2 profiles: the S1m envelope is set (or cleared) before the profile resets it.
     genCur_ = gen;
     // Host research (setGenResearch) keeps its own GenResearch52; the app option never overrides it.
     if (!genHost_) vbAlpha2_.setGenEnvelope(gen);
-    cond_.clearDetectors();
-    updateCondWanted();
     if (algo >= VB_ALPHA2_P1) vbAlpha2_.setAlpha2Profile(algo);
     else if (algo >= 0) vbMods_[algo]->reset();
     vbDelay_ = algo >= 0 ? clampv(vbMods_[algo]->latencyFrames(), 0, kVbDelayLen - 1) : 0;
@@ -441,12 +440,12 @@ void Engine::applyDev(const float* v) {
     }
     if (d != devApplied_) {
         devApplied_ = d;
-        for (VbHpv* m : {&vb52_, &vbGentle_, &vbGentleStrong_, &vbGentleAdaptive_, &vbAlpha2_}) m->setDev(d);
+        for (VbHpv* m : {&vbAlpha2_}) m->setDev(d);
     }
     const bool meter = v[P_DEV_METER] >= 0.5f;
     if (meter != devMeterOn_) {
         devMeterOn_ = meter;
-        for (VbModule* m : vbMods_) m->setDevMeter(meter);
+        for (VbModule* m : vbMods_) if(m) m->setDevMeter(meter);
         for (auto& st : sDevLp_) st.reset();
         sDevBpDry_.reset(); sDevBpLay_.reset();
         devBinDry_ = devBinLay_ = devPowDry_ = devPowLay_ = 0.0;
@@ -477,14 +476,12 @@ void Engine::configure(int sampleRate) {
     limSolo_.configure(sr_, kLookaheadMs);
     limFlat_.configure(sr_, kLookaheadMs);  // same latency as lim_: the flat path stays aligned with wet and dry
     match_.configure(sr_);
-    cond_.configure(sr_);
     xtc_.setSampleRate(sr_);
-    for (int a = 0; a < VB_ALGO_COUNT; ++a)
-        vbOk_[a] = a > VB_ALPHA2_P1 ? vbOk_[VB_ALPHA2_P1] : vbMods_[a]->configure(sr_);
-    vb52_.bindEq(&hp_, &lo_, &hi_, &hs_, sr_);
-    vbGentle_.bindEq(&hp_, &lo_, &hi_, &hs_, sr_);
-    vbGentleStrong_.bindEq(&hp_, &lo_, &hi_, &hs_, sr_);
-    vbGentleAdaptive_.bindEq(&hp_, &lo_, &hi_, &hs_, sr_);
+    std::fill(std::begin(vbOk_),std::end(vbOk_),false);
+    vbOk_[VB_ALPHA2_P1]=vbAlpha2_.configure(sr_);
+#if defined(PVB_HOST_RESULTANT_REFERENCE)
+    vbOk_[VB_RESULTANT_V16]=vbOk_[VB_ALPHA2_P1];
+#endif
     vbAlpha2_.bindEq(&hp_, &lo_, &hi_, &hs_, sr_);
     srMeter_.store(sr_, std::memory_order_relaxed);
     phone_.configure(sr_);
@@ -571,7 +568,6 @@ void Engine::resetState() {
     vbPhase_ = VB_STEADY;
     vbX_.snap(1.0);
     if (vbCur_ >= 0) vbMods_[vbCur_]->reset();
-    cond_.clearDetectors();
     xtc_.hardReset();
 }
 
@@ -711,7 +707,7 @@ void Engine::process(float* io, int frames) {
     peak42InputSamples_ = capture && frames<=kResearchCaptureFrames ? frames*6 : 0;
     peak44InputSamples_=capture && frames<=kResearchCaptureFrames?frames*5:0;
     harmonicCount_=0; harmonicOverflow_=false;
-    for(auto* module:vbMods_) module->setHarmonicCapture(capture);
+    for(auto* module:vbMods_) if(module) module->setHarmonicCapture(capture);
     double powers[5] = {}, peaks[5] = {}, mainMin = 1.0, extraMin = 1.0;
     if (capture) {
         std::fill(std::begin(diagnosticTrace_), std::end(diagnosticTrace_), 0.f);
@@ -730,7 +726,6 @@ void Engine::process(float* io, int frames) {
     uint64_t openBlock = 0;
     const bool dynOn = active_[P_DYN_ON] >= 0.5f;
     if (!dynOn) dynOff_ = 0.0;
-    updateCondWanted();  // new parameters (vbApply updates it when the algorithm changes mid-block)
     const double s1mTrim = dbToLin(kS1mTrimDb);
     // Display-only phone model: only while its meters are read (it starts fresh when it starts again).
     const bool phoneOn = tapBase < phoneUntil_.load(std::memory_order_relaxed);
@@ -855,11 +850,6 @@ void Engine::process(float* io, int frames) {
             else m->tick(xl, xr, layL, layR);
             // Experimental options (all off: neither branch runs, the layer is untouched).
             if (genCur_) { layL *= s1mTrim; layR *= s1mTrim; }
-            if (!cond_.idle()) {
-                const double cg = cond_.tick(layL, layR, 0.5 * (alignedL + alignedR));
-                layL *= cg;
-                layR *= cg;
-            }
             if(capture) if(const auto* hop=m->takeHarmonicTrace()) {
                 if(harmonicCount_>=HarmonicTrace::kBlockRows) harmonicOverflow_=true;
                 else {
@@ -1094,7 +1084,6 @@ void Engine::process(float* io, int frames) {
     }
     if (dynEnv_ < 1e-24) dynEnv_ = 0.0;
     if (matchOn) match_.flushTiny();
-    cond_.flushTiny();
     if (devMeterOn_) {
         for (auto& st : sDevLp_) st.flushTiny();
         sDevBpDry_.flushTiny(); sDevBpLay_.flushTiny();

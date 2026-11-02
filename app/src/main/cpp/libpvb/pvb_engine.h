@@ -30,7 +30,6 @@
 
 #include "pvb_analysis.h"
 #include "pvb_dsp.h"
-#include "pvb_layer_condition.h"
 #include "pvb_vb.h"
 #include "pvb_xtc.h"
 #include "pvb_layer_peak42.h"
@@ -67,26 +66,22 @@ enum Param : int {
     P_GATE_DB,        // final output gate after the dry/wet mix, dB (0 = open; <= -90 = silent). Glides over RAMP_MS.
     P_TAG,            // opaque condition tag (integer); openMs() counts audible time per tag (blind comparison)
     P_VB_ON,          // virtual bass (experimental): 1 = the algorithm below is in the path (with its latency)
-    P_VB_ALGO,        // IDs0-5 legacy; 4 Alpha2 reference,6 P1,7 D2,8 J2,9 free oscillator,10 corrected oscillator,
-                      // 11 P1+, 12 P1++ v0.2, 13 P1++ v0.3, 14 P1 + C1, 15 Resultant core v1.5 (experimental),
-                      // 16 Resultant core v1.6-c (experimental: 15 with the v1.6-c parameter set),
-                      // 17 Resultant core v1.6-d (experimental: 16 with the render-only frequency, renderFreqMode 1)
+    P_VB_ALGO,        // stable native ID 6 (P1); 0-5/7-17 reserved in app
     P_VB_LEVEL_DB,    // layer level re the 'faithful' level, dB (-120..+12; the app offers -6..+9); <= -90 = layer
                       // silent (algorithm and latency stay)
     P_FLAT,           // 1 = the bypass path is 'flat' (input x loudness-match gain, limiter) instead of the plain input
     P_MATCH_HOLD,     // 1 = the loudness match keeps its value (blind comparison: other settings play meanwhile)
     P_MATCH_SEED_DB,  // loudness-match gain until the first measurement (the value saved last time), -30..+3 dB
     P_DIAGNOSTIC_SOLO, // generated layer monitor; ordinary full mix continues driving analysis/match/limiter
-    // Experimental layer options (1 = on, default 0 = off; all off = bit-identical to the engine without them).
-    // Only while virtual bass is in the path. See pvb_layer_condition.h.
-    P_X_SMOOTH,       // "층 출렁임 완화": cut the layer where its 5 ms envelope exceeds its 500 ms envelope
-    P_X_RISE,         // "급상승 완화": limit how fast the layer envelope may rise (150 ms), cut only
-    P_X_S1M,          // "배음별 단일 포락선" (S1m): P1 only; one envelope per harmonic (GenResearch52) and -2 dB layer
-    P_X_DENSE,        // "복합음 감응 세기": up to -6 dB while the dry 500-4000 Hz band is louder than usual
+    // Retired X_* ABI slots. Stored/direct packets always sanitize these to zero.
+    P_X_SMOOTH,       // reserved legacy slot; always 0
+    P_X_RISE,         // reserved legacy slot; always 0
+    P_X_S1M,          // reserved legacy slot; always 0
+    P_X_DENSE,        // reserved legacy slot; always 0
     // Developer mode ("개발자 모드", general build). P_DEV_ON = 0: every P_D_* value is ignored and the output is
     // bit-identical to the engine without them. P_DEV_ON = 1 with every P_D_* at its default is bit-identical too: a
     // value only changes the processing while it differs from the model (DevVoicing in pvb_vb.h). The voicing acts on
-    // the hpv52m-family models (all app models); attack/release on the P1 family (continuity envelope) only.
+    // P1 generator; P1+++ locks developer voicing OFF.
     // P_DEV_ON also caps the limiter ceiling at -1 dBTP; the limiter itself can never be bypassed.
     P_DEV_ON,
     P_DEV_METER,        // 1 = compute the developer-mode meters (copyDevMeters); display only, never changes the output
@@ -97,7 +92,7 @@ enum Param : int {
     P_D_H3_DB,
     P_D_H4_DB,
     P_D_H5_DB,
-    P_D_ROLLOFF_DB_OCT, // added to the sustained upper roll-off above 220 Hz (model 24 dB/oct, 12 for gentle12), dB/oct
+    P_D_ROLLOFF_DB_OCT, // added to the sustained upper roll-off above 220 Hz (model 24 dB/oct), dB/oct
     P_D_SUST_DB,        // sustained (vocoder) path gain, dB
     P_D_PERC_DB,        // percussive (analytic) path gain, dB
     P_D_ATTACK_MS,      // P1-family track life attack (rounded to 16/3 ms hops; model 2 hops)
@@ -208,7 +203,7 @@ public:
     static constexpr int kDevMeterSize = kDevFields + 2 * kDevRing;
     int copyDevMeters(float* out, int capacity) const;
     void setModulationResearch(int mode, bool tonalOnly=false) {
-        for(VbHpv* m : {&vb52_, &vbGentle_, &vbGentleStrong_, &vbGentleAdaptive_}) m->setModulationResearch(mode,tonalOnly);
+        for(VbHpv* m : {&vbAlpha2_}) m->setModulationResearch(mode,tonalOnly);
     }
     // Before processing, host only. Only profile 6 may apply these controls.
     bool setPhase41(int mode,double* trace,int capacity) { return vbAlpha2_.setPhase41(mode,trace,capacity); }
@@ -273,14 +268,14 @@ public:
     bool resultantTraceEnable(int hops) { return vbAlpha2_.resultantTraceEnable(hops); }
     int resultantTraceCopy(double* out, int capacity) const { return vbAlpha2_.resultantTraceCopy(out, capacity); }
     void setContinuityResearch(const ContinuityParams& p) {
-        for(VbHpv* m : {&vb52_, &vbGentle_, &vbGentleStrong_, &vbGentleAdaptive_}) m->setContinuityResearch(p);
+        for(VbHpv* m : {&vbAlpha2_}) m->setContinuityResearch(p);
     }
     // Host-only study 1 (#4): counterfactual injection on the P1 research profile (ID 6) only.
     void setStageInject(const VbHpv::StageInject52& v) { vbAlpha2_.setStageInject(v); }
     void setTrackTape(VbHpv::TrackTape52* t,int mode,int64_t startHop,int64_t endHop,double tol) {
         vbAlpha2_.setTrackTape(t,mode,startHop,endHop,tol); }
     void setStageResearch(unsigned flags,StageCapture52::Sink sink=nullptr,void* user=nullptr) {
-        for(VbHpv* m : {&vb52_, &vbGentle_, &vbGentleStrong_, &vbGentleAdaptive_}) m->setStageResearch(flags,sink,user);
+        for(VbHpv* m : {&vbAlpha2_}) m->setStageResearch(flags,sink,user);
         // P1 (ID 6) is the host research profile: allow an explicit stage probe
         // to compare greedy and global track assignment in the *same* engine.
         // Fixed app profiles (IDs 11-13) remain capture-only and unaffected.
@@ -294,7 +289,7 @@ public:
     // Host research only (gen-s1s2): S1/S2 generator variants on the app profiles. Not reachable from JNI.
     // While set (any field on), the app option P_X_S1M no longer changes the generator (its -2 dB trim still applies).
     void setGenResearch(const GenResearch52& g) {
-        for(VbHpv* m : {&vb52_, &vbGentle_, &vbGentleStrong_, &vbGentleAdaptive_, &vbAlpha2_}) m->setGenResearch(g);
+        for(VbHpv* m : {&vbAlpha2_}) m->setGenResearch(g);
         genHost_ = g.envelope || g.bursts;
     }
 
@@ -332,7 +327,6 @@ private:
     int vbWanted() const;
     bool genWanted(int algo) const;   // S1m for this algorithm (P1 only)
     bool vbSwitchPending() const;     // algorithm or S1m differs from what runs
-    void updateCondWanted();
     void vbApply(int algo, bool force);
     void updateLatency();
     void applyDev(const float* v);
@@ -411,23 +405,21 @@ private:
     // latency so the music continues where it stopped (no repeat), then fades in. Switching to less latency skips
     // that much music. While the output is silent (muted blind comparison, reset) the switch is immediate.
     enum VbPhase { VB_STEADY, VB_FADE_OUT, VB_HOLD, VB_FADE_IN };
-    VbHpv vbHpv_;
-    VbBankstown vbBank_;
-    VbHpv vb52_{true};
-    VbHpv vbGentle_{true, true};
-    VbHpv vbGentleStrong_{true, true, 1};
-    VbHpv vbGentleAdaptive_{true, true, 2};
-    // The five exclusive Alpha2 profiles share one allocation; only the selected model ticks.
     VbHpv vbAlpha2_{true, true, 1};
-    VbModule* vbMods_[VB_ALGO_COUNT] = {&vbHpv_, &vbBank_, &vb52_, &vbGentle_, &vbGentleStrong_, &vbGentleAdaptive_,
-                                     &vbAlpha2_, &vbAlpha2_, &vbAlpha2_, &vbAlpha2_, &vbAlpha2_, &vbAlpha2_, &vbAlpha2_, &vbAlpha2_,
-                                     &vbAlpha2_, &vbAlpha2_, &vbAlpha2_, &vbAlpha2_};
+    // Sparse stable IDs. Only slot 6 is populated in Android/JNI builds.
+    VbModule* vbMods_[VB_ALGO_COUNT] = {nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,&vbAlpha2_,
+        nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,
+#if defined(PVB_HOST_RESULTANT_REFERENCE)
+        &vbAlpha2_,
+#else
+        nullptr,
+#endif
+        nullptr};
     bool vbOk_[VB_ALGO_COUNT] = {};   // available at the current rate
     int vbCur_ = -1;                  // algorithm in the signal path, -1 = none
     bool genCur_ = false;             // S1m running in vbAlpha2_ (P1 only); switched like an algorithm (faded)
     bool genHost_ = false;            // host research hook set (setGenResearch): leave vbAlpha2_'s GenResearch52 alone
     Xtc xtc_;                         // crosstalk cancellation (P_XTC_*), first in the processed path
-    LayerConditioner cond_;           // experimental layer options (P_X_SMOOTH, P_X_RISE, P_X_DENSE)
     int vbDelay_ = 0;                 // frames the chain's input is delayed by while vbCur_ >= 0
     VbPhase vbPhase_ = VB_STEADY;
     int vbHold_ = 0;
