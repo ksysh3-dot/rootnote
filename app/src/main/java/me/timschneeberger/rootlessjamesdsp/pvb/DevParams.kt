@@ -47,6 +47,8 @@ data class DevSpec(
     val highlight: DevHighlight,
 ) {
     val isSwitch: Boolean get() = unit == DevUnit.SWITCH
+    fun displayValue(actual: Float): Float = if (this === DevParams.STRENGTH) StrengthDisplay.UI.toDisplay(actual) else actual
+    fun actualValue(display: Float): Float = if (this === DevParams.STRENGTH) StrengthDisplay.UI.toActual(display) else display
     /** Number of steps from [min] to [max] (share code index range 0..steps). */
     val steps: Int get() = if (isSwitch) 1 else ((max - min) / step).roundToInt()
 

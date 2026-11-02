@@ -59,7 +59,7 @@ fun main(args: Array<String>) {
     val root = File(args[0])
     val home = File(root, "app/src/general/java/me/timschneeberger/rootlessjamesdsp/home/HomeScreen.kt").readText()
     val dev = File(root, "app/src/general/java/me/timschneeberger/rootlessjamesdsp/devmode/DevModeActivity.kt").readText()
-    expect(home.contains("min = PvbSettings.VB_LEVEL_MIN.toInt()"), "strength slider missing negative minimum")
+    // The production widget display range is checked by StrengthDisplayTest (including nonzero offsets).
     expect(home.contains("range = min.toFloat()..max.toFloat()"), "slider track ignores minimum")
     expect(home.contains("(state.level - 1).coerceAtLeast(PvbSettings.VB_LEVEL_MIN.toInt())"), "limiter suggestion raises negative level")
     expect(dev.contains("write(DevParams.STRENGTH, DevParams.lowerStrength(cur))"), "lower2 UI ignores common floor")

@@ -112,6 +112,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import me.timschneeberger.rootlessjamesdsp.R
 import me.timschneeberger.rootlessjamesdsp.pvb.HomeLogic
+import me.timschneeberger.rootlessjamesdsp.pvb.StrengthDisplay
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbSettings
 import kotlin.math.roundToInt
 import me.timschneeberger.rootlessjamesdsp.ui.RnMotion
@@ -145,6 +146,7 @@ data class HomeUiState(
     val masterOn: Boolean,
     /** Profile name of a measured phone, or null (unmeasured: conservative settings). */
     val measuredDeviceName: String?,
+    /** Actual dB; convert at the widget boundary. */
     val level: Int,
     val levelMax: Int,
     val chip: HomeLogic.Chip,
@@ -167,6 +169,7 @@ data class HomeUiState(
     val xtcBalHiDb: Float = 0f,
     /** The limiter has been working much of the time with virtual bass on (HomeLogic.limiterPressure). */
     val limiterPressure: Boolean = false,
+    val fixedStrength: Boolean = false,
 )
 
 class HomeActions(
@@ -367,7 +370,7 @@ private fun BassSection(state: HomeUiState, actions: HomeActions, modifier: Modi
         )
         SwitchRow(
             checked = state.linkOn,
-            enabled = state.masterOn,
+            enabled = state.masterOn && !state.fixedStrength,
             onCheckedChange = actions.onLink,
             minHeight = 72.dp,
             padding = PaddingValues(horizontal = 16.dp, vertical = 14.dp),
@@ -377,10 +380,10 @@ private fun BassSection(state: HomeUiState, actions: HomeActions, modifier: Modi
                     stringResource(R.string.home_link_title),
                     color = c.textPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold, lineHeight = 22.sp,
                 )
-                Text(linkText(state.linkLine), color = c.textSecondary, fontSize = 13.sp, lineHeight = 18.sp)
+                Text(if (state.fixedStrength) stringResource(R.string.pvb_strength_not_applicable) else linkText(state.linkLine), color = c.textSecondary, fontSize = 13.sp, lineHeight = 18.sp)
             }
         }
-        if (state.limiterPressure && state.masterOn && state.level > 0) PressureTip(state, actions)
+        if (state.limiterPressure && state.masterOn && !state.fixedStrength && state.level > 0) PressureTip(state, actions)
         HoldWithoutVbRow(enabled = state.masterOn && state.processingOn, onHold = actions.onHoldWithoutVb)
         // A phone without a measured profile: the EQ balance first, virtual bass as a spice on top.
         if (state.measuredDeviceName == null) SpiceTip(actions)
@@ -703,7 +706,7 @@ private fun headlineText(h: HomeLogic.Headline): String = stringResource(
 @Composable
 private fun linkText(line: HomeLogic.LinkLine): String = when (line) {
     is HomeLogic.LinkLine.Reduced -> stringResource(
-        R.string.home_link_reduced, line.volumePct, HomeLogic.signedDb(-line.reductionDb), HomeLogic.signedDb(line.appliedDb),
+        R.string.home_link_reduced, line.volumePct, HomeLogic.signedDb(-line.reductionDb), HomeLogic.signedDb(StrengthDisplay.UI.toDisplay(line.appliedDb)),
     )
     is HomeLogic.LinkLine.NoReduction -> stringResource(R.string.home_link_none, line.volumePct)
     HomeLogic.LinkLine.VolumeUnknown -> stringResource(R.string.home_link_unknown)
@@ -731,7 +734,8 @@ private fun chipHint(chip: HomeLogic.Chip): String = stringResource(
 private fun StrengthSection(state: HomeUiState, actions: HomeActions) {
     val c = LocalPalette.current
     val title = stringResource(R.string.home_strength_title)
-    val valueText = stringResource(R.string.home_db_value, HomeLogic.levelLabel(state.level))
+    val valueText = if (state.fixedStrength) stringResource(R.string.pvb_strength_not_applicable)
+        else stringResource(R.string.home_db_value, HomeLogic.levelLabel(state.level))
     Column(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 8.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(
@@ -741,19 +745,20 @@ private fun StrengthSection(state: HomeUiState, actions: HomeActions) {
             // The number changes at once, with a short crossfade.
             Crossfade(targetState = state.level, animationSpec = rn(RnMotion.Seed.color()), label = "level") { level ->
                 Text(
-                    stringResource(R.string.home_db_value, HomeLogic.levelLabel(level)),
+                    if (state.fixedStrength) stringResource(R.string.pvb_strength_not_applicable)
+                    else stringResource(R.string.home_db_value, HomeLogic.levelLabel(level)),
                     color = c.accentText, fontSize = 16.sp, fontWeight = FontWeight.Bold, lineHeight = 22.sp,
                 )
             }
         }
         StepSlider(
-            value = state.level,
-            min = PvbSettings.VB_LEVEL_MIN.toInt(),
-            max = state.levelMax,
-            enabled = state.masterOn,
+            value = StrengthDisplay.UI.sliderValue(state.level.toFloat(), state.levelMax.toFloat()).toInt(),
+            min = StrengthDisplay.UI.toDisplay(PvbSettings.VB_LEVEL_MIN).toInt(),
+            max = StrengthDisplay.UI.toDisplay(state.levelMax.toFloat()).toInt(),
+            enabled = state.masterOn && !state.fixedStrength,
             label = title,
             valueText = valueText,
-            onChange = actions.onLevel,
+            onChange = { actions.onLevel(StrengthDisplay.UI.toActual(it.toFloat(), state.levelMax.toFloat()).toInt()) },
         )
         FlowRow(
             modifier = Modifier.fillMaxWidth().selectableGroup(),
@@ -763,7 +768,7 @@ private fun StrengthSection(state: HomeUiState, actions: HomeActions) {
                 PresetChip(
                     label = chipLabel(chip),
                     selected = state.chip == chip,
-                    enabled = state.masterOn,
+                    enabled = state.masterOn && !state.fixedStrength,
                     onClick = { actions.onChip(chip) },
                 )
             }

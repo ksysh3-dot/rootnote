@@ -18,10 +18,13 @@ object LiveAbComparisons {
         val trimDb: Float,
         val trimMeasured: Boolean,
         private val labelOf: (PvbSettings) -> String,
+        private val strengthOf: ((PvbSettings) -> Float)? = null,
         val apply: (PvbSettings) -> PvbSettings,
     ) {
         /** Display label with the user's current slider value (e.g. "P1 +6 dB"). */
-        fun label(base: PvbSettings): String = labelOf(base)
+        fun label(base: PvbSettings): String = displayLabel(id, labelOf(base), strengthOf?.invoke(base))
+        /** Stable actual-dB text in research records and runtime conditions. */
+        fun actualLabel(base: PvbSettings): String = labelOf(base)
     }
 
     class Comparison(
@@ -33,7 +36,7 @@ object LiveAbComparisons {
     ) {
         /** The engine-facing condition of one side, labelled for this run. */
         fun condition(side: Side, base: PvbSettings): PvbRuntime.AbCondition =
-            PvbRuntime.AbCondition(side.id, side.label(base), side.trimDb, headroomDb, side.apply)
+            PvbRuntime.AbCondition(side.id, side.actualLabel(base), side.trimDb, headroomDb, side.apply)
     }
 
     /** The user's slider value as the engine reads it (whole dB, -6..12; the model's own level trim is added where the engine level is formed, [VolumeLevelLink.levelFor]). */
@@ -47,18 +50,24 @@ object LiveAbComparisons {
         return if (r > 0) "+$r dB" else "$r dB"
     }
 
+    /** Convert only a known strength prefix for display. Original saved labels and JSON/CSV stay actual. */
+    fun displayLabel(id: String, actualLabel: String, actualDb: Float?): String {
+        if (actualDb == null || id !in setOf("p1", "p1_minus3", "p1_link_on", "p1_link_off")) return actualLabel
+        return actualLabel.replaceFirst(Regex("^P1 [+-]?[0-9]+ dB"), "P1 ${dbText(StrengthDisplay.UI.toDisplay(actualDb))}")
+    }
+
     private const val UNMEASURED = 0f
 
-    val P1 = Side("p1", UNMEASURED, false, { "P1 ${dbText(userLevel(it))}" }) {
+    val P1 = Side("p1", UNMEASURED, false, { "P1 ${dbText(userLevel(it))}" }, ::userLevel) {
         PvbAbConditions.v11vb(it, PvbModels.P1, userLevel(it))
     }
-    val P1_LOWER = Side("p1_minus3", UNMEASURED, false, { "P1 ${dbText(loweredLevel(it))} (3 dB 작게)" }) {
+    val P1_LOWER = Side("p1_minus3", UNMEASURED, false, { "P1 ${dbText(loweredLevel(it))} (3 dB 작게)" }, ::loweredLevel) {
         PvbAbConditions.v11vb(it, PvbModels.P1, loweredLevel(it))
     }
-    val P1_LINK_ON = Side("p1_link_on", UNMEASURED, false, { "P1 ${dbText(userLevel(it))} · 볼륨 연동 켬" }) {
+    val P1_LINK_ON = Side("p1_link_on", UNMEASURED, false, { "P1 ${dbText(userLevel(it))} · 볼륨 연동 켬" }, ::userLevel) {
         PvbAbConditions.v11vb(it, PvbModels.P1, userLevel(it)).copy(vbVolLink = true)   // the user's link sliders
     }
-    val P1_LINK_OFF = Side("p1_link_off", UNMEASURED, false, { "P1 ${dbText(userLevel(it))} · 볼륨 연동 끔" }) {
+    val P1_LINK_OFF = Side("p1_link_off", UNMEASURED, false, { "P1 ${dbText(userLevel(it))} · 볼륨 연동 끔" }, ::userLevel) {
         PvbAbConditions.v11vb(it, PvbModels.P1, userLevel(it))
     }
     // Spatial (review 2026-10-23, questions 1-2): the canceller against the M/S widener with the same mid and side

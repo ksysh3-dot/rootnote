@@ -15,6 +15,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import me.timschneeberger.rootlessjamesdsp.R
+import me.timschneeberger.rootlessjamesdsp.pvb.StrengthDisplay
 import me.timschneeberger.rootlessjamesdsp.pvb.DevTestKind
 import me.timschneeberger.rootlessjamesdsp.pvb.DevTestSound
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbBuild
@@ -103,8 +104,8 @@ object PvbAdvanced {
         val slope = num(s.vbVolSlope, 2)
         val maxDb = num(s.vbVolMaxDb)
         return if (reduction >= 0.05f)
-            context.getString(R.string.pvb_vb_vol_link_on, pct, signedDb(-reduction), signedDb(applied), ref, slope, maxDb)
-        else context.getString(R.string.pvb_vb_vol_link_on_none, pct, signedDb(applied), ref, slope, maxDb)
+            context.getString(R.string.pvb_vb_vol_link_on, pct, signedDb(-reduction), signedDb(StrengthDisplay.UI.toDisplay(applied)), ref, slope, maxDb)
+        else context.getString(R.string.pvb_vb_vol_link_on_none, pct, signedDb(StrengthDisplay.UI.toDisplay(applied)), ref, slope, maxDb)
     }
 
     /** "어느 쪽이 아래 스피커인지 확인": the left channel alone for 3 s through the normal path, while processing. */
@@ -237,7 +238,11 @@ fun PvbSection(host: RnAdvancedActivity, showIcons: Boolean) {
         }
         PrefSlider(p, P.KEY_VB_STRENGTH_DB, stringResource(R.string.pvb_vb_level), P.VB_LEVEL_DEFAULT,
             P.VB_LEVEL_MIN..(caps?.vbLevelMax ?: P.VB_LEVEL_MAX), 1f, "dB", 0, enabled = vbOn && !s.p1ppp, strictStep = true,
-            label = { v -> P.clampLevel(v).roundToInt().let { if (it > 0) "+$it dB" else "$it dB" } })
+            line = if (s.p1ppp) stringResource(R.string.pvb_strength_not_applicable) else null,
+            toDisplay = { StrengthDisplay.UI.sliderValue(it, caps?.vbLevelMax ?: P.VB_LEVEL_MAX) },
+            fromDisplay = { P.clampLevel(StrengthDisplay.UI.toActual(it, caps?.vbLevelMax ?: P.VB_LEVEL_MAX)) },
+            label = { v -> if (s.p1ppp) context.getString(R.string.pvb_strength_not_applicable)
+                else v.roundToInt().let { if (it > 0) "+$it dB" else "$it dB" } })
         PrefSwitch(p, P.KEY_VB_VOL_LINK, stringResource(R.string.pvb_vb_vol_link), false,
             line = PvbAdvanced.vbVolLinkLine(context, s), enabled = vbOn && !s.p1ppp)
         if (research && s.vbVolLink) {

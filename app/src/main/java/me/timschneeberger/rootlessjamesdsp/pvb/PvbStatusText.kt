@@ -103,8 +103,8 @@ class PvbStatusText(private val context: Context) {
             val modelName = if (research) "${PvbSettings.vbAlgoName(vb - 1)} · " else ""
             lines += when {
                 PvbModels.inUse(vb - 1) ->
-                    "$vbLabel: ${modelName}레벨 ${signed(s.vbLevelDb)} dB" +
-                        (if (s.vbVolLink) " · 볼륨 연동 −${fmt(s.vbVolReductionDb)} dB → 적용 ${signed(s.vbAppliedLevelDb)} dB" else "")
+                    "$vbLabel: ${modelName}레벨 ${signed(StrengthDisplay.UI.toDisplay(s.vbLevelDb))} dB" +
+                        (if (s.vbVolLink) " · 볼륨 연동 −${fmt(s.vbVolReductionDb)} dB → 적용 ${signed(StrengthDisplay.UI.toDisplay(s.vbAppliedLevelDb))} dB" else "")
                 else -> "$vbLabel: 켜져 있지만 지금은 쓰지 않음 (우회 중이거나 이 샘플레이트에서 지원 안 됨)"
             }
 

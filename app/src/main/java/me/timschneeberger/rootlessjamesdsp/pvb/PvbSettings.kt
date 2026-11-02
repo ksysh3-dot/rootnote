@@ -109,7 +109,7 @@ data class PvbSettings(
         const val KEY_VB_ALGO = "pvb_vb_algo"
         /** Alpha 1/2 discrete level list (a string). Read once by the alpha 3 migration, then left untouched. */
         const val KEY_VB_LEVEL_DB = "pvb_vb_level_db"
-        /** Alpha 3 strength slider (a float, whole dB in [VB_LEVEL_MIN]..[VB_LEVEL_MAX]). */
+        /** Actual layer dB, never display coordinates. Existing alpha 1/2 and schema-4 values are actual too. */
         const val KEY_VB_STRENGTH_DB = "pvb_vb_strength_db"
         /** Not persisted: the preset control is derived from model + level. */
         const val KEY_VB_MODE = "pvb_vb_mode"

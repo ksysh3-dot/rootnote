@@ -38,19 +38,19 @@ fun main(args: Array<String>) {
     val general = SafeCaps.GENERAL
 
     // --- slider range and caps ---
-    expect(HomeLogic.sliderMax(general) == 9, "general slider is 0..9 dB")
-    expect(HomeLogic.sliderMax(null) == 12, "s26u slider is 0..12 dB")
+    expect(HomeLogic.sliderMax(general) == 9, "general slider is -6..9 dB")
+    expect(HomeLogic.sliderMax(null) == 12, "s26u slider is -6..12 dB")
     expect(HomeLogic.sliderValue(12f, general) == 9, "12 dB shows as the 9 dB cap")
     expect(HomeLogic.sliderValue(3.6f, general) == 4, "whole dB steps")
     expect(HomeLogic.sliderValue(-5f, general) == -5 && HomeLogic.sliderValue(-9f, general) == -6, "negative strength stays, floor -6")
-    expect(HomeLogic.sliderValue(Float.NaN, general) == 6, "non-finite -> default 6")
+    expect(HomeLogic.sliderValue(Float.NaN, general) == 4, "non-finite -> default 4")
     expect(HomeLogic.sliderValue(12f, null) == 12, "s26u keeps 12")
 
     // --- preset chips: derived from model + level like the advanced screen's mode list ---
-    expect(HomeLogic.selectedChip(PvbModels.P1_KEY, 6f) == Chip.FULLNESS, "P1 at +6 -> 풍성함 증가")
+    expect(HomeLogic.selectedChip(PvbModels.P1_KEY, 4f) == Chip.FULLNESS, "P1 at +4 -> 풍성함 증가")
     expect(HomeLogic.selectedChip(PvbModels.P1_KEY, 9f) == Chip.CUSTOM, "P1 at +9 -> custom")
-    expect(HomeLogic.selectedChip("no-such-model", 6f) == Chip.FULLNESS, "unknown key = default model (P1)")
-    expect(HomeLogic.selectedChip(PvbModels.P1_KEY, 6f, customPinned = true) == Chip.CUSTOM, "custom tapped stays custom")
+    expect(HomeLogic.selectedChip("no-such-model", 4f) == Chip.FULLNESS, "unknown key = default model (P1)")
+    expect(HomeLogic.selectedChip(PvbModels.P1_KEY, 4f, customPinned = true) == Chip.CUSTOM, "custom tapped stays custom")
     for (p in PvbModels.presets) {
         val chip = HomeLogic.selectedChip(p.modelKey, p.levelDb)
         expect(chip.presetKey == p.key, "every preset is its own chip (${p.key} -> $chip)")
@@ -59,7 +59,7 @@ fun main(args: Array<String>) {
     expect(HomeLogic.modelKey(999) == PvbModels.DEFAULT_KEY, "unknown id -> default key")
 
     // what tapping a chip writes: model + level within the caps; custom writes nothing
-    expect(HomeLogic.presetWrite(Chip.FULLNESS, general) == (PvbModels.P1_KEY to 6f), "풍성함 증가 writes P1, +6")
+    expect(HomeLogic.presetWrite(Chip.FULLNESS, general) == (PvbModels.P1_KEY to 4f), "풍성함 증가 writes P1, +4")
     expect(HomeLogic.presetWrite(Chip.CUSTOM, general) == null, "사용자 지정 writes nothing")
     val tight = general.copy(vbLevelMax = 7f)
     // a written preset reads back as the same chip (through the real settings reader, general caps)
@@ -70,7 +70,7 @@ fun main(args: Array<String>) {
             val s = PvbSettings.load(HomePrefs(mapOf(PvbSettings.KEY_VB_ALGO to model, PvbSettings.KEY_VB_STRENGTH_DB to level)))
             expect(HomeLogic.selectedChip(HomeLogic.modelKey(s.vbAlgo), s.vbLevelDb) == chip, "$chip round trip")
         }
-        // a stored level above the general cap is played (and shown) as 9: the deep preset then matches
+        // a stored level above the general cap is played (and shown) as 9; a removed model falls back to P1
         val s = PvbSettings.load(HomePrefs(mapOf(PvbSettings.KEY_VB_ALGO to "alpha3_gentle12", PvbSettings.KEY_VB_STRENGTH_DB to 12f)))
         expect(close(s.vbLevelDb, 9f) && HomeLogic.sliderValue(s.vbLevelDb, PvbBuild.caps) == 9, "12 dB stored -> 9 dB")
     } finally {
@@ -181,6 +181,6 @@ fun main(args: Array<String>) {
             "home_hold_novb_line", "home_hold_novb_active", "home_hold_novb_a11y", "home_spice_title", "home_spice_body"))
         expect(!ko[k].isNullOrBlank(), "ko string $k")
 
-    println("Home screen: caps 0..9, chips derived from model + level (custom pinned), preset writes within caps, " +
+    println("Home screen: caps -6..9, chips derived from model + level (custom pinned), preset writes within caps, " +
         "master/headline with the first-run gate, volume-link line (60 % -> −4 dB, applied +2 dB), strings en/ko: OK")
 }

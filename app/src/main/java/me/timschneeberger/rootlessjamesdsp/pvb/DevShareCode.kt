@@ -13,6 +13,8 @@ package me.timschneeberger.rootlessjamesdsp.pvb
  *   their default are not stored: a code from a phone with other defaults (high-pass, strength) keeps the reader's.
  * - tail: 4 characters, 20 bits: the number of data groups (4 bits) and a CRC-16/CCITT-FALSE (16 bits) over the UTF-8
  *   text "RN1-<model>-<version>-<data groups>".
+ * - Strength indexes/defaults are ALWAYS actual dB, independent of StrengthDisplay. UI editors convert before
+ *   encode and render decoded actual values through the same layer; RN1 needs no offset metadata or migration.
  * - value-set 1 keeps its historical strength indexes 0..12. Value-set 2 uses the -6..12 strength grid;
  *   it is emitted only for negative strength, and older readers explicitly reject the unknown value-set.
  *

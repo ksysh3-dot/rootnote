@@ -111,6 +111,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import me.timschneeberger.rootlessjamesdsp.R
 import me.timschneeberger.rootlessjamesdsp.home.rootnotePalette
+import me.timschneeberger.rootlessjamesdsp.pvb.HomeLogic
+import me.timschneeberger.rootlessjamesdsp.pvb.StrengthDisplay
 import me.timschneeberger.rootlessjamesdsp.pvb.DevEvidence
 import me.timschneeberger.rootlessjamesdsp.pvb.DevEvidenceText
 import me.timschneeberger.rootlessjamesdsp.pvb.DevGroup
@@ -180,6 +182,7 @@ data class DevUiState(
     val pasteText: String = "",
     val pasteResult: DevShareCode.Result? = null,
     val previewing: Boolean = false,
+    val fixedStrength: Boolean = false,
     /** "스피커 확인 (마이크)": null until first used; the last result stays after it stops. */
     val probe: ProbeView? = null,
     /** "마이크 스펙트럼": null until first used. */
@@ -499,7 +502,8 @@ private fun Note(text: String) {
 
 /** The value as the card shows it (the roll-off as its absolute slope). */
 @Composable
-internal fun valueText(spec: DevSpec, v: Float, vbAlgo: Int): String {
+internal fun valueText(spec: DevSpec, actual: Float, vbAlgo: Int): String {
+    val v = spec.displayValue(actual)
     fun num(x: Float, decimals: Int) = String.format(Locale.ROOT, "%.${decimals}f", x).let { if (it == "-0" || it == "-0.0") it.drop(1) else it }
     fun signed(x: Float, decimals: Int = 0): String {
         val s = num(x, decimals)
@@ -620,7 +624,8 @@ private fun SliderCard(spec: DevSpec, value: Float, default: Float, state: DevUi
     val range = sliderRange(spec, state.vbAlgo)
     val rec = recRange(spec, state.vbAlgo)
     val experimental = value < rec.start - 1e-4f || value > rec.endInclusive + 1e-4f
-    val text = valueText(spec, value, state.vbAlgo)
+    val fixed = state.fixedStrength && spec === DevParams.STRENGTH
+    val text = if (fixed) stringResource(R.string.pvb_strength_not_applicable) else valueText(spec, value, state.vbAlgo)
     val name = stringResource(DevModeTexts.of(spec).name)
     Column(
         Modifier.padding(horizontal = 8.dp, vertical = 2.dp).fillMaxWidth()
@@ -631,9 +636,9 @@ private fun SliderCard(spec: DevSpec, value: Float, default: Float, state: DevUi
         Text(stringResource(DevModeTexts.of(spec).line), color = c.textSecondary, fontSize = 13.sp, lineHeight = 18.sp)
         if (expanded) Details(spec)
         Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            StepButton(false, stringResource(R.string.dev_minus, name), enabled = value > range.start + 1e-4f) { actions.onStep(spec, -1) }
-            ValueTrack(spec, value, default, range, rec, name, text, experimental, Modifier.weight(1f).padding(horizontal = 4.dp), actions)
-            StepButton(true, stringResource(R.string.dev_plus, name), enabled = value < range.endInclusive - 1e-4f) { actions.onStep(spec, 1) }
+            StepButton(false, stringResource(R.string.dev_minus, name), enabled = !fixed && value > range.start + 1e-4f) { actions.onStep(spec, -1) }
+            ValueTrack(spec, value, default, range, rec, name, text, experimental, Modifier.weight(1f).padding(horizontal = 4.dp), actions, enabled = !fixed)
+            StepButton(true, stringResource(R.string.dev_plus, name), enabled = !fixed && value < range.endInclusive - 1e-4f) { actions.onStep(spec, 1) }
         }
     }
 }
@@ -653,24 +658,25 @@ private fun StepButton(plus: Boolean, label: String, enabled: Boolean, onClick: 
 private fun ValueTrack(
     spec: DevSpec, value: Float, default: Float, range: ClosedFloatingPointRange<Float>,
     rec: ClosedFloatingPointRange<Float>, name: String, valueText: String, experimental: Boolean,
-    modifier: Modifier, actions: DevActions,
+    modifier: Modifier, actions: DevActions, enabled: Boolean = true,
 ) {
     val c = LocalDevPalette.current
     val rangeLabel = stringResource(if (experimental) R.string.dev_range_experimental else R.string.dev_range_recommended)
     val stateText = stringResource(R.string.dev_slider_state, valueText, rangeLabel)
     RnSliderTrack(
-        value = value, range = range, step = spec.step, enabled = true, name = name, valueText = stateText,
-        snap = { spec.snap(it) }, default = default, stroke = 6.dp,
+        value = spec.displayValue(value), range = spec.displayValue(range.start)..spec.displayValue(range.endInclusive),
+        step = spec.step, enabled = enabled, name = name, valueText = stateText,
+        snap = { spec.displayValue(spec.snap(spec.actualValue(it))) }, default = spec.displayValue(default), stroke = 6.dp,
         colors = RnSliderColors(c.fill, c.sliderInactive, c.thumb, c.textSecondary),
         ring = if (experimental) ExperimentalOrange else c.accentText,
         onStart = { actions.onValueStart(spec) },
-        onChange = { v -> actions.onValue(spec, v) },
+        onChange = { v -> actions.onValue(spec, spec.actualValue(v)) },
         modifier = modifier,
         paintTrack = { start, end, px, _ ->
             val y = size.height / 2f
             val sw = 6.dp.toPx()
-            val rs = px(rec.start.coerceIn(range.start, range.endInclusive))
-            val re = px(rec.endInclusive.coerceIn(range.start, range.endInclusive))
+            val rs = px(spec.displayValue(rec.start.coerceIn(range.start, range.endInclusive)))
+            val re = px(spec.displayValue(rec.endInclusive.coerceIn(range.start, range.endInclusive)))
             val lo = minOf(rs, re); val hi = maxOf(rs, re)
             val orange = ExperimentalOrange.copy(alpha = 0.45f)
             val teal = c.fill.copy(alpha = 0.32f)
@@ -935,7 +941,12 @@ private fun EvidenceSheet(spec: DevSpec, state: DevUiState, actions: DevActions)
                 Column(Modifier.fillMaxWidth().background(c.band, RoundedCornerShape(14.dp)).padding(14.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     BadgeChip(item.tag, badgeLabel(item.tag, state))
-                    Text(stringResource(item.sentence), color = c.textPrimary, fontSize = 15.sp, lineHeight = 21.sp)
+                    Text(if (item.sentence == R.string.dev_ev_strength_2) stringResource(item.sentence,
+                        HomeLogic.signedDb(StrengthDisplay.UI.toDisplay(3f)),
+                        HomeLogic.signedDb(StrengthDisplay.UI.toDisplay(4f)).let {
+                            if (androidx.compose.ui.platform.LocalConfiguration.current.locales[0].language == "ko") it.removePrefix("+") else it
+                        },
+                        HomeLogic.signedDb(StrengthDisplay.UI.toDisplay(6f))) else stringResource(item.sentence), color = c.textPrimary, fontSize = 15.sp, lineHeight = 21.sp)
                     if (item.tag == DevEvidence.MEASURED && state.measuredBadge.here)
                         Text(stringResource(R.string.dev_ev_measured_here_note), color = c.accentText, fontSize = 13.sp, lineHeight = 18.sp)
                     for (src in item.sources) {

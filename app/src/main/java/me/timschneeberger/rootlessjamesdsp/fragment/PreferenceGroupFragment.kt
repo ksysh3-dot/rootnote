@@ -36,6 +36,7 @@ import me.timschneeberger.rootlessjamesdsp.preference.EqualizerPreference
 import me.timschneeberger.rootlessjamesdsp.preference.FileLibraryPreference
 import me.timschneeberger.rootlessjamesdsp.preference.MaterialSeekbarPreference
 import me.timschneeberger.rootlessjamesdsp.preference.SwitchPreferenceGroup
+import me.timschneeberger.rootlessjamesdsp.pvb.StrengthDisplay
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbBuild
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbSettings
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbModels
@@ -367,7 +368,9 @@ class PreferenceGroupFragment : PreferenceFragmentCompat(), KoinComponent {
             }
         }
         val level = findPreference<MaterialSeekbarPreference>(PvbSettings.KEY_VB_STRENGTH_DB)?.apply {
-            valueLabelOverride = { v -> PvbSettings.clampLevel(v).roundToInt().let { if (it > 0) "+$it dB" else "$it dB" } }
+            toDisplayValue = { StrengthDisplay.UI.toDisplay(it) }
+            fromDisplayValue = { StrengthDisplay.UI.toActual(it, getMax()) }
+            valueLabelOverride = { v -> StrengthDisplay.UI.sliderValue(v).roundToInt().let { if (it > 0) "+$it dB" else "$it dB" } }
         }
         findPreference<ListPreference>(PvbSettings.KEY_VB_MODE)?.let { mode ->
             fun item(title: String, description: String): CharSequence = SpannableStringBuilder(title).apply {
@@ -424,6 +427,24 @@ class PreferenceGroupFragment : PreferenceFragmentCompat(), KoinComponent {
                 if (key == PvbSettings.KEY_VB_ALGO || key == PvbSettings.KEY_VB_STRENGTH_DB) refresh()
             }.also { preferenceManager.sharedPreferences?.registerOnSharedPreferenceChangeListener(it) }
         }
+        fun refreshStrength() {
+            val fixed = preferenceManager.sharedPreferences?.let { PvbSettings.load(it).p1ppp } == true
+            level?.isEnabled = !fixed
+            level?.summary = if (fixed) getString(R.string.pvb_strength_not_applicable) else null
+            level?.valueLabelOverride = { v ->
+                if (fixed) getString(R.string.pvb_strength_not_applicable)
+                else StrengthDisplay.UI.sliderValue(v).roundToInt().let { if (it > 0) "+$it dB" else "$it dB" }
+            }
+        }
+        refreshStrength()
+        val modeListener = pvbModeListener
+        pvbModeListener = SharedPreferences.OnSharedPreferenceChangeListener { prefs, key ->
+            modeListener?.onSharedPreferenceChanged(prefs, key)
+            if (key == PvbSettings.KEY_P1PPP) refreshStrength()
+        }.also { listener ->
+            modeListener?.let { preferenceManager.sharedPreferences?.unregisterOnSharedPreferenceChangeListener(it) }
+            preferenceManager.sharedPreferences?.registerOnSharedPreferenceChangeListener(listener)
+        }
         setupPvbXtc()
         if (PvbBuild.recordFeatures) setupPvbTrackMemory(algo, level)  // general: per-song memory does not exist
         setupPvbVolumeLink()
@@ -473,7 +494,7 @@ class PreferenceGroupFragment : PreferenceFragmentCompat(), KoinComponent {
         val memory = findPreference<SwitchPreferenceCompat>(PvbSettings.KEY_VB_TRACK_MEMORY)
         val list = findPreference<Preference>(PvbSettings.KEY_VB_TRACK_LIST)
 
-        fun db(v: Float) = PvbSettings.clampLevel(v).roundToInt().let { if (it > 0) "+$it dB" else "$it dB" }
+        fun db(v: Float) = StrengthDisplay.UI.sliderValue(v).roundToInt().let { if (it > 0) "+$it dB" else "$it dB" }
         fun update() {
             if (!isAdded) return
             val i = levels.indicator(ctx)
@@ -559,8 +580,8 @@ class PreferenceGroupFragment : PreferenceFragmentCompat(), KoinComponent {
             val slope = num(s.vbVolSlope, 2)
             val maxDb = num(s.vbVolMaxDb)
             link.summary = if (reduction >= 0.05f)
-                getString(R.string.pvb_vb_vol_link_on, pct, signedDb(-reduction), signedDb(applied), ref, slope, maxDb)
-            else getString(R.string.pvb_vb_vol_link_on_none, pct, signedDb(applied), ref, slope, maxDb)
+                getString(R.string.pvb_vb_vol_link_on, pct, signedDb(-reduction), signedDb(StrengthDisplay.UI.toDisplay(applied)), ref, slope, maxDb)
+            else getString(R.string.pvb_vb_vol_link_on_none, pct, signedDb(StrengthDisplay.UI.toDisplay(applied)), ref, slope, maxDb)
         }
 
         // 0.05 dB steps (the XML attribute only takes integers)

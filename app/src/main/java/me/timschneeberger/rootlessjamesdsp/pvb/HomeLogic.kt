@@ -94,7 +94,9 @@ object HomeLogic {
     }
 
     /** "+6 dB"-style strength label for the slider value. */
-    fun levelLabel(level: Int): String = if (level < 0) "$level" else "+$level"
+    fun levelLabel(level: Int): String = StrengthDisplay.UI.toDisplay(level.toFloat()).toInt().let {
+        if (it < 0) "$it" else "+$it"
+    }
 
     /** Limiter working share (%, PvbMeter.LIM_ACTIVE_PCT, ~3 s) at or above which the home suggests a lower strength. */
     const val PRESSURE_ON_PCT = 30f
