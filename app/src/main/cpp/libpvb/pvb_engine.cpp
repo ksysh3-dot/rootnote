@@ -347,6 +347,7 @@ bool Engine::setP1pppPreset(bool enabled) {
 }
 void Engine::setP1pppControls(bool on) {
     // This batch cannot fail: its constants were validated before enqueue.
+    layerPeak42_.setStable(stableEffective_);dryPeak44_.setStable(stableEffective_);
     p1pppEffective_=on;dryLowCutMode_=on?2:0;dryLowCutHz_=80.;dryLowCutDb_=-6.;dryLowCutOrder_=4;
     researchLayerGain_=on?4.:1.;researchLayerGainCap_=0.;peakBudgetOn_=false;
     dryPeak44Mode_=on?1:0;layerPeak42_.configure(on?1:0,sr_,100.);

@@ -1,0 +1,23 @@
+{
+  "utc": "2026-11-03T00:35:52.178009+00:00",
+  "sources": [
+    {
+      "url": "https://github.com/numpy/SVML/blob/bd9d46e0c627ab16f3d2641f7cdb1bc15d303ba4/linux/avx512/svml_z0_log10_s_la.s",
+      "sha256": "3371033a385755eb5d5e11bfd8be4b6a98497dfa826d6fe3e0f49dcae7721739"
+    },
+    {
+      "url": "https://github.com/numpy/numpy/blob/v2.5.4/numpy/_core/src/umath/loops_unary_complex.dispatch.c.src",
+      "sha256": "a551bc5b449a8ea8fcec40212345ae3f91180dff6571d3480cc46dd042fb5702"
+    },
+    {
+      "url": "https://github.com/numpy/numpy/blob/v2.5.4/numpy/_core/src/umath/loops_arithm_fp.dispatch.c.src",
+      "sha256": "75352da4b6a7bd3140d3893b969e3d17038446c9e25c15130f78c340238c95de"
+    }
+  ],
+  "scope": "Portable scalar IEEE float32/FMA transcription of frozen NumPy AVX512 feature math and complex multiply. No AVX requirement on Android, no coefficient or weight tuning.",
+  "synthetic_primitive_checks": 1000000,
+  "magnitude_mismatch": 0,
+  "log10_mismatch": 0,
+  "M030_full_separator_pcm_layer_bit_exact": true,
+  "strict_tolerance_unchanged": 2e-06
+}

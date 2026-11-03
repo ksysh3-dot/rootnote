@@ -30,6 +30,7 @@
 
 #include "pvb_analysis.h"
 #include "pvb_stable.h"
+#include "pvb_stable_peak.h"
 #include "pvb_dsp.h"
 #include "pvb_vb.h"
 #include "pvb_xtc.h"
@@ -391,8 +392,8 @@ private:
     static constexpr int kResearchCaptureFrames=0;
 #endif
     double peak42Inputs_[6*kResearchCaptureFrames+1]={};int peak42InputSamples_=0;
-    LayerPeak42 layerPeak42_;
-    int dryPeak44Mode_=0;DryPeak44 dryPeak44_;
+    ModeLayerPeak42 layerPeak42_;
+    int dryPeak44Mode_=0;ModeDryPeak44 dryPeak44_;
     VbHpv peak44P1_{true,true,1};
     SvfState sDryPeak44Eq_[2][5],sDryPeak44Shelf_[2][4];
     double peak44Inputs_[5*kResearchCaptureFrames+1]={};int peak44InputSamples_=0;

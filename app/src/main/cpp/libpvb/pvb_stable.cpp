@@ -1,5 +1,6 @@
 // Frozen s71 stream math; SciPy1.18.1 ducc FFT, BSD/GPL notices in stable_vendor.
 #include "pvb_stable.h"
+#include "pvb_stable_host_math.h"
 #define DUCC0_NO_LOWLEVEL_THREADING
 #define DUCC0_NO_SIMD
 #include "stable_vendor/ducc0/fft/fft1d_impl.h"
@@ -16,12 +17,16 @@ void StableSeparator::frame(){
    for(int i=1;i<256;i++)sp[c][i]={result[2*i-1],result[2*i]};
   }
   for(int i=0;i<257;i++){
-   auto m=(sp[0][i]+sp[1][i])*.5f;float mag=std::abs(m);float power=mag*mag+1e-8f;
-   feat[i]=std::min(4.f,std::max(-8.f,std::log10(power)))/4.f;
+   auto m=(sp[0][i]+sp[1][i])*.5f;float mag=stableHostMagnitude(m.real(),m.imag());float power=mag*mag+1e-8f;
+   feat[i]=std::min(4.f,std::max(-8.f,stableHostLog10(power)))/4.f;
   }
   net_.run(feat,mask);
   for(int c=0;c<2;c++){
-   for(int i=0;i<257;i++)sp[c][i]*=std::complex<float>(mask[i],mask[257+i]);
+   for(int i=0;i<257;i++){
+    const float ar=sp[c][i].real(),ai=sp[c][i].imag(),br=mask[i],bi=mask[257+i];
+    // NumPy SIMD complex multiplication rounds the imaginary product first.
+    sp[c][i]={std::fma(ar,br,-(ai*bi)),std::fma(ar,bi,ai*br)};
+   }
    input[0]=sp[c][0].real();input[511]=sp[c][256].real();
    for(int i=1;i<256;i++){input[2*i-1]=sp[c][i].real();input[2*i]=sp[c][i].imag();}
    auto result=fft_->plan.exec(input,scratch_,1.f/512.f,false,1);

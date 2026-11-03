@@ -30,5 +30,5 @@ def main():
     r=f.result();results.append(r);progress(f'FINAL {phase} {len(results)}/{len(items)} {futures[f]} pass={r["passed"]}')
   dump('FINAL_'+phase.upper()+'.json',dict(rows=results,n=len(results),passed=all(r['passed'] for r in results)))
   progress('FINAL '+phase+' COMPLETE pass='+str(all(r['passed'] for r in results)))
-  if phase=='parity' and not all(r['passed'] for r in results):raise RuntimeError('Final strict parity failed; preserve rows and diagnose before full music')
+  if phase=='parity' and not all(r['passed'] for r in results):raise RuntimeError('Strict2e-6 parity failed; preserve evidence and diagnose')
 if __name__=='__main__':main()
