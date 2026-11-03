@@ -448,12 +448,13 @@
             android:persistent="false"
             android:selectable="false"
             app:iconSpaceReserved="false" />
-        <me.timschneeberger.rootlessjamesdsp.preference.MaterialSwitchPreference
-            android:key="pvb_p1ppp"
-            android:title="@string/pvb_p1ppp"
-            android:summary="@string/pvb_p1ppp_summary"
-            android:dependency="pvb_vb_enable"
-            android:defaultValue="false" />
+        <ListPreference
+            android:key="pvb_bass_mode"
+            android:title="@string/pvb_bass_mode"
+            android:summary="@string/pvb_bass_mode_summary"
+            android:entries="@array/pvb_bass_modes"
+            android:entryValues="@array/pvb_bass_mode_values"
+            android:defaultValue="off" />
         <Preference
             android:key="pvb_x_feedback"
             android:title="@string/pvb_x_feedback"

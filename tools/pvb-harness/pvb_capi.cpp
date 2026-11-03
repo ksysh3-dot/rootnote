@@ -481,3 +481,8 @@ extern "C" int pvb_engine_cancellation50(float* out,int frames,double* stats) {
  if(!out || !stats || frames<8192)return 0;
  pvb::Sum50TestAccess::cancellation(out,frames,stats);return 1;
 }
+
+extern "C" int pvb_load_stable_weights(void* h,const unsigned char* p,int size){return h && static_cast<pvb::Engine*>(h)->loadStableWeights(p,size);}
+extern "C" int pvb_stable_separator(const unsigned char* p,int size,const float* x,float* y,int n){
+ pvb::StableSeparator s;if(!s.load(p,size))return 0;for(int i=0;i<n;i++){float z[2]{},mix[2];s.tick(x[2*i],x[2*i+1],z,mix);y[2*i]=z[0];y[2*i+1]=z[1];}return 1;
+}

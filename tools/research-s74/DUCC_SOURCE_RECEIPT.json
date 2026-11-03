@@ -1,0 +1,57 @@
+{
+  "ducc0/fft/fft1d_impl.h": {
+    "url": "https://raw.githubusercontent.com/scipy/scipy/v1.18.1/subprojects/duccfft/ducc0/fft/fft1d_impl.h",
+    "sha256": "0d999ec44f0e593f47358ab86e46bb54e8662e6c96542fa99e24604d9abb6ac1",
+    "bytes": 104725
+  },
+  "ducc0/infra/useful_macros.h": {
+    "url": "https://raw.githubusercontent.com/scipy/scipy/v1.18.1/subprojects/duccfft/ducc0/infra/useful_macros.h",
+    "sha256": "7a60a413b6a38b671d8d37e13773f3549bda052aa72b1c7a6d4277ae9ff312ea",
+    "bytes": 2935
+  },
+  "ducc0/math/cmplx.h": {
+    "url": "https://raw.githubusercontent.com/scipy/scipy/v1.18.1/subprojects/duccfft/ducc0/math/cmplx.h",
+    "sha256": "6d09b5c4e120d311f664c635e8a0e0ed192182b5c55da3aa764435c1ccab2226",
+    "bytes": 4449
+  },
+  "ducc0/infra/error_handling.h": {
+    "url": "https://raw.githubusercontent.com/scipy/scipy/v1.18.1/subprojects/duccfft/ducc0/infra/error_handling.h",
+    "sha256": "453ccac8e0b5b2951accc9819871789ac0e7c62952e0f82f116d968c79e96317",
+    "bytes": 4283
+  },
+  "ducc0/infra/aligned_array.h": {
+    "url": "https://raw.githubusercontent.com/scipy/scipy/v1.18.1/subprojects/duccfft/ducc0/infra/aligned_array.h",
+    "sha256": "4b7b92765c2dafc707545683a550dc1d97015c25aa315747b6c884847dc41d93",
+    "bytes": 6122
+  },
+  "ducc0/infra/simd.h": {
+    "url": "https://raw.githubusercontent.com/scipy/scipy/v1.18.1/subprojects/duccfft/ducc0/infra/simd.h",
+    "sha256": "4a5262e4c238721f6bdb6f0e1b52a3c5ecb7fdbef26b229034c7dd8e538c2fee",
+    "bytes": 32970
+  },
+  "ducc0/infra/threading.h": {
+    "url": "https://raw.githubusercontent.com/scipy/scipy/v1.18.1/subprojects/duccfft/ducc0/infra/threading.h",
+    "sha256": "446a71c3c440b197b383c4d67f876548556e52dad7751d14f57cb6a7ce23651d",
+    "bytes": 11859
+  },
+  "ducc0/math/unity_roots.h": {
+    "url": "https://raw.githubusercontent.com/scipy/scipy/v1.18.1/subprojects/duccfft/ducc0/math/unity_roots.h",
+    "sha256": "c422dd1e78e59f523c58131d08715dff8b26e0904105f35029c13ea1f8047cf8",
+    "bytes": 7366
+  },
+  "ducc0/fft/fft.h": {
+    "url": "https://raw.githubusercontent.com/scipy/scipy/v1.18.1/subprojects/duccfft/ducc0/fft/fft.h",
+    "sha256": "d73befd3626c22d8e4de03431cd5f13fb8cf1c32570e678018b2793f8200dbf8",
+    "bytes": 37068
+  },
+  "ducc0/infra/mav.h": {
+    "url": "https://raw.githubusercontent.com/scipy/scipy/v1.18.1/subprojects/duccfft/ducc0/infra/mav.h",
+    "sha256": "0908777f24c1c4fa56eeab01c87db52c6ea2470b957249806c0d084c74e727a3",
+    "bytes": 59037
+  },
+  "ducc0/infra/misc_utils.h": {
+    "url": "https://raw.githubusercontent.com/scipy/scipy/v1.18.1/subprojects/duccfft/ducc0/infra/misc_utils.h",
+    "sha256": "8702587e5f56ad12741baf8893ea2b860a5cecfd988851059f9003cb80a54505",
+    "bytes": 4648
+  }
+}

@@ -41,6 +41,7 @@ object PvbRuntime {
         val dynRefDb: Float = Float.NaN,       // quiet-passage bass threshold in use (NaN = off)
         val abActive: Boolean = false,         // a blind comparison is running: hide everything that reveals it
         val p1pppRequested: Boolean = false,
+        val stableRequested: Boolean = false,
         val vbOn: Boolean = false,             // virtual bass setting (what the engine plays is in its meters)
         val vbAlgo: Int = PvbModels.P1,
         val vbLevelDb: Float = PvbSettings.VB_LEVEL_DEFAULT,   // slider (requested) level

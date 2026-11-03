@@ -428,7 +428,7 @@ class PreferenceGroupFragment : PreferenceFragmentCompat(), KoinComponent {
             }.also { preferenceManager.sharedPreferences?.registerOnSharedPreferenceChangeListener(it) }
         }
         fun refreshStrength() {
-            val fixed = preferenceManager.sharedPreferences?.let { PvbSettings.load(it).p1ppp } == true
+            val fixed = preferenceManager.sharedPreferences?.let { PvbSettings.load(it).fixedBass } == true
             level?.isEnabled = !fixed
             level?.summary = if (fixed) getString(R.string.pvb_strength_not_applicable) else null
             level?.valueLabelOverride = { v ->
@@ -436,11 +436,14 @@ class PreferenceGroupFragment : PreferenceFragmentCompat(), KoinComponent {
                 else StrengthDisplay.UI.sliderValue(v).roundToInt().let { if (it > 0) "+$it dB" else "$it dB" }
             }
         }
+        findPreference<androidx.preference.ListPreference>(PvbSettings.KEY_BASS_MODE)?.let { choice ->
+            preferenceManager.sharedPreferences?.let { prefs -> choice.value = PvbSettings.load(prefs).bassMode }
+        }
         refreshStrength()
         val modeListener = pvbModeListener
         pvbModeListener = SharedPreferences.OnSharedPreferenceChangeListener { prefs, key ->
             modeListener?.onSharedPreferenceChanged(prefs, key)
-            if (key == PvbSettings.KEY_P1PPP) refreshStrength()
+            if (key == PvbSettings.KEY_P1PPP || key == PvbSettings.KEY_BASS_MODE) refreshStrength()
         }.also { listener ->
             modeListener?.let { preferenceManager.sharedPreferences?.unregisterOnSharedPreferenceChangeListener(it) }
             preferenceManager.sharedPreferences?.registerOnSharedPreferenceChangeListener(listener)

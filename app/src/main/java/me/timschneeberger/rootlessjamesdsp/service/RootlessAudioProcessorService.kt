@@ -234,7 +234,9 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
         engine.syncWithPreferences()
 
         // Setup PVB engine and its control layer
-        pvbEngine = PvbEngine(48000)
+        pvbEngine = PvbEngine(48000).also { engine ->
+            check(engine.loadStableWeights(assets.open("stable_ab_1218.bin").use { it.readBytes() }))
+        }
         pvbController = PvbController(this, pvbEngine)
         // JamesDSP -> PVB chain: seal the overlapping JamesDSP modules while PVB processes (never written to prefs)
         pvbController.onSealChanged = { sealed, spatial ->

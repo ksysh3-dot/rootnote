@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+ <string name="pvb_bass_mode">베이스 모드 · 실험, 48 kHz</string>
+ <string name="pvb_bass_mode_summary">기본 OFF. 강함·안정은 검증한 EQ·층 0 dB·출력 −5 dB로 고정합니다. 안정은 지연 66.5 ms를 추가하며 총 엔진 지연은 215.25 ms입니다. 영상 앱의 자동 보정은 보장되지 않습니다.</string>
+ <string-array name="pvb_bass_modes"><item>OFF</item><item>강함 · P1+++</item><item>안정 · FAST_PEAK · 실험 · 지연 +66 ms</item></string-array>
+ <string-array name="pvb_bass_mode_values"><item>off</item><item>strong</item><item>stable</item></string-array>
+</resources>

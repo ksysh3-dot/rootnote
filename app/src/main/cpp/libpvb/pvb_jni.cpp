@@ -230,3 +230,11 @@ Java_me_timschneeberger_rootlessjamesdsp_pvb_PvbNative_meterCount(JNIEnv*, jclas
 
 }  // extern "C"
 
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_me_timschneeberger_rootlessjamesdsp_pvb_PvbNative_loadStableWeights(JNIEnv* env,jclass,jlong handle,jbyteArray data){
+    auto* h=fromJ(handle);if(!h || !data || env->GetArrayLength(data)!=531208)return JNI_FALSE;
+    jbyte* bytes=env->GetByteArrayElements(data,nullptr);if(!bytes)return JNI_FALSE;
+    bool ok=h->engine.loadStableWeights(reinterpret_cast<unsigned char*>(bytes),531208);
+    env->ReleaseByteArrayElements(data,bytes,JNI_ABORT);return ok?JNI_TRUE:JNI_FALSE;
+}

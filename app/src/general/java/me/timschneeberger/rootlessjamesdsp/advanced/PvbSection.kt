@@ -227,31 +227,34 @@ fun PvbSection(host: RnAdvancedActivity, showIcons: Boolean) {
                     vbWarning = true  // stays off until the warning is confirmed
                 }
             })
-        PrefSwitch(p, P.KEY_P1PPP, stringResource(R.string.pvb_p1ppp), false,
-            line = stringResource(R.string.pvb_p1ppp_summary), enabled = vbOn)
-        VbModeRow(p, s, research, vbOn && !s.p1ppp)
+        RnChoiceRow(stringResource(R.string.pvb_bass_mode),
+            listOf(RnChoice("off", "OFF"), RnChoice("strong", "강함 · P1+++"),
+                RnChoice("stable", "안정 · FAST_PEAK · 실험 · 지연 +66 ms")),
+            s.bassMode, { p.put(P.KEY_BASS_MODE, it) }, enabled = vbOn,
+            line = stringResource(R.string.pvb_bass_mode_summary))
+        VbModeRow(p, s, research, vbOn && !s.fixedBass)
         if (research) {
             val model = PvbModels.fromKey(p.string(P.KEY_VB_ALGO, PvbModels.DEFAULT_KEY))
             RnChoiceRow(stringResource(R.string.pvb_vb_algo), PvbModels.models.map { RnChoice(it.key, it.title, it.description) },
                 model.key, { p.put(P.KEY_VB_ALGO, it) }, line = "${model.title} · 약 0.15초 지연\n${model.description}",
-                enabled = vbOn && !s.p1ppp)
+                enabled = vbOn && !s.fixedBass)
         }
         PrefSlider(p, P.KEY_VB_STRENGTH_DB, stringResource(R.string.pvb_vb_level), P.VB_LEVEL_DEFAULT,
-            P.VB_LEVEL_MIN..(caps?.vbLevelMax ?: P.VB_LEVEL_MAX), 1f, "dB", 0, enabled = vbOn && !s.p1ppp, strictStep = true,
-            line = if (s.p1ppp) stringResource(R.string.pvb_strength_not_applicable) else null,
+            P.VB_LEVEL_MIN..(caps?.vbLevelMax ?: P.VB_LEVEL_MAX), 1f, "dB", 0, enabled = vbOn && !s.fixedBass, strictStep = true,
+            line = if (s.fixedBass) stringResource(R.string.pvb_strength_not_applicable) else null,
             toDisplay = { StrengthDisplay.UI.sliderValue(it, caps?.vbLevelMax ?: P.VB_LEVEL_MAX) },
             fromDisplay = { P.clampLevel(StrengthDisplay.UI.toActual(it, caps?.vbLevelMax ?: P.VB_LEVEL_MAX)) },
-            label = { v -> if (s.p1ppp) context.getString(R.string.pvb_strength_not_applicable)
+            label = { v -> if (s.fixedBass) context.getString(R.string.pvb_strength_not_applicable)
                 else v.roundToInt().let { if (it > 0) "+$it dB" else "$it dB" } })
         PrefSwitch(p, P.KEY_VB_VOL_LINK, stringResource(R.string.pvb_vb_vol_link), false,
-            line = PvbAdvanced.vbVolLinkLine(context, s), enabled = vbOn && !s.p1ppp)
+            line = PvbAdvanced.vbVolLinkLine(context, s), enabled = vbOn && !s.fixedBass)
         if (research && s.vbVolLink) {
             PrefSlider(p, P.KEY_VB_VOL_REF_PCT, stringResource(R.string.pvb_vb_vol_ref_pct), 40f, 20f..70f, 1f, "%", 0,
-                line = stringResource(R.string.pvb_vb_vol_ref_pct_summary), enabled = vbOn && !s.p1ppp, strictStep = true)
+                line = stringResource(R.string.pvb_vb_vol_ref_pct_summary), enabled = vbOn && !s.fixedBass, strictStep = true)
             PrefSlider(p, P.KEY_VB_VOL_SLOPE, stringResource(R.string.pvb_vb_vol_slope), 0.2f, 0.1f..0.5f, 0.05f, "dB", 2,
-                line = stringResource(R.string.pvb_vb_vol_slope_summary), enabled = vbOn && !s.p1ppp, strictStep = true)
+                line = stringResource(R.string.pvb_vb_vol_slope_summary), enabled = vbOn && !s.fixedBass, strictStep = true)
             PrefSlider(p, P.KEY_VB_VOL_MAX_DB, stringResource(R.string.pvb_vb_vol_max_db), 12f, 3f..12f, 1f, "dB", 0,
-                line = stringResource(R.string.pvb_vb_vol_max_db_summary), enabled = vbOn && !s.p1ppp, strictStep = true)
+                line = stringResource(R.string.pvb_vb_vol_max_db_summary), enabled = vbOn && !s.fixedBass, strictStep = true)
         }
 
         // 실험 기능

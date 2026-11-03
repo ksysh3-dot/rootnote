@@ -124,3 +124,5 @@ options retain the existing fit threshold and add no delay. The adopted P1+
 baseline and Android defaults remain unchanged. Definitions, selection history,
 measured gains and adverse changes are preserved in docs/P1PP_RECOVERY_PROTOCOL.md
 and research/p1pp/2026-10-26-recovery/.
+
+STABLE experimental FFT uses the SciPy1.18.1 ducc FFT subset, BSD-3-Clause OR GPL-2.0-or-later. Original notices are retained in app/src/main/cpp/libpvb/stable_vendor and the APK asset stable_fft_LICENSE.txt.

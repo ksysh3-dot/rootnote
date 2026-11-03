@@ -153,3 +153,7 @@ java -cp "$OUT50:$KOTLIN_STDLIB" P1pppParamsTestKt
 # Stream/rate/route lifecycle, transition diagnostics and closed PCM passthrough (actual JNI).
 $KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/DevParams.kt" "$APP/StrengthDisplay.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/PvbEngine.kt" "$APP/PvbNative.kt" "$APP/PvbEngineParams.kt" "$HERE/P1pppLifecycleJniTest.kt" -d "$OUT50"
 java -Djava.library.path="$HERE/../build" -cp "$OUT50:$KOTLIN_STDLIB" P1pppLifecycleJniTestKt "$HERE/../../.."
+
+# S74 frozen separator mode: actual JNI transitions, latency, rate and route.
+$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/DevParams.kt" "$APP/StrengthDisplay.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/PvbEngine.kt" "$APP/PvbNative.kt" "$APP/PvbEngineParams.kt" "$HERE/StableLifecycleJniTest.kt" -d "$OUT50"
+java -Djava.library.path="$HERE/../build" -cp "$OUT50:$KOTLIN_STDLIB" StableLifecycleJniTestKt "$HERE/../../.."

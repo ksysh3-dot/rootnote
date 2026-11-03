@@ -40,6 +40,7 @@ data class PvbSettings(
     val vbVolMaxDb: Float = VolumeLevelLink.MAX_DB_DEFAULT,
     // Experimental layer options ("실험 기능"), all off by default; the engine ignores them while virtual bass is off.
     // Not part of device profiles (DeviceProfiles.FLOAT_KEYS / BOOL_KEYS) nor of the blind-comparison conditions.
+    val stable: Boolean = false,
     val p1ppp: Boolean = false,       // frozen P1+++; effective overrides only, never rewrites saved settings
     // Developer mode ("개발자 모드", general build only; DevParams). devOn = the user consented and the values below
     // reach the engine (P_DEV_ON); each value at its default is the model itself. Not part of device profiles.
@@ -78,6 +79,9 @@ data class PvbSettings(
     val xtcPortrait: Int = XTC_PORTRAIT_OFF,
     val xtcPortraitLowRight: Boolean = true,
 ) {
+    val fixedBass: Boolean get() = p1ppp || stable
+    val bassMode: String get() = if (stable) "stable" else if (p1ppp) "strong" else "off"
+
     companion object {
         // Not "dsp_*": upstream presets, backups and device profiles swap those files behind the listeners' back.
         const val PREFS_NAME = "pvb_settings"
@@ -125,6 +129,7 @@ data class PvbSettings(
         const val KEY_VB_VOL_SLOPE = "pvb_vb_vol_slope"
         const val KEY_VB_VOL_MAX_DB = "pvb_vb_vol_max_db"
         /** Experimental layer options (switches in the "실험 기능" group, default off). */
+        const val KEY_BASS_MODE = "pvb_bass_mode"
         const val KEY_P1PPP = "pvb_p1ppp"
         const val KEY_X_SMOOTH = "pvb_x_smooth"
         const val KEY_X_RISE = "pvb_x_rise"
@@ -210,6 +215,8 @@ data class PvbSettings(
          */
         fun migrateVirtualBassModel(p: SharedPreferences) {
             val all = p.all
+            if (KEY_BASS_MODE !in all && all[KEY_P1PPP] == true)
+                p.edit().putString(KEY_BASS_MODE, "strong").apply()
             val raw = all[KEY_VB_ALGO]
             val old = raw?.toString() ?: PvbModels.DEFAULT_KEY
             val schema = try { p.getInt(KEY_VB_MODEL_SCHEMA, 0) } catch (_: ClassCastException) { 0 }
@@ -250,7 +257,8 @@ data class PvbSettings(
             val d = PvbSettings()
             return PvbBuild.finish(PvbSettings(
                 enabled = p.bool(KEY_ENABLE, d.enabled),
-                p1ppp = p.bool(KEY_P1PPP, false),
+                stable = (p.all[KEY_BASS_MODE] as? String) == "stable",
+                p1ppp = ((p.all[KEY_BASS_MODE] as? String)?.let { it == "strong" } ?: p.bool(KEY_P1PPP, false)),
                 matchOnDisable = p.bool(KEY_MATCH_ON_DISABLE, d.matchOnDisable),
                 speakerOnly = p.bool(KEY_SPEAKER_ONLY, d.speakerOnly),
                 hpHz = p.float(KEY_HP_HZ, d.hpHz),

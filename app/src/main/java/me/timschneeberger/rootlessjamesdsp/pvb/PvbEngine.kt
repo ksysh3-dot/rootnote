@@ -207,6 +207,8 @@ class PvbEngine(sampleRate: Int) : AutoCloseable {
         }
     }
 
+    fun loadStableWeights(data: ByteArray): Boolean = use(false) { PvbNative.loadStableWeights(it,data) }
+
     val isValid: Boolean
         get() = !closed.get() && refs.get() > 0
 

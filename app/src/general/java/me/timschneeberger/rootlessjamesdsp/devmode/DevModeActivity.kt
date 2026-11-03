@@ -182,7 +182,7 @@ class DevModeActivity : BaseActivity() {
             consentNeeded = consentNeeded,
             serviceRunning = BaseAudioProcessorService.activeServices > 0,
             shareCode = shareCode(DevParams.read(s)),
-            fixedStrength = s.p1ppp,
+            fixedStrength = s.fixedBass,
         )
     }
 
@@ -190,7 +190,7 @@ class DevModeActivity : BaseActivity() {
         val s = settings()
         val values = DevParams.read(s)
         update {
-            it.copy(values = values, vbAlgo = s.vbAlgo, volumeLinkOn = s.vbVolLink, fixedStrength = s.p1ppp,
+            it.copy(values = values, vbAlgo = s.vbAlgo, volumeLinkOn = s.vbVolLink, fixedStrength = s.fixedBass,
                 canUndo = undo.isNotEmpty(), hiddenCount = tracker.hiddenTypes().size, shareCode = shareCode(values),
                 speakerFloorHz = flags.getFloat(BassFitActivity.KEY_FIT_FLOOR_HZ, profile.speakerFloorHz))
         }

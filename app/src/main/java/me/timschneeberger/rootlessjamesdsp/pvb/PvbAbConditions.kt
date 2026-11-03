@@ -29,7 +29,7 @@ object PvbAbConditions {
     fun v11(s: PvbSettings) = s.copy(
         enabled = true, hpHz = 100f, lowHz = 220f, lowDb = 3f, lowQ = 1f, hiHz = 4500f, hiDb = -3f, hiQ = 0.6f,
         outDb = -5f, ceilDb = -1f, releaseMs = 60f, volLink = false, dynOn = false, hsHz = 2500f, hsDb = 0f,
-        p1ppp = false, devOn = false, vbOn = false, vbVolLink = false,   // alpha 3.2: fixed layer levels, as measured for the trims
+        stable = false, p1ppp = false, devOn = false, vbOn = false, vbVolLink = false,   // alpha 3.2: fixed layer levels, as measured for the trims
         xtcMode = PvbSettings.XTC_OFF,   // spatial: only the spatial comparisons turn it on (LiveAbComparisons)
     )
 

@@ -122,6 +122,22 @@ class StrengthDisplayTest {
         }
     }
 
+    @Test fun stableModeMigrationAndFixedStrength() {
+        PvbBuild.general = false
+        val legacy = MemoryPrefs(mapOf(PvbSettings.KEY_P1PPP to true))
+        PvbSettings.migrateVirtualBassModel(legacy.proxy)
+        assertEquals("strong", PvbSettings.load(legacy.proxy).bassMode)
+        for (mode in listOf("off", "strong", "stable")) {
+            val prefs = MemoryPrefs(mapOf(PvbSettings.KEY_BASS_MODE to mode,
+                PvbSettings.KEY_P1PPP to true, PvbSettings.KEY_VB_STRENGTH_DB to 9f))
+            val settings = PvbSettings.load(prefs.proxy)
+            assertEquals(mode, settings.bassMode)
+            assertEquals(mode != "off", settings.fixedBass)
+            assertEquals(mode == "stable", settings.stable)
+            assertEquals(9f, settings.vbLevelDb, 0f)
+        }
+    }
+
     /** Dynamic proxy works against Android's interface and the repository's host-only interface. */
     private class MemoryPrefs(initial: Map<String, Any>) {
         val values = initial.toMutableMap()

@@ -35,7 +35,7 @@ class PvbStatusText(private val context: Context) {
             return Rendered("블라인드 비교 중입니다. 어떤 설정이 재생되는지 드러나지 않게 상태를 숨깁니다.", false)
         val haveMeters = engine.readMeters(meters)
         if (haveMeters) {
-            val presetStatus = "requested=${s.p1pppRequested} state=${meters[PvbMeter.P1PPP_STATE].toInt()} " +
+            val presetStatus = "stable=${s.stableRequested} requested=${s.p1pppRequested} state=${meters[PvbMeter.P1PPP_STATE].toInt()} " +
                 "rate=${meters[PvbMeter.SAMPLE_RATE].toInt()} speaker=${s.speaker} latency=${engine.latencyFrames}"
             if (presetStatus != lastPresetStatus) {
                 if (s.p1pppRequested || meters[PvbMeter.P1PPP_STATE] > 0f || lastPresetStatus.contains("requested=true"))
@@ -49,9 +49,9 @@ class PvbStatusText(private val context: Context) {
         val canCopy = research && haveMeters && s.vbOn && !s.matchedBypass && PvbModels.fromId(s.vbAlgo) != null
         val lines = ArrayList<String>()
         if (haveMeters && meters[PvbMeter.P1PPP_STATE] > 0f) lines += when (meters[PvbMeter.P1PPP_STATE].toInt()) {
+            3 -> "안정 · FAST_PEAK 실험 · 엔진 지연 215.25 ms (추가 66.5 ms)"
             1 -> "P1+++ 적용 중 · EQ 고정 · 층 0 dB · 출력 −5 dB"
             2 -> "P1+++ 지원 안 됨 · 48 kHz에서만 지원"
-            3 -> "P1+++ 지원 안 됨 · 처리·가상 저음·고정 설정을 확인하세요"
             4 -> "P1+++ 전환 중"
             else -> "P1+++ 지원 안 됨"
         }

@@ -29,6 +29,7 @@
 #include <vector>
 
 #include "pvb_analysis.h"
+#include "pvb_stable.h"
 #include "pvb_dsp.h"
 #include "pvb_vb.h"
 #include "pvb_xtc.h"
@@ -185,6 +186,11 @@ public:
     bool setP1pppPreset(bool enabled);
     int p1pppState()const{return p1pppPublished_.load(std::memory_order_relaxed);}
     void process(float* interleavedStereo, int frames);
+    // Called once by service creation before handing this instance to audio/UI threads.
+    bool loadStableWeights(const unsigned char* p,size_t n){return stable_.load(p,n);}
+    void setSeparatorPeak70Research(bool on){separatorPeak70_=on;}
+    void processSeparator70(float* z,const float* x,int n){separatorMix70_=x;process(z,n);separatorMix70_=nullptr;}
+
     void processInt16(const int16_t* in, int16_t* out, int frames);
     void readMeters(float* out, int count);
     // Detailed diagnostics: call only from the audio owner, immediately around process().
@@ -356,6 +362,12 @@ private:
     float p1pppNext_[P_COUNT]={};RampedValue p1pppFade_;int p1pppHold_=0;
     std::atomic<int> p1pppPublished_{0};BoundedPeak50 boundedPeak50_;
 
+    StableSeparator stable_;
+    bool stableEffective_=false,stableNeedsPrime_=false,stablePriming_=false;
+    bool separatorPeak70_=false;const float* separatorMix70_=nullptr;
+    SvfState separatorEq70_[2][5];double separatorDelay70_[2][16384]{};int separatorPos70_=0;
+    int stablePrimeRemaining_=0;
+    void primeStable(int physicalFrames);
     // Audio-thread state.
     int sr_ = 48000;
     float active_[P_COUNT] = {};
