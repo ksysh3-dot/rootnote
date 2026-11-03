@@ -718,5 +718,5 @@ Tap on \'Tutorial\' below for detailed instructions.</string>
 Please press \'Continue\' below to re-do the setup wizard.</string>
     <string name="pvb_p1ppp">P1+++ · Experimental, 48 kHz</string>
     <string name="pvb_p1ppp_summary">Off by default. Requires 48 kHz. Locks the tested EQ, layer 0 dB and output −5 dB; suspends spatial, level links and developer voicing. Saved settings return when off. Unsupported states appear in status.</string>
-    <string name="pvb_strength_not_applicable">P1+++ · N/A</string>
+    <string name="pvb_strength_not_applicable">Fixed layer 0 dB · strength not applied</string>
 </resources>
