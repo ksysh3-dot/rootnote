@@ -181,7 +181,21 @@ fun main(args: Array<String>) {
         dp[PvbParam.D_BOUNDARY_HZ] == 190f && dp[PvbParam.D_OUT_LO_HZ] == 150f && dp[PvbParam.D_OUT_HI_HZ] == 600f &&
         (PvbParam.D_H2_DB..PvbParam.D_PERC_DB).all { dp[it] == 0f } && dp[PvbParam.D_ATTACK_MS] == 32f / 3f &&
         dp[PvbParam.D_RELEASE_MS] == 32f, "defaultParams: developer mode off, model values")
-    check(PvbDevMeter.SIZE == 32 + 2 * 512 && PvbDevMeter.T3_H2_DB + 7 == PvbDevMeter.FIELDS, "meter layout 32 + 2 x 512")
+    check(PvbDevMeter.STAGE_START == 32 + 2 * 512 && PvbDevMeter.SIZE == 32 + 11 * 512 &&
+        PvbDevMeter.T3_H2_DB + 7 == PvbDevMeter.FIELDS, "meter prefix preserved; 9 stage fields appended per bin")
+    run {
+        val m = FloatArray(PvbDevMeter.SIZE) { -120f }
+        val first = PvbDevMeter.STAGE_START
+        val last = first + 511 * PvbDevMeter.STAGE_FIELDS
+        m[first] = -20f; m[first + 1] = -38f; m[first + 2] = -26f
+        m[first + 3] = 55f; m[first + 4] = 8f; m[last + 8] = 3.2f
+        val s = DevSnapshot.fromMeters(m, -6f, 0f, -1f, 50f, true, 0f, -15f)
+        check(s.stages.size == 512 * 9 && s.stages[0] == -20f && s.stages[1] == -38f &&
+            s.stages[3] == 55f && s.stages[4] == 8f && s.stages.last() == 3.2f,
+            "stage snapshot preserves source, generator, actual trace reasons and last-bin attenuation")
+        m[first] = 0f
+        check(s.stages[0] == -20f, "frozen snapshot owns immutable history copy")
+    }
     run {
         // two bass notes held together: both drawn, the quieter one's harmonics judged against the loudest level
         val m = FloatArray(PvbDevMeter.SIZE) { -120f }

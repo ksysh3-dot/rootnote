@@ -451,6 +451,7 @@ void Engine::applyDev(const float* v) {
     }
     const bool meter = v[P_DEV_METER] >= 0.5f;
     if (meter != devMeterOn_) {
+        resetDevTelemetry();
         devMeterOn_ = meter;
         for (VbModule* m : vbMods_) if(m) m->setDevMeter(meter);
         for (auto& st : sDevLp_) st.reset();
@@ -533,6 +534,7 @@ void Engine::publishFilters() {
 }
 
 void Engine::resetState() {
+    resetDevTelemetry();
     stable_.reset();stableNeedsPrime_=stableEffective_;stablePrimeRemaining_=stableEffective_?49152:0;
     for(auto& channel:separatorEq70_)for(auto& state:channel)state.reset();
     for(auto& channel:separatorDelay70_)std::fill(std::begin(channel),std::end(channel),0.);
@@ -735,7 +737,7 @@ void Engine::process(float* io, int frames) {
     peak42InputSamples_ = capture && frames<=kResearchCaptureFrames ? frames*6 : 0;
     peak44InputSamples_=capture && frames<=kResearchCaptureFrames?frames*5:0;
     harmonicCount_=0; harmonicOverflow_=false;
-    for(auto* module:vbMods_) if(module) module->setHarmonicCapture(capture);
+    for(auto* module:vbMods_) if(module) module->setHarmonicCapture(capture || (devMeterOn_ && !stablePriming_));
     double powers[5] = {}, peaks[5] = {}, mainMin = 1.0, extraMin = 1.0;
     if (capture) {
         std::fill(std::begin(diagnosticTrace_), std::end(diagnosticTrace_), 0.f);
@@ -784,6 +786,9 @@ void Engine::process(float* io, int frames) {
                 io[2*n]=io[2*n+1]=0.f;
                 if(capture){diagnosticLayer_[2*n]=diagnosticLayer_[2*n+1]=diagnosticFull_[2*n]=diagnosticFull_[2*n+1]=0.f;}
                 continue;
+            }
+            if(devMeterOn_ && devSample_==0) {
+                devSample_=3192;devRingCount_=3192/devBinLen_;devBinN_=3192%devBinLen_;
             }
             fl=sep[0];fr=sep[1];
         }
@@ -909,7 +914,22 @@ void Engine::process(float* io, int frames) {
             else m->tick(xl, xr, layL, layR);
             // Experimental options (all off: neither branch runs, the layer is untouched).
             if (genCur_) { layL *= s1mTrim; layR *= s1mTrim; }
-            if(capture) if(const auto* hop=m->takeHarmonicTrace()) {
+            if(capture || (devMeterOn_ && !stablePriming_)) if(const auto* hop=m->takeHarmonicTrace()) {
+                if(devMeterOn_ && !stablePriming_) {
+                    DevDecision q; q.reason=hop->data[13]; float strongest=-1;
+                    for(int t=0;t<HarmonicTrace::kTracks;++t) {
+                        const float* r=hop->data+HarmonicTrace::kHeader+t*HarmonicTrace::kTrack;
+                        if(r[1]>=1 && r[1]<=3 && r[4]>strongest) {
+                            strongest=r[4];q.f=r[2];q.state=r[1];q.fit=r[12];q.reason=static_cast<float>(static_cast<int>(q.reason)|static_cast<int>(r[10]));
+                        }
+                    }
+                    // Trace grain centre is in host samples relative to this tick; add shared limiter delay.
+                    const int ahead=std::max(0,static_cast<int>(std::lround(hop->data[10]))+lim_.latency());
+                    devDecisionQueue_[(devSample_+ahead)&16383]=q;
+                    // Use state=-1 as a valid no-track observation (zero otherwise means no new hop).
+                    if(q.state==0)devDecisionQueue_[(devSample_+ahead)&16383].state=-1;
+                }
+                if(capture) {
                 if(harmonicCount_>=HarmonicTrace::kBlockRows) harmonicOverflow_=true;
                 else {
                     float* row=harmonicRows_+harmonicCount_++*HarmonicTrace::kFields;
@@ -919,33 +939,26 @@ void Engine::process(float* io, int frames) {
                 }
             }
         }
+        } // harmonic capture
         // Developer meter: the layer as generated (before the routing below), like its dry reference from before XTC.
         const double layMid = 0.5 * (layL + layR);
         // Upright split or mono: the layer goes where the music's low part goes (not to the earpiece). Models that
         // generate from the EQ output (inputAfterEq, Bankstown) already follow the split: left as they are.
         if (vbCur_ >= 0 && !vbMods_[vbCur_]->inputAfterEq() && !xtc_.idle()) xtc_.routeLayer(layL, layR);
-        if (devMeterOn_) {
+        if (devMeterOn_ && !stablePriming_) {
             // Developer-mode display only (nothing here reaches the output): dry low band (aligned with the layer),
             // layer, and both in the 150-400 Hz band where the phone's protection acts.
             double low = 0.5 * (alignedL + alignedR);
             for (int i = 0; i < kDevLpSections; ++i) low = devLp_[i].tick(sDevLp_[i], low);
             const double lay = vg * layMid * og;
             devBinDry_ += low * low;
-            devBinLay_ += lay * lay;
+
             const double bd = devBp_.tick(sDevBpDry_, 0.5 * (eqL + eqR) * og);
             const double bl = devBp_.tick(sDevBpLay_, lay);
             devPowDry_ += (bd * bd - devPowDry_) * devPowCoef_;
             devPowLay_ += (bl * bl - devPowLay_) * devPowCoef_;
-            if (++devBinN_ >= devBinLen_) {
-                const int slot = static_cast<int>(devRingCount_ % kDevRing);
-                devRingDry_[slot].store(dbOrFloor(std::sqrt(2.0 * devBinDry_ / devBinLen_)), std::memory_order_relaxed);
-                devRingLay_[slot].store(dbOrFloor(std::sqrt(2.0 * devBinLay_ / devBinLen_)), std::memory_order_relaxed);
-                ++devRingCount_;
-                devRingPub_.store(devRingCount_, std::memory_order_release);
-                devBinDry_ = devBinLay_ = 0.0;
-                devBinN_ = 0;
-            }
         }
+
         double peak44UncutL=eqL,peak44UncutR=eqR,peak44DryL=eqL,peak44DryR=eqR;
         double peak44RefLayL=layL,peak44RefLayR=layR;
         if(dryPeak44Mode_ && vbCur_==VB_ALPHA2_P1) {
@@ -1033,6 +1046,43 @@ void Engine::process(float* io, int frames) {
             limitedR=(ddR+peak42LayerR)*lim_.currentGain();
         }
 
+        if(devMeterOn_ && !stablePriming_) {
+            double common=0.5*(stableEffective_&&!stablePriming_?stableMix[0]+stableMix[1]:xl+xr);
+            double source=0.5*(xl+xr);
+            for(int i=0;i<kDevLpSections;++i) {
+                common=devLp_[i].tick(devCommonState_[i],common);
+                source=devLp_[i].tick(devSourceState_[i],source);
+            }
+            const int write=static_cast<int>(devSample_&16383);
+            devInputDelay_[0][write]=static_cast<float>(common);devInputDelay_[1][write]=static_cast<float>(source);
+            const int delay=clampv(vbDelay_+lat,0,16383),read=(write-delay+16384)&16383;
+            const double commonAligned=devInputDelay_[0][read],sourceAligned=devInputDelay_[1][read];
+            devStagePower_[0]+=commonAligned*commonAligned;devStagePower_[1]+=sourceAligned*sourceAligned;
+            // Stereo power, same gain and same physical time before/after dedicated layer control.
+            const double requested=.5*(delayedLayerL*delayedLayerL+delayedLayerR*delayedLayerR);
+            const double actual=.5*(peak42LayerL*peak42LayerL+peak42LayerR*peak42LayerR);
+            devStagePower_[2]+=requested;
+            // Replace the earlier pre-control accumulator; that tap is deliberately no longer presented as actual.
+            devBinLay_+=actual;
+            const auto q=devDecisionQueue_[write];
+            if(q.state!=0)devDecision_=q;
+            devDecisionQueue_[write]=DevDecision{};
+            devBinFinalGr_=std::max(devBinFinalGr_,dbOrFloor(1./std::max(lim_.currentGain(),1e-30)));
+            if(++devBinN_>=devBinLen_) {
+                const int slot=static_cast<int>(devRingCount_%kDevRing);
+                float vals[kDevStageFields]={dbOrFloor(std::sqrt(2*devStagePower_[0]/devBinLen_)),
+                    dbOrFloor(std::sqrt(2*devStagePower_[1]/devBinLen_)),dbOrFloor(std::sqrt(2*devStagePower_[2]/devBinLen_)),
+                    devDecision_.f,devDecision_.reason,devDecision_.fit,devDecision_.state,devBinFinalGr_,
+                    static_cast<float>(std::max(0.,10*std::log10(std::max(devStagePower_[2],1e-30)/std::max(devBinLay_,1e-30))))};
+                for(int j=0;j<kDevStageFields;++j)devStages_[slot][j].store(vals[j],std::memory_order_relaxed);
+                devRingDry_[slot].store(vals[1],std::memory_order_relaxed);
+                devRingLay_[slot].store(dbOrFloor(std::sqrt(2*std::max(0.,devBinLay_)/devBinLen_)),std::memory_order_relaxed);
+                devRingPub_.store(++devRingCount_,std::memory_order_release);
+                devBinDry_=devBinLay_=0;devBinN_=0;devBinFinalGr_=0;
+                std::fill_n(devStagePower_,3,0.);
+            }
+            ++devSample_;
+        }
         // Isolate the actual generator contribution, not the difference between two reruns.
         // The full sum above still drives its original limiter and the loudness matcher below.
         const double sx = soloX_.next();
@@ -1146,7 +1196,7 @@ void Engine::process(float* io, int frames) {
     }
     if (dynEnv_ < 1e-24) dynEnv_ = 0.0;
     if (matchOn) match_.flushTiny();
-    if (devMeterOn_) {
+    if (devMeterOn_ && !stablePriming_) {
         for (auto& st : sDevLp_) st.flushTiny();
         sDevBpDry_.flushTiny(); sDevBpLay_.flushTiny();
         if (devPowDry_ < 1e-24) devPowDry_ = 0.0;
@@ -1299,6 +1349,17 @@ void Engine::devUpdateSlots(const DevHarmonics& h, bool have, double level, doub
     }
 }
 
+void Engine::resetDevTelemetry() {
+    for(auto& s:devCommonState_)s.reset();
+    for(auto& s:devSourceState_)s.reset();
+    std::memset(devInputDelay_,0,sizeof devInputDelay_);
+    std::fill_n(devDecisionQueue_,16384,DevDecision{});
+    devBinDry_=devBinLay_=0;devBinN_=0;devRingCount_=0;devRingPub_.store(0,std::memory_order_relaxed);
+    for(auto& v:devRingDry_)v.store(-120.f,std::memory_order_relaxed);
+    for(auto& v:devRingLay_)v.store(-120.f,std::memory_order_relaxed);
+    devDecision_=DevDecision{};devSample_=0;devBinFinalGr_=0;std::fill_n(devStagePower_,3,0.);
+    for(auto& row:devStages_)for(int j=0;j<kDevStageFields;++j)row[j].store(j<3?-120.f:0.f,std::memory_order_relaxed);
+}
 int Engine::copyDevMeters(float* out, int capacity) const {
     if (out == nullptr || capacity < kDevMeterSize) return 0;
     const uint32_t count = devRingPub_.load(std::memory_order_acquire);
@@ -1309,6 +1370,10 @@ int Engine::copyDevMeters(float* out, int capacity) const {
         const int slot = static_cast<int>((count + static_cast<uint32_t>(i)) % kDevRing);
         out[kDevFields + 2 * i] = devRingDry_[slot].load(std::memory_order_relaxed);
         out[kDevFields + 2 * i + 1] = devRingLay_[slot].load(std::memory_order_relaxed);
+    }
+    for(int i=0;i<kDevRing;++i) {
+        const int slot=static_cast<int>((count+static_cast<uint32_t>(i))%kDevRing);
+        for(int j=0;j<kDevStageFields;++j)out[kDevFields+2*kDevRing+i*kDevStageFields+j]=devStages_[slot][j].load(std::memory_order_relaxed);
     }
     return kDevMeterSize;
 }
@@ -1387,4 +1452,3 @@ void Engine::readMeters(float* out, int count) {
 }
 
 }  // namespace pvb
-

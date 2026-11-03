@@ -155,7 +155,7 @@ enum Meter : int {
 
 void defaultParams(float* out);  // fills P_COUNT values
 
-// Developer-mode meters (Engine::copyDevMeters): kDevFields values, then kDevRing (dry, layer) pairs, oldest first.
+// Developer display: legacy fields + (generator-low, actual-layer) pairs, then 9 stage fields per bin, oldest first.
 enum DevMeter : int {
     DM_F0 = 0,          // fundamental of the loudest held track, Hz (0 = none); held 0.15 s, then falls 30 dB/s
     DM_H2_DB,           // k = 2..8 at the output (output band, imposition gain, level and output gain applied), dBFS
@@ -207,7 +207,8 @@ public:
     // dBFS, oldest first). Returns the number of floats written, or 0 when out is too small.
     static constexpr int kDevFields = DM_FIELDS;
     static constexpr int kDevRing = 512;
-    static constexpr int kDevMeterSize = kDevFields + 2 * kDevRing;
+    static constexpr int kDevStageFields = 9; // common, generator, requested, f0, reasons, fit dB, state, final GR, layer GR
+    static constexpr int kDevMeterSize = kDevFields + (2 + kDevStageFields) * kDevRing;
     int copyDevMeters(float* out, int capacity) const;
     void setModulationResearch(int mode, bool tonalOnly=false) {
         for(VbHpv* m : {&vbAlpha2_}) m->setModulationResearch(mode,tonalOnly);
@@ -475,6 +476,17 @@ private:
     // Developer mode: voicing last pushed to the modules, and the display meters (audio thread writes, any reads).
     DevVoicing devApplied_;
     bool devMeterOn_ = false;
+    void resetDevTelemetry();
+    SvfState devCommonState_[4],devSourceState_[4];
+    float devInputDelay_[2][16384]{};
+    struct DevDecision {float f=0,reason=0,fit=0,state=0;};
+    DevDecision devDecisionQueue_[16384]{};
+    DevDecision devDecision_;
+    uint64_t devSample_=0;
+    double devStagePower_[3]{};
+    float devBinFinalGr_=0,devBinLayerGr_=0;
+    std::atomic<float> devStages_[kDevRing][kDevStageFields]{};
+
     // devLp_: 8th-order Butterworth low-pass at the generator edge (4 sections): the display's source-bass line, steep
     // enough that piano or vocals at 250-400 Hz do not read as bass the generator could use.
     static constexpr int kDevLpSections = 4;
@@ -529,5 +541,3 @@ private:
 double estimatePhoneLimiterGr(double levelDb);
 
 }  // namespace pvb
-
-

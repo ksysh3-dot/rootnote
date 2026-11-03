@@ -51,6 +51,8 @@ class DevSnapshot(
     val thresholdDb: Float,
     /** Quieter tracks held at the same time (bass notes together), each a fundamental and k = 2..8 dBFS. */
     val extraTracks: List<DevTrack> = emptyList(),
+    val stages: FloatArray = FloatArray(0),
+
 ) {
     /** Sum of the dry band and the layer band (power), dBFS. */
     val totalBandDb: Float get() = DevMath.sumDb(dryBandDb, layerBandDb)
@@ -73,6 +75,7 @@ class DevSnapshot(
                 binMs = m[PvbDevMeter.RING_BIN_MS].takeIf { it > 0f } ?: 5f,
                 outPeakDb = outPeakDb, limiterGrDb = limiterGrDb, ceilingDb = ceilingDb, volumePct = volumePct,
                 volumeLink = volumeLink, volumeLinkReductionDb = volumeLinkReductionDb, thresholdDb = thresholdDb,
+                stages = m.copyOfRange(PvbDevMeter.STAGE_START, PvbDevMeter.SIZE),
                 extraTracks = listOf(PvbDevMeter.T2_F0 to PvbDevMeter.T2_H2_DB, PvbDevMeter.T3_F0 to PvbDevMeter.T3_H2_DB)
                     .filter { (f, _) -> m[f] > 0f }
                     .map { (f, h) -> DevTrack(m[f], FloatArray(7) { m[h + it] }) },

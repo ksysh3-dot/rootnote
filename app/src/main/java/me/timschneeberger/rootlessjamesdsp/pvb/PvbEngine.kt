@@ -132,7 +132,9 @@ object PvbDevMeter {
     const val T3_H2_DB = 25
     const val FIELDS = 32
     const val RING = 512
-    const val SIZE = FIELDS + 2 * RING
+    const val STAGE_FIELDS = 9
+    const val STAGE_START = FIELDS + 2 * RING
+    const val SIZE = STAGE_START + STAGE_FIELDS * RING
 }
 
 /** Index of each value in the analysis info array (same order as pvb::AnaInfo in pvb_analysis.h). */
@@ -329,4 +331,3 @@ class PvbEngine(sampleRate: Int) : AutoCloseable {
         )
     }
 }
-
