@@ -49,7 +49,7 @@ class PvbStatusText(private val context: Context) {
         val canCopy = research && haveMeters && s.vbOn && !s.matchedBypass && PvbModels.fromId(s.vbAlgo) != null
         val lines = ArrayList<String>()
         if (haveMeters && meters[PvbMeter.P1PPP_STATE] > 0f) lines += when (meters[PvbMeter.P1PPP_STATE].toInt()) {
-            3 -> "안정 · FAST_PEAK 실험 · 엔진 지연 215.25 ms (추가 66.5 ms)"
+            3 -> "안정 · FAST_PEAK 실험 · 엔진 지연 183.25 ms (추가 34.5 ms)"
             1 -> "강함 · P1+++ 적용 중 · EQ 고정 · 층 0 dB · 출력 −5 dB"
             2 -> "강함·안정 모드 지원 안 됨 · 48 kHz에서만 지원"
             4 -> if (s.stableRequested) "안정 전환 중" else "강함 전환 중"

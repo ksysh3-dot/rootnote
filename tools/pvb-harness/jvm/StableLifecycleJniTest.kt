@@ -27,7 +27,7 @@ fun main(args: Array<String>) {
    val p=stable.copyOf();p[57]=mode.toFloat();engine.setParams(p);blocks(260)
    val m=FloatArray(PvbMeter.COUNT);engine.readMeters(m)
    ck(m[PvbMeter.P1PPP_STATE].toInt()==when(mode){1->1;2->3;else->0},"settled mode $mode")
-   ck(engine.latencyFrames==if(mode==2)10332 else 7140,"reported latency $mode")
+   ck(engine.latencyFrames==if(mode==2)8796 else 7140,"reported latency $mode")
   }
   for(rate in listOf(44100,48000,96000,48000)) {
    engine.setSampleRate(rate);engine.setParams(PvbEngineParams.encode(settings,inputs74(rate)).params);engine.reset();blocks(260)

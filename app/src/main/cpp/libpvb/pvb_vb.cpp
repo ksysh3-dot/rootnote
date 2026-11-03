@@ -206,12 +206,12 @@ double kth(double* v, int n, int k) {
 
 // ================================================================================================ hpv
 
-VbHpv::VbHpv(bool, bool, int) {
-    hanning(winHp_, kHpN);
-    hanning(winPv_, kPvN);
-    for (int n = 0; n < kHpN; ++n) {
-        cosHp_[n] = std::cos(2.0 * kPi * n / kHpN);
-        sinHp_[n] = std::sin(2.0 * kPi * n / kHpN);
+void VbHpv::initializeWindows() {
+    hanning(winHp_, hpN_);
+    hanning(winPv_, pvN_);
+    for (int n = 0; n < hpN_; ++n) {
+        cosHp_[n] = std::cos(2.0 * kPi * n / hpN_);
+        sinHp_[n] = std::sin(2.0 * kPi * n / hpN_);
     }
     for (int n = 0; n < kPvNfft; ++n) {
         cosPv_[n] = std::cos(2.0 * kPi * n / kPvNfft);
@@ -246,13 +246,27 @@ VbHpv::VbHpv(bool, bool, int) {
     // sample, in the reference's order (oldest frame first).
     for (int r = 0; r < kHpHop; ++r) {
         double s = 0.0;
-        for (int q = (kHpN - kHpHop) / kHpHop; q >= 0; --q) {
+        for (int q = (hpN_ - kHpHop) / kHpHop; q >= 0; --q) {
             const double w = winHp_[r + kHpHop * q];
             s += w * w;
         }
         wsumHp_[r] = std::max(s, 1e-3);
     }
-    pvWsum_ = pairwiseSum(winPv_, kPvN);
+    pvWsum_ = pairwiseSum(winPv_, pvN_);
+}
+void VbHpv::setStable183Window(bool enabled) {
+    if (shortWindow_ == enabled) return;
+    shortWindow_=enabled; hpN_=enabled?144:192; hpBins_=hpN_/2+1;
+    pvN_=enabled?288:384; base48_=enabled?5516:7052;
+    envelopeDelay_=pvN_/2+15; closingRadius_=90*pvN_/384;
+    initializeWindows();
+    // configure() updates rate-dependent latency and resets all analysis state.
+    configure(static_cast<int>(std::lround(eqFs52_)));
+}
+
+VbHpv::VbHpv(bool, bool, int) {
+    warmShortKernel(); // Build the immutable fit table before audio processing.
+    initializeWindows();
     // numpy.bartlett(2 H + 1)[:-1]
     for (int g = 0; g < 2 * kPvH; ++g) {
         const double nn = 1.0 - (2 * kPvH + 1) + 2.0 * g;
@@ -309,7 +323,7 @@ bool VbHpv::configure(int sampleRate) {
     supported_ = true;
     // vbcore's measured hpv latency (6812 samples at 48 kHz) plus the 15 core samples (240 at 48 kHz) of the causal
     // grain placement; the same time at 44.1 kHz.
-    latency_ = static_cast<int>(std::lround((vbt::kLat48Py + kRtShift * 16) / 48000.0 * sampleRate));
+    latency_ = static_cast<int>(std::lround((vbt::kLat48Py + kRtShift * 16 - (7052-base48_)) / 48000.0 * sampleRate));
     reset();
     return true;
 }
@@ -480,17 +494,17 @@ double VbHpv::bandLayer(double re, double im) {
 void VbHpv::hpssFrame() {
     int64_t i = static_cast<int64_t>(i_);
     double fr[kHpN];
-    for (int n = 0; n < kHpN; ++n) fr[n] = bRing_[(i - (kHpN - 1) + n) & (kRing - 1)] * winHp_[n];
+    for (int n = 0; n < hpN_; ++n) fr[n] = bRing_[(i - (hpN_ - 1) + n) & (kRing - 1)] * winHp_[n];
     double Fr[kHpBins], Fi[kHpBins], S[kHpBins];
     {
         const double zero[kHpN] = {};
-        dft192(fr, zero, Fr, Fi, kHpBins);
+        dft192(fr, zero, Fr, Fi, hpBins_);
     }
-    for (int k = 0; k < kHpBins; ++k) S[k] = std::hypot(Fr[k], Fi[k]);
+    for (int k = 0; k < hpBins_; ++k) S[k] = std::hypot(Fr[k], Fi[k]);
     const int future=hpssLookahead();
     const bool prominence=future && (p1PlusFlags_&8);
     const int history=prominence?kHpMedT+5:kHpMedT;
-    std::copy(S, S + kHpBins, sHist_[sPos_]);
+    std::copy(S, S + hpBins_, sHist_[sPos_]);
     sPos_ = (sPos_ + 1) % history;
     if(future) {
         // Current spectrum updates the eleven-frame history; classify the
@@ -499,23 +513,23 @@ void VbHpv::hpssFrame() {
         // with a guessed phase. Extra work is an explicit HQ-mode cost.
         if(i<future) return;
         i-=future;
-        for(int n=0;n<kHpN;++n)
-            fr[n]=bRing_[(i-(kHpN-1)+n)&(kRing-1)]*winHp_[n];
+        for(int n=0;n<hpN_;++n)
+            fr[n]=bRing_[(i-(hpN_-1)+n)&(kRing-1)]*winHp_[n];
         const double zero[kHpN]={};
-        dft192(fr,zero,Fr,Fi,kHpBins);
-        for(int k=0;k<kHpBins;++k) S[k]=std::hypot(Fr[k],Fi[k]);
+        dft192(fr,zero,Fr,Fi,hpBins_);
+        for(int k=0;k<hpBins_;++k) S[k]=std::hypot(Fr[k],Fi[k]);
     }
     double Mh[kHpBins], MhA[kHpBins], Mc[kHpBins];
     // olaHA_ holds the harmonic part the output does not use: the C5 mask under C6, the causal mask under C5 (both
     // only for the analysis side: C6's vocoder spectrum, or the polyphony count)
     const bool analysisMask=!future && (stageFlags_&(StageAnalysisProminence|StageCausalProminence));
-    for (int k = 0; k < kHpBins; ++k) {
+    for (int k = 0; k < hpBins_; ++k) {
         double v[kHpMedT];
         for (int t = 0; t < kHpMedT; ++t)
             v[t] = sHist_[prominence?(sPos_+5+t)%history:t][k];
         const double H = kth(v, kHpMedT, kHpMedT / 2);  // causal or centered eleven-frame median
         double u[kHpMedF];
-        for (int d = 0; d < kHpMedF; ++d) u[d] = S[clampv(k - kHpMedF / 2 + d, 0, kHpBins - 1)];
+        for (int d = 0; d < kHpMedF; ++d) u[d] = S[clampv(k - kHpMedF / 2 + d, 0, hpBins_ - 1)];
         const double P = kth(u, kHpMedF, kHpMedF / 2);  // median over +-3 bins
         Mh[k] = (H * H) / (H * H + P * P + 1e-20);
         if(prominence) {
@@ -533,7 +547,7 @@ void VbHpv::hpssFrame() {
             // C6 uses this mask only for the analysis harmonic part (olaHA_); the output paths keep the causal one.
             const double* prev=sHist_[(sPos_+history-2)%history];
             double up[kHpMedF];
-            for(int d=0;d<kHpMedF;++d) up[d]=prev[clampv(k-kHpMedF/2+d,0,kHpBins-1)];
+            for(int d=0;d<kHpMedF;++d) up[d]=prev[clampv(k-kHpMedF/2+d,0,hpBins_-1)];
             const double Pp=kth(up,kHpMedF,kHpMedF/2);
             const auto prominent=[](double s,double p) {return clampv((s/(p+1e-20)-1.)/(std::sqrt(10.)-1.),0.,1.);};
             const double weight=std::min(prominent(S[k],P),prominent(prev[k],Pp));
@@ -549,30 +563,30 @@ void VbHpv::hpssFrame() {
     // and Nyquist bins ignored, like numpy).
     double gr[kHpN], gi[kHpN], yr[kHpN], yi[kHpN];
     auto inverse = [&](const double* mask) {
-        for (int k = 0; k < kHpBins; ++k) {
+        for (int k = 0; k < hpBins_; ++k) {
             gr[k] = Fr[k] * mask[k];
             gi[k] = -(Fi[k] * mask[k]);
         }
         gi[0] = 0.0;
-        gi[kHpBins - 1] = 0.0;
-        for (int k = 1; k < kHpBins - 1; ++k) {   // conj(H[N - k]) = H[k]
-            gr[kHpN - k] = gr[k];
-            gi[kHpN - k] = -gi[k];
+        gi[hpBins_ - 1] = 0.0;
+        for (int k = 1; k < hpBins_ - 1; ++k) {   // conj(H[N - k]) = H[k]
+            gr[hpN_ - k] = gr[k];
+            gi[hpN_ - k] = -gi[k];
         }
-        dft192(gr, gi, yr, yi, kHpN);
+        dft192(gr, gi, yr, yi, hpN_);
     };
     if (analysisMask) {
         inverse(MhA);
-        for (int n = 0; n < kHpN; ++n) {
-            const int64_t t = i - (kHpN - 1) + n;
-            if (t >= 0) olaHA_[t & (kRing - 1)] += yr[n] / kHpN * winHp_[n];
+        for (int n = 0; n < hpN_; ++n) {
+            const int64_t t = i - (hpN_ - 1) + n;
+            if (t >= 0) olaHA_[t & (kRing - 1)] += yr[n] / hpN_ * winHp_[n];
         }
     }
     inverse(Mh);
-    for (int n = 0; n < kHpN; ++n) {
-        const int64_t t = i - (kHpN - 1) + n;
+    for (int n = 0; n < hpN_; ++n) {
+        const int64_t t = i - (hpN_ - 1) + n;
         if (t < 0) continue;  // before the stream: the reference drops these too
-        const double yh = yr[n] / kHpN;
+        const double yh = yr[n] / hpN_;
         olaH_[t & (kRing - 1)] += yh * winHp_[n];
         olaP_[t & (kRing - 1)] += (fr[n] - yh) * winHp_[n];
     }
@@ -622,6 +636,19 @@ void VbHpv::fft64(double* re, double* im) const {
 
 // 192-point DFT (exp(-2 pi i k n / 192)) by decimation in time into three 64-point FFTs; bins 0 .. nOut-1.
 void VbHpv::dft192(const double* xr, const double* xi, double* yr, double* yi, int nOut) {
+    if(shortWindow_) {
+        // Frozen S75 window1 arithmetic and accumulation order.
+        for(int k=0;k<nOut;++k) {
+            double re=0.,im=0.;
+            for(int n=0;n<hpN_;++n) {
+                const int q=(k*n)%hpN_; const double c=cosHp_[q],z=sinHp_[q];
+                re+=xr[n]*c+xi[n]*z; im+=xi[n]*c-xr[n]*z;
+            }
+            yr[k]=re;yi[k]=im;
+        }
+        return;
+    }
+
     for (int r = 0; r < 3; ++r) {
         for (int m = 0; m < 64; ++m) {
             fr3_[r][m] = xr[3 * m + r];
@@ -631,7 +658,7 @@ void VbHpv::dft192(const double* xr, const double* xi, double* yr, double* yi, i
     }
     for (int k = 0; k < nOut; ++k) {
         const int q = k & 63;
-        const int t1 = k % kHpN, t2 = (2 * k) % kHpN;
+        const int t1 = k % hpN_, t2 = (2 * k) % hpN_;
         const double w1r = cosHp_[t1], w1i = -sinHp_[t1], w2r = cosHp_[t2], w2i = -sinHp_[t2];
         yr[k] = fr3_[0][q] + (fr3_[1][q] * w1r - fi3_[1][q] * w1i) + (fr3_[2][q] * w2r - fi3_[2][q] * w2i);
         yi[k] = fi3_[0][q] + (fr3_[1][q] * w1i + fi3_[1][q] * w1r) + (fr3_[2][q] * w2i + fi3_[2][q] * w2r);

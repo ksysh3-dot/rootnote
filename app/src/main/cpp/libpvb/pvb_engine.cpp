@@ -347,6 +347,11 @@ bool Engine::setP1pppPreset(bool enabled) {
 }
 void Engine::setP1pppControls(bool on) {
     // This batch cannot fail: its constants were validated before enqueue.
+    vbAlpha2_.setStable183Window(stableEffective_);
+    peak44P1_.setStable183Window(stableEffective_);
+    // A mode switch keeps algorithm ID 6, so vbApply() may legitimately skip it.
+    // Refresh the dry alignment when switching back from the shorter window.
+    if(vbCur_==VB_ALPHA2_P1)vbDelay_=clampv(vbAlpha2_.latencyFrames(),0,kVbDelayLen-1);
     layerPeak42_.setStable(stableEffective_);dryPeak44_.setStable(stableEffective_);
     p1pppEffective_=on;dryLowCutMode_=on?2:0;dryLowCutHz_=80.;dryLowCutDb_=-6.;dryLowCutOrder_=4;
     researchLayerGain_=on?4.:1.;researchLayerGainCap_=0.;peakBudgetOn_=false;
@@ -404,7 +409,7 @@ bool Engine::vbSwitchPending() const {
 }
 
 void Engine::updateLatency() {
-    latency_.store((stableEffective_?3192:0) + lim_.latency() + (stableEffective_?7052:(vbCur_ >= 0 ? vbDelay_ : 0)), std::memory_order_relaxed);
+    latency_.store((stableEffective_?3192:0) + lim_.latency() + (stableEffective_?5516:(vbCur_ >= 0 ? vbDelay_ : 0)), std::memory_order_relaxed);
 }
 
 void Engine::vbApply(int algo, bool force) {

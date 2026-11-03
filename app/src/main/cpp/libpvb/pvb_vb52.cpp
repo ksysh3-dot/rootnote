@@ -19,7 +19,23 @@ double interp52(const double* a, int n, double idx) {
     const int j=static_cast<int>(idx); const double r=idx-j;
     return a[j]*(1-r)+a[std::min(j+1,n-1)]*r;
 }
-double kernel52(double d) {
+double kernel52(double d,bool shortWindow) {
+    if(shortWindow) {
+    // Short PV windows need their own normalized centred Hann response.
+    struct Kernel {
+        double v[10241];
+        Kernel() {
+            double w[288],sum=0.;
+            for(int n=0;n<288;++n){w[n]=.5-.5*std::cos(2*kPi*n/(288-1));sum+=w[n];}
+            for(int j=0;j<10241;++j){const double q=j/64.-80.;double z=0.;
+                for(int n=0;n<288;++n)z+=w[n]*std::cos(2*kPi*q*(n-288/2)/VbHpv::kPvNfft);
+                v[j]=z/sum;}
+        }
+    };
+    static const Kernel table;
+    return (d < -80 || d > 80)?0:interp52(table.v,10241,(d+80)*64);
+    }
+
     return (d < -40 || d > 40) ? 0 : interp52(vb52t::kHann,5121,(d+40)*64);
 }
 double offset52(double a, double b, double c) {
@@ -50,11 +66,11 @@ void VbHpv::beginHarmonic52() {
     std::fill(std::begin(harmonicTrace_.data),std::end(harmonicTrace_.data),0.f);
     auto* h=harmonicTrace_.data; h[2]=static_cast<float>(harmonicEpoch_);
     for(int j=0;j<4;++j) h[3+j]=static_cast<float>((i_>>(16*j))&65535);
-    h[7]=-383; h[8]=static_cast<float>(191+hpssLookahead());
+    h[7]=-(pvN_-1); h[8]=static_cast<float>(hpN_-1+hpssLookahead());
     const double hostPerCore=static_cast<double>(M_)/L_;
     const double fractional=static_cast<double>(M_)*static_cast<double>(m_)/L_-static_cast<double>(n_);
     const double firDelay=static_cast<double>(taps_-1)/(2*L_);
-    h[9]=static_cast<float>(fractional-(382.+hpssLookahead())*hostPerCore-firDelay);
+    h[9]=static_cast<float>(fractional-(static_cast<double>(hpN_-1+pvN_/2-1)+hpssLookahead())*hostPerCore-firDelay);
     h[10]=static_cast<float>(fractional+16*hostPerCore+firDelay);
     h[15]=static_cast<float>(harmEnv52_); h[16]=static_cast<float>(percEnv52_);
     h[23]=HarmonicTrace::kVersion; h[27]=static_cast<float>(modulationMode_+(tonalOnly_?16:0)); harmonicReady_=true;
@@ -121,7 +137,7 @@ void VbHpv::renderTrack52(Track52& actual,const double src[2][256],const int ns[
     Track52& tr=freezeTrack?*frozen:actual;
     if(freezeTrack) {tr.f=s38Tape_[2*tr.id];tr.phi=s38Tape_[2*tr.id+1]+2*kPi*tr.f*static_cast<double>(i_)/kFsd;}
     const double trackFade=(s38Flags_&32)?1.:tr.fade,trackLife=(s38Flags_&32)?1.:tr.life;
-    const double tc=2.*80/48000+(192.+15+191)/3000-7052./48000;
+    const double tc=2.*80/48000+static_cast<double>(pvN_/2+15+hpN_-1)/3000-static_cast<double>(base48_)/48000;
     double w[7],gain; lookup(tr.f,w,gain);
     if(devHarm_) devWeights(w);   // developer mode: per-harmonic offsets (off: untouched)
     double devH[7]={};
@@ -333,7 +349,7 @@ void VbHpv::renderTrack52(Track52& actual,const double src[2][256],const int ns[
                 return h;
             };
             const double hostRate=kFsd*static_cast<double>(M_)/L_;
-            const double fixedDelay=(2.*(kPvN/2-1)+kPvH)/kFsd+(taps_-1)/(L_*hostRate);
+            const double fixedDelay=(2.*(pvN_/2-1)+kPvH)/kFsd+(taps_-1)/(L_*hostRate);
             const double envelopeDelay=latency_/hostRate-fixedDelay;
             const auto a=tr.family.sourceModulation*std::polar(1.,-2*kPi*tr.family.rate*envelopeDelay);
             const auto h=response(fk),hl=response(fk-tr.family.rate),hu=response(fk+tr.family.rate);
@@ -352,7 +368,10 @@ void VbHpv::renderTrack52(Track52& actual,const double src[2][256],const int ns[
         } else for(int g=0;g<32;++g) {
             const double t=(g-16)/3000.;double ratio,phase;
             if(tr.family.valid) tr.family.local(t,ratio,phase);
-            else if(tr.modulation.valid) modulation::local(tr.modulation,t,ratio,phase);
+            else if(tr.modulation.valid) {
+                if(shortWindow_) modulation183::local(tr.modulation,t,ratio,phase);
+                else modulation::local(tr.modulation,t,ratio,phase);
+            }
             else {
                 ratio=clampv(1+tr.dadt*t/std::max(tr.a,1e-12),0.,3.);
                 phase=2*kPi*tr.f*t+kPi*clampv(tr.dfdt,-400.,400.)*t*t;
@@ -431,7 +450,7 @@ double VbHpv::phaseDelta52(double f) const {
     // latency_ is the base placement/rounding correction. HQ HPSS delays both
     // source observations and the dry stream equally; do not subtract that
     // additional delay again from the relative harmonic phase reference.
-    const double timing=2*kPi*f*(7052./48000-static_cast<double>(latency_)/eqFs52_);
+    const double timing=2*kPi*f*(static_cast<double>(base48_)/48000-static_cast<double>(latency_)/eqFs52_);
     return std::arg(actual/ref)+timing;
 }
 
@@ -487,7 +506,7 @@ void VbHpv::pvFrame52() {
     // Study 3 C4: the v0.3 impact context (percussive envelope above a quarter of the harmonic one, held 24 hops =
     // 128 ms) suspends the wider low grid, so an impact's own low tail is judged as before
     if(stageFlags_&StageLowGridOutsideImpact) lowGridHold52_=percEnv52_>.25*harmEnv52_?24:std::max(0,lowGridHold52_-1);
-    const int64_t s0=static_cast<int64_t>(i_)-(kPvN-1);
+    const int64_t s0=static_cast<int64_t>(i_)-(pvN_-1);
     spectrum52(bhRing_,s0,xr52_,xi52_);
     double mag[256], mx=0;
     const int nb=hiBin_-loBin_;
@@ -541,19 +560,19 @@ void VbHpv::pvFrame52() {
     }
     double minb=pk[0].beta,maxb=minb;
     for (int p=1;p<np;++p) { minb=std::min(minb,pk[p].beta); maxb=std::max(maxb,pk[p].beta); }
-    const int lo=std::max(0,static_cast<int>(minb)-12), hi=static_cast<int>(maxb)+13;
+    const int lo=std::max(0,static_cast<int>(minb)-(12*384/pvN_)), hi=static_cast<int>(maxb)+(12*384/pvN_)+1;
     double err[256]={};
     std::complex<double> peakModel[8];  // (a W / 2) e^(i ph) of each peak, evaluated once instead of once per bin
     for (int p=0;p<np;++p) peakModel[p]=(pk[p].a*pvWsum_/2)*std::exp(std::complex<double>(0,pk[p].ph));
     for (int b=lo;b<hi;++b) {
         std::complex<double> model=0;
-        for (int p=0;p<np;++p) model+=peakModel[p]*kernel52(b-pk[p].beta);
+        for (int p=0;p<np;++p) model+=peakModel[p]*kernel52(b-pk[p].beta,shortWindow_);
         err[b-lo]=std::norm(std::complex<double>(xr52_[b],xi52_[b])-model);
     }
     for (int p=0;p<np;++p) {
         double e=0,own=0;
-        for (int b=lo;b<hi;++b) if (std::abs(b-pk[p].beta)<=11) {
-            e+=err[b-lo]; const double k=kernel52(b-pk[p].beta); own+=k*k;
+        for (int b=lo;b<hi;++b) if (std::abs(b-pk[p].beta)<=(11.*384/pvN_)) {
+            e+=err[b-lo]; const double k=kernel52(b-pk[p].beta,shortWindow_); own+=k*k;
         }
         own*=std::pow(pk[p].a*pvWsum_/2,2);
         pk[p].res=10*std::log10(e/std::max(own,1e-30)+1e-12); pk[p].raw=pk[p].res;
@@ -562,12 +581,12 @@ void VbHpv::pvFrame52() {
     // nuisance columns, never claimed to be separated note/instrument labels.
     if((modulationMode_&2) && np>0) {
         double frame[kPvN], neighbors[3];int nn=0;
-        for(int n=0;n<kPvN;++n) frame[n]=bhRing_[(s0+n)&(kRing-1)];
+        for(int n=0;n<pvN_;++n) frame[n]=bhRing_[(s0+n)&(kRing-1)];
         for(int j=1;j<np && nn<3;++j) if(std::abs(pk[j].f-pk[0].f)>12) neighbors[nn++]=pk[j].f;
         AmFamily52 family;
         if(stageFlags_&StageAmFamily) {
-            double raw[kPvN];for(int n=0;n<kPvN;++n) raw[n]=detailRing52_[(s0+n)&(kRing-1)];
-            const int64_t sourceCentre=s0+kPvN/2;
+            double raw[kPvN];for(int n=0;n<pvN_;++n) raw[n]=detailRing52_[(s0+n)&(kRing-1)];
+            const int64_t sourceCentre=s0+pvN_/2;
             if(family52_.valid && sourceCentre-familyCentre52_<=128) {
                 family=family52_;family.advance(static_cast<double>(sourceCentre-familyCentre52_)/kFsd);
                 if(amfamily::predictionResidual(family,raw)>-25) family.valid=false;
@@ -578,9 +597,9 @@ void VbHpv::pvFrame52() {
             }
             if(family.valid) {np=1;pk[0].family=family;familyApplied52_=true;}
         }
-        auto m=family.valid?family.trajectory():modulation::fit(frame,pk[0].f,neighbors,nn);
+        auto m=family.valid?family.trajectory():(shortWindow_?modulation183::fit(frame,pk[0].f,neighbors,nn):modulation::fit(frame,pk[0].f,neighbors,nn));
         if(m.valid && !family.valid && (stageFlags_&StageShortDetail)) {
-            double local[detail::N];const int64_t centre=s0+kPvN/2;
+            double local[detail::N];const int64_t centre=s0+pvN_/2;
             for(int n=0;n<detail::N;++n) local[n]=detailRing52_[(centre-detail::N/2+n)&(kRing-1)];
             auto shortFit=detail::fit(local,m.frequency,m.frequencySlope);
             if(shortFit.valid) {
@@ -754,7 +773,7 @@ void VbHpv::pvFrame52() {
             np=nk2;
         }
     }
-    const int64_t centre=s0+kPvN+kRtShift;
+    const int64_t centre=s0+pvN_+kRtShift;
     int poly=0; for(int p=0;p<np;++p) if(pk[p].a>=.25*am) ++poly;
     // Study 3 C6: the percussive layer's polyphony mute is decided on the causal HPSS harmonic part, as without C6
     if((stageFlags_&(StageAnalysisProminence|StageCausalProminence)) && hpssLookahead()==0) poly=polyCausal52(s0);
@@ -1113,7 +1132,7 @@ void VbHpv::takeGrain52(int64_t index,double& sample,double& nominalAmplitude) {
 
 double VbHpv::core52(double d) {
     const int64_t i=static_cast<int64_t>(i_); const int slot=i&(kRing-1);
-    const int future=hpssLookahead(),hpssDelay=191+future;
+    const int future=hpssLookahead(),hpssDelay=hpN_-1+future;
     md52_[slot]=d; md2_52_[slot]=i>=hpssDelay?md52_[(i-hpssDelay)&(kRing-1)]:0;
     double b=d; for(auto& s:band_) b=s.tick(b); bRing_[slot]=b;
     if((i+1)%16==0) hpssFrame();
@@ -1155,17 +1174,17 @@ double VbHpv::core52(double d) {
         const int64_t j=static_cast<int64_t>(i)-kBurstDelay;
         if(j>=0) hpRing_[j&(kRing-1)]=burstSample52(j);
     }
-    if(i>=383+future && (i-383-future)%16==0) pvFrame52();
+    if(i>=pvN_-1+future && (i-(pvN_-1)-future)%16==0) pvFrame52();
     // Exact nearest-edge centred closing, evaluated with the existing vocoder delay.
-    if(i>=90) {
-        double m=0; for(int64_t j=std::max<int64_t>(0,i-180);j<=i;++j) m=std::max(m,aRing_[j&(kRing-1)]);
-        max52_[(i-90)&(kRing-1)]=m;
+    if(i>=closingRadius_) {
+        double m=0; for(int64_t j=std::max<int64_t>(0,i-2*closingRadius_);j<=i;++j) m=std::max(m,aRing_[j&(kRing-1)]);
+        max52_[(i-closingRadius_)&(kRing-1)]=m;
     }
     const int defer=outputDefer();
     double ac=0;
-    if(i>=207+defer) {
-        const int64_t t=i-207-defer; ac=1e30;
-        for(int64_t j=std::max<int64_t>(0,t-90);j<=t+90;++j) ac=std::min(ac,max52_[j&(kRing-1)]);
+    if(i>=envelopeDelay_+defer) {
+        const int64_t t=i-envelopeDelay_-defer; ac=1e30;
+        for(int64_t j=std::max<int64_t>(0,t-closingRadius_);j<=t+closingRadius_;++j) ac=std::min(ac,max52_[j&(kRing-1)]);
     }
     double out=0,apv=0;
     if(i>=defer) {
@@ -1200,7 +1219,7 @@ double VbHpv::core52(double d) {
     const int pslot=(i-defer)&(kRing-1);
     const double target=i>=defer?polyT52_[pslot]:1.; if(i>=defer) polyT52_[pslot]=1;
     a=std::exp(-1./(target<poly52_?60:600)); poly52_=a*poly52_+(1-a)*target;
-    const double hp=i>=207+defer?hpRing_[(i-207-defer)&(kRing-1)]*poly52_:0;
+    const double hp=i>=envelopeDelay_+defer?hpRing_[(i-envelopeDelay_-defer)&(kRing-1)]*poly52_:0;
     // Developer mode "지속음 / 타격음 비율": path gains, only while one of them differs from 0 dB.
     double preFilter=devMix_?out*appliedGain*devSustLin_+(tonalOnly_?0:hp)*devPercLin_:out*appliedGain+(tonalOnly_?0:hp);
     if(dev_.attackHops>DevVoicing::kAttackHops) {
@@ -1264,9 +1283,9 @@ double VbHpv::burstSample52(int64_t j) {
     return y;
 }
 void VbHpv::spectrum52(const double* ring, int64_t s0, double* re, double* im) {
-    const int half = kPvN / 2;
+    const int half = pvN_ / 2;
     double frame[kPvN];
-    for (int n = 0; n < kPvN; ++n) frame[n] = ring[(s0 + n) & (kRing - 1)] * winPv_[n];
+    for (int n = 0; n < pvN_; ++n) frame[n] = ring[(s0 + n) & (kRing - 1)] * winPv_[n];
     // zero-phase arrangement fr = [frame[half:], zeros, frame[:half]] (2048 points), real FFT: the even samples go into
     // the real and the odd ones into the imaginary part of a 1024-point complex FFT.
     
@@ -1291,6 +1310,8 @@ void VbHpv::spectrum52(const double* ring, int64_t s0, double* re, double* im) {
     }
 }
 }
+
+namespace pvb { void VbHpv::warmShortKernel() { (void)kernel52(0.,true); (void)modulation183::axes(); } }
 
 // Resultant core (algorithm 15): defined here, in this translation unit, to use the helpers above and the privates of VbHpv
 #if defined(PVB_HOST_RESULTANT_REFERENCE)

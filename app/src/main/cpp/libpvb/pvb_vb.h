@@ -177,6 +177,11 @@ struct HpvParams {
 class VbHpv final : public VbModule {
 public:
     // Core rate and frame sizes (fixed: the tables and buffers are sized for them).
+    // Only the integrated STABLE mode selects the frozen S75 window1.
+    // Storage stays at legacy maxima; OFF/STRONG keep their original windows.
+    void setStable183Window(bool enabled);
+    static void warmShortKernel();
+    int baseDelay48() const { return base48_; }
     static constexpr int kFsd = 3000;
     static constexpr int kHpN = 192, kHpHop = 16, kHpMedT = 11, kHpMedF = 7, kHpBins = kHpN / 2 + 1;
     static constexpr int kPvN = 384, kPvH = 16, kPvNfft = 2048, kMaxPeaks = 8;
@@ -433,6 +438,9 @@ private:
     // HPSS
     static constexpr int kRing = 512;      // power of two, > every look-back below
     double bRing_[kRing] = {};
+    bool shortWindow_ = false;
+    int hpN_=192, hpBins_=97, pvN_=384, base48_=7052, envelopeDelay_=207, closingRadius_=90;
+    void initializeWindows();
     double winHp_[kHpN] = {};
     double wsumHp_[kHpHop] = {};
     double cosHp_[kHpN] = {}, sinHp_[kHpN] = {};   // exp(-2 pi i n / 192); 192 = 3 x 64 (mixed radix)
