@@ -14,8 +14,10 @@ fi
 mkdir -p "$OUT"
 CC="${CC:-gcc}"
 # Same language mode as the app (CMakeLists: -std=gnu11, -O2); upstream warnings are not ours to fix (newer GCC
-# turns some old-C warnings into errors by default: keep them warnings, as the NDK clang build does).
+# turns some old-C warnings into errors by default: keep them warnings, as the NDK clang build does). GCC 14+ (the
+# ubuntu-26.04 runner has GCC 15) also errors on implicit int (nseel-compiler.c: "register i, j, l, m;"); the flag
+# exists in GCC 13 too (checked with 13.3 and 14.2).
 "$CC" -std=gnu11 -O2 -fPIC -shared -w -Wno-error=implicit-function-declaration -Wno-error=incompatible-pointer-types \
-    -Wno-error=int-conversion -I"$J" $(find "$J" -name '*.c' | sort) "$CPP/EELStdOutExtension.c" \
+    -Wno-error=int-conversion -Wno-error=implicit-int -I"$J" $(find "$J" -name '*.c' | sort) "$CPP/EELStdOutExtension.c" \
     "$HERE/jdsp_capi.c" -o "$OUT/libjdspcapi.so" -lm -lpthread
 echo "built: $OUT/libjdspcapi.so"
