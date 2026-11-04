@@ -16,7 +16,7 @@ objs=()
 for f in "$HERE/../../app/src/main/cpp/rootfx/jamesdsp_rootnote.c" "$J/cpthread.c" $(find "$J/jdsp" -name '*.c' | sort) "$CPP/EELStdOutExtension.c" "$HERE/android_log_stub.c"; do
     o="$OUT/obj/$(echo "$f" | md5sum | cut -c1-12).o"
     "$CC" -std=gnu11 -O2 -fPIC -w -Wno-error=implicit-function-declaration -Wno-error=incompatible-pointer-types \
-        -Wno-error=int-conversion -fvisibility=hidden -I"$J" -I"$J/jdsp" -I"$CPP/rootfx" -c "$f" -o "$o"
+        -Wno-error=int-conversion -Wno-error=implicit-int -fvisibility=hidden -I"$J" -I"$J/jdsp" -I"$CPP/rootfx" -c "$f" -o "$o"
     objs+=("$o")
 done
 for f in "$CPP/rootfx/rootfx_pvb.cpp" "$P/pvb_engine.cpp" "$P/pvb_analysis.cpp" "$P/pvb_vb52.cpp" "$P/pvb_vb.cpp"; do
