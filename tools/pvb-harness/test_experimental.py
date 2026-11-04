@@ -4,7 +4,8 @@
     ./build_host.sh && python3 test_experimental.py [--baseline-ref SHA | --baseline LIB] [--report out.json]
 
 Checks
-  - all four off: output bit-identical to the engine before the options existed. --baseline-ref builds that engine
+  - all four off: output equal (max sample difference <= BASELINE_TOL, bit-identical on g++ 13/14) to the engine
+    before the options existed. --baseline-ref builds that engine
     from a git commit (sources taken with `git show`, fetched with --depth 1 if missing); --baseline uses a built
     libpvbcapi.so. Without either, only the in-tree checks below run (CI passes --baseline-ref).
   - in-tree: an option switched on and off again leaves the layer untouched once it has blended out (bit exact
@@ -33,6 +34,7 @@ from test_engine import Engine, FP, P, load_lib  # noqa: E402
 X = dict(X_SMOOTH=29, X_RISE=30, X_S1M=31, X_DENSE=32)
 P.update(X)
 P1, D2 = 6, 7
+BASELINE_TOL = 1e-8   # largest sample difference to the reference engine that still counts as "the same output"
 RESULTS = []
 
 
@@ -164,9 +166,14 @@ def t_baseline(lib, base_path, label):
                               max_diff=float(np.max(np.abs(ya - yb)))))
             a.close()
             b.close()
-    bad = [c for c in cases if not c['equal']]
-    check(f'all options off = engine at {label} (bit exact; VB off and all 11 models, 44.1/48 kHz, switch + level)',
-          not bad, cases=len(cases), worst=max(c['max_diff'] for c in cases))
+    # Two different source trees (this engine vs the reference commit) are two different compilations: a newer g++
+    # (ubuntu-latest moved from 24.04 / GCC 13 to 26.04 / GCC 15 on 2026-10-27) may schedule the identical formulas
+    # differently and differ in the last bit. Allow BASELINE_TOL (about -160 dBFS); anything audible still fails.
+    bad = [c for c in cases if c['max_diff'] > BASELINE_TOL]
+    check(f'all options off = engine at {label} (equal to within {BASELINE_TOL:g}; VB off and all 11 models, '
+          f'44.1/48 kHz, switch + level)',
+          not bad, cases=len(cases), bit_exact=sum(1 for c in cases if c['equal']),
+          worst=max(c['max_diff'] for c in cases))
 
 
 def t_off_after_blend(lib, sr=48000):
