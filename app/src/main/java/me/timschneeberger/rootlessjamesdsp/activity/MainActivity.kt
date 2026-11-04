@@ -751,13 +751,17 @@ class MainActivity : BaseActivity() {
         when {
             name.endsWith(".tar") -> {
                 // Validate presets
-                StorageUtils.openInputStreamSafe(this, uri)?.use {
-                    if (!Preset.validate(it)) {
+                val valid = try {
+                    StorageUtils.openInputStreamSafe(this, uri)?.use { Preset.validate(it) } == true
+                } catch (ex: Exception) {
+                    Timber.e(ex)
+                    false
+                }
+                if (!valid) {
                         Timber.e("File rejected due to invalid content")
                         showAlert(R.string.filelibrary_corrupted_title,
                             R.string.filelibrary_corrupted)
                         return
-                    }
                 }
 
                 titleRes = R.string.intent_import_preset
@@ -812,12 +816,14 @@ class MainActivity : BaseActivity() {
 
                         if (name.endsWith(".tar")) {
                             try {
-                                StorageUtils.openInputStreamSafe(this@MainActivity, uri)?.use {
-                                    Preset.load(this@MainActivity, it)
-                                }
+                                // Load the verified local copy, not a second mutable provider stream.
+                                file.inputStream().use { Preset.load(this@MainActivity, it) }
                             }
                             catch (ex: Exception) {
-                                showAlert(getString(R.string.filelibrary_corrupted_title), ex.localizedMessage ?: "")
+                                withContext(Dispatchers.Main) {
+                                    showAlert(getString(R.string.filelibrary_corrupted_title), ex.localizedMessage ?: "")
+                                }
+                                return@launch
                             }
                         }
                         else if (namespace != null && key != null && keyEnable != null)
@@ -831,7 +837,9 @@ class MainActivity : BaseActivity() {
                         delay(250L)
                         broadcastPresetLoadEvent()
 
-                        makeSnackbar(getString(R.string.intent_import_select_success, name)).show()
+                        withContext(Dispatchers.Main) {
+                            makeSnackbar(getString(R.string.intent_import_select_success, file.name)).show()
+                        }
                     }
                 }
             }
