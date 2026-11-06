@@ -159,7 +159,7 @@ object PvbEngineParams {
                 PvbParam.X_SMOOTH, PvbParam.X_RISE, PvbParam.X_S1M, PvbParam.X_DENSE, PvbParam.DEV_ON,
                 PvbParam.XTC_MODE, PvbParam.VB_LEVEL_DB)) p[k] = frozen[k]
             p[PvbParam.VB_ALGO] = PvbModels.P1.toFloat()
-            p[PvbParam.P1PPP] = if (s.stable) 2f else 1f
+            p[PvbParam.P1PPP] = if (s.stable || s.separated) 2f else 1f
         }
         return Encoded(p, diagnosticSolo)
     }

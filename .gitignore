@@ -18,6 +18,10 @@ local.properties
 /app/src/main/cpp/libjamesdsp/Main/DSPManager/.idea
 /app/src/main/cpp/libjamesdsp/Main/DSPManager/DSPManager.iml
 
+# s91 personal test assets: never commit new weights
+/app/src/main/assets/E60KD.bin
+/app/src/main/assets/T3a16_96.bin
+
 # Signing keys never belong in this repository (the general build is signed from CI secrets)
 *.jks
 *.keystore

@@ -21,6 +21,7 @@ public:
  StableSeparator();
  ~StableSeparator();
  bool load(const unsigned char* p,size_t size);
+ void unload(); // Lifecycle only: audio generation must have ended.
  bool loaded()const{return loaded_;}
  void reset();
  bool tick(float l,float r,float* separated,float* original);

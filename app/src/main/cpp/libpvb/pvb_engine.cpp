@@ -306,6 +306,44 @@ bool Engine::setPeakBudgetResearch(int enabled, double cap, double ceilingDb,
     return true;
 }
 
+bool Engine::prepareStageC(int mode,const unsigned char* data,size_t bytes,bool worker,bool telemetry,int sampleRate) {
+    if(mode<0 || mode>4 || (worker && mode!=3))return false;
+    if((mode==2 || mode==4) && (!data || bytes!=531208))return false;
+    if(mode==3 && (!data || bytes!=425640))return false;
+    setStream91(false,false,0);
+    stable_.unload();
+    worker91_.reset();
+    if((mode==2 || mode==4) && !loadStableWeights(data,bytes))return false;
+    if(mode==3 && (!loadControl91(data,bytes) || (worker && !loadWorker91(data,bytes))))return false;
+    control91_.telemetry=telemetry;
+    if(worker91_)worker91_->stream.telemetry=telemetry;
+    // Reproduce a fresh engine's transition clock via the existing configure/reset path.
+    // All file reads, model/FFT preparation and optional thread creation precede audio.
+    {
+        std::lock_guard<std::mutex> lock(mtx_);
+        defaultParams(active_);defaultParams(pending_);hasPending_=false;pendingSr_=0;
+    }
+    stableEffective_=false;separatorPeak70_=false;setP1pppControls(false);
+    processed_=false;resetRequested_.store(false);configure(sampleRate);
+    if(mode==3 && !setStream91(true,worker,0))return false;
+    control91_.observedCount.store(0);control91_.observedMax.store(0);
+    for(auto& bin:control91_.observedHistogram)bin.store(0);
+    if(worker91_){worker91_->stream.observedCount.store(0);worker91_->stream.observedMax.store(0);for(auto& bin:worker91_->stream.observedHistogram)bin.store(0);}
+    stageCTelemetry_=telemetry;stageCLateBase_=0;separatorTicks88_=0;stageCLate_.store(0);stageCSeparatorTicks_.store(0);
+    stageCMode_.store(mode);
+    stageCFlags_.store((stream91Enabled_?1:0)|(worker91Enabled_?2:0)|(stable_.loaded()?4:0));
+    return true;
+}
+void Engine::copyStageC(int64_t* out)const {
+    const int flags=stageCFlags_.load();
+    const auto& s=(flags&2) && worker91_?worker91_->stream:control91_;
+    out[0]=s.observedCount.load(std::memory_order_acquire);out[1]=s.observedMax.load();
+    out[2]=stageCLate_.load();out[3]=(flags&2) && worker91_?worker91_->dropped.load():0;
+    out[4]=stageCSeparatorTicks_.load();out[5]=stageCMode_.load();out[6]=flags;
+    out[7]=p1pppState();out[8]=latencyFrames();out[9]=33;out[10]=8;out[11]=stageCTelemetry_?1:0;
+    for(int i=0;i<2000;++i)out[12+i]=s.observedHistogram[i].load(std::memory_order_relaxed);
+}
+
 void Engine::setSampleRate(int sampleRate) {
     std::lock_guard<std::mutex> lock(mtx_);
     pendingSr_ = sampleRate;
@@ -534,7 +572,7 @@ void Engine::publishFilters() {
 }
 
 void Engine::resetState() {
-    if(stream91Enabled_){control91_.reset();stream91Samples_=0;vbAlpha2_.resetControl91();if(worker91Enabled_ && worker91_){worker91_->reset();worker91_->start();}}
+    if(stream91Enabled_){stageCLateBase_+=vbAlpha2_.stats88().lateFrames;control91_.reset();stream91Samples_=0;vbAlpha2_.resetControl91();if(worker91Enabled_ && worker91_){worker91_->reset();worker91_->start();}}
     resetDevTelemetry();
     stable_.reset();stableNeedsPrime_=stableEffective_;stablePrimeRemaining_=stableEffective_?49152:0;
     for(auto& channel:separatorEq70_)for(auto& state:channel)state.reset();
@@ -1250,6 +1288,10 @@ void Engine::process(float* io, int frames) {
     mMatchMeasured_.store(match_.measured(), std::memory_order_relaxed);
     mEstLevel_.store(phoneOn ? static_cast<float>(std::max(-120.0, phone_.maxLevelDb())) : -120.f, std::memory_order_relaxed);
     mEstGr_.store(phoneOn ? static_cast<float>(phone_.grDb(1)) : 0.f, std::memory_order_relaxed);
+    if(stageCTelemetry_ && !stablePriming_){
+        stageCLate_.store(stageCLateBase_+vbAlpha2_.stats88().lateFrames,std::memory_order_relaxed);
+        stageCSeparatorTicks_.store(separatorTicks88_,std::memory_order_relaxed);
+    }
     mBlocks_.fetch_add(1, std::memory_order_relaxed);
     const auto research = vbCur_ >= 0 ? vbMods_[vbCur_]->researchStats() : VbResearchStats{};
     mVbScene_.store(research.scene, std::memory_order_relaxed);

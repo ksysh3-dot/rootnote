@@ -40,6 +40,8 @@ data class PvbSettings(
     val vbVolMaxDb: Float = VolumeLevelLink.MAX_DB_DEFAULT,
     // Experimental layer options ("실험 기능"), all off by default; the engine ignores them while virtual bass is off.
     // Not part of device profiles (DeviceProfiles.FLOAT_KEYS / BOOL_KEYS) nor of the blind-comparison conditions.
+    val separated: Boolean = false,
+    val conducted: Boolean = false,
     val stable: Boolean = false,
     val p1ppp: Boolean = false,       // frozen P1+++; effective overrides only, never rewrites saved settings
     // Developer mode ("개발자 모드", general build only; DevParams). devOn = the user consented and the values below
@@ -79,8 +81,9 @@ data class PvbSettings(
     val xtcPortrait: Int = XTC_PORTRAIT_OFF,
     val xtcPortraitLowRight: Boolean = true,
 ) {
-    val fixedBass: Boolean get() = p1ppp || stable
-    val bassMode: String get() = if (stable) "stable" else if (p1ppp) "strong" else "off"
+    val fixedBass: Boolean get() = p1ppp || stable || separated || conducted
+    val stageCId: Int get() = when { conducted -> 3; separated -> 2; stable -> 4; p1ppp -> 1; else -> 0 }
+    val bassMode: String get() = if (conducted) "conducted" else if (separated) "separated" else if (stable) "stable" else if (p1ppp) "strong" else "off"
 
     companion object {
         // Not "dsp_*": upstream presets, backups and device profiles swap those files behind the listeners' back.
@@ -257,6 +260,8 @@ data class PvbSettings(
             val d = PvbSettings()
             return PvbBuild.finish(PvbSettings(
                 enabled = p.bool(KEY_ENABLE, d.enabled),
+                separated = (p.all[KEY_BASS_MODE] as? String) == "separated",
+                conducted = (p.all[KEY_BASS_MODE] as? String) == "conducted",
                 stable = (p.all[KEY_BASS_MODE] as? String) == "stable",
                 p1ppp = ((p.all[KEY_BASS_MODE] as? String)?.let { it == "strong" } ?: p.bool(KEY_P1PPP, false)),
                 matchOnDisable = p.bool(KEY_MATCH_ON_DISABLE, d.matchOnDisable),

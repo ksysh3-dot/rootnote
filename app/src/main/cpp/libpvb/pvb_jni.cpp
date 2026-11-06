@@ -238,3 +238,26 @@ Java_me_timschneeberger_rootlessjamesdsp_pvb_PvbNative_loadStableWeights(JNIEnv*
     bool ok=h->engine.loadStableWeights(reinterpret_cast<unsigned char*>(bytes),531208);
     env->ReleaseByteArrayElements(data,bytes,JNI_ABORT);return ok?JNI_TRUE:JNI_FALSE;
 }
+
+// Lifecycle entry: caller has joined the previous audio generation before calling.
+extern "C" JNIEXPORT jboolean JNICALL
+Java_me_timschneeberger_rootlessjamesdsp_pvb_PvbNative_prepareStageC(JNIEnv* env,jclass,jlong handle,jint mode,jbyteArray data,jboolean worker,jboolean telemetry,jint rate){
+    auto* h=fromJ(handle);if(!h)return JNI_FALSE;
+    const jsize n=data?env->GetArrayLength(data):0;
+    jbyte* bytes=data?env->GetByteArrayElements(data,nullptr):nullptr;
+    if(data && !bytes)return JNI_FALSE;
+    bool ok=false;
+    try {ok=h->engine.prepareStageC(mode,reinterpret_cast<unsigned char*>(bytes),n,worker==JNI_TRUE,telemetry==JNI_TRUE,rate);}
+    catch(...) {ok=false;}
+    if(bytes)env->ReleaseByteArrayElements(data,bytes,JNI_ABORT);
+    return ok?JNI_TRUE:JNI_FALSE;
+}
+extern "C" JNIEXPORT jboolean JNICALL
+Java_me_timschneeberger_rootlessjamesdsp_pvb_PvbNative_copyStageC(JNIEnv* env,jclass,jlong handle,jlongArray out){
+    auto* h=fromJ(handle);
+    if(!h || !out || env->GetArrayLength(out)!=pvb::Engine::kStageCSize)return JNI_FALSE;
+    int64_t values[pvb::Engine::kStageCSize];h->engine.copyStageC(values);
+    jlong converted[pvb::Engine::kStageCSize];
+    for(int i=0;i<pvb::Engine::kStageCSize;++i)converted[i]=values[i];
+    env->SetLongArrayRegion(out,0,pvb::Engine::kStageCSize,converted);return JNI_TRUE;
+}

@@ -16,7 +16,9 @@ void ControlStream::frame(){
  auto z=fft_->plan.exec(input,scratch_,1.f,true,1);
  for(int i=0;i<257;++i){float re=i==0?z[0]:i==256?z[511]:z[2*i-1],im=(i==0 || i==256)?0.f:z[2*i];float m=stableHostMagnitude(re,im);lastFeature[i]=std::clamp(stableHostLog10(m*m+1e-8f),-8.f,4.f)/4.f;}
  net_.run(lastFeature,lastProbability);float v[8];compact_.run(lastProbability,v);frames.put(frame_++,v);++frameCount;
- if(telemetry){auto ns=std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now()-began).count();frameNanoseconds+=ns;maxNanoseconds=std::max(maxNanoseconds,uint64_t(ns));++timeHistogram[std::min<size_t>(1999,ns/10000)];}
+ if(telemetry){auto ns=std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now()-began).count();frameNanoseconds+=ns;maxNanoseconds=std::max(maxNanoseconds,uint64_t(ns));++timeHistogram[std::min<size_t>(1999,ns/10000)];
+ observedHistogram[std::min<size_t>(1999,ns/10000)].fetch_add(1,std::memory_order_relaxed);
+ observedMax.store(std::max(observedMax.load(std::memory_order_relaxed),uint64_t(ns)),std::memory_order_relaxed);observedCount.fetch_add(1,std::memory_order_release);}
 }
 bool ControlStream::tick(float l,float r){
  downReady=false;if(!loaded())return false;

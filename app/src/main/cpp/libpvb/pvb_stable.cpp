@@ -8,6 +8,8 @@ namespace pvb {
 struct StableFft {ducc0::detail_fft::pocketfft_r<float> plan{512};};
 StableSeparator::StableSeparator() = default;
 StableSeparator::~StableSeparator() = default;
+void StableSeparator::unload(){loaded_=false;net_=StableNet{};fft_.reset();reset();}
+
 void StableSeparator::frame(){
   std::complex<float> sp[2][257];float feat[257],mask[514],input[512];
   for(int c=0;c<2;c++){

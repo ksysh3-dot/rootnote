@@ -40,6 +40,8 @@ class ControlStream {
  void frame();
 public:
  ControlFrames frames;float lastProbability[42]{};float lastFeature[257]{};float lastDown=0;bool downReady=false;
+ std::array<std::atomic<uint64_t>,2000> observedHistogram{};
+ std::atomic<uint64_t> observedCount{0},observedMax{0};
  bool telemetry=false;uint64_t frameCount=0,frameNanoseconds=0,maxNanoseconds=0;std::array<uint64_t,2000> timeHistogram{};
  ControlStream();~ControlStream();
  bool load(const unsigned char*,size_t);bool loaded()const{return net_.loaded;}

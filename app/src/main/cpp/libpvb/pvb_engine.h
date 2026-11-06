@@ -213,12 +213,20 @@ public:
     bool setStream91(bool enabled,bool worker,int64_t origin){
         if(enabled && (!control91_.loaded() || stable_.loaded()))return false;
         if(worker91_)worker91_->stop();
-        stream91Enabled_=enabled;worker91Enabled_=worker;stream91Origin_=origin;stream91Samples_=0;control91_.reset();
+        stream91Enabled_=enabled;worker91Enabled_=enabled && worker;stream91Origin_=origin;stream91Samples_=0;control91_.reset();
         if(enabled && worker){if(!worker91_)return false;worker91_->reset();worker91_->start();}
         vbAlpha2_.setStream91(enabled && !worker?&control91_:nullptr,enabled && worker?worker91_.get():nullptr,origin);return true;
     }
     bool loadWorker91(const unsigned char* p,size_t n){worker91_=std::make_unique<ControlWorker>();return worker91_->stream.load(p,n);}
     uint64_t stale91()const{return vbAlpha2_.stats88().staleHops;}
+    // Service lifecycle only: no audio generation may be alive during prepare.
+    bool prepareStageC(int mode,const unsigned char* data,size_t bytes,bool worker,bool telemetry,int sampleRate);
+    static constexpr int kStageCSize=2012;
+    void copyStageC(int64_t* out)const;
+    std::atomic<int> stageCMode_{0},stageCFlags_{0};
+    bool stageCTelemetry_=false;uint64_t stageCLateBase_=0;
+    std::atomic<uint64_t> stageCLate_{0},stageCSeparatorTicks_{0};
+
 
     void setSeparatorPeak70Research(bool on){separatorPeak70_=on;}
     void processSeparator70(float* z,const float* x,int n){separatorMix70_=x;process(z,n);separatorMix70_=nullptr;}

@@ -228,10 +228,10 @@ fun PvbSection(host: RnAdvancedActivity, showIcons: Boolean) {
                 }
             })
         RnChoiceRow(stringResource(R.string.pvb_bass_mode),
-            listOf(RnChoice("off", "OFF"), RnChoice("strong", "강함 · P1+++"),
-                RnChoice("stable", "안정 · FAST_PEAK · 실험 · 지연 +66 ms")),
+            listOf(RnChoice("off", "끔"), RnChoice("strong", "강함"),
+                RnChoice("separated", "분리형"), RnChoice("conducted", "지휘형")),
             s.bassMode, { p.put(P.KEY_BASS_MODE, it) }, enabled = vbOn,
-            line = stringResource(R.string.pvb_bass_mode_summary))
+            line = (if (s.stable) "현재: epoch6 안정 (개발자 비교)\n" else "") + stringResource(R.string.pvb_bass_mode_summary))
         VbModeRow(p, s, research, vbOn && !s.fixedBass)
         if (research) {
             val model = PvbModels.fromKey(p.string(P.KEY_VB_ALGO, PvbModels.DEFAULT_KEY))

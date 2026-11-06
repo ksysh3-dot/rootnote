@@ -285,7 +285,7 @@ public:
     const Control88& stats88()const{return control88_;}
     void setDiag88b(float* p,int n){control88_.diagnostic=p;control88_.diagnosticCapacity=n;control88_.diagnosticCount=0;}
     void setStream91(ControlStream* s,ControlWorker* w,double origin){control88_=Control88{};control88_.enabled=s||w;control88_.modules=33;control88_.stream=s;control88_.worker=w;control88_.origin=origin;}
-    void resetControl91(){control88_.time=-control88_.origin;control88_.g=1;control88_.hops=control88_.staleHops=0;}
+    void resetControl91(){control88_.time=-control88_.origin;control88_.g=1;control88_.hops=control88_.staleHops=control88_.lateFrames=0;control88_.lastLateIndex=-1;}
     void setStageResearch(unsigned flags,StageCapture52::Sink sink=nullptr,void* user=nullptr) {
         stageHostFlags_=flags&268435455;stageFlags_=resultantOn_?0u:stageHostFlags_;stageSink_=sink;stageUser_=user;reset();
     }

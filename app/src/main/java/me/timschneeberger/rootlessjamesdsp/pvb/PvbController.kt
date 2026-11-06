@@ -343,13 +343,17 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
 
     // ------------------------------------------------------------------------------------------ inputs
 
-    private val prefListener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ ->
+    /** Service reuses stopRecording/startRecording; model preparation follows the completed join. */
+    var onStageCChange: (() -> Unit)? = null
+    private val prefListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         val old = effectiveSettings
         userSettings = PvbSettings.load(prefs)
         effectiveSettings = effective(userSettings)
         updateActive()
         if (old.volRefPct != effectiveSettings.volRefPct) readVolume()
-        push(rampMs = EDIT_RAMP_MS)
+        if (key in setOf(PvbSettings.KEY_BASS_MODE, PvbSettings.KEY_P1PPP, "pvb_s91_worker", "pvb_s91_telemetry") && onStageCChange != null) {
+            onStageCChange?.invoke()
+        } else push(rampMs = EDIT_RAMP_MS)
     }
 
     private val settingsObserver = object : ContentObserver(main) {
