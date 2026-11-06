@@ -534,6 +534,7 @@ void Engine::publishFilters() {
 }
 
 void Engine::resetState() {
+    if(stream91Enabled_){control91_.reset();stream91Samples_=0;vbAlpha2_.resetControl91();if(worker91Enabled_ && worker91_){worker91_->reset();worker91_->start();}}
     resetDevTelemetry();
     stable_.reset();stableNeedsPrime_=stableEffective_;stablePrimeRemaining_=stableEffective_?49152:0;
     for(auto& channel:separatorEq70_)for(auto& state:channel)state.reset();
@@ -711,9 +712,17 @@ void Engine::process(float* io, int frames) {
         if(p1pppQueued_)commitP1ppp();
         if(p1pppEffective_)vbApply(vbWanted(),true);
         resetState();
-        if(p1pppEffective_) {p1pppFade_.snap(0.);p1pppHold_=latencyFrames();p1pppPhase_=PPP_HOLD;publishP1ppp();}
-        fade_.snap(0.0);
-        fade_.setTarget(1.0, static_cast<int>(std::lround(kRecoverFadeS * sr_)));
+        if(stream91Enabled_) {
+            // Replay this mode's fresh-start 1440-sample algorithm switch clock.
+            // OFF/P1/PPP/STABLE retain the original recovery route below.
+            vbCur_=-1;vbDelay_=0;vbPhase_=VB_STEADY;vbX_.snap(1.);
+            p1pppFade_.snap(1.);p1pppHold_=0;p1pppPhase_=PPP_STEADY;publishP1ppp();
+            fade_.snap(1.);
+        } else {
+            if(p1pppEffective_) {p1pppFade_.snap(0.);p1pppHold_=latencyFrames();p1pppPhase_=PPP_HOLD;publishP1ppp();}
+            fade_.snap(0.0);
+            fade_.setTarget(1.0, static_cast<int>(std::lround(kRecoverFadeS * sr_)));
+        }
     }
 
     // Virtual bass on/off or another algorithm: switch now if nothing is audible, else fade out first.
@@ -772,6 +781,7 @@ void Engine::process(float* io, int frames) {
         float fl = io[2 * n], fr = io[2 * n + 1];
         if (!isFiniteBits(fl)) { fl = 0.f; badInput = true; }
         if (!isFiniteBits(fr)) { fr = 0.f; badInput = true; }
+        if(stream91Enabled_ && !stablePriming_){if(stream91Samples_++>=stream91Origin_){if(worker91Enabled_)worker91_->tick(fl,fr);else control91_.tick(fl,fr);}}
         // Signals of one sample, in order (docs/ARCHITECTURE.md section 3): xl/xr the input; alignedL/R the input
         // delayed by the generator latency (vbDelay_ samples) so the dry path lines up with the layer; spatialL/R
         // after the spatial stage; eqL/R after the EQ; layL/R the generated layer; preLimitL/R the mix before the
@@ -779,6 +789,7 @@ void Engine::process(float* io, int frames) {
         // bypass and the matcher; yl/yr the output. Linear amplitude throughout.
         float stableMix[2]{};
         if(stableEffective_ && !stablePriming_) {
+            ++separatorTicks88_;
             float sep[2];bool ready=stable_.tick(fl,fr,sep,stableMix);
             if(!ready){
                 const double f=p1pppFade_.next();(void)f;

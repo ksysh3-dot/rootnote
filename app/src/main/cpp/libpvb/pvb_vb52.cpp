@@ -501,6 +501,8 @@ int VbHpv::polyCausal52(int64_t s0) {
 void VbHpv::pvFrame52() {
     std::fill(std::begin(oscillatorNominal52_),std::end(oscillatorNominal52_),0.);
     detailApplied52_=familyApplied52_=false;
+    control88_.beginDiag(static_cast<double>(n_));
+    if(control88_.enabled)control88_.hop(static_cast<double>(n_));
     beginHarmonic52();
     if(devMeter_) devBeginFrame();
     // Study 3 C4: the v0.3 impact context (percussive envelope above a quarter of the harmonic one, held 24 hops =
@@ -512,6 +514,7 @@ void VbHpv::pvFrame52() {
     const int nb=hiBin_-loBin_;
     for (int b=0;b<nb;++b) { mag[b]=std::hypot(xr52_[loBin_+b],xi52_[loBin_+b]); mx=std::max(mx,mag[b]); }
     if(harmonicCapture_) harmonicTrace_.data[14]=static_cast<float>(mx*2/pvWsum_);
+    if(control88_.diag){int nc=0;for(int b=1;b<nb-1 && nc<256;++b)if(mag[b]>=mag[b-1] && mag[b]>mag[b+1] && mag[b]>=mx*pvRel_ && mx*2/pvWsum_>=pvAbs_){double off=offset52(std::log(mag[b-1]+1e-30),std::log(mag[b]+1e-30),std::log(mag[b+1]+1e-30));control88_.diag[4+nc++]=float((loBin_+b+off)*binHz_);}control88_.diag[1]=float(nc);}
     if (mx*2/pvWsum_<pvAbs_) {
         observeScene(VB_SCENE_UNKNOWN);
         missingFrame52(HarmonicTrace::Absolute,true); apkCount_=histCount_=0; return;
@@ -519,12 +522,16 @@ void VbHpv::pvFrame52() {
     int lm[256], nl=0;
     for (int b=1;b<nb-1;++b) if (mag[b]>=mag[b-1] && mag[b]>mag[b+1]) lm[nl++]=b;
     if (!nl) { observeScene(VB_SCENE_UNKNOWN); missingFrame52(HarmonicTrace::NoPeak,false); return; }
+    const bool m1=control88_.enabled && (control88_.modules&1);
+    double score88[256];
+    if(m1)for(int b=0;b<nb;++b)score88[b]=mag[b]*control88_.prior((loBin_+b)*binHz_);
     // Same magnitude order as the original module; indices break exact ties deterministically.
-    std::sort(lm,lm+nl,[&](int a,int b) {return mag[a]==mag[b] ? a>b : mag[a]>mag[b];});
+    if(m1)std::sort(lm,lm+nl,[&](int a,int b){return score88[a]==score88[b]?a>b:score88[a]>score88[b];});
+    else std::sort(lm,lm+nl,[&](int a,int b) {return mag[a]==mag[b] ? a>b : mag[a]>mag[b];});
     struct Peak { double f,a,ph,beta,res; double raw=0; ModulationFit modulation={}; AmFamily52 family={}; } pk[8];
     int np=0;
     for (int j=0;j<nl && np<6;++j) {
-        const int b=lm[j]; if (mag[b]<mx*pvRel_) break;
+        const int b=lm[j]; if(m1){if(score88[b]<mx*pvRel_)continue;}else if (mag[b]<mx*pvRel_) break;
         const double a=std::log(mag[b-1]+1e-30), v=std::log(mag[b]+1e-30), c=std::log(mag[b+1]+1e-30);
         const double off=offset52(a,v,c);
         pk[np++]={ (loBin_+b)*binHz_+off*binHz_, std::exp(v-.25*(a-c)*off)*2/pvWsum_,
@@ -836,7 +843,7 @@ void VbHpv::pvFrame52() {
         auto q=pk[p]; int best=-1;
         if(stageFlags_&StageGlobalTrack) best=global[p];
         else for(int t=0;t<nt52_;++t) if(!used[t] && (!protectIdentity || tr52_[t].protection.allows(q.f)) &&
-            std::abs(tr52_[t].f-q.f)<.1*q.f &&
+            std::abs(tr52_[t].f-q.f)<.1*q.f*(m1?control88_.prior(q.f):1.) &&
             (best<0 || std::abs(tr52_[t].f-q.f)<std::abs(tr52_[best].f-q.f))) best=t;
         // Require current evidence only until the track first earns permission.
         // A valid modulation model remains accepted by its own residual.
@@ -1222,6 +1229,7 @@ double VbHpv::core52(double d) {
     const double hp=i>=envelopeDelay_+defer?hpRing_[(i-envelopeDelay_-defer)&(kRing-1)]*poly52_:0;
     // Developer mode "지속음 / 타격음 비율": path gains, only while one of them differs from 0 dB.
     double preFilter=devMix_?out*appliedGain*devSustLin_+(tonalOnly_?0:hp)*devPercLin_:out*appliedGain+(tonalOnly_?0:hp);
+    if(control88_.enabled && (control88_.modules&32))preFilter*=std::max(control88_.g,.1);
     if(dev_.attackHops>DevVoicing::kAttackHops) {
         // Developer attack longer than the model: the layer's level (40 ms mean square) may rise no faster than the
         // attack; it follows any fall at once, so a held note is untouched (gain 1) and only onsets are softened.

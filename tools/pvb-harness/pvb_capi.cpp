@@ -486,3 +486,21 @@ extern "C" int pvb_load_stable_weights(void* h,const unsigned char* p,int size){
 extern "C" int pvb_stable_separator(const unsigned char* p,int size,const float* x,float* y,int n){
  pvb::StableSeparator s;if(!s.load(p,size))return 0;for(int i=0;i<n;i++){float z[2]{},mix[2];s.tick(x[2*i],x[2*i+1],z,mix);y[2*i]=z[0];y[2*i+1]=z[1];}return 1;
 }
+
+extern "C" int pvb_set_control_research(void* e,int enabled,unsigned modules,const float* frames,int count,int stride) {
+ if(!e || (enabled!=0 && enabled!=1) || modules>1023 || count<0 || (stride!=8 && stride<41) || (enabled && (!frames || !count)))return 0;
+ static_cast<pvb::Engine*>(e)->setControl88(enabled!=0,modules,frames,count,stride);return 1;
+}
+extern "C" int pvb_set_control_events(void* e,const double* events,int count) {
+ if(!e || count<0 || (count && !events))return 0;
+ static_cast<pvb::Engine*>(e)->setEvents88(events,count);return 1;
+}
+extern "C" int pvb_control_stats(void* e,double* out,int n){return e?static_cast<pvb::Engine*>(e)->stats88(out,n):0;}
+
+extern "C" int pvb_set_diag88b(void* e,float* out,int count) {
+ if(!e || !out || count<1)return 0;
+ static_cast<pvb::Engine*>(e)->setDiag88b(out,count);return 1;
+}
+extern "C" int pvb_stats88b(void* e,double* out,int n){return e?static_cast<pvb::Engine*>(e)->stats88b(out,n):0;}
+
+extern "C" int pvb_set_control_floor89(void* e,float epsilon){if(!e || (epsilon!=.25f && epsilon!=.5f))return 0;static_cast<pvb::Engine*>(e)->setFloor89(epsilon);return 1;}

@@ -21,6 +21,7 @@
 //
 // Copyright (C) 2026 PVB project. Licensed under the GNU GPL v3 (same as RootlessJamesDSP).
 #pragma once
+#include "s88_control.h"
 
 #include <algorithm>
 #include <cmath>
@@ -278,6 +279,13 @@ public:
     // grains are kept; when the track is released within three hops they are added back where they belonged.
     void setP1PPV04Research(unsigned flags) { p1ppV04Host_=flags&511; if(!p1PlusFixed_) p1ppV04_=p1ppV04Host_; reset(); }
     // Algorithm 15 (Resultant core) keeps stageFlags_ at 0: the host flags are remembered for a later P1 but not applied.
+    void setControl88(bool en,unsigned modules,const float* frames,int count,int stride){control88_=Control88{};control88_.enabled=en;control88_.modules=modules;control88_.frames=frames;control88_.count=count;control88_.stride=stride;}
+    void setFloor89(float e){control88_.epsilon89=e;}
+    void setEvents88(const double*,int){}
+    const Control88& stats88()const{return control88_;}
+    void setDiag88b(float* p,int n){control88_.diagnostic=p;control88_.diagnosticCapacity=n;control88_.diagnosticCount=0;}
+    void setStream91(ControlStream* s,ControlWorker* w,double origin){control88_=Control88{};control88_.enabled=s||w;control88_.modules=33;control88_.stream=s;control88_.worker=w;control88_.origin=origin;}
+    void resetControl91(){control88_.time=-control88_.origin;control88_.g=1;control88_.hops=control88_.staleHops=0;}
     void setStageResearch(unsigned flags,StageCapture52::Sink sink=nullptr,void* user=nullptr) {
         stageHostFlags_=flags&268435455;stageFlags_=resultantOn_?0u:stageHostFlags_;stageSink_=sink;stageUser_=user;reset();
     }
@@ -481,6 +489,7 @@ private:
     double eps_ = 0, ifFloor_ = 0, pvAbs_ = 0, pvRel_ = 0, cPsi_[kKMax - 1] = {}, sPsi_[kKMax - 1] = {};
 
     // hpv52m: all state is fixed-size and owned by the module; no audio-thread allocations.
+    Control88 control88_;
     struct Track52 {
         double f=0, phi=0, off[7]={}, fade=0, a=0;
         struct Phase41 {

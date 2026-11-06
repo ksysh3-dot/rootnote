@@ -1,5 +1,6 @@
 # PVB speaker engine (C++17). Built as its own shared library so the JamesDSP code stays untouched.
 add_library(pvbengine SHARED
+        ${CMAKE_CURRENT_LIST_DIR}/pvb_control_stream.cpp
         ${CMAKE_CURRENT_LIST_DIR}/pvb_stable.cpp
         ${CMAKE_CURRENT_LIST_DIR}/pvb_engine.cpp
         ${CMAKE_CURRENT_LIST_DIR}/pvb_engine.h
@@ -21,3 +22,5 @@ set_target_properties(pvbengine PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED
 target_compile_options(pvbengine PRIVATE -O2 -fno-fast-math -Wall -Wextra)
 target_include_directories(pvbengine PRIVATE ${CMAKE_CURRENT_LIST_DIR} ${CMAKE_CURRENT_LIST_DIR}/stable_vendor)
 set_source_files_properties(${CMAKE_CURRENT_LIST_DIR}/pvb_stable.cpp PROPERTIES COMPILE_OPTIONS "-ffp-contract=off")
+
+set_source_files_properties(${CMAKE_CURRENT_LIST_DIR}/pvb_control_stream.cpp PROPERTIES COMPILE_OPTIONS "-ffp-contract=off")

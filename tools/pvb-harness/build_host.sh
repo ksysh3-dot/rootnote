@@ -6,14 +6,14 @@ SRC="$HERE/../../app/src/main/cpp/libpvb"
 OUT="${1:-$HERE/build}"
 mkdir -p "$OUT"
 CXX="${CXX:-g++}"
-FLAGS="-std=c++17 -O2 -fno-fast-math -ffp-contract=off -Wall -Wextra -Wpedantic -Werror -fPIC -shared"
+FLAGS="-pthread -std=c++17 -O2 -fno-fast-math -ffp-contract=off -Wall -Wextra -Wpedantic -Werror -fPIC -shared"
 # Explicit fixed reference build; never enables Resultant in the JNI/Android library.
 REF_FLAGS=""
 if [ "${2:-}" = "--reference" ]; then REF_FLAGS="-DPVB_HOST_RESULTANT_REFERENCE=1 -I$HERE/reference"; fi
-"$CXX" $FLAGS $REF_FLAGS -I"$SRC" -I"$SRC/stable_vendor" "$SRC/pvb_stable.cpp" "$SRC/pvb_engine.cpp" "$SRC/pvb_analysis.cpp" "$SRC/pvb_vb.cpp" "$SRC/pvb_vb52.cpp" "$HERE/pvb_capi.cpp" -o "$OUT/libpvbcapi.so"
+"$CXX" $FLAGS $REF_FLAGS -I"$SRC" -I"$SRC/stable_vendor" "$SRC/pvb_control_stream.cpp" "$SRC/pvb_stable.cpp" "$SRC/pvb_engine.cpp" "$SRC/pvb_analysis.cpp" "$SRC/pvb_vb.cpp" "$SRC/pvb_vb52.cpp" "$HERE/pvb_capi.cpp" "$HERE/../research-s91/s91_native_api.cpp" -o "$OUT/libpvbcapi.so"
 if [ -z "${JAVA_HOME:-}" ]; then JAVA_HOME="$(dirname "$(dirname "$(readlink -f "$(command -v java)")")")"; fi
 "$CXX" $FLAGS -I"$SRC" -I"$SRC/stable_vendor" -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/linux" \
-    "$SRC/pvb_stable.cpp" "$SRC/pvb_engine.cpp" "$SRC/pvb_analysis.cpp" "$SRC/pvb_vb.cpp" "$SRC/pvb_vb52.cpp" "$SRC/pvb_jni.cpp" -o "$OUT/libpvbengine.so"
+    "$SRC/pvb_control_stream.cpp" "$SRC/pvb_stable.cpp" "$SRC/pvb_engine.cpp" "$SRC/pvb_analysis.cpp" "$SRC/pvb_vb.cpp" "$SRC/pvb_vb52.cpp" "$SRC/pvb_jni.cpp" -o "$OUT/libpvbengine.so"
 # Which source this build is (review question 74): a WAV rendered with it can name the exact engine.
 REPO="$HERE/../.."
 if SHA="$(git -C "$REPO" rev-parse --short=12 HEAD 2>/dev/null)"; then

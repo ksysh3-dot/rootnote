@@ -189,6 +189,37 @@ public:
     void process(float* interleavedStereo, int frames);
     // Called once by service creation before handing this instance to audio/UI threads.
     bool loadStableWeights(const unsigned char* p,size_t n){return stable_.load(p,n);}
+    uint64_t separatorTicks88_=0;
+    void setControl88(bool en,unsigned modules,const float* frames,int n,int stride){vbAlpha2_.setControl88(en,modules,frames,n,stride);}
+    void setFloor89(float e){vbAlpha2_.setFloor89(e);}
+    void setEvents88(const double* events,int n){vbAlpha2_.setEvents88(events,n);}
+    int stats88(double* out,int n)const {
+        if(n<10)return 0;
+        const auto& c=vbAlpha2_.stats88();
+        const double v[10]={double(c.hops),double(c.injections),double(c.eventPreview),double(c.eventRelease),
+            double(c.reviewKeep),double(c.reviewDrop),stable_.loaded()?1.:0.,double(separatorTicks88_),c.time,c.g};
+        std::copy(v,v+10,out);return 10;
+    }
+    void setDiag88b(float* p,int n){vbAlpha2_.setDiag88b(p,n);}
+    int stats88b(double* out,int n)const {
+        if(n<10)return 0;
+        const auto& c=vbAlpha2_.stats88();
+        const double v[10]={double(c.injectionEvents),double(c.holdEvents),double(c.capacityOmissions),double(c.heldHops),double(c.holdHops),c.maxHoldMs,c.tokens,double(c.diagnosticCount),c.injectStart,c.nextRefill};
+        std::copy(v,v+10,out);return 10;
+    }
+    ControlStream control91_;std::unique_ptr<ControlWorker> worker91_;
+    bool stream91Enabled_=false,worker91Enabled_=false;int64_t stream91Samples_=0,stream91Origin_=0;
+    bool loadControl91(const unsigned char* p,size_t n){return control91_.load(p,n);}
+    bool setStream91(bool enabled,bool worker,int64_t origin){
+        if(enabled && (!control91_.loaded() || stable_.loaded()))return false;
+        if(worker91_)worker91_->stop();
+        stream91Enabled_=enabled;worker91Enabled_=worker;stream91Origin_=origin;stream91Samples_=0;control91_.reset();
+        if(enabled && worker){if(!worker91_)return false;worker91_->reset();worker91_->start();}
+        vbAlpha2_.setStream91(enabled && !worker?&control91_:nullptr,enabled && worker?worker91_.get():nullptr,origin);return true;
+    }
+    bool loadWorker91(const unsigned char* p,size_t n){worker91_=std::make_unique<ControlWorker>();return worker91_->stream.load(p,n);}
+    uint64_t stale91()const{return vbAlpha2_.stats88().staleHops;}
+
     void setSeparatorPeak70Research(bool on){separatorPeak70_=on;}
     void processSeparator70(float* z,const float* x,int n){separatorMix70_=x;process(z,n);separatorMix70_=nullptr;}
 
