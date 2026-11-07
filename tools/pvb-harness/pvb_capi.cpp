@@ -280,6 +280,9 @@ void* pvb_create(int sampleRate) { return new pvb::Engine(sampleRate); }
 void pvb_destroy(void* e) { delete static_cast<pvb::Engine*>(e); }
 void pvb_set_sample_rate(void* e, int sr) { static_cast<pvb::Engine*>(e)->setSampleRate(sr); }
 void pvb_set_params(void* e, const float* v, int n) { static_cast<pvb::Engine*>(e)->setParams(v, n); }
+int pvb_prepare_stage_c(void* e, int mode, const unsigned char* d, int n, int worker, int telemetry, int sr) {
+    return static_cast<pvb::Engine*>(e)->prepareStageC(mode, d, static_cast<size_t>(n), worker != 0, telemetry != 0, sr) ? 1 : 0;
+}
 void pvb_process(void* e, float* io, int frames) { static_cast<pvb::Engine*>(e)->process(io, frames); }
 void pvb_process_i16(void* e, const short* in, short* out, int frames) {
     static_cast<pvb::Engine*>(e)->processInt16(reinterpret_cast<const int16_t*>(in), reinterpret_cast<int16_t*>(out), frames);

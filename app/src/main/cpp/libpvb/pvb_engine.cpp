@@ -324,6 +324,8 @@ bool Engine::prepareStageC(int mode,const unsigned char* data,size_t bytes,bool 
         defaultParams(active_);defaultParams(pending_);hasPending_=false;pendingSr_=0;
     }
     stableEffective_=false;separatorPeak70_=false;setP1pppControls(false);
+    // s95: strong and conducted hold a missing track 12 hops; the other modes were not measured with it.
+    vbAlpha2_.setHoldHops(mode==1 || mode==3 ? 12 : 0);
     processed_=false;resetRequested_.store(false);configure(sampleRate);
     if(mode==3 && !setStream91(true,worker,0))return false;
     control91_.observedCount.store(0);control91_.observedMax.store(0);

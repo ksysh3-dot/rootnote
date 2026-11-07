@@ -39,6 +39,7 @@ bool VbHpv::setAlpha2Profile(int algorithm) {
     p1ppV04_=resultant ? 0u : p1ppV04Host_;
     modulationMode_=mode;tonalOnly_=false;continuity_=ContinuityParams{};continuity_.enabled=true;
     applyDevContinuity();
+    if(holdHops_>0)continuity_.hold=holdHops_;
     // Resultant core: gen_ (host research, survives profile switches) is not used by algorithms 15 and 16; it comes back,
     // as the host or the engine last asked for it (genReq_), with the next other profile. Only a switch into or out of
     // the pair touches it, so the other profiles stay exactly as they were.

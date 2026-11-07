@@ -207,6 +207,8 @@ public:
     }
     // Host research only: configure before processing; not a saved app algorithm.
     void setContinuityResearch(const ContinuityParams& p) { continuity_ = p; reset(); }
+    // Track hold of the selected bass mode (0 = model default). Survives profile selection; audio must be stopped.
+    void setHoldHops(int hops) { holdHops_ = hops; if (continuity_.enabled) continuity_.hold = hops > 0 ? hops : ContinuityParams{}.hold; }
     // S41 host research, set before processing; caller owns optional trace storage.
     // mode0 OFF; 1 onset50,2 slow250,3 confidence,4 table;5..9 diagnostic ablations;10..12 S43 event realignment.
     bool setPhase41(int mode,double* trace,int capacity) {
@@ -537,6 +539,7 @@ private:
     void s32Focus52(const double* frequencies,const double* amplitudes,int count);
     double s32Gate52(Track52& track,bool observed);
     ContinuityParams continuity_;
+    int holdHops_ = 0;
     int modulationMode_=0;
     bool tonalOnly_=false;
     unsigned stageFlags_=0;
