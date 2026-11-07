@@ -94,9 +94,16 @@ class StageCTelemetry(private val context: Context, private val engine: PvbEngin
         val w = writer ?: return
         task?.cancel(false)
         task = null
-        w.submit { snapshot("session_end") }.get(10, TimeUnit.SECONDS)
-        w.shutdown()
-        check(w.awaitTermination(10, TimeUnit.SECONDS))
-        writer = null
+        // A slow export holds the file lock: that must not stop the service from preparing or closing the engine.
+        try {
+            w.submit { snapshot("session_end") }.get(10, TimeUnit.SECONDS)
+            w.shutdown()
+            if (!w.awaitTermination(10, TimeUnit.SECONDS)) android.util.Log.e("s91", "telemetry writer still busy")
+        } catch (e: Exception) {
+            android.util.Log.e("s91", "telemetry close failed", e)
+            w.shutdownNow()
+        } finally {
+            writer = null
+        }
     }
 }
