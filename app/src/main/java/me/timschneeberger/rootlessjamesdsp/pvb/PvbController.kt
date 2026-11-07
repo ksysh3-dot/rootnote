@@ -530,6 +530,7 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
         lastGate = inputs.gateDb
         lastTag = inputs.abTag
         engine.setParams(encoded.params)
+        engine.setLayerCap(effectiveSettings.layerCapEngineDb)
         lastParams = encoded.params.copyOf()
         paramSink?.invoke(encoded.params)
         publish(lowDb)

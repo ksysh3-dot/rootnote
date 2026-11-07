@@ -431,6 +431,9 @@ class PreferenceGroupFragment : PreferenceFragmentCompat(), KoinComponent {
             val fixed = preferenceManager.sharedPreferences?.let { PvbSettings.load(it).fixedBass } == true
             level?.isEnabled = !fixed
             findPreference<MaterialSeekbarPreference>(PvbSettings.KEY_FIXED_LEVEL_DB)?.isVisible = fixed
+            val capOn = preferenceManager.sharedPreferences?.let { PvbSettings.load(it).layerCapOn } == true
+            findPreference<Preference>(PvbSettings.KEY_LAYER_CAP_ON)?.isVisible = fixed
+            findPreference<Preference>(PvbSettings.KEY_LAYER_CAP_DB)?.isVisible = fixed && capOn
             level?.summary = if (fixed) getString(R.string.pvb_strength_not_applicable) else null
             level?.valueLabelOverride = { v ->
                 if (fixed) getString(R.string.pvb_strength_not_applicable)
@@ -447,7 +450,7 @@ class PreferenceGroupFragment : PreferenceFragmentCompat(), KoinComponent {
         val modeListener = pvbModeListener
         pvbModeListener = SharedPreferences.OnSharedPreferenceChangeListener { prefs, key ->
             modeListener?.onSharedPreferenceChanged(prefs, key)
-            if (key == PvbSettings.KEY_P1PPP || key == PvbSettings.KEY_BASS_MODE) refreshStrength()
+            if (key == PvbSettings.KEY_P1PPP || key == PvbSettings.KEY_BASS_MODE || key == PvbSettings.KEY_LAYER_CAP_ON) refreshStrength()
         }.also { listener ->
             modeListener?.let { preferenceManager.sharedPreferences?.unregisterOnSharedPreferenceChangeListener(it) }
             preferenceManager.sharedPreferences?.registerOnSharedPreferenceChangeListener(listener)

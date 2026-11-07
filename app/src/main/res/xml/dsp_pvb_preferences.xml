@@ -469,6 +469,26 @@
             app:updatesContinuously="true"
             app:showSeekBarValue="true"
             app:iconSpaceReserved="false" />
+        <me.timschneeberger.rootlessjamesdsp.preference.MaterialSwitchPreference
+            android:key="pvb_layer_cap_on"
+            android:title="@string/pvb_layer_cap"
+            android:summary="@string/pvb_layer_cap_summary"
+            android:defaultValue="false"
+            app:iconSpaceReserved="false" />
+        <me.timschneeberger.rootlessjamesdsp.preference.MaterialSeekbarPreference
+            android:key="pvb_layer_cap_db"
+            android:title="@string/pvb_layer_cap_level"
+            android:summary="@string/pvb_layer_cap_level_summary"
+            android:defaultValue="-24"
+            app:minValue="-30"
+            app:maxValue="-18"
+            app:seekBarIncrement="1"
+            app:precision="0"
+            app:unit="dB"
+            app:allowDividerAbove="false"
+            app:updatesContinuously="true"
+            app:showSeekBarValue="true"
+            app:iconSpaceReserved="false" />
         <Preference
             android:key="pvb_x_feedback"
             android:title="@string/pvb_x_feedback"

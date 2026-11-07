@@ -235,6 +235,12 @@ fun PvbSection(host: RnAdvancedActivity, showIcons: Boolean) {
         if (s.fixedBass) {
             PrefSlider(p, P.KEY_FIXED_LEVEL_DB, stringResource(R.string.pvb_fixed_level), 0f, P.FIXED_LEVEL_MIN..0f, 1f, "dB", 0,
                 line = stringResource(R.string.pvb_fixed_level_summary), enabled = vbOn, strictStep = true)
+            PrefSwitch(p, P.KEY_LAYER_CAP_ON, stringResource(R.string.pvb_layer_cap), false,
+                line = stringResource(R.string.pvb_layer_cap_summary), enabled = vbOn)
+            if (s.layerCapOn) {
+                PrefSlider(p, P.KEY_LAYER_CAP_DB, stringResource(R.string.pvb_layer_cap_level), -24f, P.LAYER_CAP_MIN..P.LAYER_CAP_MAX, 1f, "dB", 0,
+                    line = stringResource(R.string.pvb_layer_cap_level_summary), enabled = vbOn, strictStep = true)
+            }
         }
         VbModeRow(p, s, research, vbOn && !s.fixedBass)
         if (research) {

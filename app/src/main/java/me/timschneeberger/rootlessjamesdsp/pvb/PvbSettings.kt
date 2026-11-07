@@ -45,6 +45,8 @@ data class PvbSettings(
     val stable: Boolean = false,
     val p1ppp: Boolean = false,       // frozen P1+++; effective overrides only, never rewrites saved settings
     val fixedLevelDb: Float = 0f,     // layer level of the fixed modes, saved apart from vbLevelDb
+    val layerCapOn: Boolean = false,  // speaker guard of the fixed modes; off by default
+    val layerCapDb: Float = -24f,     // 125-250 Hz envelope of the layer, dBFS after the output gain
     // Developer mode ("개발자 모드", general build only; DevParams). devOn = the user consented and the values below
     // reach the engine (P_DEV_ON); each value at its default is the model itself. Not part of device profiles.
     val devOn: Boolean = false,
@@ -83,6 +85,7 @@ data class PvbSettings(
     val xtcPortraitLowRight: Boolean = true,
 ) {
     val fixedBass: Boolean get() = p1ppp || stable || separated || conducted
+    val layerCapEngineDb: Float get() = if (layerCapOn && fixedBass) layerCapDb else 0f
     val stageCId: Int get() = when { conducted -> 3; separated -> 2; stable -> 4; p1ppp -> 1; else -> 0 }
     val bassMode: String get() = if (conducted) "conducted" else if (separated) "separated" else if (stable) "stable" else if (p1ppp) "strong" else "off"
 
@@ -121,6 +124,9 @@ data class PvbSettings(
         const val KEY_VB_STRENGTH_DB = "pvb_vb_strength_db"
         /** Layer level of the strong, separated and conducted modes: attenuation only. */
         const val KEY_FIXED_LEVEL_DB = "pvb_fixed_level_db"
+        /** Speaker guard of the fixed modes: experimental, off by default. */
+        const val KEY_LAYER_CAP_ON = "pvb_layer_cap_on"
+        const val KEY_LAYER_CAP_DB = "pvb_layer_cap_db"
         /** Not persisted: the preset control is derived from model + level. */
         const val KEY_VB_MODE = "pvb_vb_mode"
         /** Alpha 3.1 "곡별 세기 기억" (default off). Not part of [PvbSettings]: the engine never reads it. */
@@ -206,10 +212,13 @@ data class PvbSettings(
         const val VB_LEVEL_MIN = -6f   // was 0 until 2026-10-31 (RESULTANT_CORE.md 19.12); saved values 0..12 are unchanged
         const val VB_LEVEL_MAX = 12f
         const val FIXED_LEVEL_MIN = -12f
+        const val LAYER_CAP_MIN = -30f
+        const val LAYER_CAP_MAX = -18f
         const val VB_LEVEL_DEFAULT = 4f   // was 6 until 2026-11-02 (user: pvb-s26u round 19 noise at +6 drops at +3..4; general S26U profile already +4)
 
         /** Any number to a slider value: whole dB, clamped into the slider range; non-finite gives the default. */
         fun clampFixedLevel(v: Float): Float = if (v.isFinite()) Math.round(v).toFloat().coerceIn(FIXED_LEVEL_MIN, 0f) else 0f
+        fun clampLayerCap(v: Float): Float = if (v.isFinite()) Math.round(v).toFloat().coerceIn(LAYER_CAP_MIN, LAYER_CAP_MAX) else -24f
         fun clampLevel(v: Float): Float =
             if (v.isFinite()) Math.round(v).toFloat().coerceIn(VB_LEVEL_MIN, VB_LEVEL_MAX) else VB_LEVEL_DEFAULT
 
@@ -295,6 +304,8 @@ data class PvbSettings(
                 vbAlgo = PvbModels.fromKey(p.str(KEY_VB_ALGO, PvbModels.DEFAULT_KEY)).id,
                 vbLevelDb = clampLevel(p.float(KEY_VB_STRENGTH_DB, d.vbLevelDb)),
                 fixedLevelDb = clampFixedLevel(p.float(KEY_FIXED_LEVEL_DB, d.fixedLevelDb)),
+                layerCapOn = p.bool(KEY_LAYER_CAP_ON, d.layerCapOn),
+                layerCapDb = clampLayerCap(p.float(KEY_LAYER_CAP_DB, d.layerCapDb)),
                 vbVolLink = p.bool(KEY_VB_VOL_LINK, d.vbVolLink),
                 vbVolRefPct = Math.round(p.float(KEY_VB_VOL_REF_PCT, d.vbVolRefPct)).toFloat()
                     .coerceIn(VolumeLevelLink.REF_PCT_MIN, VolumeLevelLink.REF_PCT_MAX),

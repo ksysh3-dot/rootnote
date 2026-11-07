@@ -22,6 +22,7 @@
 //
 // Copyright (C) 2026 PVB project. Licensed under the GNU GPL v3 (same as RootlessJamesDSP).
 #pragma once
+#include "pvb_layer_cap.h"
 
 #include <atomic>
 #include <cstdint>
@@ -221,6 +222,8 @@ public:
     uint64_t stale91()const{return vbAlpha2_.stats88().staleHops;}
     // Service lifecycle only: no audio generation may be alive during prepare.
     bool prepareStageC(int mode,const unsigned char* data,size_t bytes,bool worker,bool telemetry,int sampleRate);
+    // Speaker guard of the fixed modes, dBFS; 0 = off. Any thread: the audio loop reads one atomic.
+    void setLayerCapDb(float db){layerCapDb_.store(db,std::memory_order_relaxed);}
     static constexpr int kStageCSize=2012;
     void copyStageC(int64_t* out)const;
     std::atomic<int> stageCMode_{0},stageCFlags_{0};
@@ -402,6 +405,7 @@ private:
     PppPhase p1pppPhase_=PPP_STEADY;
     float p1pppNext_[P_COUNT]={};RampedValue p1pppFade_;int p1pppHold_=0;
     std::atomic<int> p1pppPublished_{0};BoundedPeak50 boundedPeak50_;
+    std::atomic<float> layerCapDb_{0.f};float layerCapActiveDb_=0.f;LayerCap layerCap_;
 
     StableSeparator stable_;
     bool stableEffective_=false,stableNeedsPrime_=false,stablePriming_=false;

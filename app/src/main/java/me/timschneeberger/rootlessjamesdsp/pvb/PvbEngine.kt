@@ -230,6 +230,9 @@ class PvbEngine(sampleRate: Int) : AutoCloseable {
         diagnosticParams = values.copyOf()
     }
 
+    /** Speaker guard of the fixed modes in dBFS; 0 = off. */
+    fun setLayerCap(db: Float) = use(Unit) { PvbNative.setLayerCap(it, db) }
+
     /** Clears the engine memory and fades in; call when the engine re-enters the signal path. */
     fun reset() = use(Unit) { PvbNative.reset(it) }
 

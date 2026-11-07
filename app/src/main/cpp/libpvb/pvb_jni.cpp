@@ -252,6 +252,11 @@ Java_me_timschneeberger_rootlessjamesdsp_pvb_PvbNative_prepareStageC(JNIEnv* env
     if(bytes)env->ReleaseByteArrayElements(data,bytes,JNI_ABORT);
     return ok?JNI_TRUE:JNI_FALSE;
 }
+// Speaker guard level of the fixed modes; 0 = off.
+extern "C" JNIEXPORT void JNICALL
+Java_me_timschneeberger_rootlessjamesdsp_pvb_PvbNative_setLayerCap(JNIEnv*,jclass,jlong handle,jfloat db){
+    auto* h=fromJ(handle);if(h)h->engine.setLayerCapDb(db);
+}
 extern "C" JNIEXPORT jboolean JNICALL
 Java_me_timschneeberger_rootlessjamesdsp_pvb_PvbNative_copyStageC(JNIEnv* env,jclass,jlong handle,jlongArray out){
     auto* h=fromJ(handle);

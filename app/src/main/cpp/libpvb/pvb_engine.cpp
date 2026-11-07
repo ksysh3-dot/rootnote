@@ -577,6 +577,7 @@ void Engine::publishFilters() {
 void Engine::resetState() {
     if(stream91Enabled_){stageCLateBase_+=vbAlpha2_.stats88().lateFrames;control91_.reset();stream91Samples_=0;vbAlpha2_.resetControl91();if(worker91Enabled_ && worker91_){worker91_->reset();worker91_->start();}}
     resetDevTelemetry();
+    layerCap_.reset();
     stable_.reset();stableNeedsPrime_=stableEffective_;stablePrimeRemaining_=stableEffective_?49152:0;
     for(auto& channel:separatorEq70_)for(auto& state:channel)state.reset();
     for(auto& channel:separatorDelay70_)std::fill(std::begin(channel),std::end(channel),0.);
@@ -1069,6 +1070,13 @@ void Engine::process(float* io, int frames) {
                 eqR = budgetDryR + peakBudgetBlend_ * (eqR - budgetDryR);
                 vg *= 1.0 + peakBudgetBlend_ * (target - 1.0);
             }
+        }
+        // Speaker guard, after the layer and output gains and before the dry sum (position of the s94 research cap).
+        const float layerCapDb=layerCapDb_.load(std::memory_order_relaxed);
+        if(layerCapDb!=layerCapActiveDb_){layerCapActiveDb_=layerCapDb;layerCap_.set(layerCapDb);}
+        if(layerCap_.enabled && p1pppEffective_) {
+            const double capGain=layerCap_.gain(0.5*(layL+layR)*vg*og);
+            layL*=capGain;layR*=capGain;
         }
         // Keep this small delay warm even when diagnostics are off: exact component alignment on arming.
         const double preL = vg * layL * og, preR = vg * layR * og;
