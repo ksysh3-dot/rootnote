@@ -157,7 +157,8 @@ object PvbEngineParams {
                 PvbParam.HI_HZ, PvbParam.HI_DB, PvbParam.HI_Q, PvbParam.HS_HZ, PvbParam.HS_DB,
                 PvbParam.OUT_DB, PvbParam.CEIL_DB, PvbParam.REL_MS, PvbParam.DYN_ON, PvbParam.FLAT,
                 PvbParam.X_SMOOTH, PvbParam.X_RISE, PvbParam.X_S1M, PvbParam.X_DENSE, PvbParam.DEV_ON,
-                PvbParam.XTC_MODE, PvbParam.VB_LEVEL_DB)) p[k] = frozen[k]
+                PvbParam.XTC_MODE)) p[k] = frozen[k]
+            p[PvbParam.VB_LEVEL_DB] = s.fixedLevelDb   // 0 dB is the validated level; the user may only go below it
             p[PvbParam.VB_ALGO] = PvbModels.P1.toFloat()
             p[PvbParam.P1PPP] = if (s.stable || s.separated) 2f else 1f
         }

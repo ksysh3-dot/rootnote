@@ -351,11 +351,12 @@ void Engine::setSampleRate(int sampleRate) {
 
 bool Engine::validP1ppp(const float* p) {
     float d[P_COUNT];defaultParams(d);
-    // Only the transport tag, attenuating final gate and display/match controls may vary.
+    // Only the transport tag, attenuating final gate, an attenuating layer level and display/match controls may vary.
     for(int i : {P_ENABLED,P_HP_HZ,P_LOW_HZ,P_LOW_DB,P_LOW_Q,P_HI_HZ,P_HI_DB,P_HI_Q,
-                 P_OUT_DB,P_CEIL_DB,P_REL_MS,P_DYN_ON,P_HS_HZ,P_HS_DB,P_VB_LEVEL_DB,
+                 P_OUT_DB,P_CEIL_DB,P_REL_MS,P_DYN_ON,P_HS_HZ,P_HS_DB,
                  P_FLAT,P_DIAGNOSTIC_SOLO,P_X_SMOOTH,P_X_RISE,P_X_S1M,P_X_DENSE,P_DEV_ON,P_XTC_MODE})
         if(p[i]!=d[i])return false;
+    if(!(p[P_VB_LEVEL_DB]<=0.f && p[P_VB_LEVEL_DB]>=-12.f))return false;
     return p[P_VB_ON]==1.f && p[P_VB_ALGO]==VB_ALPHA2_P1;
 }
 

@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
  <string name="pvb_bass_mode">베이스 모드 · 실험, 48 kHz</string>
- <string name="pvb_bass_mode_summary">기본값·세기는 그대로입니다. 분리형·지휘형은 임시 이름이며 최종 이름이 아닙니다. 강함·분리형·지휘형은 검증한 EQ·층 0 dB·출력 −5 dB로 고정합니다. 분리형 183.25 ms, 지휘형 148.75 ms입니다. 새 곡 시험 결과는 혼재입니다. 지휘형은 묻힌 베이스를 더 잘 지키지만 드럼·보컬 차단이 곡에 따라 흔들립니다. 분리형은 다른 악기를 덜 따라가지만 묻힌 베이스를 더 줄입니다. 영상 앱의 자동 보정은 보장되지 않습니다.</string>
+ <string name="pvb_fixed_level">강함·분리형·지휘형 세기</string>
+ <string name="pvb_fixed_level_summary">0 dB가 검증한 크기입니다. 낮추면 거슬리는 소리와 저음감이 함께 줄어듭니다.</string>
+ <string name="pvb_bass_mode_summary">기본값·세기는 그대로입니다. 분리형·지휘형은 임시 이름이며 최종 이름이 아닙니다. 강함·분리형·지휘형은 검증한 EQ·출력 −5 dB로 고정하고, 층 크기는 아래 세기로 0 dB에서 낮출 수 있습니다. 분리형 183.25 ms, 지휘형 148.75 ms입니다. 새 곡 시험 결과는 혼재입니다. 지휘형은 묻힌 베이스를 더 잘 지키지만 드럼·보컬 차단이 곡에 따라 흔들립니다. 분리형은 다른 악기를 덜 따라가지만 묻힌 베이스를 더 줄입니다. 영상 앱의 자동 보정은 보장되지 않습니다.</string>
  <string-array name="pvb_bass_modes"><item>끔</item><item>강함</item><item>분리형</item><item>지휘형</item></string-array>
  <string-array name="pvb_bass_mode_values"><item>off</item><item>strong</item><item>separated</item><item>conducted</item></string-array>
 

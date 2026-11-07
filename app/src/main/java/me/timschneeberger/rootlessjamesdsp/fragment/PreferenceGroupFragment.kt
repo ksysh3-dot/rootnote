@@ -430,6 +430,7 @@ class PreferenceGroupFragment : PreferenceFragmentCompat(), KoinComponent {
         fun refreshStrength() {
             val fixed = preferenceManager.sharedPreferences?.let { PvbSettings.load(it).fixedBass } == true
             level?.isEnabled = !fixed
+            findPreference<MaterialSeekbarPreference>(PvbSettings.KEY_FIXED_LEVEL_DB)?.isVisible = fixed
             level?.summary = if (fixed) getString(R.string.pvb_strength_not_applicable) else null
             level?.valueLabelOverride = { v ->
                 if (fixed) getString(R.string.pvb_strength_not_applicable)

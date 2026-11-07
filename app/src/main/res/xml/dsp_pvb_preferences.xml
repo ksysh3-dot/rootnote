@@ -455,6 +455,20 @@
             android:entries="@array/pvb_bass_modes"
             android:entryValues="@array/pvb_bass_mode_values"
             android:defaultValue="off" />
+        <me.timschneeberger.rootlessjamesdsp.preference.MaterialSeekbarPreference
+            android:key="pvb_fixed_level_db"
+            android:title="@string/pvb_fixed_level"
+            android:summary="@string/pvb_fixed_level_summary"
+            android:defaultValue="0"
+            app:minValue="-12"
+            app:maxValue="0"
+            app:seekBarIncrement="1"
+            app:precision="0"
+            app:unit="dB"
+            app:allowDividerAbove="false"
+            app:updatesContinuously="true"
+            app:showSeekBarValue="true"
+            app:iconSpaceReserved="false" />
         <Preference
             android:key="pvb_x_feedback"
             android:title="@string/pvb_x_feedback"

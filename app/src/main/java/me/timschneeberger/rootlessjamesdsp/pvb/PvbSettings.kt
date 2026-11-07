@@ -44,6 +44,7 @@ data class PvbSettings(
     val conducted: Boolean = false,
     val stable: Boolean = false,
     val p1ppp: Boolean = false,       // frozen P1+++; effective overrides only, never rewrites saved settings
+    val fixedLevelDb: Float = 0f,     // layer level of the fixed modes, saved apart from vbLevelDb
     // Developer mode ("개발자 모드", general build only; DevParams). devOn = the user consented and the values below
     // reach the engine (P_DEV_ON); each value at its default is the model itself. Not part of device profiles.
     val devOn: Boolean = false,
@@ -118,6 +119,8 @@ data class PvbSettings(
         const val KEY_VB_LEVEL_DB = "pvb_vb_level_db"
         /** Actual layer dB, never display coordinates. Existing alpha 1/2 and schema-4 values are actual too. */
         const val KEY_VB_STRENGTH_DB = "pvb_vb_strength_db"
+        /** Layer level of the strong, separated and conducted modes: attenuation only. */
+        const val KEY_FIXED_LEVEL_DB = "pvb_fixed_level_db"
         /** Not persisted: the preset control is derived from model + level. */
         const val KEY_VB_MODE = "pvb_vb_mode"
         /** Alpha 3.1 "곡별 세기 기억" (default off). Not part of [PvbSettings]: the engine never reads it. */
@@ -202,9 +205,11 @@ data class PvbSettings(
         /** Strength slider range, dB re the 'faithful' level, whole-dB steps (the engine accepts up to +12). */
         const val VB_LEVEL_MIN = -6f   // was 0 until 2026-10-31 (RESULTANT_CORE.md 19.12); saved values 0..12 are unchanged
         const val VB_LEVEL_MAX = 12f
+        const val FIXED_LEVEL_MIN = -12f
         const val VB_LEVEL_DEFAULT = 4f   // was 6 until 2026-11-02 (user: pvb-s26u round 19 noise at +6 drops at +3..4; general S26U profile already +4)
 
         /** Any number to a slider value: whole dB, clamped into the slider range; non-finite gives the default. */
+        fun clampFixedLevel(v: Float): Float = if (v.isFinite()) Math.round(v).toFloat().coerceIn(FIXED_LEVEL_MIN, 0f) else 0f
         fun clampLevel(v: Float): Float =
             if (v.isFinite()) Math.round(v).toFloat().coerceIn(VB_LEVEL_MIN, VB_LEVEL_MAX) else VB_LEVEL_DEFAULT
 
@@ -289,6 +294,7 @@ data class PvbSettings(
                 vbOn = p.bool(KEY_VB_ON, d.vbOn),
                 vbAlgo = PvbModels.fromKey(p.str(KEY_VB_ALGO, PvbModels.DEFAULT_KEY)).id,
                 vbLevelDb = clampLevel(p.float(KEY_VB_STRENGTH_DB, d.vbLevelDb)),
+                fixedLevelDb = clampFixedLevel(p.float(KEY_FIXED_LEVEL_DB, d.fixedLevelDb)),
                 vbVolLink = p.bool(KEY_VB_VOL_LINK, d.vbVolLink),
                 vbVolRefPct = Math.round(p.float(KEY_VB_VOL_REF_PCT, d.vbVolRefPct)).toFloat()
                     .coerceIn(VolumeLevelLink.REF_PCT_MIN, VolumeLevelLink.REF_PCT_MAX),
