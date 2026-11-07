@@ -232,6 +232,10 @@ fun PvbSection(host: RnAdvancedActivity, showIcons: Boolean) {
                 RnChoice("separated", "분리형"), RnChoice("conducted", "지휘형")),
             s.bassMode, { p.put(P.KEY_BASS_MODE, it) }, enabled = vbOn,
             line = (if (s.stable) "현재: epoch6 안정 (개발자 비교)\n" else "") + stringResource(R.string.pvb_bass_mode_summary))
+        if (s.fixedBass) {
+            PrefSlider(p, P.KEY_FIXED_LEVEL_DB, stringResource(R.string.pvb_fixed_level), 0f, P.FIXED_LEVEL_MIN..0f, 1f, "dB", 0,
+                line = stringResource(R.string.pvb_fixed_level_summary), enabled = vbOn, strictStep = true)
+        }
         VbModeRow(p, s, research, vbOn && !s.fixedBass)
         if (research) {
             val model = PvbModels.fromKey(p.string(P.KEY_VB_ALGO, PvbModels.DEFAULT_KEY))
