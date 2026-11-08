@@ -228,6 +228,9 @@ public:
     void setHandoverHost(bool on);
     // Host check only: turn the s107 FT3M fade inertia and layer trim on in another mode after prepareStageC.
     void setFadeTrimHost(bool on);
+    // Host check only: turn the s110 CF375M fit relaxation and its layer trim on or off after prepareStageC.
+    void setFitRelaxHost(bool on);
+    uint64_t fitRelaxHops() const { return vbAlpha2_.fitRelaxHops(); }
     static constexpr int kStageCSize=2012;
     void copyStageC(int64_t* out)const;
     std::atomic<int> stageCMode_{0},stageCFlags_{0};
@@ -428,6 +431,7 @@ private:
     int dryLowCutOrder_ = 4;
     double researchLayerGain_ = 1.0, researchLayerGainCap_ = 0.0;
     static constexpr double kFt3mTrim = 0.9816349216172104; // 10^(-0.161/20), s107
+    static constexpr double kCf375mTrim = 0.9305291874902555; // 10^(-0.161/20) * 10^(-0.4644/20), s110
     double layerTrim_ = 1.0;
     bool peakBudgetOn_ = false;
     double peakBudgetCap_ = 2.0, peakBudgetCeilingDb_ = -3.0;

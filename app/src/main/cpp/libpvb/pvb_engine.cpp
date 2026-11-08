@@ -308,6 +308,7 @@ bool Engine::setPeakBudgetResearch(int enabled, double cap, double ceilingDb,
 
 void Engine::setHandoverHost(bool on){vbAlpha2_.setHandover(on);}
 void Engine::setFadeTrimHost(bool on){vbAlpha2_.setFadeInertia(on);layerTrim_=on?kFt3mTrim:1.0;}
+void Engine::setFitRelaxHost(bool on){vbAlpha2_.setFitRelax(on);layerTrim_=on?kCf375mTrim:(vbAlpha2_.fadeInertia()?kFt3mTrim:1.0);}
 bool Engine::prepareStageC(int mode,const unsigned char* data,size_t bytes,bool worker,bool telemetry,int sampleRate) {
     if(mode<0 || mode>4 || (worker && mode!=3))return false;
     if((mode==2 || mode==4) && (!data || bytes!=531208))return false;
@@ -330,9 +331,10 @@ bool Engine::prepareStageC(int mode,const unsigned char* data,size_t bytes,bool 
     vbAlpha2_.setHoldHops(mode==1 || mode==3 ? 12 : 0);
     // s103/s104: the handover with the energy-matched 3rd harmonic was measured on the conducted mode only.
     vbAlpha2_.setHandover(mode==3);
-    // s106/s107: confirmed tracks lower the fit-gate fade 3x slower, with the layer trimmed -0.161 dB
-    // so the layer level matches s104 (FT3M). Measured on the conducted mode only.
-    vbAlpha2_.setFadeInertia(mode==3);layerTrim_=mode==3?kFt3mTrim:1.0;
+    // s106/s107: confirmed tracks lower the fit-gate fade 3x slower (FT3M).
+    // s110: a conductor candidate within 50 cents relaxes the fit gate that drives fade (CF375M), with the
+    // layer trimmed -0.161 dB and a further -0.4644 dB as measured. Measured on the conducted mode only.
+    vbAlpha2_.setFadeInertia(mode==3);vbAlpha2_.setFitRelax(mode==3);layerTrim_=mode==3?kCf375mTrim:1.0;
     processed_=false;resetRequested_.store(false);configure(sampleRate);
     if(mode==3 && !setStream91(true,worker,0))return false;
     control91_.observedCount.store(0);control91_.observedMax.store(0);

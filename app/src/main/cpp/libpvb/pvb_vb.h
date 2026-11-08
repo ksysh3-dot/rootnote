@@ -214,6 +214,11 @@ public:
     void setHandover(bool on) { handover_ = on; }
     // s106/s107: a confirmed track (fade >= .5, 12+ confirmed hops) lowers fade with a 270-sample tau. Audio must be stopped.
     void setFadeInertia(bool on) { fadeInertia_ = on; }
+    // s110 CF375M: a live track whose fit residual lies in (-15, -3.75] dB keeps the fade target of a fit when a
+    // conductor candidate (salience >= .5) lies within 50 cents of it. Fade only. Audio must be stopped.
+    void setFitRelax(bool on) { fitRelax_ = on; fitRelaxHops_ = 0; }
+    bool fadeInertia() const { return fadeInertia_; }
+    uint64_t fitRelaxHops() const { return fitRelaxHops_; }
     // S41 host research, set before processing; caller owns optional trace storage.
     // mode0 OFF; 1 onset50,2 slow250,3 confidence,4 table;5..9 diagnostic ablations;10..12 S43 event realignment.
     bool setPhase41(int mode,double* trace,int capacity) {
@@ -547,6 +552,18 @@ private:
     int holdHops_ = 0;
     bool handover_ = false;
     bool fadeInertia_ = false;
+    bool fitRelax_ = false;
+    uint64_t fitRelaxHops_ = 0; // Observer only: hops in which any track was relaxed.
+    double fitResidual(double residual,double f,bool existing) const {
+        if(!fitRelax_ || !existing || !control88_.enabled || !control88_.raw8 || f<=0) return residual;
+        if(!(residual>-15. && residual<=-3.75)) return residual;
+        const float* p=control88_.raw8;
+        for(int i=4;i<8;i+=2) {
+            const double fm=440*std::exp2((double(p[i])-69)/12.);
+            if(p[i+1]>=.5f && std::abs(1200*std::log2(f/fm))<=50.) return -15.;
+        }
+        return residual;
+    }
     int modulationMode_=0;
     bool tonalOnly_=false;
     unsigned stageFlags_=0;
