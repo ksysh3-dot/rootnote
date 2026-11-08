@@ -468,6 +468,7 @@ extern "C" int pvb_try_set_params(void* ptr,const float* p,int n) {
  return ptr && static_cast<pvb::Engine*>(ptr)->trySetParams(p,n)?1:0;
 }
 extern "C" int pvb_set_layer_cap(void* ptr,float db) {if(!ptr)return 0;static_cast<pvb::Engine*>(ptr)->setLayerCapDb(db);return 1;}
+extern "C" int pvb_set_handover_host(void* ptr,int on) {if(!ptr)return 0;static_cast<pvb::Engine*>(ptr)->setHandoverHost(on!=0);return 1;}
 extern "C" int pvb_copy_peak50_state(void* p,double* out,int n) {return p?static_cast<pvb::Engine*>(p)->copyPeak50State(out,n):0;}
 extern "C" int pvb_p1ppp_state(void* ptr) {return ptr?static_cast<pvb::Engine*>(ptr)->p1pppState():-1;}
 // Algebraic component injection through exactly the native parallel limiter schedule.

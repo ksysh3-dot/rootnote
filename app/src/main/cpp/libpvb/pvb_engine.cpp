@@ -306,6 +306,7 @@ bool Engine::setPeakBudgetResearch(int enabled, double cap, double ceilingDb,
     return true;
 }
 
+void Engine::setHandoverHost(bool on){vbAlpha2_.setHandover(on);}
 bool Engine::prepareStageC(int mode,const unsigned char* data,size_t bytes,bool worker,bool telemetry,int sampleRate) {
     if(mode<0 || mode>4 || (worker && mode!=3))return false;
     if((mode==2 || mode==4) && (!data || bytes!=531208))return false;
@@ -326,6 +327,8 @@ bool Engine::prepareStageC(int mode,const unsigned char* data,size_t bytes,bool 
     stableEffective_=false;separatorPeak70_=false;setP1pppControls(false);
     // s95: strong and conducted hold a missing track 12 hops; the other modes were not measured with it.
     vbAlpha2_.setHoldHops(mode==1 || mode==3 ? 12 : 0);
+    // s103/s104: the handover with the energy-matched 3rd harmonic was measured on the conducted mode only.
+    vbAlpha2_.setHandover(mode==3);
     processed_=false;resetRequested_.store(false);configure(sampleRate);
     if(mode==3 && !setStream91(true,worker,0))return false;
     control91_.observedCount.store(0);control91_.observedMax.store(0);

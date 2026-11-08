@@ -209,6 +209,9 @@ public:
     void setContinuityResearch(const ContinuityParams& p) { continuity_ = p; reset(); }
     // Track hold of the selected bass mode (0 = model default). Survives profile selection; audio must be stopped.
     void setHoldHops(int hops) { holdHops_ = hops; if (continuity_.enabled) continuity_.hold = hops > 0 ? hops : ContinuityParams{}.hold; }
+    // s103/s104: a track ended by a newly born note releases like any lost track for hold+release hops, and
+    // upper tracks (f >= 90 Hz) keep the 3rd harmonic at least half the 2nd with the weight energy kept. Audio must be stopped.
+    void setHandover(bool on) { handover_ = on; }
     // S41 host research, set before processing; caller owns optional trace storage.
     // mode0 OFF; 1 onset50,2 slow250,3 confidence,4 table;5..9 diagnostic ablations;10..12 S43 event realignment.
     bool setPhase41(int mode,double* trace,int capacity) {
@@ -507,7 +510,7 @@ private:
         int confHops=0; bool inherited=false;   // hops confirmed so far; this track continues a long confirmed one
         // P1++ v0.4 bit 32: grains this track would have emitted while the guard held it (oldest first)
         double pend[kDeferHops][32]={}, pendNominal[kDeferHops]={}; int64_t pendCentre[kDeferHops]={}; int pendN=0;
-        bool strong=false, fastEnding=false;
+        bool strong=false, fastEnding=false, handover=false;
         uint32_t id=0, age=0;
         double dfdt=0, life=1, residual=-200, rawResidual=-200;
         int missing=0;
@@ -540,6 +543,7 @@ private:
     double s32Gate52(Track52& track,bool observed);
     ContinuityParams continuity_;
     int holdHops_ = 0;
+    bool handover_ = false;
     int modulationMode_=0;
     bool tonalOnly_=false;
     unsigned stageFlags_=0;

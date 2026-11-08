@@ -224,6 +224,8 @@ public:
     bool prepareStageC(int mode,const unsigned char* data,size_t bytes,bool worker,bool telemetry,int sampleRate);
     // Speaker guard of the fixed modes, dBFS; 0 = off. Any thread: the audio loop reads one atomic.
     void setLayerCapDb(float db){layerCapDb_.store(db,std::memory_order_relaxed);}
+    // Host check only: turn the s104 handover on in another mode after prepareStageC. Audio must be stopped.
+    void setHandoverHost(bool on);
     static constexpr int kStageCSize=2012;
     void copyStageC(int64_t* out)const;
     std::atomic<int> stageCMode_{0},stageCFlags_{0};

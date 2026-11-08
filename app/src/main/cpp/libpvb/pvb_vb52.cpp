@@ -199,6 +199,28 @@ void VbHpv::renderTrack52(Track52& actual,const double src[2][256],const int ns[
     };
     const bool registerCorner=(stageFlags_&StageRegisterCorner) && !harmonicOfLower;
     const double corner=std::max(220.,3*tr.f);
+    // s102 H3aE: an upper track keeps its 3rd harmonic at least half the 2nd, with the weight energy of the
+    // unchanged weights kept (s104 measured it with the handover).
+    double wHe[7]={};
+    const bool he=handover_ && tr.f>=90 && !harmonicOfLower;
+    if(he) {
+        double w0[7],w1[7],e0=0,e1=0;
+        for(int k=2;k<=8;++k) {
+            double v=w[k-2];
+            if(gentle_ && k*tr.f>220) {
+                const double base=v*rolloff(k*tr.f,220.);
+                if(registerCorner) {
+                    const double moved=k*tr.f>corner?v*rolloff(k*tr.f,corner):v;
+                    v=base+share*(moved-base);
+                } else v=base;
+            }
+            w0[k-2]=w1[k-2]=v;
+        }
+        w1[1]=std::max(w1[1],.5*w1[0]);
+        for(int j=0;j<7;++j) {e0+=w0[j]*w0[j];e1+=w1[j]*w1[j];}
+        const double sc=e0>0 && e1>0 ? std::sqrt(e0/e1) : 1.;
+        for(int j=0;j<7;++j) wHe[j]=w1[j]*sc;
+    }
     for(int k=2;k<=8;++k) {
         // Exact gentle128 reference: sustained partials above 220 Hz lose
         // 12 dB/octave; no redistribution, no percussion or level change.
@@ -209,6 +231,7 @@ void VbHpv::renderTrack52(Track52& actual,const double src[2][256],const int ns[
                 w[k-2]=base+share*(moved-base);
             } else w[k-2]=base;
         }
+        if(he) w[k-2]=wHe[k-2];
         float* ht=harmonicCapture_ && traceSlot<HarmonicTrace::kTracks ?
             harmonicTrace_.data+HarmonicTrace::kHeader+traceSlot*HarmonicTrace::kTrack+14+6*(k-2) : nullptr;
         if(ht) { ht[0]=static_cast<float>(amp*w[k-2]); ht[4]=tr.residual>-15?HarmonicTrace::Fit:0; }
@@ -408,7 +431,10 @@ void VbHpv::missingFrame52(int reason,bool fast) {
     for(int j=0;j<nt52_;++j) {
         auto tr=tr52_[j]; ++tr.age; ++tr.missing;
         // S1: silence (Absolute) is not a note onset; only a born note cuts fast.
-        const bool fastEnd=gen_.envelope?tr.fastEnding:(fast || tr.fastEnding); tr.fastEnding=fastEnd;
+        const bool fastEnd0=gen_.envelope?tr.fastEnding:(fast || tr.fastEnding); tr.fastEnding=fastEnd0;
+        // s103: within hold+release hops a handed-over track releases like any lost track.
+        const bool fastEnd=fastEnd0 && !(handover_ && !gen_.envelope && !fast && tr.handover &&
+                                         tr.missing<=continuity_.hold+continuity_.release);
         tr.phi+=2*kPi*tr.f*kPvH/kFsd;
         if(fastEnd || tr.missing>continuity_.hold)
             tr.life=std::max(0.,tr.life-1./std::max(1,fastEnd?continuity_.fastRelease:continuity_.release));
@@ -1026,16 +1052,20 @@ void VbHpv::pvFrame52() {
         const int grace=((p1ppV04_&128)?4:0)+((p1ppV04_&256)?8:0);
         if(protectIdentity && grace>0 && tr.protection.lockHops>0 && bornCut)
             tr.protection.pendingBornCut=true;
-        const bool fast=tr.fastEnding || (grace>0 && tr.protection.pendingBornCut
-                                        ? tr.missing>grace : bornCut);
+        const bool pendingCut=grace>0 && tr.protection.pendingBornCut;
+        const bool fast=tr.fastEnding || (pendingCut ? tr.missing>grace : bornCut);
+        // s103: a track first ended by a newly born note (now, or after its identity grace) is handed over, not cut.
+        if(handover_ && !gen_.envelope && fast && !tr.fastEnding && (bornCut || pendingCut)) tr.handover=true;
         tr.fastEnding=fast;
+        const bool handing=handover_ && !gen_.envelope && fast && tr.handover && tr.missing<=continuity_.hold+continuity_.release;
+        const bool cut=fast && !handing;
         tr.phi+=2*kPi*tr.f*kPvH/kFsd;
-        if(fast || tr.missing>continuity_.hold)
-            tr.life=std::max(0.,tr.life-1./std::max(1,fast?continuity_.fastRelease:continuity_.release));
+        if(cut || tr.missing>continuity_.hold)
+            tr.life=std::max(0.,tr.life-1./std::max(1,cut?continuity_.fastRelease:continuity_.release));
         if(!continuity_.enabled) tr.life=0;
         if(tr.life<1e-12) tr.life=0;
         if(gen_.envelope) tr.life=1;
-        const int state=tr.life<=0?HarmonicTrace::End:(fast || tr.missing>continuity_.hold?HarmonicTrace::Release:HarmonicTrace::Held);
+        const int state=tr.life<=0?HarmonicTrace::End:(cut || tr.missing>continuity_.hold?HarmonicTrace::Release:HarmonicTrace::Held);
         if(nextCount>=12) {
             if(harmonicCapture_) harmonicTrace_.data[21]+=1;
             grave52(tr); continue;
@@ -1044,7 +1074,7 @@ void VbHpv::pvFrame52() {
         if(harmonicCapture_ && traceIndex>=HarmonicTrace::kTracks) harmonicTrace_.data[21]+=1;
         traceTrack52(traceIndex,tr,state,HarmonicTrace::Lost);
         if(tr.life>0 || (stageFlags_&StageOscillator)) {
-            if(!resultantOn_) renderTrack52(tr,src,ns,false,fast,traceIndex,grain,agrain);
+            if(!resultantOn_) renderTrack52(tr,src,ns,false,cut,traceIndex,grain,agrain);
             if(gen_.envelope && tr.envPeak<1e-2) tr.life=0;
             if(tr.life>0) next[nextCount++]=tr; else grave52(tr);
         }
