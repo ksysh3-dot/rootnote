@@ -307,6 +307,7 @@ bool Engine::setPeakBudgetResearch(int enabled, double cap, double ceilingDb,
 }
 
 void Engine::setHandoverHost(bool on){vbAlpha2_.setHandover(on);}
+void Engine::setFadeTrimHost(bool on){vbAlpha2_.setFadeInertia(on);layerTrim_=on?kFt3mTrim:1.0;}
 bool Engine::prepareStageC(int mode,const unsigned char* data,size_t bytes,bool worker,bool telemetry,int sampleRate) {
     if(mode<0 || mode>4 || (worker && mode!=3))return false;
     if((mode==2 || mode==4) && (!data || bytes!=531208))return false;
@@ -329,6 +330,9 @@ bool Engine::prepareStageC(int mode,const unsigned char* data,size_t bytes,bool 
     vbAlpha2_.setHoldHops(mode==1 || mode==3 ? 12 : 0);
     // s103/s104: the handover with the energy-matched 3rd harmonic was measured on the conducted mode only.
     vbAlpha2_.setHandover(mode==3);
+    // s106/s107: confirmed tracks lower the fit-gate fade 3x slower, with the layer trimmed -0.161 dB
+    // so the layer level matches s104 (FT3M). Measured on the conducted mode only.
+    vbAlpha2_.setFadeInertia(mode==3);layerTrim_=mode==3?kFt3mTrim:1.0;
     processed_=false;resetRequested_.store(false);configure(sampleRate);
     if(mode==3 && !setStream91(true,worker,0))return false;
     control91_.observedCount.store(0);control91_.observedMax.store(0);
@@ -899,9 +903,9 @@ void Engine::process(float* io, int frames) {
         const double peak42BaseVg=vg;
         // Bypass the multiply at the default. This changes only post-generator
         // gain, including the isolated diagnostics; it never feeds tracking.
-        if (researchLayerGain_ != 1.0 || researchLayerGainCap_ != 0.0) {
-            const double rg = researchLayerGainCap_ > 0.0
-                ? std::min(researchLayerGain_, researchLayerGainCap_) : researchLayerGain_;
+        if (researchLayerGain_ != 1.0 || researchLayerGainCap_ != 0.0 || layerTrim_ != 1.0) {
+            const double rg = (researchLayerGainCap_ > 0.0
+                ? std::min(researchLayerGain_, researchLayerGainCap_) : researchLayerGain_) * layerTrim_;
             if (rg != 1.0) vg *= rg;
         }
 

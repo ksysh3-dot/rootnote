@@ -978,7 +978,11 @@ void VbHpv::pvFrame52() {
             if(q.modulation.valid) {tr.dadt=q.modulation.amplitudeSlope;tr.dfdt=q.modulation.frequencySlope;}
         }
         tr.residual=q.res; tr.rawResidual=q.raw;
-        tr.fade+=((q.res>-15?0.:1.)-tr.fade)*(1-std::exp(-16./90));
+        // s106 FT3: eligibility is read before the fade/confHops update.
+        if(fadeInertia_ && q.res>-15 && best>=0 && tr.fade>=.5 && tr.confHops>=12 && !gen_.envelope)
+            tr.fade+=(0.-tr.fade)*(1-std::exp(-16./270));
+        else
+            tr.fade+=((q.res>-15?0.:1.)-tr.fade)*(1-std::exp(-16./90));
         if(stageFlags_&StageReentrySlow) {
             // Resultant R4-L v2: the share follows the fit like fade, falling within ~10 ms, returning over the tau
             const double target=q.res>-15?0.:1.,tau=target<tr.r4Share?10.:r4ReentryTau52_;

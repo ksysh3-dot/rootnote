@@ -212,6 +212,8 @@ public:
     // s103/s104: a track ended by a newly born note releases like any lost track for hold+release hops, and
     // upper tracks (f >= 90 Hz) keep the 3rd harmonic at least half the 2nd with the weight energy kept. Audio must be stopped.
     void setHandover(bool on) { handover_ = on; }
+    // s106/s107: a confirmed track (fade >= .5, 12+ confirmed hops) lowers fade with a 270-sample tau. Audio must be stopped.
+    void setFadeInertia(bool on) { fadeInertia_ = on; }
     // S41 host research, set before processing; caller owns optional trace storage.
     // mode0 OFF; 1 onset50,2 slow250,3 confidence,4 table;5..9 diagnostic ablations;10..12 S43 event realignment.
     bool setPhase41(int mode,double* trace,int capacity) {
@@ -544,6 +546,7 @@ private:
     ContinuityParams continuity_;
     int holdHops_ = 0;
     bool handover_ = false;
+    bool fadeInertia_ = false;
     int modulationMode_=0;
     bool tonalOnly_=false;
     unsigned stageFlags_=0;

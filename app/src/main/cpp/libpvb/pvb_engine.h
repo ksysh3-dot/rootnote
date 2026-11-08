@@ -226,6 +226,8 @@ public:
     void setLayerCapDb(float db){layerCapDb_.store(db,std::memory_order_relaxed);}
     // Host check only: turn the s104 handover on in another mode after prepareStageC. Audio must be stopped.
     void setHandoverHost(bool on);
+    // Host check only: turn the s107 FT3M fade inertia and layer trim on in another mode after prepareStageC.
+    void setFadeTrimHost(bool on);
     static constexpr int kStageCSize=2012;
     void copyStageC(int64_t* out)const;
     std::atomic<int> stageCMode_{0},stageCFlags_{0};
@@ -425,6 +427,8 @@ private:
     double dryLowCutHz_ = 80.0, dryLowCutDb_ = -6.0;
     int dryLowCutOrder_ = 4;
     double researchLayerGain_ = 1.0, researchLayerGainCap_ = 0.0;
+    static constexpr double kFt3mTrim = 0.9816349216172104; // 10^(-0.161/20), s107
+    double layerTrim_ = 1.0;
     bool peakBudgetOn_ = false;
     double peakBudgetCap_ = 2.0, peakBudgetCeilingDb_ = -3.0;
     double peakBudgetReferenceOutDb_ = -5.0, peakBudgetReleaseMs_ = 80.0, peakBudgetBlend_ = 1.0;
