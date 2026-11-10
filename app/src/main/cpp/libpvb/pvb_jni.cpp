@@ -252,6 +252,12 @@ Java_me_timschneeberger_rootlessjamesdsp_pvb_PvbNative_prepareStageC(JNIEnv* env
     if(bytes)env->ReleaseByteArrayElements(data,bytes,JNI_ABORT);
     return ok?JNI_TRUE:JNI_FALSE;
 }
+// Fixed modes: accept the user's EQ.
+extern "C" JNIEXPORT void JNICALL
+Java_me_timschneeberger_rootlessjamesdsp_pvb_PvbNative_setFixedEqOpen(JNIEnv*,jclass,jlong handle,jboolean open){
+    auto* h=fromJ(handle);if(h)h->engine.setFixedEqOpen(open==JNI_TRUE);
+}
+
 // Speaker guard level of the fixed modes; 0 = off.
 extern "C" JNIEXPORT void JNICALL
 Java_me_timschneeberger_rootlessjamesdsp_pvb_PvbNative_setLayerCap(JNIEnv*,jclass,jlong handle,jfloat db){

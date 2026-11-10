@@ -232,6 +232,8 @@ class PvbEngine(sampleRate: Int) : AutoCloseable {
 
     /** Speaker guard of the fixed modes in dBFS; 0 = off. */
     fun setLayerCap(db: Float) = use(Unit) { PvbNative.setLayerCap(it, db) }
+    /** Fixed modes: accept the user's EQ (must be called before the parameters that carry it). */
+    fun setFixedEqOpen(open: Boolean) = use(Unit) { PvbNative.setFixedEqOpen(it, open) }
 
     /** Clears the engine memory and fades in; call when the engine re-enters the signal path. */
     fun reset() = use(Unit) { PvbNative.reset(it) }

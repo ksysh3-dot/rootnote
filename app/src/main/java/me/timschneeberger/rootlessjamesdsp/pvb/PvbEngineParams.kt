@@ -153,9 +153,13 @@ object PvbEngineParams {
         val preset = s.fixedBass && i.sampleRate == 48000 && processing && s.vbOn && !i.abActive && !i.measuring && !diagnosticSolo
         if (preset) {
             val frozen = PvbEngine.defaultParams()
-            for (k in intArrayOf(PvbParam.HP_HZ, PvbParam.LOW_HZ, PvbParam.LOW_DB, PvbParam.LOW_Q,
-                PvbParam.HI_HZ, PvbParam.HI_DB, PvbParam.HI_Q, PvbParam.HS_HZ, PvbParam.HS_DB,
-                PvbParam.OUT_DB, PvbParam.CEIL_DB, PvbParam.REL_MS, PvbParam.DYN_ON, PvbParam.FLAT,
+            // Opened EQ (after the warning): the user's EQ plays, the low-mid gain no higher than the default
+            // (the layer level and peak budget of these modes assume it). Everything else stays frozen.
+            val eq = intArrayOf(PvbParam.HP_HZ, PvbParam.LOW_HZ, PvbParam.LOW_DB, PvbParam.LOW_Q,
+                PvbParam.HI_HZ, PvbParam.HI_DB, PvbParam.HI_Q, PvbParam.HS_HZ, PvbParam.HS_DB)
+            if (!s.fixedEqOpen) for (k in eq) p[k] = frozen[k]
+            else p[PvbParam.LOW_DB] = minOf(p[PvbParam.LOW_DB], frozen[PvbParam.LOW_DB])
+            for (k in intArrayOf(PvbParam.OUT_DB, PvbParam.CEIL_DB, PvbParam.REL_MS, PvbParam.DYN_ON, PvbParam.FLAT,
                 PvbParam.X_SMOOTH, PvbParam.X_RISE, PvbParam.X_S1M, PvbParam.X_DENSE, PvbParam.DEV_ON,
                 PvbParam.XTC_MODE)) p[k] = frozen[k]
             p[PvbParam.VB_LEVEL_DB] = s.fixedLevelDb   // 0 dB is the validated level; the user may only go below it

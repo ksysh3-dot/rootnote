@@ -531,6 +531,7 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
         lastTag = inputs.abTag
         engine.setParams(encoded.params)
         engine.setLayerCap(effectiveSettings.layerCapEngineDb)
+        engine.setFixedEqOpen(effectiveSettings.fixedEqOpen && !PvbRuntime.abActive)
         lastParams = encoded.params.copyOf()
         paramSink?.invoke(encoded.params)
         publish(lowDb)

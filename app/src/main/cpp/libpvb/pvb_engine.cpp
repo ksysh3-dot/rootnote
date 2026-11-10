@@ -360,13 +360,19 @@ void Engine::setSampleRate(int sampleRate) {
     pendingSr_ = sampleRate;
 }
 
-bool Engine::validP1ppp(const float* p) {
+bool Engine::validP1ppp(const float* p) const {
     float d[P_COUNT];defaultParams(d);
     // Only the transport tag, attenuating final gate, an attenuating layer level and display/match controls may vary.
-    for(int i : {P_ENABLED,P_HP_HZ,P_LOW_HZ,P_LOW_DB,P_LOW_Q,P_HI_HZ,P_HI_DB,P_HI_Q,
-                 P_OUT_DB,P_CEIL_DB,P_REL_MS,P_DYN_ON,P_HS_HZ,P_HS_DB,
+    for(int i : {P_ENABLED,P_OUT_DB,P_CEIL_DB,P_REL_MS,P_DYN_ON,
                  P_FLAT,P_DIAGNOSTIC_SOLO,P_X_SMOOTH,P_X_RISE,P_X_S1M,P_X_DENSE,P_DEV_ON,P_XTC_MODE})
         if(p[i]!=d[i])return false;
+    // The EQ too, unless the user opened it; opened, the low-mid gain may still not exceed the default.
+    if(fixedEqOpen_) {
+        if(!(p[P_LOW_DB]<=d[P_LOW_DB]))return false;
+    } else {
+        for(int i : {P_HP_HZ,P_LOW_HZ,P_LOW_DB,P_LOW_Q,P_HI_HZ,P_HI_DB,P_HI_Q,P_HS_HZ,P_HS_DB})
+            if(p[i]!=d[i])return false;
+    }
     if(!(p[P_VB_LEVEL_DB]<=0.f && p[P_VB_LEVEL_DB]>=-12.f))return false;
     return p[P_VB_ON]==1.f && p[P_VB_ALGO]==VB_ALPHA2_P1;
 }
@@ -580,6 +586,17 @@ void Engine::publishFilters() {
     pub_[i++].store(f[3]->m1, std::memory_order_relaxed);
     pub_[i++].store(f[3]->m2, std::memory_order_relaxed);
     pub_[i++].store(flatX_.value() * match_.gainDb(), std::memory_order_relaxed);
+    // Dry low shelf of the fixed modes, drawn at its full depth (the S44 peak guard only makes it shallower briefly).
+    const int shelves = dryLowCutMode_ == 0 ? 0 : dryLowCutOrder_ == 2 ? 1 : dryLowCutOrder_ == 4 ? 2 : 4;
+    pub_[i++].store(static_cast<double>(shelves), std::memory_order_relaxed);
+    for (int q = 0; q < 4; ++q) {
+        const SvfCoef& c = dryLowCut_[q].current();
+        pub_[i++].store(q < shelves ? c.g : 0.0, std::memory_order_relaxed);
+        pub_[i++].store(q < shelves ? c.k : 0.0, std::memory_order_relaxed);
+        pub_[i++].store(q < shelves ? c.m0 : 1.0, std::memory_order_relaxed);
+        pub_[i++].store(q < shelves ? c.m1 : 0.0, std::memory_order_relaxed);
+        pub_[i++].store(q < shelves ? c.m2 : 0.0, std::memory_order_relaxed);
+    }
     pubSeq_.store(s + 2, std::memory_order_release);
 }
 

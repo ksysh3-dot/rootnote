@@ -46,7 +46,10 @@ data class PvbSettings(
     val p1ppp: Boolean = false,       // frozen P1+++; effective overrides only, never rewrites saved settings
     val fixedLevelDb: Float = 0f,     // layer level of the fixed modes, saved apart from vbLevelDb
     val layerCapOn: Boolean = false,  // speaker guard of the fixed modes; off by default
-    val layerCapDb: Float = -24f,     // 125-250 Hz envelope of the layer, dBFS after the output gain
+    val layerCapDb: Float = -24f,
+    // The fixed modes play the default EQ. The user may open it for the mode it was opened in (stored: that mode's
+    // name); choosing another mode closes it again without touching the stored value.
+    val fixedEqOpenMode: String = "",     // 125-250 Hz envelope of the layer, dBFS after the output gain
     // Developer mode ("개발자 모드", general build only; DevParams). devOn = the user consented and the values below
     // reach the engine (P_DEV_ON); each value at its default is the model itself. Not part of device profiles.
     val devOn: Boolean = false,
@@ -86,6 +89,8 @@ data class PvbSettings(
 ) {
     val fixedBass: Boolean get() = p1ppp || stable || separated || conducted
     val layerCapEngineDb: Float get() = if (layerCapOn && fixedBass) layerCapDb else 0f
+    /** The user's EQ reaches the engine in a fixed mode (opened after the warning, for this mode only). */
+    val fixedEqOpen: Boolean get() = fixedBass && fixedEqOpenMode == bassMode
     val stageCId: Int get() = when { conducted -> 3; separated -> 2; stable -> 4; p1ppp -> 1; else -> 0 }
     val bassMode: String get() = if (conducted) "conducted" else if (separated) "separated" else if (stable) "stable" else if (p1ppp) "strong" else "off"
 
@@ -126,6 +131,9 @@ data class PvbSettings(
         const val KEY_FIXED_LEVEL_DB = "pvb_fixed_level_db"
         /** Speaker guard of the fixed modes: experimental, off by default. */
         const val KEY_LAYER_CAP_ON = "pvb_layer_cap_on"
+        const val KEY_FIXED_EQ_OPEN = "pvb_fixed_eq_open"
+        /** EQ keys the fixed modes hold at their defaults unless opened (PvbEngineParams). */
+        val FIXED_EQ_KEYS = listOf(KEY_HP_HZ, KEY_LOW_HZ, KEY_LOW_DB, KEY_LOW_Q, KEY_HI_HZ, KEY_HI_DB, KEY_HI_Q, KEY_HS_HZ, KEY_HS_DB)
         const val KEY_LAYER_CAP_DB = "pvb_layer_cap_db"
         /** Not persisted: the preset control is derived from model + level. */
         const val KEY_VB_MODE = "pvb_vb_mode"
@@ -306,6 +314,7 @@ data class PvbSettings(
                 fixedLevelDb = clampFixedLevel(p.float(KEY_FIXED_LEVEL_DB, d.fixedLevelDb)),
                 layerCapOn = p.bool(KEY_LAYER_CAP_ON, d.layerCapOn),
                 layerCapDb = clampLayerCap(p.float(KEY_LAYER_CAP_DB, d.layerCapDb)),
+                fixedEqOpenMode = p.str(KEY_FIXED_EQ_OPEN, d.fixedEqOpenMode),
                 vbVolLink = p.bool(KEY_VB_VOL_LINK, d.vbVolLink),
                 vbVolRefPct = Math.round(p.float(KEY_VB_VOL_REF_PCT, d.vbVolRefPct)).toFloat()
                     .coerceIn(VolumeLevelLink.REF_PCT_MIN, VolumeLevelLink.REF_PCT_MAX),

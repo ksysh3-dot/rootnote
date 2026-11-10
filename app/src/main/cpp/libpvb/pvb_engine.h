@@ -224,6 +224,9 @@ public:
     bool prepareStageC(int mode,const unsigned char* data,size_t bytes,bool worker,bool telemetry,int sampleRate);
     // Speaker guard of the fixed modes, dBFS; 0 = off. Any thread: the audio loop reads one atomic.
     void setLayerCapDb(float db){layerCapDb_.store(db,std::memory_order_relaxed);}
+    // Fixed modes: accept EQ values other than the defaults (low-mid gain still no higher than the default).
+    // Call before the parameters that carry them; checked when parameters are queued.
+    void setFixedEqOpen(bool open){std::lock_guard<std::mutex> lock(mtx_);fixedEqOpen_=open;}
     // Host check only: turn the s104 handover on in another mode after prepareStageC. Audio must be stopped.
     void setHandoverHost(bool on);
     // Host check only: turn the s107 FT3M fade inertia and layer trim on in another mode after prepareStageC.
@@ -372,7 +375,7 @@ public:
 
 private:
     friend struct Sum50TestAccess; // host boundary fixture, no production injection path
-    static bool validP1ppp(const float* p);
+    bool validP1ppp(const float* p) const;
     void setP1pppControls(bool on);
     void queueP1ppp(const float* p);
     void commitP1ppp();
@@ -391,6 +394,7 @@ private:
 
     // Pending updates, guarded by mtx_.
     std::mutex mtx_;
+    bool fixedEqOpen_ = false;  // guarded by mtx_
     float pending_[P_COUNT] = {};
     bool hasPending_ = false;
     int pendingSr_ = 0;
@@ -583,7 +587,9 @@ private:
     std::atomic<float> anaLimMin_{1.f};
     // Filter coefficients in use (hp, low, high: g k m0 m1 m2 each), output gain (linear), mix,
     // low-mid gain (dB); written by the audio thread under a sequence counter.
-    static constexpr int kPubCount = 24;  // hp lo hi (5 each), out gain, mix, low dB, high shelf (5), bypass gain dB
+    // hp lo hi (5 each), out gain, mix, low dB, high shelf (5), bypass gain dB, dry low shelf sections in use,
+    // then up to four dry low shelf sections (5 each; fixed modes only)
+    static constexpr int kPubCount = 45;
     std::atomic<double> pub_[kPubCount];
     std::atomic<uint32_t> pubSeq_{0};
     std::mutex anaMtx_;

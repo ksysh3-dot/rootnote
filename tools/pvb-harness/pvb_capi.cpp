@@ -468,6 +468,7 @@ extern "C" int pvb_try_set_params(void* ptr,const float* p,int n) {
  return ptr && static_cast<pvb::Engine*>(ptr)->trySetParams(p,n)?1:0;
 }
 extern "C" int pvb_set_layer_cap(void* ptr,float db) {if(!ptr)return 0;static_cast<pvb::Engine*>(ptr)->setLayerCapDb(db);return 1;}
+extern "C" int pvb_set_fixed_eq_open(void* ptr,int open) {if(!ptr)return 0;static_cast<pvb::Engine*>(ptr)->setFixedEqOpen(open!=0);return 1;}
 extern "C" int pvb_set_handover_host(void* ptr,int on) {if(!ptr)return 0;static_cast<pvb::Engine*>(ptr)->setHandoverHost(on!=0);return 1;}
 extern "C" int pvb_set_fade_trim_host(void* ptr,int on) {if(!ptr)return 0;static_cast<pvb::Engine*>(ptr)->setFadeTrimHost(on!=0);return 1;}
 extern "C" int pvb_set_fit_relax_host(void* ptr,int on) {if(!ptr)return 0;static_cast<pvb::Engine*>(ptr)->setFitRelaxHost(on!=0);return 1;}

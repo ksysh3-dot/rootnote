@@ -137,6 +137,7 @@ fun PvbSection(host: RnAdvancedActivity, showIcons: Boolean) {
     val s = p.read { PvbSettings.load(it) }
     val enabled = p.bool(P.KEY_ENABLE, true)
     var vbWarning by remember { mutableStateOf(false) }
+    var eqWarning by remember { mutableStateOf(false) }
 
     RnSwitchRow(stringResource(R.string.pvb_enable), enabled, { p.put(P.KEY_ENABLE, it) }, bold = true,
         icon = if (showIcons) painterResource(R.drawable.ic_twotone_speaker_24dp) else null)
@@ -184,16 +185,36 @@ fun PvbSection(host: RnAdvancedActivity, showIcons: Boolean) {
         // 음색 보정 (the general build's caps narrow some ranges)
         RnSectionTitle(stringResource(R.string.rn_adv_section_tone), infoLabel = stringResource(R.string.eq_info_open),
             onInfo = { host.startActivity(BassStoryActivity.intent(host)) })
-        PrefSlider(p, P.KEY_LOW_DB, stringResource(R.string.pvb_low_db), 3f, -6f..(caps?.lowDbMax ?: 9f), 0.5f, "dB", 1)
-        PrefSlider(p, P.KEY_LOW_HZ, stringResource(R.string.pvb_low_hz), 220f, 150f..350f, 5f, "Hz", 0)
-        if (research) PrefSlider(p, P.KEY_LOW_Q, stringResource(R.string.pvb_low_q), 1f, 0.4f..(caps?.lowQMax ?: 3f), 0.05f, "", 2)
-        PrefSlider(p, P.KEY_HP_HZ, stringResource(R.string.pvb_hp_hz), 100f, (caps?.hpHzMin ?: 40f)..200f, 5f, "Hz", 0)
-        PrefSlider(p, P.KEY_HI_DB, stringResource(R.string.pvb_hi_db), -3f, -9f..3f, 0.5f, "dB", 1)
-        PrefSlider(p, P.KEY_HI_HZ, stringResource(R.string.pvb_hi_hz), 4500f, 2000f..8000f, 100f, "Hz", 0)
+        // Fixed modes play the validated default EQ (PvbEngineParams); the sliders stay dimmed until the user
+        // opens them after a warning, for this mode only. Opened, the low-mid gain stops at the default.
+        val fixedEq = s.vbOn && s.fixedBass
+        val eqOn = !fixedEq || s.fixedEqOpen
+        if (fixedEq && !s.fixedEqOpen) {
+            RnNote(stringResource(R.string.pvb_fixed_eq_locked))
+            RnNavRow(stringResource(R.string.pvb_fixed_eq_open), stringResource(R.string.pvb_fixed_eq_open_summary),
+                chevron = false) { eqWarning = true }
+        } else if (fixedEq) {
+            RnNote(stringResource(R.string.pvb_fixed_eq_opened), warning = true)
+            RnNavRow(stringResource(R.string.pvb_fixed_eq_reset), stringResource(R.string.pvb_fixed_eq_reset_summary),
+                chevron = false) {
+                val edit = p.prefs.edit()
+                (P.FIXED_EQ_KEYS + P.KEY_FIXED_EQ_OPEN).forEach { edit.remove(it) }
+                edit.apply()
+            }
+        }
+        val lowMax = if (fixedEq) 3f else caps?.lowDbMax ?: 9f
+        PrefSlider(p, P.KEY_LOW_DB, stringResource(R.string.pvb_low_db), 3f, -6f..lowMax, 0.5f, "dB", 1, enabled = eqOn)
+        PrefSlider(p, P.KEY_LOW_HZ, stringResource(R.string.pvb_low_hz), 220f, 150f..350f, 5f, "Hz", 0, enabled = eqOn)
+        if (research) PrefSlider(p, P.KEY_LOW_Q, stringResource(R.string.pvb_low_q), 1f, 0.4f..(caps?.lowQMax ?: 3f), 0.05f, "", 2,
+            enabled = eqOn)
+        PrefSlider(p, P.KEY_HP_HZ, stringResource(R.string.pvb_hp_hz), 100f, (caps?.hpHzMin ?: 40f)..200f, 5f, "Hz", 0,
+            enabled = eqOn)
+        PrefSlider(p, P.KEY_HI_DB, stringResource(R.string.pvb_hi_db), -3f, -9f..3f, 0.5f, "dB", 1, enabled = eqOn)
+        PrefSlider(p, P.KEY_HI_HZ, stringResource(R.string.pvb_hi_hz), 4500f, 2000f..8000f, 100f, "Hz", 0, enabled = eqOn)
         if (research) {
-            PrefSlider(p, P.KEY_HI_Q, stringResource(R.string.pvb_hi_q), 0.6f, 0.3f..2f, 0.05f, "", 2)
-            PrefSlider(p, P.KEY_HS_DB, stringResource(R.string.pvb_hs_db), 0f, -9f..0f, 0.5f, "dB", 1)
-            PrefSlider(p, P.KEY_HS_HZ, stringResource(R.string.pvb_hs_hz), 2500f, 1500f..6000f, 100f, "Hz", 0)
+            PrefSlider(p, P.KEY_HI_Q, stringResource(R.string.pvb_hi_q), 0.6f, 0.3f..2f, 0.05f, "", 2, enabled = eqOn)
+            PrefSlider(p, P.KEY_HS_DB, stringResource(R.string.pvb_hs_db), 0f, -9f..0f, 0.5f, "dB", 1, enabled = eqOn)
+            PrefSlider(p, P.KEY_HS_HZ, stringResource(R.string.pvb_hs_hz), 2500f, 1500f..6000f, 100f, "Hz", 0, enabled = eqOn)
         }
 
         // 출력과 리미터
@@ -278,6 +299,16 @@ fun PvbSection(host: RnAdvancedActivity, showIcons: Boolean) {
     PrefSwitch(p, P.KEY_MATCH_ON_DISABLE, stringResource(R.string.pvb_match_on_disable), true,
         line = stringResource(R.string.pvb_match_on_disable_summary))
 
+    if (eqWarning) RnDialog(
+        stringResource(R.string.pvb_fixed_eq_warning_title), stringResource(R.string.pvb_fixed_eq_warning),
+        confirmLabel = stringResource(R.string.pvb_fixed_eq_warning_ok),
+        onConfirm = {
+            eqWarning = false
+            // The stored low-mid gain may be above the default from before; the engine plays at most the default.
+            p.put(P.KEY_FIXED_EQ_OPEN, s.bassMode)
+        },
+        dismissLabel = stringResource(android.R.string.cancel), onDismiss = { eqWarning = false },
+    )
     if (vbWarning) RnDialog(
         stringResource(R.string.pvb_vb_warning_title), stringResource(R.string.pvb_vb_warning),
         confirmLabel = stringResource(R.string.pvb_vb_warning_ok),
