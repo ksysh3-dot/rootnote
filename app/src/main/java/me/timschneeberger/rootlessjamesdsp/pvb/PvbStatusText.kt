@@ -25,6 +25,7 @@ class PvbStatusText(private val context: Context) {
     private val meters = FloatArray(PvbMeter.COUNT)
     private var lastBlocks = -1f
     private var lastBlockChangeMs = 0L
+    private var lastPresetStatus = ""
 
     /** [offText]: the body while the service is off (each screen says where its power control is). */
     fun render(offText: String): Rendered {
@@ -33,11 +34,22 @@ class PvbStatusText(private val context: Context) {
         if (PvbRuntime.abHidden)
             return Rendered("블라인드 비교 중입니다. 어떤 설정이 재생되는지 드러나지 않게 상태를 숨깁니다.", false)
         val haveMeters = engine.readMeters(meters)
+        if (haveMeters) {
+            val presetStatus = "stable=${s.stableRequested} requested=${s.p1pppRequested} state=${meters[PvbMeter.P1PPP_STATE].toInt()} " +
+                "rate=${meters[PvbMeter.SAMPLE_RATE].toInt()} speaker=${s.speaker} latency=${engine.latencyFrames}"
+            if (presetStatus != lastPresetStatus) {
+                if (s.p1pppRequested || meters[PvbMeter.P1PPP_STATE] > 0f || lastPresetStatus.contains("requested=true"))
+                    android.util.Log.i("P1PPP", presetStatus)
+                lastPresetStatus = presetStatus
+            }
+        }
         val research = PvbBuild.researchUi
         // The S26U speaker/limiter model applies only on the S26U (general build: measured profile only).
         val phoneModel = PvbGeneral.phoneModelCurves(context)
         val canCopy = research && haveMeters && s.vbOn && !s.matchedBypass && PvbModels.fromId(s.vbAlgo) != null
         val lines = ArrayList<String>()
+        if (s.p1pppRequested && haveMeters && meters[PvbMeter.SAMPLE_RATE] != 48000f)
+            lines += context.getString(me.timschneeberger.rootlessjamesdsp.R.string.pvb_rate_fallback)
         if (PvbGeneral.unmeasured(context))
             lines += context.getString(me.timschneeberger.rootlessjamesdsp.R.string.unmeasured_status)
         val back = PvbRuntime.abReturnVolume
@@ -72,36 +84,31 @@ class PvbStatusText(private val context: Context) {
             lines += "음량 맞춤 ${signed(db)} dB" + if (measured.isFinite()) " (최근 재생 기준 추정)" else " (초기 추정·음악 재생 후 갱신)"
         }
 
+        val presetPacket = haveMeters && meters[PvbMeter.P1PPP_STATE] > 0f
         val applied = if (flowing) meters[PvbMeter.LOW_DB_NOW] else s.targetLowDb
-        if (s.processing) lines += if (s.volLink) {
+        if (s.processing && !presetPacket) lines += if (s.volLink) {
             "저중역 보정: ${signed(applied)} dB (볼륨 연동: 기준보다 ${fmt(s.dropDb)} dB ${if (s.dropDb >= 0f) "작음" else "큼"})"
         } else {
             "저중역 보정: ${signed(applied)} dB (볼륨 연동 꺼짐)"
         }
 
-        if (s.processing && s.dynRefDb.isFinite()) {
+        if (s.processing && s.dynRefDb.isFinite() && !presetPacket) {
             val dynNow = if (haveMeters) meters[PvbMeter.DYN_DB] else 0f
             val level = if (haveMeters && meters[PvbMeter.DYN_LEVEL_DB] > -119f) meters[PvbMeter.DYN_LEVEL_DB] else Float.NaN
             lines += "조용한 구간 저음 추가: ${signed(dynNow)} dB · 기준 ${fmt(s.dynRefDb)} dB (지금 레벨 ${fmt(level)} dB)"
         }
-        if (s.vbOn && !s.matchedBypass) {
+        if (s.vbOn && !s.matchedBypass && !presetPacket) {
             val vb = if (haveMeters) meters[PvbMeter.VB].toInt() else 0
             // General build without the research tools: no internal alpha names or model codenames.
             val vbLabel = if (PvbBuild.general) "가상 저음" else "가상 저음 (알파 3)"
             val modelName = if (research) "${PvbSettings.vbAlgoName(vb - 1)} · " else ""
             lines += when {
-                vb in 1..11 ->
-                    "$vbLabel: ${modelName}레벨 ${signed(s.vbLevelDb)} dB" +
-                        (if (s.vbVolLink) " · 볼륨 연동 −${fmt(s.vbVolReductionDb)} dB → 적용 ${signed(s.vbAppliedLevelDb)} dB" else "")
+                PvbModels.inUse(vb - 1) ->
+                    "$vbLabel: ${modelName}레벨 ${signed(StrengthDisplay.UI.toDisplay(s.vbLevelDb))} dB" +
+                        (if (s.vbVolLink) " · 볼륨 연동 −${fmt(s.vbVolReductionDb)} dB → 적용 ${signed(StrengthDisplay.UI.toDisplay(s.vbAppliedLevelDb))} dB" else "")
                 else -> "$vbLabel: 켜져 있지만 지금은 쓰지 않음 (우회 중이거나 이 샘플레이트에서 지원 안 됨)"
             }
-            if (research && flowing && vb == 1 + PvbSettings.VB_GENTLE) {
-                lines += "구간 분석: ${sceneName(meters[PvbMeter.VB_SCENE].toInt())} · 소리에 미적용"
-            }
-            if (research && flowing && vb == 1 + PvbSettings.VB_GENTLE_ADAPTIVE) {
-                val weight = (meters[PvbMeter.VB_UPPER_BLEND] * 100).toInt()
-                lines += "고차배음 더 억제 설정: ${weight}% · 적응형 시험"
-            }
+
         }
         if (research) lines += "볼륨: ${s.volumeIndex}/${s.volumeMax} 단계 · 약 ${fmt(s.volumeDb)} dB, 기준 ${fmt(s.referenceDb)} dB"
         if (research) lines += if (s.volumeDbSource == "system") {
@@ -175,14 +182,14 @@ class PvbStatusText(private val context: Context) {
                 .put("analysis_core_sample_rate", 3000)
                 .put("counts_since_algorithm_reset", true)
                 .put("trained_selector", false)
-                .put("automatic_audio_switching_applied", snapshot[PvbMeter.VB].toInt() == 1 + PvbSettings.VB_GENTLE_ADAPTIVE && s.processing && !s.matchedBypass)
+                .put("automatic_audio_switching_applied", false)
                 .put("strong_budget_weight", snapshot[PvbMeter.VB_UPPER_BLEND])
                 .put("strong_budget_target", snapshot[PvbMeter.VB_UPPER_TARGET].toInt())
                 .put("budget_transitions", snapshot[PvbMeter.VB_UPPER_TRANSITIONS].toLong())
                 .put("policy_version", 2)
-                .put("note", "Rule-based experimental harmonic-budget selection only in algorithm 5; " +
+                .put("note", "P1 observations only; no automatic harmonic-budget selection; " +
                     "not pitch labels, buzz detection, learned quality scores or a listening result. " +
-                    "Both budgets share analysis and oscillator phases. Counters reset with algorithm/rate.")
+                    "Observation counters reset with algorithm/rate.")
             val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
             clipboard.setPrimaryClip(ClipData.newPlainText("PVB 저음 연구", report.toString(2)))
             Toast.makeText(context, "저음 연구 기록을 복사했습니다", Toast.LENGTH_SHORT).show()

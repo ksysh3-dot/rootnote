@@ -6,6 +6,7 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceCategory
 import me.timschneeberger.rootlessjamesdsp.R
 import me.timschneeberger.rootlessjamesdsp.fragment.settings.SettingsBaseFragment
+import me.timschneeberger.rootlessjamesdsp.pvb.StrengthDisplay
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbModels
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbSettings
 import me.timschneeberger.rootlessjamesdsp.pvb.TrackKeys
@@ -35,7 +36,7 @@ class TrackLevelsFragment : SettingsBaseFragment() {
         super.onDestroy()
     }
 
-    private fun db(v: Float) = PvbSettings.clampLevel(v).roundToInt().let { if (it > 0) "+$it dB" else "$it dB" }
+    private fun db(v: Float) = StrengthDisplay.UI.sliderValue(v).roundToInt().let { if (it > 0) "+$it dB" else "$it dB" }
 
     private fun appName(pkg: String): String = try {
         val pm = requireContext().packageManager

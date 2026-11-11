@@ -32,3 +32,7 @@ tools/pvb-harness/study/private/
 /tools/rootfx/build/
 /tools/rootfx/build-android/
 /dist-root/
+
+# The conducted control network is part of the app source distribution.
+!app/src/main/assets/E60KD.bin
+/.kotlin/

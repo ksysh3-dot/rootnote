@@ -8,7 +8,7 @@ import test_engine as T
 
 lib = T.load_lib(sys.argv[1]); root = Path(sys.argv[2]); count = 0
 for fs in (44100, 48000):
-    for algorithm in (3, 4, 6, 7, 8, 9, 10):
+    for algorithm in (6,):
         x = np.fromfile(root / f'alpha2-{fs}-{algorithm}.in.f32', dtype='<f4').reshape(-1, 2)
         jni = np.fromfile(root / f'alpha2-{fs}-{algorithm}.out.f32', dtype='<f4').reshape(-1, 2)
         e = T.Engine(lib, fs, vb_on=1, vb_algo=algorithm, vb_level_db=9, out_db=-18, ramp_ms=0)

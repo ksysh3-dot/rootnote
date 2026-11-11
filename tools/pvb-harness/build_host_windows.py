@@ -46,7 +46,7 @@ def main():
            '-pthread', '-shared', '-I' + str(src), *map(str, inputs),
            str(generated), '-o', str(out / 'pvbcapi.dll')]
     subprocess.run(cmd, env=env, check=True)
-    files = sorted(src.glob('*.h')) + inputs + [capi]
+    files = sorted(src.glob('*.h')) + sorted(src.glob('*.inc')) + inputs + [capi]   # .inc: pvb_resultant.inc is part of pvb_vb52.cpp
     manifest = {p.relative_to(root).as_posix():
                 hashlib.sha256(p.read_bytes()).hexdigest() for p in files}
     (out / 'source_hashes.json').write_text(json.dumps(manifest, indent=2), encoding='utf-8')

@@ -96,16 +96,16 @@ private fun policy() {
     // The user moves the slider during A -> remembered for A, default untouched.
     check(p.onSettingsChanged(lv(9f), tick()))
     check(p.store.get(TrackKeys.of(a)!!)!!.levelDb == 9f && p.usingSaved && p.default == def)
-    // A preset during A changes model and level: both remembered.
-    check(p.onSettingsChanged(lv(9f, PvbModels.GENTLE12_KEY), tick()))
-    check(p.store.get(TrackKeys.of(a)!!)!!.modelKey == PvbModels.GENTLE12_KEY)
+    // Repeating P1 at the same level is not a new setting change.
+    check(!p.onSettingsChanged(lv(9f, PvbModels.P1_KEY), tick()))
+    check(p.store.get(TrackKeys.of(a)!!)!!.modelKey == PvbModels.P1_KEY)
     // B has no entry -> back to the default (model too).
     check(p.onTrack(b, tick()) == def && !p.usingSaved)
     // Our own write coming back is not a user change.
     check(!p.onSettingsChanged(def, tick()) && p.store.get(TrackKeys.of(b)!!) == null)
     // Back to A -> its setting.
-    check(p.onTrack(a, tick()) == lv(9f, PvbModels.GENTLE12_KEY) && p.usingSaved)
-    check(!p.onSettingsChanged(lv(9f, PvbModels.GENTLE12_KEY), tick()))
+    check(p.onTrack(a, tick()) == lv(9f, PvbModels.P1_KEY) && p.usingSaved)
+    check(!p.onSettingsChanged(lv(9f, PvbModels.P1_KEY), tick()))
     // Same track again (metadata refresh, album added): nothing to write.
     check(p.onTrack(t("A", album = "X"), tick()) == null && p.track?.album == "X")
     // Pause A: stays on A's setting. Stop: no track -> default.
@@ -114,7 +114,7 @@ private fun policy() {
     // No track: a change is the new default; then a track without entry gets the new default.
     check(!p.onSettingsChanged(lv(4f), tick()) && p.default == lv(4f))
     check(p.onTrack(c, tick()) == null)                // already at the new default
-    check(p.onTrack(a, tick()) == lv(9f, PvbModels.GENTLE12_KEY))
+    check(p.onTrack(a, tick()) == lv(9f, PvbModels.P1_KEY))
     check(p.onTrack(b, tick()) == lv(4f))
     // Untitled item -> no key -> default and nothing saved on a change.
     p.onTrack(a, tick())

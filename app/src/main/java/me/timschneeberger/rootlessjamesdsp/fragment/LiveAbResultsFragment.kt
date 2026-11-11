@@ -14,6 +14,8 @@ import androidx.preference.PreferenceCategory
 import me.timschneeberger.rootlessjamesdsp.BuildConfig
 import me.timschneeberger.rootlessjamesdsp.R
 import me.timschneeberger.rootlessjamesdsp.fragment.settings.SettingsBaseFragment
+import me.timschneeberger.rootlessjamesdsp.pvb.LiveAbComparisons
+import me.timschneeberger.rootlessjamesdsp.pvb.StrengthDisplay
 import me.timschneeberger.rootlessjamesdsp.pvb.LiveAbCsv
 import me.timschneeberger.rootlessjamesdsp.pvb.LiveAbJson
 import me.timschneeberger.rootlessjamesdsp.pvb.LiveAbRecord
@@ -64,7 +66,7 @@ class LiveAbResultsFragment : SettingsBaseFragment() {
 
     private fun fileBase() = "pvb_live_ab_" + stamp("yyyyMMdd_HHmmss")
 
-    private fun db(v: Float) = if (!v.isFinite()) "?" else v.roundToInt().let { if (it > 0) "+$it dB" else "$it dB" }
+    private fun db(v: Float) = if (!v.isFinite()) "?" else StrengthDisplay.UI.toDisplay(v).roundToInt().let { if (it > 0) "+$it dB" else "$it dB" }
 
     private fun render() {
         val ctx = context ?: return
@@ -121,14 +123,14 @@ class LiveAbResultsFragment : SettingsBaseFragment() {
 
     private fun verdictText(r: LiveAbRecord): String {
         val w = r.winner()
-        return if (w == null) getString(R.string.pvb_live_ab_same) else "${w.letter} = ${w.label}"
+        return if (w == null) getString(R.string.pvb_live_ab_same) else "${w.letter} = ${LiveAbComparisons.displayLabel(w.id, w.label, w.levelDb)}"
     }
 
     private fun title(r: LiveAbRecord) = "${r.timeLocal.take(16)} · ${r.comparisonLabel} · ${verdictText(r)}"
 
     private fun summary(r: LiveAbRecord): String {
         val lines = ArrayList<String>()
-        lines += r.sides.joinToString(", ") { "${it.letter} = ${it.label}" }
+        lines += r.sides.joinToString(", ") { "${it.letter} = ${LiveAbComparisons.displayLabel(it.id, it.label, it.levelDb)}" }
         if (r.chips.isNotEmpty()) lines += getString(R.string.pvb_live_ab_chips) + ": " + r.chips.joinToString(", ")
         if (r.note.isNotBlank()) lines += getString(R.string.pvb_live_ab_note) + ": " + r.note
         lines += r.track?.let { t -> listOfNotNull(t.title, t.artist).joinToString(" — ").ifBlank { t.packageName } }

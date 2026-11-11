@@ -23,6 +23,11 @@ object PvbNative {
     @JvmStatic external fun copyDevMeters(handle: Long, out: FloatArray): Int
     @JvmStatic external fun devMeterSize(): Int
     @JvmStatic external fun readMeters(handle: Long, out: FloatArray)
+    @JvmStatic external fun prepareStageC(handle: Long, mode: Int, data: ByteArray?, worker: Boolean, telemetry: Boolean, rate: Int, familyP2: Boolean): Boolean
+    @JvmStatic external fun setLayerCap(handle: Long, db: Float)
+    @JvmStatic external fun setFixedEqOpen(handle: Long, open: Boolean)
+    @JvmStatic external fun copyStageC(handle: Long, out: LongArray): Boolean
+    @JvmStatic external fun loadStableWeights(handle: Long, data: ByteArray): Boolean
     @JvmStatic external fun latency(handle: Long): Int
     @JvmStatic external fun openMs(handle: Long, tag: Int): Int
     @JvmStatic external fun paramCount(): Int

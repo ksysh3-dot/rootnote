@@ -31,6 +31,33 @@ struct HarmonicRendererTestAccess {
         return 32;
     }
 };
+// Exact algebraic F5 fixture through Engine::process, with fixed dry/layer
+// boundary components. All delay, controller, native limiter and output code run.
+struct Sum50TestAccess {
+ struct Fixed final : VbModule {
+  double value=0.;bool configure(int)override{return true;}void reset()override{}
+  int latencyFrames()const override{return 7052;}bool inputAfterEq()const override{return false;}
+  void tick(double,double,double& l,double& r)override{l=r=value;}
+ };
+ static void cancellation(float* out,int frames,double* stats) {
+  Fixed fixed;const double ceiling=dbToLin(-1.);fixed.value=-.1*ceiling;
+  auto* e=new Engine(48000);float p[P_COUNT];defaultParams(p);
+  p[P_VB_ON]=1;p[P_VB_ALGO]=6;p[P_RAMP_MS]=0;p[P_P1PPP]=1;e->setParams(p,P_COUNT);
+  float block[128]={};for(int i=0;i<49152;i+=64)e->process(block,64);
+  // Only component construction is replaced. No alternate limiter or offline
+  // replay is used; controller A sees D=1.2C, L=-.4C, reference=1.1C.
+  SvfCoef identity;identity.m0=1.;identity.m1=identity.m2=0.;
+  e->hp_.snap(identity);e->lo_.snap(identity);e->hi_.snap(identity);e->hs_.snap(identity);
+  e->outGain_.snap(1.);e->dryLowCutMode_=e->dryPeak44Mode_=0;
+  e->vbMods_[VB_ALPHA2_P1]=&fixed;
+  for(int i=0;i<frames;) {
+   const int n=std::min(64,frames-i);std::fill(block,block+2*n,static_cast<float>(1.2*ceiling));
+   e->process(block,n);std::copy_n(block,2*n,out+2*i);i+=n;
+  }
+  stats[0]=.8*ceiling;stats[1]=1.2*ceiling;stats[2]=e->layerPeak42_.gain();
+  stats[3]=e->latencyFrames();stats[4]=e->lim_.currentGain();delete e;
+ }
+};
 struct RendererProbe {
     VbHpv vb{true,false};
     int64_t nextCentre=16,readPosition=0,finalized=0;
@@ -55,23 +82,128 @@ struct HostStageCapture {
 }
 
 extern "C" {
+int pvb_set_phase41(void* e,int mode,double* trace,int capacity) {
+    return e && static_cast<pvb::Engine*>(e)->setPhase41(mode,trace,capacity) ? 1 : 0;
+}
+int pvb_phase41_count(void* e) { return e?static_cast<pvb::Engine*>(e)->phase41Count():-1; }
+
+int pvb_set_n2_research(void* e,unsigned flags,int mode,double value,const double* tape,int count) {
+    return e && static_cast<pvb::Engine*>(e)->setN2Research(flags,mode,value,tape,count) ? 1 : 0;
+}
+
+
 
 int pvb_set_p1plus_research(void* e,unsigned flags) {
     if(!e || flags>15 || ((flags&8) && !(flags&4))) return 0;
     static_cast<pvb::Engine*>(e)->setP1PlusResearch(flags);return 1;
 }
 
+int pvb_set_p1pp_research_params(void* e,int hold,double historyDb,int steadyHops,double steadyA,double releaseStrength) {
+    if(!e || hold<1 || steadyHops<1 || steadyA<=0 || releaseStrength<0) return 0;
+    static_cast<pvb::Engine*>(e)->setP1PPResearchParams(hold,historyDb,steadyHops,steadyA,releaseStrength);return 1;
+}
+int pvb_set_r4_research(void* e,int holdHops,double floorBlend,double tauUpMs) {
+    if(!e || holdHops<0 || holdHops>24 || floorBlend<0 || floorBlend>1 || tauUpMs<=0) return 0;
+    static_cast<pvb::Engine*>(e)->setR4Research(holdHops,floorBlend,tauUpMs);return 1;
+}
+int pvb_set_r4_level(void* e,double gainDb) {
+    if(!e || !(gainDb>=0) || gainDb>18) return 0;
+    static_cast<pvb::Engine*>(e)->setR4Level(gainDb);return 1;
+}
+int pvb_set_r4_reentry(void* e,double tauMs) {
+    if(!e || !(tauMs>=10) || tauMs>2000) return 0;
+    static_cast<pvb::Engine*>(e)->setR4Reentry(tauMs);return 1;
+}
+
+// Resultant core (algorithm 15, docs/RESULTANT_CORE.md 4.2 and 5.8), host research. v: the 16 parameters in the order of the
+// spec (voicing, levelDb, ampSource, snrOnDb, snrFastDb (unused since v1.3), snrOffDb, tauOnMs, tauOffMs, betaMin, betaMax,
+// kappa, nMin, nFuture, psiSlew, crest, maxDfdtBirth); n may be shorter, the rest are then the defaults. 1 = accepted,
+// 0 = a value out of range (nothing applied). The setting is kept whichever algorithm runs.
+int pvb_set_dry_low_cut(void* e,int dryLowCutMode,double dryLowCutHz,double dryLowCutDb) {
+    if (!e) return 0;
+    return static_cast<pvb::Engine*>(e)->setDryLowCutResearch(dryLowCutMode,dryLowCutHz,dryLowCutDb) ? 1 : 0;
+}
+
+// S31 host-only controls; set before the first processing call.
+int pvb_set_dry_low_cut_order(void* e,int order) {
+    return e && static_cast<pvb::Engine*>(e)->setDryLowCutOrderResearch(order) ? 1 : 0;
+}
+int pvb_set_peak_budget_research(void* e,int enabled,double cap,double ceilingDb,
+                                 double referenceOutDb,double releaseMs,double blend) {
+    return e && static_cast<pvb::Engine*>(e)->setPeakBudgetResearch(
+        enabled,cap,ceilingDb,referenceOutDb,releaseMs,blend) ? 1 : 0;
+}
+int pvb_set_layer_gain_research(void* e,double gain,double cap) {
+    return e && static_cast<pvb::Engine*>(e)->setLayerGainResearch(gain,cap) ? 1 : 0;
+}
+
+// S32: three default-OFF P1 layer attenuators. Configure before processing.
+int pvb_set_p1_wrong_note_research(void* e,int flags) {
+    return e && flags>=0 && static_cast<pvb::Engine*>(e)->setP1WrongNoteResearch(static_cast<unsigned>(flags)) ? 1 : 0;
+}
+int pvb_set_resultant(void* e,const double* v,int n) {
+    if(!e || n<0 || (n>0 && !v)) return 0;
+    return static_cast<pvb::Engine*>(e)->setResultantParams(v,n) ? 1 : 0;
+}
+// Voice trace of the Resultant core: 8 rows (one per voice slot) of 22 doubles for every hop (3000/16 per second), up to
+// capacityHops hops; allocation happens here only. capacityHops <= 0 frees the buffer. 1 = enabled, 0 = refused.
+// Fields: hop core index, voice id, track id, state (0 empty 1 CAND 2 ON 3 REL), coasting hops, f_track, f_osc, dfdt_s, A, c,
+// sigma, Np, snr_db, prominent, raw_db, res_db, subordinate, theta_hat, psi_2, psi_3, a_2, a_3.
+int pvb_resultant_trace_enable(void* e,int capacityHops) {
+    if(!e) return 0;
+    return static_cast<pvb::Engine*>(e)->resultantTraceEnable(capacityHops) ? 1 : 0;
+}
+// Copies the recorded rows (22 doubles each, 8 per hop, oldest first) into out (cap doubles). Returns the number of rows,
+// -1 no trace enabled, -2 cap too small, -3 more hops than capacityHops were processed (never silently truncated).
+// A reset (algorithm switch, engine reset) starts the trace again.
+int pvb_resultant_trace_copy(void* e,double* out,int cap) {
+    if(!e || (cap>0 && !out) || cap<0) return -2;
+    return static_cast<pvb::Engine*>(e)->resultantTraceCopy(out,cap);
+}
+
+int pvb_set_p1pp_v04_research(void* e,int flags) {
+    if(!e || flags<0 || flags>511) return 0;
+    static_cast<pvb::Engine*>(e)->setP1PPV04Research(static_cast<unsigned>(flags));return 1;
+}
+
 int pvb_set_p1pp_impact_research(void* e,int mode) {
-    if(!e || mode<0 || mode>4) return 0;
+    if(!e || mode<0 || mode>8) return 0;
     static_cast<pvb::Engine*>(e)->setP1PPImpactResearch(mode);return 1;
 }
 
+// Study 1 (#4) counterfactual injection, P1 research profile only. mask 1 = selected HPSS outputs (bh, bp),
+// 2 = envelope targets (as, ps); buffers are indexed by core sample and must outlive processing. Set before
+// the first block (it resets the module). mask 0 clears it. Windows are [hStart,hEnd) and [eStart,eEnd).
+int pvb_set_stage_inject(void* e,unsigned mask,const double* bh,const double* bp,long long hStart,long long hEnd,
+                         const double* as,const double* ps,long long eStart,long long eEnd,long long n) {
+    using I=pvb::VbHpv::StageInject52;
+    if(!e || mask>3 || n<0 || hStart<0 || hEnd<hStart || eStart<0 || eEnd<eStart) return 0;
+    if(((mask&I::InjectHpss) && (!bh || !bp)) || ((mask&I::InjectEnvelope) && (!as || !ps))) return 0;
+    I v; v.mask=mask; v.bh=bh; v.bp=bp; v.as=as; v.ps=ps; v.n=n;
+    v.hStart=hStart; v.hEnd=hEnd; v.eStart=eStart; v.eEnd=eEnd;
+    static_cast<pvb::Engine*>(e)->setStageInject(v); return 1;
+}
+// Study 1 (#4) B3 track tape (P1 research profile only). mode 1 records, 2 replays inside [startHop,endHop) with a
+// relative frequency tolerance; 0 detaches. Stats: recorded, replaced, added, kept, duplicate ids, overflow, hops.
+void* pvb_track_tape_create(int hops) {
+    return hops>0 && hops<=200000 ? pvb::VbHpv::createTrackTape(hops) : nullptr;
+}
+void pvb_track_tape_destroy(void* t) { pvb::VbHpv::destroyTrackTape(static_cast<pvb::VbHpv::TrackTape52*>(t)); }
+int pvb_set_track_tape(void* e,void* t,int mode,long long startHop,long long endHop,double tol) {
+    if(!e || mode<0 || mode>2 || (mode && !t) || startHop<0 || endHop<startHop || !(tol>0 && tol<.5)) return 0;
+    static_cast<pvb::Engine*>(e)->setTrackTape(mode?static_cast<pvb::VbHpv::TrackTape52*>(t):nullptr,mode,
+                                               startHop,endHop,tol);
+    return 1;
+}
+int pvb_track_tape_stats(void* t,long long* out,int n) {
+    return pvb::VbHpv::trackTapeStats(static_cast<pvb::VbHpv::TrackTape52*>(t),out,n);
+}
 int pvb_stage_fields() {return pvb::StageCapture52::kFields;}
 // Attach before process and detach before destroying the engine. Allocation and
 // copying happen outside the audio call. Overflow is explicit, never truncated.
 void* pvb_stage_attach(void* e,unsigned flags,int capacity) {
     const unsigned predictors=pvb::StageTrackLinear|pvb::StageTrackBurg;
-    if(!e || flags>8191 || (flags&predictors)==predictors ||
+    if(!e || flags>268435455 || (flags&predictors)==predictors ||
        ((flags&pvb::StageOscillatorCorrect) && !(flags&pvb::StageOscillator)) ||
        ((flags&predictors) && !(flags&pvb::StageGlobalTrack)) || capacity<=0 || capacity>2000000) return nullptr;
     auto* s=new pvb::HostStageCapture(static_cast<pvb::Engine*>(e),capacity);
@@ -148,6 +280,9 @@ void* pvb_create(int sampleRate) { return new pvb::Engine(sampleRate); }
 void pvb_destroy(void* e) { delete static_cast<pvb::Engine*>(e); }
 void pvb_set_sample_rate(void* e, int sr) { static_cast<pvb::Engine*>(e)->setSampleRate(sr); }
 void pvb_set_params(void* e, const float* v, int n) { static_cast<pvb::Engine*>(e)->setParams(v, n); }
+int pvb_prepare_stage_c(void* e, int mode, const unsigned char* d, int n, int worker, int telemetry, int sr) {
+    return static_cast<pvb::Engine*>(e)->prepareStageC(mode, d, static_cast<size_t>(n), worker != 0, telemetry != 0, sr) ? 1 : 0;
+}
 void pvb_process(void* e, float* io, int frames) { static_cast<pvb::Engine*>(e)->process(io, frames); }
 void pvb_process_i16(void* e, const short* in, short* out, int frames) {
     static_cast<pvb::Engine*>(e)->processInt16(reinterpret_cast<const int16_t*>(in), reinterpret_cast<int16_t*>(out), frames);
@@ -255,21 +390,9 @@ double pvb_ana_point_hz(int i, int n) { return pvb::anaPointHz(i, n); }
 
 // Virtual bass modules on their own (layer only), for the comparison with the Python reference.
 void* pvb_vb_create(int algo, int sampleRate) {
-    if(algo<0 || algo>=pvb::VB_ALGO_COUNT) return nullptr;
-    if(algo>=pvb::VB_ALPHA2_P1) {
-        auto* m=new pvb::VbHpv(true,true,1);
-        if(!m->configure(sampleRate) || !m->setAlpha2Profile(algo)) {delete m;return nullptr;}
-        return m;
-    }
-    pvb::VbModule* m = algo == pvb::VB_BANKSTOWN ? static_cast<pvb::VbModule*>(new pvb::VbBankstown())
-                                                 : static_cast<pvb::VbModule*>(new pvb::VbHpv(
-                                                     algo >= pvb::VB_HPV52M && algo <= pvb::VB_GENTLE_ADAPTIVE,
-                                                     algo >= pvb::VB_GENTLE && algo <= pvb::VB_GENTLE_ADAPTIVE,
-                                                     algo == pvb::VB_GENTLE_STRONG ? 1 : algo == pvb::VB_GENTLE_ADAPTIVE ? 2 : 0));
-    if (!m->configure(sampleRate)) {
-        delete m;
-        return nullptr;
-    }
+    if(!pvb::supportedVbAlgo(algo)) return nullptr;
+    auto* m=new pvb::VbHpv(true,true,1);
+    if(!m->configure(sampleRate) || !m->setAlpha2Profile(algo)) {delete m;return nullptr;}
     return m;
 }
 void pvb_vb_destroy(void* m) { delete static_cast<pvb::VbModule*>(m); }
@@ -283,3 +406,112 @@ void pvb_vb_process(void* m, const double* inL, const double* inR, double* outL,
 }
 
 
+
+extern "C" int pvb_set_layer_peak42(void* ptr,int mode,double releaseMs) {
+ return ptr && static_cast<pvb::Engine*>(ptr)->setLayerPeak42Research(mode,releaseMs)?1:0;
+}
+// Streaming component replay: the exact same state machine as Engine, no track peak argument.
+extern "C" void pvb_peak42_replay(const double* d,const double* l,const double* ref,int n,int mode,
+ double* y,double* outl,double* gains,double* stats) {
+ pvb::LayerPeak42 c;c.configure(mode,48000.,100.);
+ for(int i=0;i<n+88;++i) {
+  double ddL,ddR,ll,rr;
+  c.process(i<n?d[2*i]:0.,i<n?d[2*i+1]:0.,i<n?l[2*i]:0.,i<n?l[2*i+1]:0.,
+            i<n?ref[2*i]:0.,i<n?ref[2*i+1]:0.,88,ddL,ddR,ll,rr);
+  if(i>=88) {int j=i-88;y[2*j]=ddL+ll;y[2*j+1]=ddR+rr;outl[2*j]=ll;outl[2*j+1]=rr;gains[j]=c.gain();}
+ }
+ stats[0]=static_cast<double>(c.infeasible());stats[1]=static_cast<double>(c.lower());
+}
+
+extern "C" void pvb_peak42_replay3(const double* d,const double* l,const double* ref,int n,
+ double* y,double* outl,double* gains,double* stats) {
+ pvb::LayerPeak42 c;c.configure(3,48000.,100.);
+ for(int i=0;i<n+88;++i) {
+  double ddL,ddR,ll,rr;
+  c.process(i<n?d[2*i]:0.,i<n?d[2*i+1]:0.,i<n?l[2*i]:0.,i<n?l[2*i+1]:0.,
+            i<n?ref[2*i]:0.,i<n?ref[2*i+1]:0.,88,ddL,ddR,ll,rr);
+  if(i>=88) {int j=i-88;
+   for(int m=0;m<3;++m) {
+    double g=c.gainFor(m+1);gains[j*3+m]=g;
+    for(int ch=0;ch<2;++ch) {
+     double z=l[2*j+ch]*g;outl[j*6+m*2+ch]=z;y[j*6+m*2+ch]=(ch==0?ddL:ddR)+z;
+    }
+   }
+  }
+ }
+ stats[0]=static_cast<double>(c.infeasible());stats[1]=static_cast<double>(c.lower());
+}
+
+extern "C" int pvb_copy_peak42_inputs(void* e,double* out,int capacity) {
+ return e?static_cast<pvb::Engine*>(e)->copyPeak42Inputs(out,capacity):0;
+}
+
+extern "C" int pvb_set_dry_peak44(void* e,int mode){return e && static_cast<pvb::Engine*>(e)->setDryPeak44Research(mode)?1:0;}
+extern "C" int pvb_copy_peak44_inputs(void* e,double* out,int cap){return e?static_cast<pvb::Engine*>(e)->copyPeak44Inputs(out,cap):0;}
+extern "C" void pvb_dry44_replay(const double* d,const double* s,int n,double* y,double* a){
+ pvb::DryPeak44 c;
+ for(int i=0;i<n+7052;++i){double l,r;c.process(i<n?d[2*i]:0.,i<n?d[2*i+1]:0.,i<n?s[2*i]:0.,i<n?s[2*i+1]:0.,7052,l,r);
+  if(i>=7052){int j=i-7052;y[2*j]=l;y[2*j+1]=r;a[j]=c.alpha();}}
+}
+extern "C" void pvb_limiter44_replay(const double* y,const double* l,int n,double drive,double ceiling,double* out,double* outl,double* gains){
+ pvb::TruePeakLimiter lim;lim.configure(48000.,1.5);lim.setCeilingDb(ceiling);lim.setReleaseMs(60.);
+ for(int i=0;i<n+lim.latency();++i){double a,b;lim.process(i<n?y[2*i]*drive:0.,i<n?y[2*i+1]*drive:0.,a,b);
+  if(i>=lim.latency()){int j=i-lim.latency();out[2*j]=a;out[2*j+1]=b;outl[2*j]=l[2*j]*drive*lim.currentGain();outl[2*j+1]=l[2*j+1]*drive*lim.currentGain();gains[j]=lim.currentGain();}}
+}
+
+// S50: same atomic pending path as JNI; no partial application on failure.
+extern "C" int pvb_set_s30_full_research(void* ptr,int enabled) {
+ if(!ptr || (enabled!=0 && enabled!=1))return 0;
+ return static_cast<pvb::Engine*>(ptr)->setP1pppPreset(enabled!=0)?1:0;
+}
+extern "C" int pvb_try_set_params(void* ptr,const float* p,int n) {
+ return ptr && static_cast<pvb::Engine*>(ptr)->trySetParams(p,n)?1:0;
+}
+extern "C" int pvb_set_layer_cap(void* ptr,float db) {if(!ptr)return 0;static_cast<pvb::Engine*>(ptr)->setLayerCapDb(db);return 1;}
+extern "C" int pvb_set_fixed_eq_open(void* ptr,int open) {if(!ptr)return 0;static_cast<pvb::Engine*>(ptr)->setFixedEqOpen(open!=0);return 1;}
+extern "C" int pvb_set_handover_host(void* ptr,int on) {if(!ptr)return 0;static_cast<pvb::Engine*>(ptr)->setHandoverHost(on!=0);return 1;}
+extern "C" int pvb_set_fade_trim_host(void* ptr,int on) {if(!ptr)return 0;static_cast<pvb::Engine*>(ptr)->setFadeTrimHost(on!=0);return 1;}
+extern "C" int pvb_set_fit_relax_host(void* ptr,int on) {if(!ptr)return 0;static_cast<pvb::Engine*>(ptr)->setFitRelaxHost(on!=0);return 1;}
+extern "C" long long pvb_fit_relax_hops(void* ptr) {return ptr?static_cast<long long>(static_cast<pvb::Engine*>(ptr)->fitRelaxHops()):-1;}
+extern "C" int pvb_copy_peak50_state(void* p,double* out,int n) {return p?static_cast<pvb::Engine*>(p)->copyPeak50State(out,n):0;}
+extern "C" int pvb_p1ppp_state(void* ptr) {return ptr?static_cast<pvb::Engine*>(ptr)->p1pppState():-1;}
+// Algebraic component injection through exactly the native parallel limiter schedule.
+extern "C" void pvb_bound50_replay(const double* d,const double* l,const double* a,int n,double* y,double* g) {
+ pvb::TruePeakLimiter lim;lim.configure(48000.,1.5);lim.setCeilingDb(-1.);lim.setReleaseMs(60.);
+ pvb::BoundedPeak50 bound;bound.setCeilingDb(-1.);bound.setReleaseMs(60.,48000.);
+ for(int i=0;i<n+88;++i) {
+  const double dl=i<n?d[2*i]:0.,dr=i<n?d[2*i+1]:0.,ll=i<n?l[2*i]:0.,lr=i<n?l[2*i+1]:0.;
+  double ol,orr;lim.process(dl+ll,dr+lr,ol,orr);lim.capCurrentGain(bound.process(dl,dr,ll,lr));
+  if(i>=88) {const int j=i-88;g[j]=lim.currentGain();y[2*j]=(d[2*j]+a[j]*l[2*j])*g[j];y[2*j+1]=(d[2*j+1]+a[j]*l[2*j+1])*g[j];}
+ }
+}
+
+extern "C" int pvb_engine_cancellation50(float* out,int frames,double* stats) {
+ if(!out || !stats || frames<8192)return 0;
+ pvb::Sum50TestAccess::cancellation(out,frames,stats);return 1;
+}
+
+extern "C" int pvb_load_stable_weights(void* h,const unsigned char* p,int size){return h && static_cast<pvb::Engine*>(h)->loadStableWeights(p,size);}
+extern "C" int pvb_stable_separator(const unsigned char* p,int size,const float* x,float* y,int n){
+ pvb::StableSeparator s;if(!s.load(p,size))return 0;for(int i=0;i<n;i++){float z[2]{},mix[2];s.tick(x[2*i],x[2*i+1],z,mix);y[2*i]=z[0];y[2*i+1]=z[1];}return 1;
+}
+
+extern "C" int pvb_set_control_research(void* e,int enabled,unsigned modules,const float* frames,int count,int stride) {
+ if(!e || (enabled!=0 && enabled!=1) || modules>1023 || count<0 || (stride!=8 && stride<41) || (enabled && (!frames || !count)))return 0;
+ static_cast<pvb::Engine*>(e)->setControl88(enabled!=0,modules,frames,count,stride);return 1;
+}
+extern "C" int pvb_set_control_events(void* e,const double* events,int count) {
+ if(!e || count<0 || (count && !events))return 0;
+ static_cast<pvb::Engine*>(e)->setEvents88(events,count);return 1;
+}
+extern "C" int pvb_control_stats(void* e,double* out,int n){return e?static_cast<pvb::Engine*>(e)->stats88(out,n):0;}
+
+extern "C" int pvb_set_diag88b(void* e,float* out,int count) {
+ if(!e || !out || count<1)return 0;
+ static_cast<pvb::Engine*>(e)->setDiag88b(out,count);return 1;
+}
+extern "C" int pvb_stats88b(void* e,double* out,int n){return e?static_cast<pvb::Engine*>(e)->stats88b(out,n):0;}
+
+extern "C" int pvb_set_control_floor89(void* e,float epsilon){if(!e || (epsilon!=.25f && epsilon!=.5f))return 0;static_cast<pvb::Engine*>(e)->setFloor89(epsilon);return 1;}
+
+extern "C" int pvb_prepare_p2(void* e,int mode,const unsigned char* p,int n,int on){return e && static_cast<pvb::Engine*>(e)->prepareStageC(mode,p,n,false,false,48000,on!=0);}

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+ <string name="pvb_bass_mode">Bass mode</string>
+ <string name="pvb_fixed_level">Conducted strength</string>
+ <string name="pvb_fixed_level_summary">0 dB가 검증한 크기입니다. 낮추면 거슬리는 소리와 저음감이 함께 줄어듭니다.</string>
+ <string name="pvb_layer_cap">스피커 보호 상한 (실험)</string>
+ <string name="pvb_layer_cap_summary">125–250 Hz 층이 아래 크기를 넘는 순간에만 층을 누릅니다. 킥·베이스가 깨지는 소리가 줄어드는지 들어 보는 기능입니다. 원곡 소리는 줄이지 않습니다.</string>
+ <string name="pvb_layer_cap_level">상한 크기</string>
+ <string name="pvb_layer_cap_level_summary">낮을수록 더 자주 누릅니다. −24 dB부터 들어 보세요.</string>
+ <string name="pvb_bass_mode_summary">Conducted follows the bass to generate harmonics. It uses the default EQ and a −5 dB output; you can lower its strength. The new tracking works at 48 kHz. Other output rates use the previous processing path. Processing delay at 48 kHz is about 0.15 seconds.</string>
+ <string name="pvb_fixed_eq_locked">고정 모드는 검증한 기본 EQ로 재생합니다. 아래 값은 지금 소리에 쓰이지 않습니다. 이 모드는 원음 80 Hz 아래도 −6 dB 낮춥니다(EQ 곡선에 표시).</string>
+ <string name="pvb_fixed_eq_open">EQ 조절 풀기</string>
+ <string name="pvb_fixed_eq_open_summary">이 모드에서만 아래 값을 소리에 씁니다</string>
+ <string name="pvb_fixed_eq_warning_title">고정 모드의 EQ를 풀까요?</string>
+ <string name="pvb_fixed_eq_warning">이 모드는 기본 EQ에서 층 크기와 피크 한도를 맞추고 측정했습니다. EQ를 바꾸면 그 검증 밖이며, 끊김·쿠쿠쿵·리미터 동작이 달라질 수 있습니다. 저중역은 기본값(+3 dB)보다 올릴 수 없습니다. 다른 모드를 고르면 다시 잠기고, 언제든 기본값으로 되돌릴 수 있습니다.</string>
+ <string name="pvb_fixed_eq_warning_ok">풀기</string>
+ <string name="pvb_fixed_eq_opened">검증 밖 EQ로 재생 중입니다. 저중역은 기본값(+3 dB)까지만 씁니다.</string>
+ <string name="pvb_fixed_eq_reset">기본값으로 되돌리고 잠그기</string>
+ <string name="pvb_fixed_eq_reset_summary">EQ 값을 모두 기본값으로 돌립니다</string>
+ <string-array name="pvb_bass_modes"><item>@string/pvb_mode_off</item><item>@string/pvb_mode_conducted</item></string-array>
+ <string-array name="pvb_bass_mode_values"><item>off</item><item>conducted</item></string-array>
+
+ <string name="pvb_mode_off">Off</string>
+ <string name="pvb_mode_conducted">Conducted</string>
+ <string name="pvb_rate_fallback">The new bass tracking requires 48 kHz. The previous processing path is active.</string>
+</resources>

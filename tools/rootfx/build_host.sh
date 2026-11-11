@@ -24,6 +24,12 @@ for f in "$CPP/rootfx/rootfx_pvb.cpp" "$P/pvb_engine.cpp" "$P/pvb_analysis.cpp" 
     "$CXX" -std=c++17 -O2 -fno-fast-math -fPIC -Wall -Wextra -Werror -fvisibility=hidden -I"$P" -I"$CPP/rootfx" -c "$f" -o "$o"
     objs+=("$o")
 done
+# The conducted mode needs the control stream and the stable model; both keep contraction off, as in the app build.
+for f in "$P/pvb_control_stream.cpp" "$P/pvb_stable.cpp"; do
+    o="$OUT/obj/$(echo "$f" | md5sum | cut -c1-12).o"
+    "$CXX" -std=c++17 -O2 -fno-fast-math -ffp-contract=off -fPIC -Wall -Wextra -Werror -fvisibility=hidden -I"$P" -I"$P/stable_vendor" -I"$CPP/rootfx" -c "$f" -o "$o"
+    objs+=("$o")
+done
 "$CXX" -shared -fPIC "${objs[@]}" -o "$OUT/librootnotefx.so" -lm -lpthread
 "$CXX" -std=c++17 -O2 -I"$P" -c "$HERE/param_count.cpp" -o "$OUT/obj/param_count.o"
 "$CC" -std=gnu11 -O2 -Wall -Wextra -Werror -I"$J" -I"$CPP/rootfx" -c "$HERE/test_rootfx.c" -o "$OUT/obj/test_rootfx.o"

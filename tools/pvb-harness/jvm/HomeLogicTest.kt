@@ -38,46 +38,40 @@ fun main(args: Array<String>) {
     val general = SafeCaps.GENERAL
 
     // --- slider range and caps ---
-    expect(HomeLogic.sliderMax(general) == 9, "general slider is 0..9 dB")
-    expect(HomeLogic.sliderMax(null) == 12, "s26u slider is 0..12 dB")
+    expect(HomeLogic.sliderMax(general) == 9, "general slider is -6..9 dB")
+    expect(HomeLogic.sliderMax(null) == 12, "s26u slider is -6..12 dB")
     expect(HomeLogic.sliderValue(12f, general) == 9, "12 dB shows as the 9 dB cap")
     expect(HomeLogic.sliderValue(3.6f, general) == 4, "whole dB steps")
-    expect(HomeLogic.sliderValue(-5f, general) == 0, "below 0 -> 0")
-    expect(HomeLogic.sliderValue(Float.NaN, general) == 6, "non-finite -> default 6")
+    expect(HomeLogic.sliderValue(-5f, general) == -5 && HomeLogic.sliderValue(-9f, general) == -6, "negative strength stays, floor -6")
+    expect(HomeLogic.sliderValue(Float.NaN, general) == 4, "non-finite -> default 4")
     expect(HomeLogic.sliderValue(12f, null) == 12, "s26u keeps 12")
 
     // --- preset chips: derived from model + level like the advanced screen's mode list ---
-    expect(HomeLogic.selectedChip(PvbModels.P1_KEY, 6f) == Chip.FULLNESS, "P1 at +6 -> 풍성함 증가")
-    expect(HomeLogic.selectedChip(PvbModels.GENTLE12_KEY, 9f) == Chip.DEEP, "12 dB/oct model at +9 -> 초저역 강조")
+    expect(HomeLogic.selectedChip(PvbModels.P1_KEY, 4f) == Chip.FULLNESS, "P1 at +4 -> 풍성함 증가")
     expect(HomeLogic.selectedChip(PvbModels.P1_KEY, 9f) == Chip.CUSTOM, "P1 at +9 -> custom")
-    expect(HomeLogic.selectedChip(PvbModels.GENTLE12_KEY, 6f) == Chip.CUSTOM, "12 dB/oct model at +6 -> custom")
-    expect(HomeLogic.selectedChip(PvbModels.REFERENCE_KEY, 6f) == Chip.CUSTOM, "reference model -> custom")
-    expect(HomeLogic.selectedChip("no-such-model", 6f) == Chip.FULLNESS, "unknown key = default model (P1)")
-    expect(HomeLogic.selectedChip(PvbModels.P1_KEY, 6f, customPinned = true) == Chip.CUSTOM, "custom tapped stays custom")
+    expect(HomeLogic.selectedChip("no-such-model", 4f) == Chip.FULLNESS, "unknown key = default model (P1)")
+    expect(HomeLogic.selectedChip(PvbModels.P1_KEY, 4f, customPinned = true) == Chip.CUSTOM, "custom tapped stays custom")
     for (p in PvbModels.presets) {
         val chip = HomeLogic.selectedChip(p.modelKey, p.levelDb)
         expect(chip.presetKey == p.key, "every preset is its own chip (${p.key} -> $chip)")
     }
     expect(HomeLogic.modelKey(PvbModels.P1) == PvbModels.P1_KEY, "P1 id -> key")
-    expect(HomeLogic.modelKey(PvbModels.GENTLE12) == PvbModels.GENTLE12_KEY, "12 dB/oct id -> key")
     expect(HomeLogic.modelKey(999) == PvbModels.DEFAULT_KEY, "unknown id -> default key")
 
     // what tapping a chip writes: model + level within the caps; custom writes nothing
-    expect(HomeLogic.presetWrite(Chip.FULLNESS, general) == (PvbModels.P1_KEY to 6f), "풍성함 증가 writes P1, +6")
-    expect(HomeLogic.presetWrite(Chip.DEEP, general) == (PvbModels.GENTLE12_KEY to 9f), "초저역 강조 writes 12 dB/oct, +9")
+    expect(HomeLogic.presetWrite(Chip.FULLNESS, general) == (PvbModels.P1_KEY to 4f), "풍성함 증가 writes P1, +4")
     expect(HomeLogic.presetWrite(Chip.CUSTOM, general) == null, "사용자 지정 writes nothing")
     val tight = general.copy(vbLevelMax = 7f)
-    expect(HomeLogic.presetWrite(Chip.DEEP, tight) == (PvbModels.GENTLE12_KEY to 7f), "a preset level never exceeds the cap")
     // a written preset reads back as the same chip (through the real settings reader, general caps)
     try {
         PvbBuild.general = true; PvbBuild.firstRunConfirmed = true
-        for (chip in listOf(Chip.FULLNESS, Chip.DEEP)) {
+        for (chip in listOf(Chip.FULLNESS)) {
             val (model, level) = HomeLogic.presetWrite(chip, PvbBuild.caps)!!
             val s = PvbSettings.load(HomePrefs(mapOf(PvbSettings.KEY_VB_ALGO to model, PvbSettings.KEY_VB_STRENGTH_DB to level)))
             expect(HomeLogic.selectedChip(HomeLogic.modelKey(s.vbAlgo), s.vbLevelDb) == chip, "$chip round trip")
         }
-        // a stored level above the general cap is played (and shown) as 9: the deep preset then matches
-        val s = PvbSettings.load(HomePrefs(mapOf(PvbSettings.KEY_VB_ALGO to PvbModels.GENTLE12_KEY, PvbSettings.KEY_VB_STRENGTH_DB to 12f)))
+        // a stored level above the general cap is played (and shown) as 9; a removed model falls back to P1
+        val s = PvbSettings.load(HomePrefs(mapOf(PvbSettings.KEY_VB_ALGO to "alpha3_gentle12", PvbSettings.KEY_VB_STRENGTH_DB to 12f)))
         expect(close(s.vbLevelDb, 9f) && HomeLogic.sliderValue(s.vbLevelDb, PvbBuild.caps) == 9, "12 dB stored -> 9 dB")
     } finally {
         PvbBuild.reset()
@@ -129,6 +123,9 @@ fun main(args: Array<String>) {
     expect(HomeLogic.signedDb(0f) == "0", "zero")
     expect(HomeLogic.signedDb(Float.NaN) == "?", "non-finite")
     expect(HomeLogic.levelLabel(6) == "+6", "slider label")
+    expect(HomeLogic.levelLabel(-3) == "-3" && HomeLogic.levelLabel(0) == "+0", "slider label, negative strength")
+    expect(HomeLogic.sliderValue(-6f, null) == -6 && HomeLogic.sliderValue(-9f, null) == -6 && HomeLogic.sliderValue(4f, null) == 4,
+        "slider position: -6 is the lowest")
 
     // --- strings of the screen: same keys in English and Korean, Android-safe text ---
     fun strings(dir: String): Map<String, String> {
@@ -158,7 +155,7 @@ fun main(args: Array<String>) {
     // the approved Korean copy
     expect(ko["home_headline_filling"] == "저음을 채우고 있어요", "Korean headline (on)")
     expect(ko["home_headline_original"] == "원래 소리로 듣고 있어요", "Korean headline (off)")
-    expect(ko["home_chip_fullness"] == "풍성함 증가" && ko["home_chip_deep"] == "초저역 강조" && ko["home_chip_custom"] == "사용자 지정", "chip names")
+    expect(ko["home_chip_fullness"] == "풍성함 증가" && "home_chip_deep" !in ko && ko["home_chip_custom"] == "사용자 지정", "chip names")
 
     // spatial (crosstalk cancellation): presets are mode + strength only; turning on picks balanced unless stored
     expect(HomeLogic.xtcPreset(PvbSettings.XTC_CENTRE, -6f) == HomeLogic.XtcPreset.SUBTLE, "spatial subtle")
@@ -184,6 +181,6 @@ fun main(args: Array<String>) {
             "home_hold_novb_line", "home_hold_novb_active", "home_hold_novb_a11y", "home_spice_title", "home_spice_body"))
         expect(!ko[k].isNullOrBlank(), "ko string $k")
 
-    println("Home screen: caps 0..9, chips derived from model + level (custom pinned), preset writes within caps, " +
+    println("Home screen: caps -6..9, chips derived from model + level (custom pinned), preset writes within caps, " +
         "master/headline with the first-run gate, volume-link line (60 % -> −4 dB, applied +2 dB), strings en/ko: OK")
 }

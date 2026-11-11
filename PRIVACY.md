@@ -10,7 +10,7 @@ This document covers the general distribution build **Rootnote** (package `kr.ks
 
 ### 요약
 
-- 이 앱은 **설정만** 폰 안에 저장합니다.
+- 이 앱은 설정과 아래에 적은 선택형 진단 숫자를 폰 안에 저장합니다.
 - **곡 제목·아티스트·앨범, 오디오 녹음, 마이크 녹음, 사용 기록을 저장하지 않습니다.** 이런 정보를 저장하던 연구 기능(곡별 세기 기억, 블라인드 비교 기록, 버즈 진단 녹음·내보내기, 측정)은 일반 빌드에 들어 있지 않습니다.
 - **어디에도 보내지 않습니다.** 분석·광고·오류 보고(Firebase 등) 라이브러리가 없습니다.
 - 유일한 네트워크 접속은 사용자가 JamesDSP 이퀄라이저에서 **AutoEQ 검색**을 쓸 때입니다. 이때 원본 프로젝트의 AutoEQ 서버(`aeq.timschneeberger.me`, 설정에서 주소 변경 가능)에 검색어를 보냅니다.
@@ -33,6 +33,10 @@ This document covers the general distribution build **Rootnote** (package `kr.ks
 마이크를 쓰는 곳이 하나 더 있습니다. 개발자 모드의 **저음 맞추기**는 시작할 때와 1단계 동안 폰 마이크로 방 소음과 스피커 소리를 듣고, 메모리에서 대역별 크기만 계산한 뒤 버립니다. 녹음은 저장하지 않습니다. 저음 맞추기의 **검증 모드**는 회차별 결과 숫자(시각, 기기 모델, 앱 버전, 볼륨, 찾은 주파수나 세기, 답의 개수, 방 소음 여유, 마이크 종류, 폰이 알려 준 마이크 감도)를 앱 내부 파일 `files/bass_fit_validation.csv`에 남깁니다. 검증 모드의 **마이크 맞추기**는 녹음 방식별 대역 크기(숫자)와 기기 모델을 `files/bass_fit_mic_cal.csv`에 남깁니다. 두 파일 모두 소리나 곡 정보는 들어 있지 않고, 화면의 공유 버튼으로만 밖에 나가며, 지우기 버튼으로 지울 수 있습니다. 클라우드 백업에도 포함되지 않습니다.
 
 고급 설정의 **실시간 분석**에서 "실제 소리"를 켜면, 그 화면이 보이는 동안 폰 마이크로 들리는 소리의 대역별 크기를 계산해 그래프로만 보여 줍니다. 저장하지 않고, 화면을 벗어나거나 끄면 마이크도 꺼집니다. 개발자 모드의 **마이크 스펙트럼**도 같아요.
+
+지휘형의 제어망과 가족 진폭망은 앱에 내장되어 폰 안에서만 계산합니다. 모델 다운로드나 오디오 전송은 없습니다. 모드는 끔·지휘형 두 가지이며, 이전 강함·분리형·epoch6 설정은 지휘형으로 넘깁니다. 끔 설정은 유지합니다.
+
+개발자 메뉴에서 시험 계측을 직접 켜면 처리 시간·출력 샘플레이트·선택 모드·버퍼 누락 횟수 등 숫자를 `files/s91_telemetry/`에 저장합니다. 기본값은 꺼짐입니다. 오디오·곡 제목은 저장하지 않습니다. 사용자가 내보내기를 누를 때만 ZIP 파일을 만들어 Android 공유 화면을 엽니다. 앱 데이터 삭제로 지울 수 있습니다.
 
 ### 백업
 
@@ -60,7 +64,7 @@ This document covers the general distribution build **Rootnote** (package `kr.ks
 
 ### Summary
 
-- The app stores **only its settings** on the phone.
+- The app stores settings and the optional diagnostic numbers listed below on the phone.
 - It **does not store song titles, artists or albums, audio recordings, microphone recordings or usage history.** The research features that stored such data (per-song strength memory, blind comparison records, buzz diagnostics recordings and exports, measurement) are not part of the general build.
 - **Nothing is sent anywhere.** There are no analytics, advertising or crash reporting libraries (no Firebase).
 - The only network access is the **AutoEQ search** in the JamesDSP equalizer, when you use it: the search text is sent to the AutoEQ server of the original project (`aeq.timschneeberger.me`, changeable in the settings).
@@ -83,6 +87,10 @@ System audio is processed in memory while the service runs and is never saved. A
 The microphone is used in one more place. **Bass fit** in developer mode listens to the room and the speaker with the phone microphone at its start and during step 1, computes the level per band in memory and discards the audio; no recording is saved. Its **validation mode** keeps the numbers of each run (time, phone model, app version, volume, the frequency or strength found, answer counts, room margin, microphone source, the microphone sensitivity the phone declares) in the app's own file `files/bass_fit_validation.csv`; its **microphone match** keeps the level per band of each recording source (numbers) and the phone model in `files/bass_fit_mic_cal.csv`. Neither holds audio or song information, leaves the phone only through the share button on that screen, can be deleted with the clear button, and is not part of cloud backup.
 
 In advanced settings, **live analysis** with "Actual sound" turned on listens with the phone microphone while that screen is visible and only draws the level per band. Nothing is saved; leaving the screen or turning it off stops the microphone. The **microphone spectrum** in developer mode works the same way.
+
+The control and family amplitude networks are embedded and run only on the phone. There are no model downloads or audio uploads. The two modes are Off and Conducted; saved Strong, Separated and epoch6 choices migrate to Conducted. Off remains Off.
+
+Enabling test telemetry in the developer menu stores numeric processing times, output sample rate, mode and buffer-loss counts in `files/s91_telemetry/`. It is off by default and contains no audio or song titles. Only the export action creates a ZIP and opens the Android share sheet. Clearing app data deletes these files.
 
 ### Backup
 

@@ -170,7 +170,6 @@ class DevModeActivity : BaseActivity() {
             values = DevParams.read(s),
             defaults = profileDefaults(),
             vbAlgo = s.vbAlgo,
-            s1mOn = s.xS1m,
             volumeLinkOn = s.vbVolLink,
             measuredBadge = badge,
             thresholdMeasured = DevEvidenceText.thresholdMeasured(profile),
@@ -183,6 +182,7 @@ class DevModeActivity : BaseActivity() {
             consentNeeded = consentNeeded,
             serviceRunning = BaseAudioProcessorService.activeServices > 0,
             shareCode = shareCode(DevParams.read(s)),
+            fixedStrength = s.fixedBass,
         )
     }
 
@@ -190,7 +190,7 @@ class DevModeActivity : BaseActivity() {
         val s = settings()
         val values = DevParams.read(s)
         update {
-            it.copy(values = values, vbAlgo = s.vbAlgo, s1mOn = s.xS1m, volumeLinkOn = s.vbVolLink,
+            it.copy(values = values, vbAlgo = s.vbAlgo, volumeLinkOn = s.vbVolLink, fixedStrength = s.fixedBass,
                 canUndo = undo.isNotEmpty(), hiddenCount = tracker.hiddenTypes().size, shareCode = shareCode(values),
                 speakerFloorHz = flags.getFloat(BassFitActivity.KEY_FIT_FLOOR_HZ, profile.speakerFloorHz))
         }
@@ -554,7 +554,7 @@ class DevModeActivity : BaseActivity() {
             DevWarning.BUZZ_ZONE, DevWarning.NEAR_CEILING -> {
                 pushUndo()
                 val cur = ui?.values?.get(DevParams.ALL.indexOf(DevParams.STRENGTH)) ?: DevParams.STRENGTH.default
-                write(DevParams.STRENGTH, (cur - 2f).coerceAtLeast(0f))
+                write(DevParams.STRENGTH, DevParams.lowerStrength(cur))
             }
             DevWarning.TAIL -> {
                 pushUndo()

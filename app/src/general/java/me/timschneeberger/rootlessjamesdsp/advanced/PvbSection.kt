@@ -15,6 +15,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import me.timschneeberger.rootlessjamesdsp.R
+import me.timschneeberger.rootlessjamesdsp.pvb.StrengthDisplay
 import me.timschneeberger.rootlessjamesdsp.pvb.DevTestKind
 import me.timschneeberger.rootlessjamesdsp.pvb.DevTestSound
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbBuild
@@ -103,8 +104,8 @@ object PvbAdvanced {
         val slope = num(s.vbVolSlope, 2)
         val maxDb = num(s.vbVolMaxDb)
         return if (reduction >= 0.05f)
-            context.getString(R.string.pvb_vb_vol_link_on, pct, signedDb(-reduction), signedDb(applied), ref, slope, maxDb)
-        else context.getString(R.string.pvb_vb_vol_link_on_none, pct, signedDb(applied), ref, slope, maxDb)
+            context.getString(R.string.pvb_vb_vol_link_on, pct, signedDb(-reduction), signedDb(StrengthDisplay.UI.toDisplay(applied)), ref, slope, maxDb)
+        else context.getString(R.string.pvb_vb_vol_link_on_none, pct, signedDb(StrengthDisplay.UI.toDisplay(applied)), ref, slope, maxDb)
     }
 
     /** "어느 쪽이 아래 스피커인지 확인": the left channel alone for 3 s through the normal path, while processing. */
@@ -136,6 +137,7 @@ fun PvbSection(host: RnAdvancedActivity, showIcons: Boolean) {
     val s = p.read { PvbSettings.load(it) }
     val enabled = p.bool(P.KEY_ENABLE, true)
     var vbWarning by remember { mutableStateOf(false) }
+    var eqWarning by remember { mutableStateOf(false) }
 
     RnSwitchRow(stringResource(R.string.pvb_enable), enabled, { p.put(P.KEY_ENABLE, it) }, bold = true,
         icon = if (showIcons) painterResource(R.drawable.ic_twotone_speaker_24dp) else null)
@@ -183,16 +185,36 @@ fun PvbSection(host: RnAdvancedActivity, showIcons: Boolean) {
         // 음색 보정 (the general build's caps narrow some ranges)
         RnSectionTitle(stringResource(R.string.rn_adv_section_tone), infoLabel = stringResource(R.string.eq_info_open),
             onInfo = { host.startActivity(BassStoryActivity.intent(host)) })
-        PrefSlider(p, P.KEY_LOW_DB, stringResource(R.string.pvb_low_db), 3f, -6f..(caps?.lowDbMax ?: 9f), 0.5f, "dB", 1)
-        PrefSlider(p, P.KEY_LOW_HZ, stringResource(R.string.pvb_low_hz), 220f, 150f..350f, 5f, "Hz", 0)
-        if (research) PrefSlider(p, P.KEY_LOW_Q, stringResource(R.string.pvb_low_q), 1f, 0.4f..(caps?.lowQMax ?: 3f), 0.05f, "", 2)
-        PrefSlider(p, P.KEY_HP_HZ, stringResource(R.string.pvb_hp_hz), 100f, (caps?.hpHzMin ?: 40f)..200f, 5f, "Hz", 0)
-        PrefSlider(p, P.KEY_HI_DB, stringResource(R.string.pvb_hi_db), -3f, -9f..3f, 0.5f, "dB", 1)
-        PrefSlider(p, P.KEY_HI_HZ, stringResource(R.string.pvb_hi_hz), 4500f, 2000f..8000f, 100f, "Hz", 0)
+        // Fixed modes play the validated default EQ (PvbEngineParams); the sliders stay dimmed until the user
+        // opens them after a warning, for this mode only. Opened, the low-mid gain stops at the default.
+        val fixedEq = s.vbOn && s.fixedBass
+        val eqOn = !fixedEq || s.fixedEqOpen
+        if (fixedEq && !s.fixedEqOpen) {
+            RnNote(stringResource(R.string.pvb_fixed_eq_locked))
+            RnNavRow(stringResource(R.string.pvb_fixed_eq_open), stringResource(R.string.pvb_fixed_eq_open_summary),
+                chevron = false) { eqWarning = true }
+        } else if (fixedEq) {
+            RnNote(stringResource(R.string.pvb_fixed_eq_opened), warning = true)
+            RnNavRow(stringResource(R.string.pvb_fixed_eq_reset), stringResource(R.string.pvb_fixed_eq_reset_summary),
+                chevron = false) {
+                val edit = p.prefs.edit()
+                (P.FIXED_EQ_KEYS + P.KEY_FIXED_EQ_OPEN).forEach { edit.remove(it) }
+                edit.apply()
+            }
+        }
+        val lowMax = if (fixedEq) 3f else caps?.lowDbMax ?: 9f
+        PrefSlider(p, P.KEY_LOW_DB, stringResource(R.string.pvb_low_db), 3f, -6f..lowMax, 0.5f, "dB", 1, enabled = eqOn)
+        PrefSlider(p, P.KEY_LOW_HZ, stringResource(R.string.pvb_low_hz), 220f, 150f..350f, 5f, "Hz", 0, enabled = eqOn)
+        if (research) PrefSlider(p, P.KEY_LOW_Q, stringResource(R.string.pvb_low_q), 1f, 0.4f..(caps?.lowQMax ?: 3f), 0.05f, "", 2,
+            enabled = eqOn)
+        PrefSlider(p, P.KEY_HP_HZ, stringResource(R.string.pvb_hp_hz), 100f, (caps?.hpHzMin ?: 40f)..200f, 5f, "Hz", 0,
+            enabled = eqOn)
+        PrefSlider(p, P.KEY_HI_DB, stringResource(R.string.pvb_hi_db), -3f, -9f..3f, 0.5f, "dB", 1, enabled = eqOn)
+        PrefSlider(p, P.KEY_HI_HZ, stringResource(R.string.pvb_hi_hz), 4500f, 2000f..8000f, 100f, "Hz", 0, enabled = eqOn)
         if (research) {
-            PrefSlider(p, P.KEY_HI_Q, stringResource(R.string.pvb_hi_q), 0.6f, 0.3f..2f, 0.05f, "", 2)
-            PrefSlider(p, P.KEY_HS_DB, stringResource(R.string.pvb_hs_db), 0f, -9f..0f, 0.5f, "dB", 1)
-            PrefSlider(p, P.KEY_HS_HZ, stringResource(R.string.pvb_hs_hz), 2500f, 1500f..6000f, 100f, "Hz", 0)
+            PrefSlider(p, P.KEY_HI_Q, stringResource(R.string.pvb_hi_q), 0.6f, 0.3f..2f, 0.05f, "", 2, enabled = eqOn)
+            PrefSlider(p, P.KEY_HS_DB, stringResource(R.string.pvb_hs_db), 0f, -9f..0f, 0.5f, "dB", 1, enabled = eqOn)
+            PrefSlider(p, P.KEY_HS_HZ, stringResource(R.string.pvb_hs_hz), 2500f, 1500f..6000f, 100f, "Hz", 0, enabled = eqOn)
         }
 
         // 출력과 리미터
@@ -226,34 +248,49 @@ fun PvbSection(host: RnAdvancedActivity, showIcons: Boolean) {
                     vbWarning = true  // stays off until the warning is confirmed
                 }
             })
-        VbModeRow(p, s, research, vbOn)
+        RnChoiceRow(stringResource(R.string.pvb_bass_mode),
+            listOf(RnChoice("off", stringResource(R.string.pvb_mode_off)),
+                RnChoice("conducted", stringResource(R.string.pvb_mode_conducted))),
+            s.bassMode, { p.put(P.KEY_BASS_MODE, it) }, enabled = vbOn,
+            line = stringResource(R.string.pvb_bass_mode_summary))
+        if (s.fixedBass) {
+            PrefSlider(p, P.KEY_FIXED_LEVEL_DB, stringResource(R.string.pvb_fixed_level), 0f, P.FIXED_LEVEL_MIN..0f, 1f, "dB", 0,
+                line = stringResource(R.string.pvb_fixed_level_summary), enabled = vbOn, strictStep = true)
+            PrefSwitch(p, P.KEY_LAYER_CAP_ON, stringResource(R.string.pvb_layer_cap), false,
+                line = stringResource(R.string.pvb_layer_cap_summary), enabled = vbOn)
+            if (s.layerCapOn) {
+                PrefSlider(p, P.KEY_LAYER_CAP_DB, stringResource(R.string.pvb_layer_cap_level), -24f, P.LAYER_CAP_MIN..P.LAYER_CAP_MAX, 1f, "dB", 0,
+                    line = stringResource(R.string.pvb_layer_cap_level_summary), enabled = vbOn, strictStep = true)
+            }
+        }
+        VbModeRow(p, s, research, vbOn && !s.fixedBass)
         if (research) {
             val model = PvbModels.fromKey(p.string(P.KEY_VB_ALGO, PvbModels.DEFAULT_KEY))
             RnChoiceRow(stringResource(R.string.pvb_vb_algo), PvbModels.models.map { RnChoice(it.key, it.title, it.description) },
                 model.key, { p.put(P.KEY_VB_ALGO, it) }, line = "${model.title} · 약 0.15초 지연\n${model.description}",
-                enabled = vbOn)
+                enabled = vbOn && !s.fixedBass)
         }
         PrefSlider(p, P.KEY_VB_STRENGTH_DB, stringResource(R.string.pvb_vb_level), P.VB_LEVEL_DEFAULT,
-            P.VB_LEVEL_MIN..(caps?.vbLevelMax ?: P.VB_LEVEL_MAX), 1f, "dB", 0, enabled = vbOn, strictStep = true,
-            label = { v -> P.clampLevel(v).roundToInt().let { if (it > 0) "+$it dB" else "$it dB" } })
+            P.VB_LEVEL_MIN..(caps?.vbLevelMax ?: P.VB_LEVEL_MAX), 1f, "dB", 0, enabled = vbOn && !s.fixedBass, strictStep = true,
+            line = if (s.fixedBass) stringResource(R.string.pvb_strength_not_applicable) else null,
+            toDisplay = { StrengthDisplay.UI.sliderValue(it, caps?.vbLevelMax ?: P.VB_LEVEL_MAX) },
+            fromDisplay = { P.clampLevel(StrengthDisplay.UI.toActual(it, caps?.vbLevelMax ?: P.VB_LEVEL_MAX)) },
+            label = { v -> if (s.fixedBass) context.getString(R.string.pvb_strength_not_applicable)
+                else v.roundToInt().let { if (it > 0) "+$it dB" else "$it dB" } })
         PrefSwitch(p, P.KEY_VB_VOL_LINK, stringResource(R.string.pvb_vb_vol_link), false,
-            line = PvbAdvanced.vbVolLinkLine(context, s), enabled = vbOn)
+            line = PvbAdvanced.vbVolLinkLine(context, s), enabled = vbOn && !s.fixedBass)
         if (research && s.vbVolLink) {
             PrefSlider(p, P.KEY_VB_VOL_REF_PCT, stringResource(R.string.pvb_vb_vol_ref_pct), 40f, 20f..70f, 1f, "%", 0,
-                line = stringResource(R.string.pvb_vb_vol_ref_pct_summary), enabled = vbOn, strictStep = true)
+                line = stringResource(R.string.pvb_vb_vol_ref_pct_summary), enabled = vbOn && !s.fixedBass, strictStep = true)
             PrefSlider(p, P.KEY_VB_VOL_SLOPE, stringResource(R.string.pvb_vb_vol_slope), 0.2f, 0.1f..0.5f, 0.05f, "dB", 2,
-                line = stringResource(R.string.pvb_vb_vol_slope_summary), enabled = vbOn, strictStep = true)
+                line = stringResource(R.string.pvb_vb_vol_slope_summary), enabled = vbOn && !s.fixedBass, strictStep = true)
             PrefSlider(p, P.KEY_VB_VOL_MAX_DB, stringResource(R.string.pvb_vb_vol_max_db), 12f, 3f..12f, 1f, "dB", 0,
-                line = stringResource(R.string.pvb_vb_vol_max_db_summary), enabled = vbOn, strictStep = true)
+                line = stringResource(R.string.pvb_vb_vol_max_db_summary), enabled = vbOn && !s.fixedBass, strictStep = true)
         }
 
         // 실험 기능
         RnSectionTitle(stringResource(R.string.pvb_x_header))
         RnParagraph(stringResource(R.string.pvb_x_header_summary))
-        PrefSwitch(p, P.KEY_X_SMOOTH, stringResource(R.string.pvb_x_smooth), false, stringResource(R.string.pvb_x_smooth_summary), enabled = vbOn)
-        PrefSwitch(p, P.KEY_X_RISE, stringResource(R.string.pvb_x_rise), false, stringResource(R.string.pvb_x_rise_summary), enabled = vbOn)
-        PrefSwitch(p, P.KEY_X_S1M, stringResource(R.string.pvb_x_s1m), false, stringResource(R.string.pvb_x_s1m_summary), enabled = vbOn)
-        PrefSwitch(p, P.KEY_X_DENSE, stringResource(R.string.pvb_x_dense), false, stringResource(R.string.pvb_x_dense_summary), enabled = vbOn)
         RnNavRow(stringResource(R.string.pvb_x_feedback), stringResource(R.string.pvb_x_feedback_summary)) {
             PvbGeneral.openUrl(context, FEEDBACK_URL)
         }
@@ -262,6 +299,16 @@ fun PvbSection(host: RnAdvancedActivity, showIcons: Boolean) {
     PrefSwitch(p, P.KEY_MATCH_ON_DISABLE, stringResource(R.string.pvb_match_on_disable), true,
         line = stringResource(R.string.pvb_match_on_disable_summary))
 
+    if (eqWarning) RnDialog(
+        stringResource(R.string.pvb_fixed_eq_warning_title), stringResource(R.string.pvb_fixed_eq_warning),
+        confirmLabel = stringResource(R.string.pvb_fixed_eq_warning_ok),
+        onConfirm = {
+            eqWarning = false
+            // The stored low-mid gain may be above the default from before; the engine plays at most the default.
+            p.put(P.KEY_FIXED_EQ_OPEN, s.bassMode)
+        },
+        dismissLabel = stringResource(android.R.string.cancel), onDismiss = { eqWarning = false },
+    )
     if (vbWarning) RnDialog(
         stringResource(R.string.pvb_vb_warning_title), stringResource(R.string.pvb_vb_warning),
         confirmLabel = stringResource(R.string.pvb_vb_warning_ok),
@@ -275,12 +322,10 @@ fun PvbSection(host: RnAdvancedActivity, showIcons: Boolean) {
 private fun VbModeRow(p: RnPrefsFile, s: PvbSettings, research: Boolean, vbOn: Boolean) {
     fun titleRes(key: String) = when (key) {
         PvbModels.PRESET_FULLNESS -> R.string.vb_preset_fullness_title
-        PvbModels.PRESET_DEEP -> R.string.vb_preset_deep_title
         else -> R.string.vb_preset_custom_title
     }
     fun descRes(key: String) = when (key) {
         PvbModels.PRESET_FULLNESS -> R.string.vb_preset_fullness_desc
-        PvbModels.PRESET_DEEP -> R.string.vb_preset_deep_desc
         else -> R.string.vb_preset_custom_desc
     }
     // "사용자 지정" is listed only with the research tools (the model list is visible then)

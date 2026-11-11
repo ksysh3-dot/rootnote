@@ -1,4 +1,5 @@
 **Rootnote** — phone speaker virtual bass · unofficial RootlessJamesDSP fork
+
 (폰 스피커 가상 저음 · RootlessJamesDSP 기반 비공식 포크)
 
 Beta for Android 10+ (arm64). Not made or supported by the RootlessJamesDSP/JamesDSP developers. GPL-3.0, no warranty.
@@ -12,6 +13,21 @@ The corresponding source is the tagged commit; `source-*.tar.gz` below contains 
 
 ## 0.9.0-beta.13
 
+### 한국어
+- 지휘형의 저음 추적을 개선해, 이어지는 저음이 끊기거나 옥타브가 흔들리는 일을 줄였습니다.
+- 모드를 **끔·지휘형** 두 가지로 정리했습니다. 기존 강함·분리형·epoch6 설정은 지휘형으로 옮깁니다. 끔은 유지합니다.
+- 같은 소리를 만드는 계산을 줄여 처리 부하를 낮췄습니다. 호스트 비교에서 오디오 480프레임당 평균 처리 시간은 이전 지휘형 대비 30.8% 줄었습니다. 폰에서의 속도는 기기에 따라 다릅니다.
+- 새 저음 추적은 **48 kHz 출력 전용**입니다. 다른 출력 샘플레이트에서는 이전 지휘형 경로를 사용합니다.
+- 알려진 한계: 옥타브 관계인 두 음이 동시에 울리면 하나의 저음으로 묶을 수 있습니다. 깊게 처지는 구간은 남아 있습니다. 약 0.15초의 처리 지연이 있습니다.
+
+### English
+- Improved Conducted bass tracking reduces breaks in sustained bass and unstable octave changes.
+- Simplified the modes to **Off and Conducted**. Saved Strong, Separated and epoch6 choices move to Conducted; Off stays Off.
+- Reduced processing load by simplifying calculations while preserving their output. In a host comparison, mean processing time per 480 audio frames fell by 30.8% against the previous Conducted mode. Phone performance varies by device.
+- The new bass tracking requires **48 kHz output**. Other output rates use the previous Conducted processing path.
+- Known limits: two simultaneous notes an octave apart can be grouped into one bass note. Some deep dips remain. Processing adds about 0.15 seconds of delay.
+
+### 캡처와 개발 도구
 - "가로채기 캡처"를 고르면 켤 때 화면 공유 동의를 묻지 않아요. beta.12는 방식과 상관없이 동의부터 받은 뒤 가로채기를 시도했어요. 이제 Shizuku가 켜져 있으면 바로 시작하고, 가로채기를 못 쓸 때(Shizuku 꺼짐 등)만 화면 공유 동의를 받아요. 앱이 열려 있으면 바로 묻고, 아니면 알림으로 알려요. 안드로이드 15의 "화면 공유 보호" 안내도 가로채기를 쓸 때는 띄우지 않아요.
 - 가로채기 캡처가 어느 폰에서도 시작되지 않던 문제를 고쳤어요(beta.12). Rootnote 자신과 제외한 앱을 빼는 규칙을 잘못된 방법으로 넣어 시스템이 거부했어요. 가로채기를 못 쓸 때는 알림과 설정에 시스템이 알려 준 이유를 그대로 보여 줘요.
 - 가로채기에서는 소리 캡처를 막는 앱도 처리돼요. Chrome과 (개조하지 않은) Spotify에서 확인했어요. 화면 공유 방식에서는 예전처럼 처리되지 않아요.

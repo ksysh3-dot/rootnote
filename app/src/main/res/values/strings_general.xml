@@ -51,8 +51,6 @@
     <!-- Virtual bass presets of the general build (the model codenames appear only in the research section) -->
     <string name="vb_preset_fullness_title">More fullness (recommended)</string>
     <string name="vb_preset_fullness_desc">Adds body, fullness and resonance to instruments. Conservative, so buzzing is unlikely.</string>
-    <string name="vb_preset_deep_title">Deep bass (experimental)</string>
-    <string name="vb_preset_deep_desc">Tries to reproduce bass below what the speaker can play. Varies a lot between songs and can buzz.</string>
     <string name="vb_preset_custom_title">Custom</string>
     <string name="vb_preset_custom_desc">The strength was changed by hand.</string>
     <string name="vb_mode_note">The mode only sets the virtual bass sound and strength; EQ and output stay as they are.</string>

@@ -73,7 +73,8 @@ object PvbParam {
     const val XTC_BAL_HI_DB = 55
     /** Developer: speaker-floor scale of the virtual-bass table (1 or 0 = model; 0.75..1.75). See pvb_engine.h. */
     const val D_TABLE_SCALE = 56
-    const val COUNT = 57
+    const val P1PPP = 57
+    const val COUNT = 58
 }
 
 /** Index of each value in the meter array (same order as pvb::Meter in pvb_engine.h). */
@@ -108,7 +109,8 @@ object PvbMeter {
     const val DIAGNOSTIC_SOLO_EXTRA_GR_DB = 25
     /** Share of the last few seconds (3 s smoothing) the limiter took off more than 0.5 dB, %; reads do not reset it. */
     const val LIM_ACTIVE_PCT = 26
-    const val COUNT = 27
+    const val P1PPP_STATE = 27
+    const val COUNT = 28
 }
 
 /** Developer-mode meter layout (same order as pvb::DevMeter in pvb_engine.h), then [RING] (dry, layer) pairs. */
@@ -130,7 +132,9 @@ object PvbDevMeter {
     const val T3_H2_DB = 25
     const val FIELDS = 32
     const val RING = 512
-    const val SIZE = FIELDS + 2 * RING
+    const val STAGE_FIELDS = 9
+    const val STAGE_START = FIELDS + 2 * RING
+    const val SIZE = STAGE_START + STAGE_FIELDS * RING
 }
 
 /** Index of each value in the analysis info array (same order as pvb::AnaInfo in pvb_analysis.h). */
@@ -160,6 +164,9 @@ object PvbAnaInfo {
  * and no call ever waits for another. After close, processing passes audio through and the other calls do nothing.
  */
 class PvbEngine(sampleRate: Int) : AutoCloseable {
+    /** Stream rate requested by the owner; native reconfiguration takes effect at the next block. */
+    @Volatile var sampleRateHz: Int = sampleRate
+        private set
     private val handle: Long = PvbNative.create(sampleRate)
     /** Immutable requested controls for opt-in diagnostics. Native ramp/application may lag this snapshot. */
     @Volatile var diagnosticParams: FloatArray? = null
@@ -202,19 +209,31 @@ class PvbEngine(sampleRate: Int) : AutoCloseable {
         }
     }
 
+    /** Main/lifecycle only, after the service has joined its audio generation. */
+    fun prepareStageC(mode: Int, data: ByteArray?, worker: Boolean, telemetry: Boolean, rate: Int, familyP2: Boolean = true): Boolean =
+        use(false) { PvbNative.prepareStageC(it, mode, data, worker, telemetry, rate, familyP2) }.also { if (it) sampleRateHz = rate }
+    fun copyStageC(out: LongArray): Boolean = use(false) { PvbNative.copyStageC(it, out) }
+
+    fun loadStableWeights(data: ByteArray): Boolean = use(false) { PvbNative.loadStableWeights(it,data) }
+
     val isValid: Boolean
         get() = !closed.get() && refs.get() > 0
 
     val latencyFrames: Int
         get() = use(0) { PvbNative.latency(it) }
 
-    fun setSampleRate(sampleRate: Int) = use(Unit) { PvbNative.setSampleRate(it, sampleRate) }
+    fun setSampleRate(sampleRate: Int) = use(Unit) { PvbNative.setSampleRate(it, sampleRate); sampleRateHz = sampleRate }
 
     fun setParams(values: FloatArray) {
         require(values.size == PvbParam.COUNT) { "expected ${PvbParam.COUNT} values, got ${values.size}" }
         use(Unit) { PvbNative.setParams(it, values) }
         diagnosticParams = values.copyOf()
     }
+
+    /** Speaker guard of the fixed modes in dBFS; 0 = off. */
+    fun setLayerCap(db: Float) = use(Unit) { PvbNative.setLayerCap(it, db) }
+    /** Fixed modes: accept the user's EQ (must be called before the parameters that carry it). */
+    fun setFixedEqOpen(open: Boolean) = use(Unit) { PvbNative.setFixedEqOpen(it, open) }
 
     /** Clears the engine memory and fades in; call when the engine re-enters the signal path. */
     fun reset() = use(Unit) { PvbNative.reset(it) }
@@ -304,7 +323,7 @@ class PvbEngine(sampleRate: Int) : AutoCloseable {
             2500f, 0f,     // treble tilt: high shelf corner, gain (0 = off)
             0f,      // final output gate, dB (0 = open)
             0f,      // condition tag (blind comparison)
-            0f, 0f, 0f,    // virtual bass: off, hpv, 0 dB
+            0f, 6f, 0f,    // virtual bass: off, P1 (stable ID 6), 0 dB
             0f, 0f, -6f,   // flat bypass off (controller selects it), match running, initial estimate
             0f,           // generated-layer diagnostic monitor off
             0f, 0f, 0f, 0f,   // experimental layer options off: smooth, rise, S1m, dense
@@ -318,7 +337,7 @@ class PvbEngine(sampleRate: Int) : AutoCloseable {
             15.5f, 400f, 8000f, // speaker spacing, feedback band
             0f, 0f,             // speaker balance (speakers taken as equal)
             1f,                 // developer speaker-floor table scale (1 = model)
+            0f,                 // P1+++ atomic preset off
         )
     }
 }
-

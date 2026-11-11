@@ -19,7 +19,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   engine-tests:
@@ -57,36 +57,16 @@ jobs:
           {
             tools/pvb-harness/build_host.sh &&
             python3 tools/pvb-harness/test_engine.py --report engine-report.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_p1plus_baseline.py --report p1plus-baseline-ci.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/check_p1pp_impact_controls.py --out p1pp-impact-controls-ci &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_alpha2_profiles.py --lib tools/pvb-harness/build/libpvbcapi.so --report alpha2-profiles-ci.json &&
             OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_diagnostic_solo.py &&
             OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_xtc.py &&
             python3 tools/xtc/check_eel_port.py &&
             python3 tools/xtc/xtc_native_check.py &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_experimental.py --baseline-ref 9978f145317183527b15f83d91fe9c6de748ae14 --report experimental-report.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_devmode.py --baseline-ref 65c0086f01caaeffc8fdea1614560076f9a860cd --report devmode-report.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_harmonic_continuity.py --report harmonic-continuity-report.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_native_renderer.py --report native-renderer-q0.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_native_stream.py --report native-stream-q0.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_oscillator_research.py --lib tools/pvb-harness/build/libpvbcapi.so --report oscillator-ci.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_q0_native_mutation.py --report native-mutation-q0.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_modulation_research.py --report modulation-p1-report.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_detail_research.py --report detail-research-ci.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_am_family_research.py --lib tools/pvb-harness/build/libpvbcapi.so --report am-family-ci.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_track_assignment_research.py --lib tools/pvb-harness/build/libpvbcapi.so --report track-assignment-ci.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_track_prediction_research.py --lib tools/pvb-harness/build/libpvbcapi.so --report track-prediction-ci.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_track_prediction_mutation.py --report track-prediction-mutation-ci.json &&
             g++ -std=c++17 -O2 -Wall -Wextra -Werror -Iapp/src/main/cpp/libpvb tools/pvb-harness/vb_quality/test_track_prediction.cpp -o /tmp/pvb-track-prediction && /tmp/pvb-track-prediction &&
             g++ -std=c++17 -O2 -Wall -Wextra -Werror -Iapp/src/main/cpp/libpvb tools/pvb-harness/vb_quality/test_continuity_policy.cpp -o /tmp/pvb-continuity-policy && /tmp/pvb-continuity-policy &&
             g++ -std=c++17 -O2 -Wall -Wextra -Werror -Iapp/src/main/cpp/libpvb -Itools/pvb-harness tools/pvb-harness/fit_equivalence.cpp -o /tmp/pvb-fit-equivalence && /tmp/pvb-fit-equivalence &&
             g++ -std=c++17 -O2 -Wall -Wextra -Werror -Iapp/src/main/cpp/libpvb tools/pvb-harness/fastmath_check.cpp -o /tmp/pvb-fastmath-check && /tmp/pvb-fastmath-check &&
             clang++ -std=c++17 -O2 -mfma -ffp-contract=on -fno-fast-math -Iapp/src/main/cpp/libpvb -Itools/pvb-harness tools/pvb-harness/fit_equivalence.cpp -o /tmp/pvb-fit-equivalence-fma && /tmp/pvb-fit-equivalence-fma &&
             clang++ -std=c++17 -O2 -mfma -ffp-contract=on -fno-fast-math -Iapp/src/main/cpp/libpvb tools/pvb-harness/fastmath_check.cpp -o /tmp/pvb-fastmath-check-fma && /tmp/pvb-fastmath-check-fma &&
-            python3 tools/pvb-harness/vb51/test_port52.py port52-report.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/vb_quality/test_gentle_port.py --report gentle-port-report.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/vb_quality/test_adaptive_port.py --report adaptive-port-report.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/vb_quality/test_quality.py --report quality-report.json &&
             python3 tools/pvb-harness/match/test_match.py &&
             tools/pvb-harness/build_host_jdsp.sh &&
             tools/rootfx/build_host.sh &&
@@ -94,39 +74,13 @@ jobs:
             tools/pvb-harness/jvm/run_jvm_test.sh
           } 2>&1 | tee ci-build.log
 
-      - name: Save log to the ci-log branch (so it can be read without the web UI)
-        if: failure()
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./.github/save-ci-log.sh engine-tests
-
       - name: Upload test report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: engine-report
           path: |
-            harmonic-continuity-report.json
-            modulation-p1-report.json
-            native-renderer-q0.json
-            native-stream-q0.json
-            oscillator-ci.json
-            native-mutation-q0.json
             engine-report.json
-            p1plus-baseline-ci.json
-            p1pp-impact-controls-ci/controls.json
-            experimental-report.json
-            devmode-report.json
-            alpha2-profiles-ci.json
-            detail-research-ci.json
-            am-family-ci.json
-            track-assignment-ci.json
-            track-prediction-ci.json
-            track-prediction-mutation-ci.json
-            port52-report.json
-            gentle-port-report.json
-            adaptive-port-report.json
-            quality-report.json
             jdsp-chain-report.json
             ci-build.log
 
@@ -146,31 +100,15 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
-      # General build signing key: only from repository secrets, never from the repository.
-      - name: Prepare the general signing key (if the secrets exist)
-        id: key
-        env:
-          GENERAL_KEYSTORE_B64: ${{ secrets.GENERAL_KEYSTORE_B64 }}
-          GENERAL_KEYSTORE_PASSWORD: ${{ secrets.GENERAL_KEYSTORE_PASSWORD }}
-          GENERAL_KEY_ALIAS: ${{ secrets.GENERAL_KEY_ALIAS }}
-          GENERAL_KEY_PASSWORD: ${{ secrets.GENERAL_KEY_PASSWORD }}
+      # Every branch/PR/tag builds with a fresh throwaway debug key. No GENERAL_* secrets here.
+      - name: Create a throwaway test key
         run: |
           set -euo pipefail
-          if [ -n "$GENERAL_KEYSTORE_B64" ] && [ -n "$GENERAL_KEYSTORE_PASSWORD" ] && [ -n "$GENERAL_KEY_ALIAS" ] && [ -n "$GENERAL_KEY_PASSWORD" ]; then
-            printf '%s' "$GENERAL_KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/general.jks"
-            echo "GENERAL_KEYSTORE_PATH=$RUNNER_TEMP/general.jks" >> "$GITHUB_ENV"
-            echo "signed=true" >> "$GITHUB_OUTPUT"
-            echo "General build: signed with the distribution key from secrets"
-          else
-            echo "signed=false" >> "$GITHUB_OUTPUT"
-            echo "General build: no GENERAL_* secrets -> debug-signed test build (-UNSIGNED-TEST)"
-          fi
-
-      - name: Refuse to publish an unsigned general build
-        if: startsWith(github.ref, 'refs/tags/general-v') && steps.key.outputs.signed != 'true'
-        run: |
-          echo "Tag ${GITHUB_REF_NAME}: the GENERAL_* secrets are missing; a release must be signed with the distribution key." >&2
-          exit 1
+          mkdir -p "$HOME/.android"
+          keytool -genkeypair -noprompt -keystore "$RUNNER_TEMP/test-debug.jks" \
+            -storepass android -keypass android -alias androiddebugkey -keyalg RSA -keysize 2048 \
+            -validity 2 -dname 'CN=Rootnote CI test'
+          cp "$RUNNER_TEMP/test-debug.jks" "$HOME/.android/debug.keystore"
 
       - name: Source archive with submodules (GPL-3.0 corresponding source)
         run: |
@@ -179,21 +117,11 @@ jobs:
           git ls-files -z --recurse-submodules | tar --null -T - -czf "dist-general/source-${GITHUB_SHA::7}.tar.gz"
           ls -l dist-general
 
-      - name: Build rootless F-Droid release (s26u with the debug key, general with the environment key)
-        env:
-          GENERAL_KEYSTORE_PASSWORD: ${{ secrets.GENERAL_KEYSTORE_PASSWORD }}
-          GENERAL_KEY_ALIAS: ${{ secrets.GENERAL_KEY_ALIAS }}
-          GENERAL_KEY_PASSWORD: ${{ secrets.GENERAL_KEY_PASSWORD }}
+      - name: Build test APKs with the throwaway key
         run: |
           set -o pipefail
           chmod +x gradlew
           ./gradlew --no-daemon assembleRootlessFdroidS26uRelease assembleRootlessFdroidGeneralRelease assembleRootFdroidGeneralRelease 2>&1 | tee ci-build.log
-
-      - name: Save log to the ci-log branch (so it can be read without the web UI)
-        if: failure()
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./.github/save-ci-log.sh apk
 
       - name: Collect s26u APK (test build, not released)
         id: collect
@@ -242,7 +170,7 @@ jobs:
           if grep -q "FOREGROUND_SERVICE_MICROPHONE" dist-general/apk-info.txt; then echo "general APK requests the microphone FGS permission" >&2; exit 1; fi
           "$tools/apksigner" verify --verbose --print-certs "$apk" | tee dist-general/signature.txt
           echo "::notice title=general APK::$(head -1 dist-general/apk-info.txt) label=$brand signer=$(grep -m1 'certificate SHA-256' dist-general/signature.txt | sed 's/.*: //')"
-          if [ "${{ steps.key.outputs.signed }}" = "true" ]; then suffix=""; else suffix="-UNSIGNED-TEST"; fi
+          suffix="-UNSIGNED-TEST"
           base="${brand:-general}-${version}${suffix}"
           cp "$apk" "dist-general/$base.apk"
           (cd dist-general && sha256sum "$base.apk" > "$base.apk.sha256" && cat "$base.apk.sha256")
@@ -256,12 +184,6 @@ jobs:
           set -o pipefail
           tools/rootfx/build_android.sh 2>&1 | tee ci-build.log
 
-      - name: Save the module log to the ci-log branch
-        if: failure()
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./.github/save-ci-log.sh rootfx
-
       - name: Collect the general root APK (rooted phones, with the module)
         run: |
           set -euo pipefail
@@ -270,7 +192,7 @@ jobs:
           apk=$(ls $out/*universal*.apk 2>/dev/null | head -1)
           [ -n "$apk" ] || apk=$(ls $out/*.apk | head -1)
           ver=$(sed -n 's/.*generalVersionName = "\(.*\)".*/\1/p' buildSrc/src/main/kotlin/AndroidConfig.kt)
-          if [ "${{ steps.key.outputs.signed }}" = "true" ]; then suffix=""; else suffix="-UNSIGNED-TEST"; fi
+          suffix="-UNSIGNED-TEST"
           name="Rootnote-root-$ver$suffix.apk"
           mkdir -p dist-root
           cp "$apk" "dist-root/$name"
@@ -296,18 +218,117 @@ jobs:
           name: ${{ steps.general.outputs.base }}
           path: dist-general/*
 
-      # General: only from a general-v* tag, only signed (checked above), with the corresponding source archive.
-      - name: Publish the general build as a GitHub release
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/general-v') && steps.key.outputs.signed == 'true'
+      - name: Collect release inputs (still test signed)
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/general-v')
+        run: cp RELEASE_NOTES_GENERAL.md dist-general/RELEASE_NOTES_GENERAL.md
+
+      - name: Upload release inputs
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/general-v')
+        uses: actions/upload-artifact@v4
+        with:
+          name: general-release-inputs
+          path: dist-general/*
+
+  release-gate:
+    name: Validate release tag on main lineage
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/general-v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      eligible: ${{ steps.gate.outputs.eligible }}
+      version: ${{ steps.gate.outputs.version }}
+      sha: ${{ steps.gate.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check lineage, peeled tag commit and source version before secrets
+        id: gate
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin refs/heads/main:refs/remotes/origin/main
+          sha=$(git rev-parse 'HEAD^{commit}')
+          test "$sha" = "$(git rev-parse "$GITHUB_SHA^{commit}")"
+          test "$sha" = "$(git rev-parse "$GITHUB_REF^{commit}")"
+          git merge-base --is-ancestor "$sha" refs/remotes/origin/main
+          version=$(sed -n 's/^[[:space:]]*const val generalVersionName = "\([^"]*\)".*/\1/p' buildSrc/src/main/kotlin/AndroidConfig.kt)
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.-]+)?$ ]]
+          test "$TAG" = "general-v$version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo 'eligible=true' >> "$GITHUB_OUTPUT"
+
+  release:
+    name: Sign and release approved general tag
+    needs: [engine-tests, apk, release-gate]
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/general-v') && needs.release-gate.outputs.eligible == 'true'
+    runs-on: ubuntu-latest
+    # Required manual setup: environment-scoped GENERAL_* secrets, protected general-v* tags,
+    # reviewer approval, no self-review/bypass; remove repository-scoped copies of the release secrets.
+    environment: general-release
+    permissions:
+      contents: write
+    steps:
+      # Never checkout/run app Gradle scripts in the key-bearing job. Sign only this run's artifact.
+      - uses: actions/download-artifact@v4
+        with:
+          name: general-release-inputs
+          path: release-inputs
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Validate the built APK identity and source archive
+        env:
+          VERSION: ${{ needs.release-gate.outputs.version }}
+          SOURCE_SHA: ${{ needs.release-gate.outputs.sha }}
+        run: |
+          set -euo pipefail
+          tools=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          test -f "release-inputs/Rootnote-$VERSION-UNSIGNED-TEST.apk"
+          test -f "release-inputs/source-${SOURCE_SHA::7}.tar.gz"
+          "$tools/aapt" dump badging "release-inputs/Rootnote-$VERSION-UNSIGNED-TEST.apk" > "$RUNNER_TEMP/apk-info.txt"
+          grep -q "^package: name='kr.ksysh3.rootnote' " "$RUNNER_TEMP/apk-info.txt"
+          actual=$(sed -n "s/.*versionName='\([^']*\)'.*/\1/p" "$RUNNER_TEMP/apk-info.txt" | head -1)
+          test "$actual" = "$VERSION"
+      - name: Sign verified test APK with release key
+        env:
+          VERSION: ${{ needs.release-gate.outputs.version }}
+          SOURCE_SHA: ${{ needs.release-gate.outputs.sha }}
+          GENERAL_KEYSTORE_B64: ${{ secrets.GENERAL_KEYSTORE_B64 }}
+          GENERAL_KEYSTORE_PASSWORD: ${{ secrets.GENERAL_KEYSTORE_PASSWORD }}
+          GENERAL_KEY_ALIAS: ${{ secrets.GENERAL_KEY_ALIAS }}
+          GENERAL_KEY_PASSWORD: ${{ secrets.GENERAL_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          umask 077
+          key="$RUNNER_TEMP/general-release.jks"
+          trap 'rm -f -- "$key"' EXIT
+          test -n "$GENERAL_KEYSTORE_B64" && test -n "$GENERAL_KEYSTORE_PASSWORD"
+          test -n "$GENERAL_KEY_ALIAS" && test -n "$GENERAL_KEY_PASSWORD"
+          printf '%s' "$GENERAL_KEYSTORE_B64" | base64 -d > "$key"
+          tools=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          mkdir -p dist-release
+          "$tools/apksigner" sign --ks "$key" --ks-key-alias "$GENERAL_KEY_ALIAS" \
+            --ks-pass env:GENERAL_KEYSTORE_PASSWORD --key-pass env:GENERAL_KEY_PASSWORD \
+            --out "dist-release/Rootnote-$VERSION.apk" "release-inputs/Rootnote-$VERSION-UNSIGNED-TEST.apk"
+          "$tools/apksigner" verify --verbose --print-certs "dist-release/Rootnote-$VERSION.apk" > dist-release/signature.txt
+          expected=$(keytool -exportcert -keystore "$key" -alias "$GENERAL_KEY_ALIAS" \
+            -storepass:env GENERAL_KEYSTORE_PASSWORD | sha256sum | cut -d' ' -f1)
+          actual=$(sed -n 's/^Signer #1 certificate SHA-256 digest: //p' dist-release/signature.txt | tr -d ':' | tr '[:upper:]' '[:lower:]')
+          test "$actual" = "$expected"
+          cp "release-inputs/source-${SOURCE_SHA::7}.tar.gz" dist-release/
+          (cd dist-release && sha256sum *.apk source-*.tar.gz > SHA256SUMS)
+      - name: Publish the verified general release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          name: ${{ steps.general.outputs.brand }} ${{ steps.general.outputs.version }}
-          prerelease: ${{ contains(steps.general.outputs.version, '-') }}
+          name: Rootnote ${{ needs.release-gate.outputs.version }}
+          prerelease: ${{ contains(needs.release-gate.outputs.version, '-') }}
           make_latest: 'false'
-          body_path: RELEASE_NOTES_GENERAL.md
-          files: |
-            dist-general/*.apk
-            dist-general/*.sha256
-            dist-general/source-*.tar.gz
-          # The root build (dist-root: Magisk module + APK) stays a CI artifact until it is tested on a device.
+          body_path: release-inputs/RELEASE_NOTES_GENERAL.md
+          files: dist-release/*

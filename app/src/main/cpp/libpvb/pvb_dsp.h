@@ -437,6 +437,9 @@ public:
     // Gain applied to the delayed sample by the most recent process() call. Audio thread only.
     double currentGain() const { return g_; }
 
+    // Audio owner only: a parallel, conservative post-controller certificate. No delay added.
+    void capCurrentGain(double bound) { g_=std::min(g_,bound);minGain_=std::min(minGain_,g_); }
+
     // Lowest gain applied since the last call (for metering).
     double takeMinGain() {
         const double m = minGain_;

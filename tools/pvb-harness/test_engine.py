@@ -930,7 +930,7 @@ def t_dynamic(lib, sr=48000):
 
 
 # ---------------------------------------------------------------------------------------- virtual bass
-VB_HPV, VB_BANKSTOWN = 0, 1
+VB_P1 = 6
 sys.path.insert(0, os.path.join(HERE, 'vb_port'))
 
 
@@ -969,197 +969,6 @@ def vb_signals(fs):
     return dict(tone=tone, fifth=fifth, kick_bass=kb)
 
 
-def t_vb_reference(lib, album=None):
-    """C++ virtual bass modules vs the Python reference (vb_port/hpv_ref.py = vbcore.layer_hpv + causal shift)."""
-    import hpv_ref as R
-    # the frozen reference still equals the research code (when vb5 is there)
-    try:
-        sys.path.insert(0, os.path.join(HERE, 'vb5'))
-        import vbcore as V
-        V._TAB['lo'] = (R.FG, R.W, R.G)          # the exported tables (vbcore would rebuild them from measurement files)
-        x = vb_signals(48000)['fifth'][:3 * 48000]
-        a, _ = V.layer_hpv(x)
-        e = rel_db(R.layer_like_vbcore(x), a)
-        check('virtual bass: frozen reference (vb_port) == vbcore.layer_hpv', e < -200, rel_db=e)
-    except ImportError as ex:
-        print(f'[SKIP] vbcore not importable ({ex})')
-    worst = -999.0
-    rows = {}
-    for fs in (48000, 44100):
-        for name, x in vb_signals(fs).items():
-            y, _, lat, _ = vb_layer(lib, VB_HPV, fs, x, x)
-            e = rel_db(y, R.layer_rt(x, fs))
-            rows[f'{name}@{fs}'] = e
-            worst = max(worst, e)
-        check(f'virtual bass hpv latency @ {fs}', lat == R.latency_frames(fs), frames=lat, ms=1000 * lat / fs)
-    check('virtual bass hpv: C++ == Python reference (tone, fifth, kick+bass; 44.1 and 48 kHz)', worst < -150,
-          worst_rel_db=worst, **{k.replace('@', '_'): v for k, v in rows.items()})
-    # 44.1 kHz runs the same 3 kHz core: its layer, resampled to 48 kHz, matches the 48 kHz layer
-    from scipy.signal import resample_poly
-    x48 = vb_signals(48000)['fifth']
-    x44 = resample_poly(x48, 147, 160)
-    y48, _, _, _ = vb_layer(lib, VB_HPV, 48000, x48, x48)
-    y44, _, _, _ = vb_layer(lib, VB_HPV, 44100, x44, x44)
-    up = resample_poly(y44, 160, 147)[:len(y48)]
-    sl = slice(48000, len(up) - 24000)
-    e = rel_db(up[sl], y48[sl])
-    check('virtual bass hpv: 44.1 kHz layer == 48 kHz layer (same 3 kHz core)', e < -50, rel_db=e)
-    # Bankstown: per channel, formula reference
-    for fs in (48000, 44100):
-        x = vb_signals(fs)['kick_bass']; xr = vb_signals(fs)['fifth']
-        yl, yr, lat, _ = vb_layer(lib, VB_BANKSTOWN, fs, x, xr)
-        el, er = rel_db(yl, R.bankstown_layer(x, fs)), rel_db(yr, R.bankstown_layer(xr, fs))
-        check(f'Bankstown: C++ == formula reference, per channel, no latency @ {fs}', max(el, er) < -150 and lat == 0,
-              left_rel_db=el, right_rel_db=er, latency=lat)
-    # music excerpt (album, local runs only)
-    if album:
-        import soundfile as sf
-        files = sorted(glob.glob(os.path.join(glob.escape(album), '*.flac')))
-        if files:
-            x44, fs0 = sf.read(files[1], start=60 * 44100, frames=10 * 44100, dtype='float64', always_2d=True)
-            res = {}
-            for fs, x in ((44100, x44), (48000, resample_poly(x44, 160, 147, axis=0))):
-                y, _, _, dt = vb_layer(lib, VB_HPV, fs, x[:, 0], x[:, 1])
-                res[fs] = rel_db(y, R.layer_rt((x[:, 0] + x[:, 1]) / 2.0, fs))
-            check(f'virtual bass hpv: C++ == Python reference on 10 s of music ({os.path.basename(files[1])[:30]})',
-                  max(res.values()) < -150, rel_db_44k=res[44100], rel_db_48k=res[48000])
-
-
-def t_vb_engine(lib):
-    """Virtual bass inside the engine: insertion point, latency meter, switching without clicks or time jumps."""
-    import hpv_ref as R
-    sr = 48000
-    lat_lim = 88
-    rng = np.random.default_rng(21)
-    t = np.arange(3 * sr) / sr
-    x = np.stack([0.1 * np.sin(2 * np.pi * 55 * t) + 0.01 * rng.standard_normal(len(t)),
-                  0.08 * np.sin(2 * np.pi * 55 * t + 0.4) + 0.01 * rng.standard_normal(len(t))], 1).astype(np.float32)
-    x64 = x.astype(np.float64)
-    # full chain with hpv at -3 dB: EQ v1.1 on the input delayed by D, + layer (both channels), x output gain
-    e = Engine(lib, sr, vb_on=1, vb_algo=VB_HPV, vb_level_db=-3, ramp_ms=0)
-    lib.pvb_reset(e.h)        # entering the signal path: silent start, so the module starts at frame 0 like the reference
-    y = e.process(x)
-    m = e.meters()
-    e.close()
-    D = R.latency_frames(sr)
-    xd = np.r_[np.zeros((D, 2)), x64[:-D]]
-    lay = R.layer_rt(x64.mean(1), sr) * 10 ** (-3 / 20)
-    ref = (sosfilt(ref_sos(sr, V11), xd, axis=0) + lay[:, None]) * 10 ** (-5 / 20)
-    yl = y[lat_lim:].astype(np.float64)
-    err = rel_db(yl[sr // 2:], ref[sr // 2:len(yl)])
-    # the highest level the app offers (+9 dB) passes unclamped
-    e = Engine(lib, sr, vb_on=1, vb_algo=VB_HPV, vb_level_db=9, ramp_ms=0)
-    lib.pvb_reset(e.h)
-    y9 = e.process(x)
-    e.close()
-    ref9 = (sosfilt(ref_sos(sr, V11), xd, axis=0) + lay[:, None] * 10 ** (12 / 20)) * 10 ** (-5 / 20)
-    err9 = rel_db(y9[lat_lim:].astype(np.float64)[sr // 2:], ref9[sr // 2:len(y9) - lat_lim])
-    check('virtual bass in the engine: EQ(input delayed) + layer, before output gain (limiter idle) @ 48 kHz, -3 and +9 dB',
-          err < -100 and err9 < -100 and m[M['LATENCY']] == lat_lim + D and m[M['VB']] == 1 + VB_HPV,
-          rel_db=err, rel_db_plus9=err9, latency_frames=float(m[M['LATENCY']]),
-          latency_ms=1000 * float(m[M['LATENCY']]) / sr)
-    # Bankstown in the engine: no latency, per channel, on the EQ output: out = eq + layer(eq), then output gain
-    e = Engine(lib, sr, vb_on=1, vb_algo=VB_BANKSTOWN, vb_level_db=0, ramp_ms=0)
-    lib.pvb_reset(e.h)
-    y = e.process(x)
-    m = e.meters()
-    e.close()
-    eqx = sosfilt(ref_sos(sr, V11), x64, axis=0)
-    lay2 = np.stack([R.bankstown_layer(eqx[:, c], sr) for c in range(2)], 1)
-    ref2 = (eqx + lay2) * 10 ** (-5 / 20)
-    yl = y[lat_lim:].astype(np.float64)
-    err2 = rel_db(yl[sr // 2:], ref2[sr // 2:len(yl)])
-    check('Bankstown in the engine: EQ out + layer(EQ out) per channel, latency unchanged', err2 < -100 and m[M['LATENCY']] == lat_lim
-          and m[M['VB']] == 1 + VB_BANKSTOWN, rel_db=err2, latency_frames=float(m[M['LATENCY']]))
-    e = Engine(lib, 44100, vb_on=1, vb_algo=VB_HPV)
-    e.process(np.zeros((4410, 2), np.float32))
-    m44 = e.meters(); e.close()
-    check('latency meter @ 44.1 kHz with hpv', m44[M['LATENCY']] == 82 + R.latency_frames(44100),
-          latency_frames=float(m44[M['LATENCY']]), latency_ms=1000 * float(m44[M['LATENCY']]) / 44100)
-
-    # Switching while audible: fade out 30 ms, silent for the added latency, fade in; the music continues where it
-    # stopped (no repeat, no jump) and there is no click. A 220 Hz tone with a slow amplitude ramp marks the time.
-    n = 4 * sr
-    tt = np.arange(n) / sr
-    env = 0.05 + 0.1 * tt / tt[-1]
-    s = (env * np.sin(2 * np.pi * 220 * tt)).astype(np.float32)
-    xs = np.stack([s, s], 1)
-    e = Engine(lib, sr, vb_level_db=-120)          # layer silent: only the latency path shows
-    a = e.process(xs[:sr])
-    e.set(vb_on=1, vb_algo=VB_HPV)
-    b = e.process(xs[sr:3 * sr])
-    e.set(vb_on=0)
-    c = e.process(xs[3 * sr:])
-    e.close()
-    out = np.concatenate([a, b, c])[:, 0].astype(np.float64)
-    blk = int(0.005 * sr)
-    rms = np.sqrt(np.mean(out[:len(out) // blk * blk].reshape(-1, blk) ** 2, axis=1))
-    silent = rms < 1e-4
-    # silent stretch after the switch on (starts ~30 ms after 1 s)
-    on_blocks = np.where(silent[int(1.0 / 0.005):int(1.5 / 0.005)])[0]
-    gap_on_ms = len(on_blocks) * 5.0
-    # where does the music continue? correlate the output after the gap with the input
-    k0 = int(1.25 * sr)
-    seg = out[k0:k0 + 2400]
-    ref_eq = sosfilt(ref_sos(sr, V11), s.astype(np.float64)) * 10 ** (-5 / 20)
-    lags = np.arange(D - 400, D + 400)
-    errs = [np.max(np.abs(seg - ref_eq[k0 - lat_lim - L:k0 - lat_lim - L + 2400])) for L in lags]
-    best = int(lags[int(np.argmin(errs))])
-    sos = butter(8, 2000, 'high', fs=sr, output='sos')
-    hf = db(np.max(np.abs(sosfilt(sos, out)[sr // 2:])))
-    hf_steady = db(np.max(np.abs(sosfilt(sos, out)[sr // 2:sr - 100])))
-    off_blocks = np.where(silent[int(3.0 / 0.005):int(3.3 / 0.005)])[0]
-    check('virtual bass switch: on = fade, silence for the added latency, fade in, aligned; off = short dip; no click',
-          abs(gap_on_ms - 1000 * D / sr) <= 40 and best == D and len(off_blocks) <= 6 and hf < -60,
-          silent_after_on_ms=gap_on_ms, added_latency_ms=1000 * D / sr, delay_after_switch=best,
-          silent_after_off_ms=len(off_blocks) * 5.0, hf_db=hf, hf_steady_db=hf_steady)
-
-    # Switching while muted (blind comparison): immediate, no hold; unmuted output already aligned.
-    e = Engine(lib, sr, vb_level_db=-120)
-    e.process(xs[:sr])
-    e.set(gate_db=-90, ramp_ms=150)
-    e.process(xs[sr:sr + sr // 4])
-    e.set(vb_on=1, vb_algo=VB_HPV)                 # while muted
-    e.process(xs[sr + sr // 4:sr + sr // 2])
-    e.set(gate_db=0, ramp_ms=150)
-    z = e.process(xs[sr + sr // 2:2 * sr + sr // 2])
-    m = e.meters()
-    e.close()
-    zz = z[:, 0].astype(np.float64)[sr // 4:]
-    k0 = sr + sr // 2 + sr // 4
-    errs = [np.max(np.abs(zz[:2400] - ref_eq[k0 - lat_lim - L:k0 - lat_lim - L + 2400])) for L in lags]
-    best_m = int(lags[int(np.argmin(errs))])
-    check('virtual bass switch while muted: immediate, aligned when the sound returns', best_m == D
-          and m[M['VB']] == 1 + VB_HPV and np.min(errs) < 1e-6, delay=best_m, max_err=float(np.min(errs)))
-
-    # Level change glides (no click), e.g. -3 -> +3 dB.
-    e = Engine(lib, sr, vb_on=1, vb_algo=VB_HPV, vb_level_db=-3)
-    k = vb_signals(sr)['kick_bass'].astype(np.float32) * 0.5
-    xk = np.stack([k, k], 1)
-    p1 = e.process(xk[:2 * sr])
-    e.set(vb_level_db=3, ramp_ms=20)
-    p2 = e.process(xk[2 * sr:])
-    e.close()
-    pk = np.concatenate([p1, p2])[:, 0].astype(np.float64)
-    hp = butter(8, 4000, 'high', fs=sr, output='sos')
-    around = np.abs(sosfilt(hp, pk))
-    jump = db(np.max(around[2 * sr - 480:2 * sr + 2400]))
-    base = db(np.max(around[sr:2 * sr - 960]))
-    check('virtual bass level change: 20 ms glide, no click', jump < base + 3, hf_at_change_db=jump, hf_before_db=base)
-
-    # CPU on the host
-    xc = np.stack([vb_signals(sr)['fifth']] * 2, 1).astype(np.float32)
-    xc = np.tile(xc, (15, 1))[:60 * sr]
-    res = {}
-    for label, kw in (('off', dict()), ('hpv', dict(vb_on=1, vb_algo=VB_HPV)), ('bankstown', dict(vb_on=1, vb_algo=VB_BANKSTOWN))):
-        e = Engine(lib, sr, **kw)
-        t0 = time.perf_counter(); e.process(xc, block=4096); res[label] = time.perf_counter() - t0
-        e.close()
-    check('virtual bass CPU (host, 60 s stereo @ 48 kHz, whole engine)', res['hpv'] < 20 and res['bankstown'] < 10,
-          off_ms_per_s=1000 * res['off'] / 60, hpv_ms_per_s=1000 * res['hpv'] / 60,
-          bankstown_ms_per_s=1000 * res['bankstown'] / 60)
-
-
 def t_performance(lib, sr=48000):
     x = stereo(np.random.default_rng(2).normal(0, 0.1, 60 * sr))
     e = Engine(lib, sr)
@@ -1196,7 +1005,7 @@ def t_album(lib, album):
         er = np.sqrt(np.mean(rl[:nb * blk].reshape(nb, blk, 2) ** 2, axis=(1, 2)) + 1e-20)
         active = np.mean(np.abs(20 * np.log10(ey / er)) > 0.1) * 100
         # the same track with the virtual bass at its highest level (+9 dB): still held at the ceiling
-        e = Engine(lib, sr, vb_on=1, vb_algo=VB_HPV, vb_level_db=9)
+        e = Engine(lib, sr, vb_on=1, vb_algo=VB_P1, vb_level_db=9)
         y9 = e.process(x)
         lat9 = e.latency()
         e.close()
@@ -1208,7 +1017,7 @@ def t_album(lib, album):
     check(f'album: {len(rows)} tracks <= -1 dBTP', worst <= -1.0 + 0.05, worst_dbtp=worst,
           median_limiter_active_pct=float(np.median([r['limiter_active_pct'] for r in rows])))
     worst9 = max(r['vb9_tp'] for r in rows)
-    check(f'album with virtual bass hpv +9 dB: {len(rows)} tracks <= -1 dBTP', worst9 <= -1.0 + 0.05, worst_dbtp=worst9)
+    check(f'album with virtual bass P1 +9 dB: {len(rows)} tracks <= -1 dBTP', worst9 <= -1.0 + 0.05, worst_dbtp=worst9)
     return rows
 
 
@@ -1241,8 +1050,6 @@ def main():
     t_phone_stereo(lib)
     t_analysis_concurrent(lib)
     t_silent_snap(lib)
-    t_vb_reference(lib, a.album)
-    t_vb_engine(lib)
     t_performance(lib)
     album = t_album(lib, a.album) if a.album else None
 

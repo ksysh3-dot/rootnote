@@ -54,12 +54,13 @@ fun PrefSlider(
     range: ClosedFloatingPointRange<Float>, step: Float, unit: String, precision: Int,
     line: String? = null, enabled: Boolean = true, strictStep: Boolean = false,
     label: ((Float) -> String)? = null,
+    toDisplay: (Float) -> Float = { it }, fromDisplay: (Float) -> Float = { it },
 ) {
     RnValueSlider(
-        title = title, value = file.float(key, default), range = range, step = step,
+        title = title, value = toDisplay(file.float(key, default)), range = toDisplay(range.start)..toDisplay(range.endInclusive), step = step,
         valueText = label ?: { valueLabel(it, precision, unit) },
-        onChange = { file.put(key, it) },
-        line = line, default = default.takeIf { it in range }, enabled = enabled && !LocalSealed.current,
+        onChange = { file.put(key, fromDisplay(it)) },
+        line = line, default = default.takeIf { it in range }?.let(toDisplay), enabled = enabled && !LocalSealed.current,
         suffix = unit.ifEmpty { null }, decimals = precision, strictStep = strictStep,
     )
 }

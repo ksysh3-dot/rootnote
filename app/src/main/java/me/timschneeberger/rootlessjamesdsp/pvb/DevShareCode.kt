@@ -13,6 +13,10 @@ package me.timschneeberger.rootlessjamesdsp.pvb
  *   their default are not stored: a code from a phone with other defaults (high-pass, strength) keeps the reader's.
  * - tail: 4 characters, 20 bits: the number of data groups (4 bits) and a CRC-16/CCITT-FALSE (16 bits) over the UTF-8
  *   text "RN1-<model>-<version>-<data groups>".
+ * - Strength indexes/defaults are ALWAYS actual dB, independent of StrengthDisplay. UI editors convert before
+ *   encode and render decoded actual values through the same layer; RN1 needs no offset metadata or migration.
+ * - value-set 1 keeps its historical strength indexes 0..12. Value-set 2 uses the -6..12 strength grid;
+ *   it is emitted only for negative strength, and older readers explicitly reject the unknown value-set.
  *
  * Decoding never throws: wrong prefix, unknown format or value-set version, bad characters, length or checksum give a
  * [Result.Error]; an index beyond a value's range is clamped (the slider ranges may shrink in a later version).
@@ -20,6 +24,7 @@ package me.timschneeberger.rootlessjamesdsp.pvb
 object DevShareCode {
     const val PREFIX = "RN1"
     const val SET_VERSION = 1
+    private const val SIGNED_SET_VERSION = 2
     const val MAX_META = 24
     private const val ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
 
@@ -45,16 +50,21 @@ object DevShareCode {
         require(values.size == specs.size && defaults.size == specs.size) { "expected ${specs.size} values" }
         val bitmapBytes = (specs.size + 7) / 8
         val bytes = ArrayList<Int>()
-        bytes += SET_VERSION
+        // Preserve byte-for-byte RN1 compatibility for nonnegative strengths. Old readers reject signed
+        // value-set 2 instead of silently importing a negative level as a louder nonnegative one.
+        val signed = specs.indexOf(DevParams.STRENGTH).let { DevParams.STRENGTH.snap(values[it]) < 0f }
+        val setVersion = if (signed) SIGNED_SET_VERSION else SET_VERSION
+        bytes += setVersion
         val bitmap = IntArray(bitmapBytes)
         val payload = ArrayList<Int>()
         specs.forEachIndexed { i, spec ->
-            val idx = spec.indexOf(values[i])
+            val idx = if (DevParams.retired(spec)) 0 else spec.indexOf(values[i])
             if (spec.isSwitch) {
                 if (idx == 1) bitmap[i / 8] = bitmap[i / 8] or (1 shl (i % 8))
             } else if (idx != spec.indexOf(defaults[i])) {
                 bitmap[i / 8] = bitmap[i / 8] or (1 shl (i % 8))
-                payload += idx
+                payload += if (spec === DevParams.STRENGTH && setVersion == SET_VERSION)
+                    spec.snap(values[i]).toInt().coerceIn(0, DevParams.DEV_VB_LEVEL_MAX.toInt()) else idx
             }
         }
         bitmap.forEach { bytes += it }
@@ -92,18 +102,21 @@ object DevShareCode {
         val bytes = unbase32(dataParts.joinToString("")) ?: return Result.Error(Reason.BAD_CHARACTERS)
         val bitmapBytes = (specs.size + 7) / 8
         if (bytes.size < 1 + bitmapBytes) return Result.Error(Reason.BAD_LENGTH)
-        if (bytes[0] != SET_VERSION) return Result.Error(Reason.UNKNOWN_VERSION)
+        val setVersion = bytes[0]
+        if (setVersion != SET_VERSION && setVersion != SIGNED_SET_VERSION) return Result.Error(Reason.UNKNOWN_VERSION)
         val values = defaults.copyOf()
         var p = 1 + bitmapBytes
         var moved = 0
         specs.forEachIndexed { i, spec ->
             val bit = (bytes[1 + i / 8] shr (i % 8)) and 1 == 1
             if (spec.isSwitch) {
-                values[i] = if (bit) 1f else 0f
+                values[i] = if (bit && !DevParams.retired(spec)) 1f else 0f
                 if (spec.indexOf(values[i]) != spec.indexOf(defaults[i])) moved++
             } else if (bit) {
                 if (p >= bytes.size) return Result.Error(Reason.BAD_LENGTH)
-                values[i] = spec.valueAt(bytes[p++])   // clamped to the range
+                val index = bytes[p++]
+                values[i] = if (spec === DevParams.STRENGTH && setVersion == SET_VERSION)
+                    index.coerceIn(0, DevParams.DEV_VB_LEVEL_MAX.toInt()).toFloat() else spec.valueAt(index)
                 moved++
             }
         }

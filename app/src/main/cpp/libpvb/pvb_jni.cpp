@@ -1,13 +1,14 @@
 // JNI bridge for the PVB speaker engine (Kotlin side: me.timschneeberger.rootlessjamesdsp.pvb.PvbNative).
 //
 // Audio arrays are copied into an engine-owned buffer with Get/Set<Type>ArrayRegion, so no Java array
-// is pinned while processing and the buffer is only reallocated when a longer block than ever before
-// arrives (never in steady state).
+// is pinned while processing. Fixed, zero-initialized scratch is ready before streaming; oversized calls
+// are split into at most1024-frame chunks without callback allocation.
 //
 // Copyright (C) 2026 PVB project. Licensed under the GNU GPL v3 (same as RootlessJamesDSP).
 #include <jni.h>
 
 #include <algorithm>
+#include <array>
 #include <limits>
 #include <new>
 #include <vector>
@@ -19,8 +20,9 @@ namespace {
 struct Handle {
     explicit Handle(int sampleRate) : engine(sampleRate) {}
     pvb::Engine engine;
-    std::vector<float> floats;
-    std::vector<int16_t> shortsIn, shortsOut;
+    static constexpr int kSamples=2048;
+    std::array<float,kSamples> floats{};
+    std::array<int16_t,kSamples> shortsIn{},shortsOut{};
     float diagnosticLayer[pvb::Engine::kDiagnosticSamples] = {};
     float diagnosticFull[pvb::Engine::kDiagnosticSamples] = {};
     float diagnosticTrace[pvb::Engine::kDiagnosticFields] = {};
@@ -35,8 +37,8 @@ extern "C" {
 
 JNIEXPORT jlong JNICALL
 Java_me_timschneeberger_rootlessjamesdsp_pvb_PvbNative_create(JNIEnv*, jclass, jint sampleRate) {
-    Handle* h = new (std::nothrow) Handle(sampleRate);
-    return reinterpret_cast<jlong>(h);
+    try {return reinterpret_cast<jlong>(new Handle(sampleRate));}
+    catch(const std::bad_alloc&) {return 0;}
 }
 
 JNIEXPORT void JNICALL
@@ -62,6 +64,7 @@ Java_me_timschneeberger_rootlessjamesdsp_pvb_PvbNative_setParams(JNIEnv* env, jc
     float v[pvb::P_COUNT];
     pvb::defaultParams(v);
     env->GetFloatArrayRegion(values, 0, n, v);
+    if(v[pvb::P_P1PPP]>=.5f && env->GetArrayLength(values)!=pvb::P_COUNT)return;
     h->engine.setParams(v, pvb::P_COUNT);
 }
 
@@ -74,19 +77,15 @@ Java_me_timschneeberger_rootlessjamesdsp_pvb_PvbNative_processFloat(JNIEnv* env,
     if (len <= 0) return;
 
     Handle* h = fromJ(handle);
-    if (h == nullptr) {  // no engine: pass through
-        std::vector<float> tmp(static_cast<size_t>(len));
-        env->GetFloatArrayRegion(input, 0, len, tmp.data());
-        env->SetFloatArrayRegion(output, 0, len, tmp.data());
-        return;
+    std::array<float,Handle::kSamples> fallback{};
+    float* buf=h?h->floats.data():fallback.data();
+    for(jsize offset=0;offset<len;) {
+        const jsize n=std::min<jsize>(Handle::kSamples,len-offset);
+        env->GetFloatArrayRegion(input,offset,n,buf);
+        if(h)h->engine.process(buf,n/2);
+        env->SetFloatArrayRegion(output,offset,n,buf);
+        offset+=n; // kSamples is even; only the final chunk can contain an odd sample.
     }
-
-    if (h->floats.size() < static_cast<size_t>(len)) h->floats.resize(static_cast<size_t>(len));
-    float* buf = h->floats.data();
-    env->GetFloatArrayRegion(input, 0, len, buf);
-    const jsize frames = len / 2;
-    h->engine.process(buf, frames);
-    env->SetFloatArrayRegion(output, 0, len, buf);  // an odd trailing sample passes through unchanged
 }
 
 JNIEXPORT void JNICALL
@@ -98,22 +97,16 @@ Java_me_timschneeberger_rootlessjamesdsp_pvb_PvbNative_processShort(JNIEnv* env,
     if (len <= 0) return;
 
     Handle* h = fromJ(handle);
-    if (h == nullptr) {
-        std::vector<jshort> tmp(static_cast<size_t>(len));
-        env->GetShortArrayRegion(input, 0, len, tmp.data());
-        env->SetShortArrayRegion(output, 0, len, tmp.data());
-        return;
+    std::array<int16_t,Handle::kSamples> fallback{};
+    int16_t* in=h?h->shortsIn.data():fallback.data();
+    int16_t* out=h?h->shortsOut.data():fallback.data();
+    for(jsize offset=0;offset<len;) {
+        const jsize n=std::min<jsize>(Handle::kSamples,len-offset);
+        env->GetShortArrayRegion(input,offset,n,reinterpret_cast<jshort*>(in));
+        if(h)h->engine.processInt16(in,out,n/2);
+        if(n%2)out[n-1]=in[n-1];
+        env->SetShortArrayRegion(output,offset,n,reinterpret_cast<const jshort*>(out));offset+=n;
     }
-
-    if (h->shortsIn.size() < static_cast<size_t>(len)) {
-        h->shortsIn.resize(static_cast<size_t>(len));
-        h->shortsOut.resize(static_cast<size_t>(len));
-    }
-    env->GetShortArrayRegion(input, 0, len, reinterpret_cast<jshort*>(h->shortsIn.data()));
-    const jsize frames = len / 2;
-    h->engine.processInt16(h->shortsIn.data(), h->shortsOut.data(), frames);
-    if (len % 2) h->shortsOut[static_cast<size_t>(len - 1)] = h->shortsIn[static_cast<size_t>(len - 1)];
-    env->SetShortArrayRegion(output, 0, len, reinterpret_cast<const jshort*>(h->shortsOut.data()));
 }
 
 JNIEXPORT void JNICALL
@@ -237,3 +230,45 @@ Java_me_timschneeberger_rootlessjamesdsp_pvb_PvbNative_meterCount(JNIEnv*, jclas
 
 }  // extern "C"
 
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_me_timschneeberger_rootlessjamesdsp_pvb_PvbNative_loadStableWeights(JNIEnv* env,jclass,jlong handle,jbyteArray data){
+    auto* h=fromJ(handle);if(!h || !data || env->GetArrayLength(data)!=531208)return JNI_FALSE;
+    jbyte* bytes=env->GetByteArrayElements(data,nullptr);if(!bytes)return JNI_FALSE;
+    bool ok=h->engine.loadStableWeights(reinterpret_cast<unsigned char*>(bytes),531208);
+    env->ReleaseByteArrayElements(data,bytes,JNI_ABORT);return ok?JNI_TRUE:JNI_FALSE;
+}
+
+// Lifecycle entry: caller has joined the previous audio generation before calling.
+extern "C" JNIEXPORT jboolean JNICALL
+Java_me_timschneeberger_rootlessjamesdsp_pvb_PvbNative_prepareStageC(JNIEnv* env,jclass,jlong handle,jint mode,jbyteArray data,jboolean worker,jboolean telemetry,jint rate,jboolean familyP2){
+    auto* h=fromJ(handle);if(!h)return JNI_FALSE;
+    const jsize n=data?env->GetArrayLength(data):0;
+    jbyte* bytes=data?env->GetByteArrayElements(data,nullptr):nullptr;
+    if(data && !bytes)return JNI_FALSE;
+    bool ok=false;
+    try {ok=h->engine.prepareStageC(mode,reinterpret_cast<unsigned char*>(bytes),n,worker==JNI_TRUE,telemetry==JNI_TRUE,rate,familyP2==JNI_TRUE);}
+    catch(...) {ok=false;}
+    if(bytes)env->ReleaseByteArrayElements(data,bytes,JNI_ABORT);
+    return ok?JNI_TRUE:JNI_FALSE;
+}
+// Fixed modes: accept the user's EQ.
+extern "C" JNIEXPORT void JNICALL
+Java_me_timschneeberger_rootlessjamesdsp_pvb_PvbNative_setFixedEqOpen(JNIEnv*,jclass,jlong handle,jboolean open){
+    auto* h=fromJ(handle);if(h)h->engine.setFixedEqOpen(open==JNI_TRUE);
+}
+
+// Speaker guard level of the fixed modes; 0 = off.
+extern "C" JNIEXPORT void JNICALL
+Java_me_timschneeberger_rootlessjamesdsp_pvb_PvbNative_setLayerCap(JNIEnv*,jclass,jlong handle,jfloat db){
+    auto* h=fromJ(handle);if(h)h->engine.setLayerCapDb(db);
+}
+extern "C" JNIEXPORT jboolean JNICALL
+Java_me_timschneeberger_rootlessjamesdsp_pvb_PvbNative_copyStageC(JNIEnv* env,jclass,jlong handle,jlongArray out){
+    auto* h=fromJ(handle);
+    if(!h || !out || env->GetArrayLength(out)!=pvb::Engine::kStageCSize)return JNI_FALSE;
+    int64_t values[pvb::Engine::kStageCSize];h->engine.copyStageC(values);
+    jlong converted[pvb::Engine::kStageCSize];
+    for(int i=0;i<pvb::Engine::kStageCSize;++i)converted[i]=values[i];
+    env->SetLongArrayRegion(out,0,pvb::Engine::kStageCSize,converted);return JNI_TRUE;
+}
