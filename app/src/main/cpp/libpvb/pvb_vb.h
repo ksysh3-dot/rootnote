@@ -13,38 +13,43 @@
 //   - the latency is fixed for a given rate;
 //   - tick() is called once per frame, from the audio thread only.
 //
-// Algorithms:
-//   VbHpv        'hpv' from tools/pvb-harness/vb5 (frozen reference: tools/pvb-harness/vb_port/hpv_ref.py):
-//                mono input -> 3 kHz (polyphase, exact for 44.1 and 48 kHz) -> band 32-190 Hz -> causal median HPSS
-//                -> percussive part: 1-band analytic generator (u^k, k = 2..8); harmonic part: sinusoidal / phase
-//                vocoder path (128 ms frames, <= 4 peaks, harmonic k at phase k*Phi) with envelope imposition
-//                -> output band 150-600 Hz -> back to the host rate. Latency 146.9 ms (see hpv_ref.py).
-//   VbBankstown  chadmed/bankstown (MIT), per channel, no latency, on the EQ output:
-//                p = LP2(ceil)(HP2(floor)(x)), sat = K [blend tanh(s3 p) + (1 - blend) tanh(s2 p) (p <= 0)],
-//                K = pi / (0.5 + e), layer = LP2(3 ceil)(HP2(final_hp)(amt sat)); RBJ Butterworth biquads.
+// The app renders only P1 and the opt-in atomic P1+++ preset.
+// Older algorithms are recoverable at archive/models-pre-prune-20261102.
+// The optional fixed Resultant c source lives under tools/pvb-harness/reference.
+// VbHpv: mono -> 3 kHz -> causal HPSS -> tracked/percussive harmonics -> output band.
+// Existing P1 arithmetic and rate-conversion tables are retained for V0.
 //
 // Copyright (C) 2026 PVB project. Licensed under the GNU GPL v3 (same as RootlessJamesDSP).
 #pragma once
+#include "s88_control.h"
 
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include "pvb_dsp.h"
-#include "pvb_vb_policy.h"
 #include "pvb_harmonic_trace.h"
 #include "pvb_vb_continuity.h"
 #include "pvb_vb_modulation.h"
 #include "pvb_vb_am_family.h"
 #include "pvb_vb_stage.h"
 #include "pvb_track_prediction.h"
+#include "pvb_track_protection.h"
 #include "pvb_harmonic_renderer.h"
+#if defined(PVB_HOST_RESULTANT_REFERENCE)
+#include "pvb_resultant.h"
+#endif
 
 namespace pvb {
 
-enum VbAlgo : int { VB_HPV = 0, VB_BANKSTOWN = 1, VB_HPV52M = 2, VB_GENTLE = 3,
-                   VB_GENTLE_STRONG = 4, VB_GENTLE_ADAPTIVE = 5,
-                   VB_ALPHA2_P1 = 6, VB_ALPHA2_D2 = 7, VB_ALPHA2_J2 = 8,
-                   VB_ALPHA2_OSC = 9, VB_ALPHA2_OSC_CORRECT = 10, VB_ALGO_COUNT };
+// Stable JNI IDs: deleted slots 0-5, 7-15 and 17 stay reserved, never reused.
+enum VbAlgo : int { VB_ALPHA2_P1 = 6, VB_RESULTANT_V16 = 16, VB_ALGO_COUNT = 18 };
+inline bool supportedVbAlgo(int id) {
+    return id == VB_ALPHA2_P1
+#if defined(PVB_HOST_RESULTANT_REFERENCE)
+        || id == VB_RESULTANT_V16
+#endif
+        ;
+}
 
 // Scene observations are unvalidated. Only the opt-in adaptive profile uses
 // them to select a harmonic attenuation budget; they are not buzz labels.
@@ -173,10 +178,16 @@ struct HpvParams {
 class VbHpv final : public VbModule {
 public:
     // Core rate and frame sizes (fixed: the tables and buffers are sized for them).
+    // Only the integrated STABLE mode selects the frozen S75 window1.
+    // Storage stays at legacy maxima; OFF/STRONG keep their original windows.
+    void setStable183Window(bool enabled);
+    static void warmShortKernel();
+    int baseDelay48() const { return base48_; }
     static constexpr int kFsd = 3000;
     static constexpr int kHpN = 192, kHpHop = 16, kHpMedT = 11, kHpMedF = 7, kHpBins = kHpN / 2 + 1;
     static constexpr int kPvN = 384, kPvH = 16, kPvNfft = 2048, kMaxPeaks = 8;
-    static constexpr int kRtShift = kPvH - 1;  // the reference grain placement looks 15 core samples ahead
+    static constexpr int kRtShift = kPvH - 1;
+    static constexpr int kDeferHops = 3;  // P1++ v0.4 bit 32: hops a guarded track's grains wait (read one hop later)  // the reference grain placement looks 15 core samples ahead
     static constexpr int kKMax = 8;
 
     explicit VbHpv(bool masked = false, bool gentle = false, int upperMode = 0);
@@ -184,7 +195,7 @@ public:
     void reset() override;
     int latencyFrames() const override {
         return latency_ + (supported_ ? static_cast<int>(std::lround(
-            static_cast<double>(hpssLookahead())*M_/L_)) : 0);
+            static_cast<double>(hpssLookahead()+outputDefer())*M_/L_)) : 0);
     }
     bool inputAfterEq() const override { return false; }
     void tick(double inL, double inR, double& outL, double& outR) override;
@@ -196,6 +207,50 @@ public:
     }
     // Host research only: configure before processing; not a saved app algorithm.
     void setContinuityResearch(const ContinuityParams& p) { continuity_ = p; reset(); }
+    // Track hold of the selected bass mode (0 = model default). Survives profile selection; audio must be stopped.
+    void setHoldHops(int hops) { holdHops_ = hops; if (continuity_.enabled) continuity_.hold = hops > 0 ? hops : ContinuityParams{}.hold; }
+    // s103/s104: a track ended by a newly born note releases like any lost track for hold+release hops, and
+    // upper tracks (f >= 90 Hz) keep the 3rd harmonic at least half the 2nd with the weight energy kept. Audio must be stopped.
+    void setHandover(bool on) { handover_ = on; }
+    // s106/s107: a confirmed track (fade >= .5, 12+ confirmed hops) lowers fade with a 270-sample tau. Audio must be stopped.
+    void setFadeInertia(bool on) { fadeInertia_ = on; }
+    // s110 CF375M: a live track whose fit residual lies in (-15, -3.75] dB keeps the fade target of a fit when a
+    // conductor candidate (salience >= .5) lies within 50 cents of it. Fade only. Audio must be stopped.
+    void setFitRelax(bool on) { fitRelax_ = on; fitRelaxHops_ = 0; }
+    bool fadeInertia() const { return fadeInertia_; }
+    uint64_t fitRelaxHops() const { return fitRelaxHops_; }
+    // S41 host research, set before processing; caller owns optional trace storage.
+    // mode0 OFF; 1 onset50,2 slow250,3 confidence,4 table;5..9 diagnostic ablations;10..12 S43 event realignment.
+    bool setPhase41(int mode,double* trace,int capacity) {
+        if(mode<0 || mode>12 || capacity<0 || (capacity && !trace)) return false;
+        s41HostMode_=mode; s41Mode_=s32Profile_?mode:0;
+        s41Log_=trace; s41LogCapacity_=capacity; s41LogCount_=0; return true;
+    }
+    int phase41Count() const { return s41LogCount_; }
+    // Audio owner, muted batch only. One following joint reset replaces repeated
+    // research setter resets; no host flags can leak into the frozen preset.
+    void prepareP1pppResearch(bool on) {
+        s41HostMode_=on?12:0;s41Mode_=s32Profile_?s41HostMode_:0;
+        s41Log_=nullptr;s41LogCapacity_=s41LogCount_=0;
+        s32HostFlags_=s32Flags_=0;s38HostFlags_=s38Flags_=0;
+        s38HostMode_=s38Mode_=s38TapeN_=0;s38Value_=0.;s38Tape_=nullptr;
+        p1PlusHostFlags_=p1PlusFlags_=0;p1ppHostImpact_=p1ppImpactMode_=0;
+        p1ppV04Host_=p1ppV04_=0;stageHostFlags_=stageFlags_=0;
+        stageSink_=nullptr;stageUser_=nullptr;genReq_=gen_=GenResearch52{};
+    }
+    // S38 host-only stage diagnosis, all zero by default. Tape is baseline-derived
+    // ID-indexed (frequency, circular phase intercept), owned by the host.
+    bool setN2Research(unsigned flags,int mode,double value,const double* tape,int count) {
+        if(flags>63 || mode<0 || mode>10 || !std::isfinite(value) || value<0 || count<0 || (count && !tape)) return false;
+        s38HostFlags_=flags; s38HostMode_=mode; s38Value_=value; s38Tape_=tape; s38TapeN_=count;
+        s38Flags_=s32Profile_?flags:0; s38Mode_=s32Profile_?mode:0; if(flags || mode || count) reset(); return true;
+    }
+    // S32 host-only, before processing. 1=current fit, 2=salience, 4=dry novelty focus.
+    // No truth/MIDI/stem inputs. Only profile 6 applies these controls.
+    bool setP1WrongNoteResearch(unsigned flags) {
+        if(flags>7) return false;
+        s32HostFlags_=flags; if(s32Profile_) s32Flags_=flags; reset(); return true;
+    }
     // Host-only controls, no JNI/UI; bit0=synthesis, bit1=analysis.
     void setModulationResearch(int mode, bool tonalOnly=false) { modulationMode_=mode&3; tonalOnly_=tonalOnly; reset(); }
     // Host-only P1+ experiments, off by default. Bit0: exclude a valid
@@ -205,23 +260,103 @@ public:
     // bit2: centered eleven-frame HPSS, five future hops (26.667 ms).
     // bit3 (requires bit2): mix causal/centered masks by spectral prominence.
     // No bit changes the app's stored algorithm or the public trace ABI.
-    void setP1PlusResearch(unsigned flags) { p1PlusFlags_=flags&15; reset(); }
+    // Host values apply to profile 6 only; profiles 11/12 use their fixed flags.
+    void setP1PlusResearch(unsigned flags) { p1PlusHostFlags_=flags&15; if(!p1PlusFixed_) p1PlusFlags_=p1PlusHostFlags_; reset(); }
     // Host-only: 0=baseline, 1=current fit, 2=unconfirmed fit, 3=first-fit
-    // recovery, 4=clean current-fit recovery after initial rejection.
-    void setP1PPImpactResearch(int mode) { p1ppImpactMode_=mode; reset(); }
+    // recovery, 4=clean current-fit recovery after initial rejection,
+    // 5=mode 4 only inside an impact context (percussive > 1/4 of harmonic, held 24 hops) with tones playing
+    // before the impact resuming at once, 6=the same with a percussive-spike context, 7=no guard for tones with
+    // stationary history (5-7 were evaluated and set aside), 8=mode 4 with steady tones released (P1++ v0.3,
+    // app model 13; research/p1pp/2026-10-26-v03).
+    // Host-only knobs of the research modes 5-8 (impact-context hold in hops, mode 7 history limit in dB,
+    // mode 8 steady hops, amplitude ratio and minimum strength against the strongest peak of the hop).
+    // Defaults are the values the modes were evaluated with.
+    void setP1PPResearchParams(int hold, double historyDb, int steadyHops, double steadyA, double releaseStrength) {
+        impactHold52_=hold; histDbResearch_=historyDb; steadyHops52_=steadyHops; steadyA52_=steadyA;
+        releaseStrength52_=releaseStrength; }
+    // Resultant R4 onset protection (StageOnsetProtect): protected for the first holdHops of the 24-hop onset window,
+    // the register corner share falls to floorBlend there, and comes back with tauUpMs. Defaults: 24, 0, 60.
+    void setR4Research(int holdHops,double floorBlend,double tauUpMs) {
+        r4Hold52_=holdHops; r4Floor52_=floorBlend; r4TauUp52_=tauUpMs; }
+    // Resultant R4-L register level (StageRegisterLevel), dB at full share. Default 6.
+    void setR4Level(double gainDb) { r4LevelDb52_=gainDb; }
+    // Resultant R4-L v2 (StageReentrySlow): time constant of a track's share coming back after a failed fit. Default 250.
+    void setR4Reentry(double tauMs) { r4ReentryTau52_=tauMs; }
+    void setP1PPImpactResearch(int mode) { p1ppHostImpact_=mode; if(!p1PlusFixed_) p1ppImpactMode_=mode; reset(); }
+    // Host-only P1++ v0.4 research on top of impact mode 8 (research/p1pp/2026-10-27-v04): 1 = a confirmed track
+    // whose peak is not among the six strongest keeps its own local peak (up to 8 peaks), 2 = steadiness from the
+    // phase-vocoder phase prediction instead of the amplitude ratio, 4 = no strength condition, 8 = a birth within
+    // 3 % of a confirmed track that ended in the last 250 ms is that track again, 16 = a guarded track still emits
+    // the harmonics the input already has at k f, 32 = the layer is read four hops later and a guarded track's
+    // grains are kept; when the track is released within three hops they are added back where they belonged.
+    void setP1PPV04Research(unsigned flags) { p1ppV04Host_=flags&511; if(!p1PlusFixed_) p1ppV04_=p1ppV04Host_; reset(); }
+    // Algorithm 15 (Resultant core) keeps stageFlags_ at 0: the host flags are remembered for a later P1 but not applied.
+    void setControl88(bool en,unsigned modules,const float* frames,int count,int stride){control88_=Control88{};control88_.enabled=en;control88_.modules=modules;control88_.frames=frames;control88_.count=count;control88_.stride=stride;}
+    void setFloor89(float e){control88_.epsilon89=e;}
+    void setEvents88(const double*,int){}
+    const Control88& stats88()const{return control88_;}
+    void setDiag88b(float* p,int n){control88_.diagnostic=p;control88_.diagnosticCapacity=n;control88_.diagnosticCount=0;}
+    void setStream91(ControlStream* s,ControlWorker* w,double origin){control88_=Control88{};control88_.enabled=s||w;control88_.modules=33;control88_.stream=s;control88_.worker=w;control88_.origin=origin;}
+    void resetControl91(){control88_.time=-control88_.origin;control88_.g=1;control88_.hops=control88_.staleHops=control88_.lateFrames=0;control88_.lastLateIndex=-1;}
     void setStageResearch(unsigned flags,StageCapture52::Sink sink=nullptr,void* user=nullptr) {
-        stageFlags_=flags&8191;stageSink_=sink;stageUser_=user;reset();
+        stageHostFlags_=flags&268435455;stageFlags_=resultantOn_?0u:stageHostFlags_;stageSink_=sink;stageUser_=user;reset();
     }
     // App listening profiles, applied only by the audio owner while switching.
     // All use the same gentle24 placement. Legacy research setters remain separate.
     bool setAlpha2Profile(int algorithm);
+    // Algorithms 16 and 17 only: back to the pvb_resultant.h defaults when the engine leaves them for a module that does
+    // not call setAlpha2Profile (setAlpha2Profile does it itself for every other profile). Realtime safe.
+    void leaveResultantSet() {
+#if defined(PVB_HOST_RESULTANT_REFERENCE)
+        if(resultantSet_) { resultant_.setParams(nullptr,0); resultantSet_=false; }
+#endif
+    }
     void setStageCapture(StageCapture52::Sink sink,void* user) {stageSink_=sink;stageUser_=user;}
-    // Host research only; survives setAlpha2Profile (see GenResearch52).
-    void setGenResearch(const GenResearch52& g) { gen_=g; reset(); }
+    // Host-only study 1 (#4) counterfactuals: replace the selected HPSS outputs (InjectHpss, inside [hStart,hEnd)
+    // of the core clock) and/or the envelope targets (InjectEnvelope, inside [eStart,eEnd)) by host buffers indexed
+    // by core sample. The buffers belong to the host and must outlive processing. mask 0 (default, the app) leaves
+    // the path as is.
+    struct StageInject52 {
+        enum : unsigned { InjectHpss=1, InjectEnvelope=2 };
+        unsigned mask=0; const double* bh=nullptr; const double* bp=nullptr; const double* as=nullptr;
+        const double* ps=nullptr; int64_t n=0, hStart=0, hEnd=0, eStart=0, eEnd=0;
+        bool active(unsigned bit,int64_t i) const {
+            if(!(mask&bit) || i>=n) return false;
+            return bit==InjectHpss ? i>=hStart && i<hEnd : i>=eStart && i<eEnd;
+        }
+    };
+    void setStageInject(const StageInject52& v) { inject_=v; reset(); }
+    // Host-only study 1 (#4) B3 oracle: a tape of the track list after every hop. Mode 1 records (bed-only render);
+    // mode 2 replays inside hops [startHop,endHop): a track within tol (relative) of a taped track takes the taped
+    // state, a taped track with no counterpart is added while there is room, every other (impact) track is kept.
+    // Allocation happens here, outside the audio call. nullptr / mode 0 (the app) leaves the path as is.
+    struct TrackTape52;
+    static TrackTape52* createTrackTape(int hops);
+    static void destroyTrackTape(TrackTape52* t);
+    // recorded hops, replaced, added, kept, duplicate ids, overflow, replay hops in the window
+    static int trackTapeStats(const TrackTape52* t,long long* out,int n);
+    void setTrackTape(TrackTape52* t,int mode,int64_t startHop,int64_t endHop,double tol) {
+        tape_=t; tapeMode_=t?mode:0; tapeStart_=startHop; tapeEnd_=endHop; tapeTol_=tol; reset();
+    }
+    // Host research only; survives setAlpha2Profile (see GenResearch52). Algorithm 15 (Resultant core) does not use it:
+    // genReq_ remembers the request, gen_ (the one the code reads) is the default while resultantOn_.
+    void setGenResearch(const GenResearch52& g) { genReq_=g; gen_=resultantOn_?GenResearch52{}:g; reset(); }
     // App option "배음별 단일 포락선" (S1m, P1 only): the S1 envelope with the research defaults. No reset here: the
     // engine calls it while switching (faded out) and then setAlpha2Profile, which resets the module. Realtime safe.
-    void setGenEnvelope(bool on) { gen_=GenResearch52{}; gen_.envelope=on; }
+    void setGenEnvelope(bool on) { genReq_=GenResearch52{}; genReq_.envelope=on; if(!resultantOn_) gen_=genReq_; }
     bool genEnvelope() const { return gen_.envelope; }
+
+    // Resultant core (algorithm 15, host research only): parameters (see ResultantCore::kParams) in the order of docs/RESULTANT_CORE.md 5.8 (false:
+    // out of range, nothing applied; kept for any algorithm), and the per-hop voice trace (allocation in enable only).
+#if defined(PVB_HOST_RESULTANT_REFERENCE)
+    bool setResultantParams(const double*, int) { return false; } // fixed c only; no arbitrary variants
+    bool resultantTraceEnable(int hops) { return resultant_.traceEnable(hops); }
+    int resultantTraceCopy(double* out, int capacity) const { return resultant_.traceCopy(out, capacity); }
+#else
+    bool setResultantParams(const double*, int) { return false; }
+    bool resultantTraceEnable(int) { return false; }
+    int resultantTraceCopy(double*, int) const { return 0; }
+#endif
 
     // Developer mode (masked modules only; ignored by the legacy hpv). No allocation; filter memory is kept.
     void setDev(const DevVoicing& d) override;
@@ -243,6 +378,8 @@ public:
 private:
     // Defined only by the host harness; invokes the production grain renderer.
     friend struct HarmonicRendererTestAccess;
+    // Resultant core (pvb_resultant.inc): reads the tracker, rings and spectra of this module and writes its output ring.
+    friend class ResultantCore;
     struct Biquad {  // direct form II transposed, like scipy.signal.sosfilt
         double b0 = 1, b1 = 0, b2 = 0, a1 = 0, a2 = 0, z0 = 0, z1 = 0;
         inline double tick(double x) {
@@ -282,28 +419,22 @@ private:
     double core(double d);       // one 3 kHz sample in, one out (the reference's output kRtShift samples earlier)
     double core52(double d);
     void pvFrame52();
+    int polyCausal52(int64_t s0);
     void spectrum52(const double* ring, int64_t start, double* re, double* im);
-    bool masked_ = false;
-    bool gentle_ = false;
-    int upperMode_ = 0; // 0 fixed12, 1 fixed24, 2 experimental adaptive12/24
-    UpperHarmonicPolicy upperPolicy_;
+    const bool masked_ = true;
+    const bool gentle_ = true;
+    static constexpr int upperMode_ = 1; // P1 fixed 24 dB/oct
     VbResearchStats research_;
     void observeScene(int scene) {
         if (!gentle_) return;
         research_.scene = scene;
         ++research_.frames[scene];
-        if(upperMode_==2) {
-            upperPolicy_.step(scene==VB_SCENE_STEADY);
-            research_.upperBlend=upperPolicy_.blend();
-            research_.upperTarget=upperPolicy_.target();
-            research_.transitions=upperPolicy_.switches();
-        }
+
     }
     const RampedSvf* eq52_[4] = {};
     int eqFs52_ = 48000;
     double phaseDelta52(double f) const;
     void hpssFrame();            // a 192-sample HPSS frame is complete
-    void pvFrame();              // a 384-sample vocoder frame is complete
     void lookup(double f, double* wk, double& gk) const;
     void fft64(double* re, double* im) const;                   // in place, natural order in and out
     void dft192(const double* xr, const double* xi, double* yr, double* yi, int nOut);  // forward, first nOut bins
@@ -327,6 +458,9 @@ private:
     // HPSS
     static constexpr int kRing = 512;      // power of two, > every look-back below
     double bRing_[kRing] = {};
+    bool shortWindow_ = false;
+    int hpN_=192, hpBins_=97, pvN_=384, base48_=7052, envelopeDelay_=207, closingRadius_=90;
+    void initializeWindows();
     double winHp_[kHpN] = {};
     double wsumHp_[kHpHop] = {};
     double cosHp_[kHpN] = {}, sinHp_[kHpN] = {};   // exp(-2 pi i n / 192); 192 = 3 x 64 (mixed radix)
@@ -337,6 +471,7 @@ private:
     double sHist_[kHpMedT+5][kHpBins] = {};
     int sPos_ = 0;
     double olaH_[kRing] = {}, olaP_[kRing] = {};
+    double olaHA_[kRing] = {};  // study 3 C6: harmonic part for the analysis only (C5 mask); output paths keep olaH_/olaP_
     Hilbert hilH_, hilP_;
     // percussive generator state
     double prevUr_ = 0, prevUi_ = 0;
@@ -366,10 +501,23 @@ private:
     double eps_ = 0, ifFloor_ = 0, pvAbs_ = 0, pvRel_ = 0, cPsi_[kKMax - 1] = {}, sPsi_[kKMax - 1] = {};
 
     // hpv52m: all state is fixed-size and owned by the module; no audio-thread allocations.
+    Control88 control88_;
     struct Track52 {
         double f=0, phi=0, off[7]={}, fade=0, a=0;
+        struct Phase41 {
+            double c[7]={},s[7]={}; int n[7]={},bin[7]={},stable[7]={};
+            bool found[7]={}; uint64_t last[7]={};
+            bool pending43[7]={}; uint64_t until43[7]={}; int event43=0;
+        } s41;
+        double s32Gain=1; // independent render attenuation; nominal normalization stays original
         bool impactRecoveryPending=false;
-        bool strong=false, fastEnding=false;
+        int steadyHops=0;               // P1++ mode 8: hops of steady frequency and amplitude while unconfirmed
+        bool guarded=false;             // P1++ v0.4 bit 16: held back by the fit guard in this hop
+        double confF=0; int64_t confHop=-1000;  // P1++ v0.4 bit 8: frequency and hop when last confirmed (fade >= .5)
+        int confHops=0; bool inherited=false;   // hops confirmed so far; this track continues a long confirmed one
+        // P1++ v0.4 bit 32: grains this track would have emitted while the guard held it (oldest first)
+        double pend[kDeferHops][32]={}, pendNominal[kDeferHops]={}; int64_t pendCentre[kDeferHops]={}; int pendN=0;
+        bool strong=false, fastEnding=false, handover=false;
         uint32_t id=0, age=0;
         double dfdt=0, life=1, residual=-200, rawResidual=-200;
         int missing=0;
@@ -378,20 +526,76 @@ private:
         AmFamily52 family;
         HarmonicPermission permission[7];
         prediction52::History prediction;
+        trackprotection::State protection;  // host-only v0.4 bit 64: frozen stable frequency over kick onset
         oscillator52::State oscillator;
         double envPeak=0; // S1 research: largest harmonic envelope after the last render
+        double r4Share=1; // Resultant R4-L v2: share of the register corner and level (StageReentrySlow; 1 otherwise)
     };
     Track52 tr52_[12];
+    unsigned s32HostFlags_=0, s32Flags_=0;
+    int s41HostMode_=0,s41Mode_=0,s41LogCapacity_=0,s41LogCount_=0;
+    double* s41Log_=nullptr;
+    bool s43OnsetPrev_=false;
+    unsigned s38HostFlags_=0,s38Flags_=0;
+    int s38HostMode_=0,s38Mode_=0,s38TapeN_=0;
+    const double* s38Tape_=nullptr;
+    double s38Value_=0,s38LogGain_=0,s38Fast_=0,s38Slow_=0,s38PrevApv_=0;
+    int s38OnsetLeft_=0; bool s38GainValid_=false;
+
+    bool s32Profile_=false;
+    double s32MaxA_=0, s32FocusHz_=0;
+    int s32FocusLeft_=0;
+    double s32RawSlow_[kHalfFft+1]={};
+    void s32Focus52(const double* frequencies,const double* amplitudes,int count);
+    double s32Gate52(Track52& track,bool observed);
     ContinuityParams continuity_;
+    int holdHops_ = 0;
+    bool handover_ = false;
+    bool fadeInertia_ = false;
+    bool fitRelax_ = false;
+    uint64_t fitRelaxHops_ = 0; // Observer only: hops in which any track was relaxed.
+    double fitResidual(double residual,double f,bool existing) const {
+        if(!fitRelax_ || !existing || !control88_.enabled || !control88_.raw8 || f<=0) return residual;
+        if(!(residual>-15. && residual<=-3.75)) return residual;
+        const float* p=control88_.raw8;
+        for(int i=4;i<8;i+=2) {
+            const double fm=440*std::exp2((double(p[i])-69)/12.);
+            if(p[i+1]>=.5f && std::abs(1200*std::log2(f/fm))<=50.) return -15.;
+        }
+        return residual;
+    }
     int modulationMode_=0;
     bool tonalOnly_=false;
     unsigned stageFlags_=0;
     unsigned p1PlusFlags_=0;
     int p1ppImpactMode_=0;
     bool p1PlusProfile_=false;
+    bool p1PlusFixed_=false;          // profile 11/12: flags fixed by the model, host values kept for profile 6
+    unsigned p1PlusHostFlags_=0;
+    int p1ppHostImpact_=0;
+    unsigned p1ppV04Host_=0, p1ppV04_=0;
+    // v0.4 bit 8: confirmed tracks that ended recently (frequency, hop of the end)
+    double grave52_[8]={}; int64_t graveHop52_[8]={}; int graveN52_=0; int64_t hop52_=0;
+    // research impact modes 5/6: impact context and the tones playing when it began
+    int impactCtx52_=0, preImpactN52_=0;
+    int lowGridHold52_=0;  // study 3 C4: hops left in the impact context that suspends the wider low grid
+    double onsetBlend52_=1;  // Resultant R4: share of the register-corner roll-off (StageOnsetProtect; 1 otherwise)
+    int r4Hold52_=24; double r4Floor52_=0, r4TauUp52_=60;  // Resultant R4 onset protection (setR4Research)
+    double r4LevelDb52_=6;  // Resultant R4-L register level (setR4Level)
+    double r4ReentryTau52_=250;  // Resultant R4-L v2 return time constant, ms (setR4Reentry)
+    double histDbResearch_=-6, percSlow52_=0;
+    int impactHold52_=24, steadyHops52_=3;
+    double steadyA52_=.97, releaseStrength52_=.4;
+    double preImpactF52_[12]={};
     int hpssLookahead() const { return p1PlusProfile_ && (p1PlusFlags_&4) ? 5*kHpHop : 0; }
+    int outputDefer() const {
+        return p1PlusProfile_ && (p1PlusFlags_&6)==6 && p1ppImpactMode_==8 && (p1ppV04_&32) ? kPvH*(kDeferHops+1) : 0; }
+    unsigned stageHostFlags_=0;  // explicit host stage choices survive first P1 profile activation
     StageCapture52::Sink stageSink_=nullptr;
     void* stageUser_=nullptr;
+    StageInject52 inject_;
+    TrackTape52* tape_=nullptr; int tapeMode_=0; int64_t tapeStart_=0, tapeEnd_=0; double tapeTol_=.03;
+    void trackTape52();
     double detailRing52_[kRing]={};
     bool detailApplied52_=false, familyApplied52_=false;
     AmFamily52 family52_;
@@ -409,14 +613,22 @@ private:
     void addGrain52(int64_t centre, const double* grain, double nominalAmplitude);
     void takeGrain52(int64_t index, double& sample, double& nominalAmplitude);
     void missingFrame52(int reason, bool fast);
+    void grave52(const Track52& tr);   // P1++ v0.4 bit 8: remember a confirmed track that ended
     int nt52_=0, apkCount_=0, histCount_=0, holdCount_=0, holdPos_=0, onsetLeft_=0;
-    double apk52_[56]={}, hist52_[11][6]={};
+    double apk52_[56]={}, hist52_[11][8]={};
     int histN52_[11]={};
     double hold52_[28][190]={};
     double md52_[kRing]={}, md2_52_[kRing]={}, max52_[kRing]={}, polyT52_[kRing]={};
     double poly52_=1, percEnv52_=0, harmEnv52_=0;
     // gen-s1s2 research state (unused unless gen_ is set)
     GenResearch52 gen_;
+    GenResearch52 genReq_;   // what setGenResearch / setGenEnvelope asked for; gen_ equals it except while resultantOn_
+    // Resultant core: algorithm 15 skips P1's grain renderer and reads its voices' output instead (setAlpha2Profile)
+#if defined(PVB_HOST_RESULTANT_REFERENCE)
+    ResultantCore resultant_;
+#endif
+    bool resultantOn_=false;
+    bool resultantSet_=false;   // resultant_ holds the parameter set of algorithm 16 or 17 (applied by setAlpha2Profile)
     double genGain_=0, genFastE_=0, genSlowE_=0, lastFc_=60, lastGk_=0;
     int64_t genLastOnset_=-1000000;
     static constexpr int kBurstDelay=45; // 15 ms look-ahead for the burst amplitude, inside the hp read delay
@@ -426,6 +638,7 @@ private:
     Burst bursts_[2];
     double burstSample52(int64_t j);
     double xr52_[kHalfFft+1]={}, xi52_[kHalfFft+1]={};
+    double polyXr52_[kHalfFft+1]={}, polyXi52_[kHalfFft+1]={}, bhCausal52_[kRing]={};  // study 3 C6 polyphony
     double sr52_[kHalfFft+1]={}, si52_[kHalfFft+1]={}, sm52_[kHalfFft+1]={};
 
     // Developer mode. Each flag is set only while its value differs from the model, so the default path is untouched.
@@ -442,44 +655,4 @@ private:
     void devEndFrame() { for(int i=0;i<devFrame_.n;++i) devSnap_.add(devFrame_.f[i],devFrame_.amp[i],devFrame_.sum[i]); }
 };
 
-// ------------------------------------------------------------------------------------------------ Bankstown
-struct BankstownParams {  // defaults: Asahi Linux tuning for the MacBook Pro 14 (to be replaced by phone values)
-    double amt = 1.45;
-    double s2 = 1.35;
-    double s3 = 2.25;
-    double blend = 0.67;
-    double floorHz = 20.0;
-    double ceilHz = 200.0;
-    double finalHpHz = 200.0;
-};
-
-class VbBankstown final : public VbModule {
-public:
-    bool configure(int sampleRate) override;
-    void reset() override;
-    int latencyFrames() const override { return 0; }
-    bool inputAfterEq() const override { return true; }
-    void tick(double inL, double inR, double& outL, double& outR) override;
-
-    BankstownParams params;  // read at configure()
-
-private:
-    struct Biquad {
-        double b0 = 1, b1 = 0, b2 = 0, a1 = 0, a2 = 0, z0 = 0, z1 = 0;
-        inline double tick(double x) {
-            const double y = b0 * x + z0;
-            z0 = b1 * x - a1 * y + z1;
-            z1 = b2 * x - a2 * y;
-            return y;
-        }
-    };
-    static Biquad rbj(double fs, double f, bool lowpass);
-    double chan(int c, double x);
-    Biquad hp_[2], lp_[2], hpOut_[2], lpOut_[2];
-    double k_ = 0;
-    int sr_ = 0;
-};
-
 }  // namespace pvb
-
-

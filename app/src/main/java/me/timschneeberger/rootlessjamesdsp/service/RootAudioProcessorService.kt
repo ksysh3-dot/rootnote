@@ -99,7 +99,9 @@ class RootAudioProcessorService : BaseAudioProcessorService(), KoinComponent,
         app.rootSessionDatabase.sessionList.values.forEach { (it as? RemoteEffectSession)?.effect?.let(f) }
 
     private fun startPvb() {
-        val e = PvbEngine(48000)
+        val e = PvbEngine(48000).also { engine ->
+            check(engine.loadStableWeights(assets.open("stable_ab_1218.bin").use { it.readBytes() }))
+        }
         val c = PvbController(this, e)
         c.paramSink = { p -> forEachEffect { it.setPvbParams(p) } }
         c.start()

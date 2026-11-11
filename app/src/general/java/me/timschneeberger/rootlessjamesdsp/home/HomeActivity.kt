@@ -315,6 +315,7 @@ class HomeActivity : BaseActivity() {
             xtcBalLoDb = s.xtcBalLoDb,
             xtcBalHiDb = s.xtcBalHiDb,
             limiterPressure = limiterPressure,
+            fixedStrength = s.fixedBass,
         )
     }
 

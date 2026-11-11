@@ -48,7 +48,7 @@ NEUTRAL = dict(low_db=0, hi_db=0, hs_db=0, hp_hz=20, out_db=0, ceil_db=0)
 
 def main():
     lib = te.load_lib(os.path.join(HERE, 'build/libpvbcapi.so'))
-    check('parameter count 57 (47 + 9 crosstalk-cancellation values + developer table scale)', lib.pvb_param_count() == 57)
+    check('parameter count 58 (stable s50 P1+++ ABI)', lib.pvb_param_count() == 58)
     d = np.zeros(lib.pvb_param_count(), np.float32)
     lib.pvb_default_params(d.ctypes.data_as(te.FP))
     check('defaults: off, gentle, 40 cm, hat 57, 15.5 cm, 400-8000 Hz, balance 0 / 0',
@@ -158,7 +158,7 @@ def main():
     # Both model families: P1 (generates from the input, routed by the XTC stage) and Bankstown (generates from the
     # EQ output, so it already follows the split and must not be routed twice). The layer's power is kept: the low
     # channel gets the per-channel landscape level +3 dB.
-    for algo, name in ((6, 'P1'), (1, 'Bankstown')):
+    for algo, name in ((6, 'P1'),):
         flat = band_db(te.Engine(lib, sr, xtc_mode=0, vb_on=1, vb_algo=algo, vb_level_db=4).process(bass)[k2:], 150, 800)
         for mode, low_ch in ((4, 0), (5, 1)):
             y = te.Engine(lib, sr, xtc_mode=mode, vb_on=1, vb_algo=algo, vb_level_db=4).process(bass)[k2:]

@@ -328,25 +328,32 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
     }
 
     /** Called by the service whenever it creates the output track; its routed device tells us where sound goes. */
+    @androidx.annotation.MainThread
     fun attachTrack(newTrack: AudioTrack) {
-        main.post {
-            if (!started) return@post
-            track?.removeOnRoutingChangedListener(routingListener)
-            track = newTrack
-            newTrack.addOnRoutingChangedListener(routingListener, main)
-            updateRoute(push = true)
-        }
+        if (!started) return
+        track?.removeOnRoutingChangedListener(routingListener)
+        track = newTrack
+        newTrack.addOnRoutingChangedListener(routingListener, main)
+        // The service calls this on main before starting its new audio worker. Enqueue the
+        // complete rate-specific packet now, including when the route itself did not change;
+        // posting it would let the first new-rate block run with the old frozen settings.
+        updateRoute(push = false)
+        push(rampMs = EDIT_RAMP_MS)
     }
 
     // ------------------------------------------------------------------------------------------ inputs
 
-    private val prefListener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ ->
+    /** Service reuses stopRecording/startRecording; model preparation follows the completed join. */
+    var onStageCChange: (() -> Unit)? = null
+    private val prefListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         val old = effectiveSettings
         userSettings = PvbSettings.load(prefs)
         effectiveSettings = effective(userSettings)
         updateActive()
         if (old.volRefPct != effectiveSettings.volRefPct) readVolume()
-        push(rampMs = EDIT_RAMP_MS)
+        if (key in setOf(PvbSettings.KEY_BASS_MODE, PvbSettings.KEY_P1PPP, "pvb_s91_worker", "pvb_s91_telemetry") && onStageCChange != null) {
+            onStageCChange?.invoke()
+        } else push(rampMs = EDIT_RAMP_MS)
     }
 
     private val settingsObserver = object : ContentObserver(main) {
@@ -516,12 +523,15 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
             gateDb = gateDb(),
             measuring = PvbRuntime.measuring,
             devMeter = PvbRuntime.devMeter,
+            sampleRate = engine.sampleRateHz,
         )
         val encoded = PvbEngineParams.encode(effectiveSettings, inputs)
         diagnosticSolo = encoded.diagnosticSolo
         lastGate = inputs.gateDb
         lastTag = inputs.abTag
         engine.setParams(encoded.params)
+        engine.setLayerCap(effectiveSettings.layerCapEngineDb)
+        engine.setFixedEqOpen(effectiveSettings.fixedEqOpen && !PvbRuntime.abActive)
         lastParams = encoded.params.copyOf()
         paramSink?.invoke(encoded.params)
         publish(lowDb)
@@ -560,6 +570,8 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
             targetLowDb = lowDb,
             dynRefDb = if (s.enabled && s.dynOn) dynRefNow() else Float.NaN,
             abActive = PvbRuntime.abActive,
+            p1pppRequested = userSettings.fixedBass,
+            stableRequested = userSettings.stable,
             vbOn = s.vbOn,
             vbAlgo = s.vbAlgo,
             vbLevelDb = s.vbLevelDb,

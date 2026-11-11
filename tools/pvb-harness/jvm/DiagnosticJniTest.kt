@@ -4,18 +4,18 @@ import kotlin.math.*
 fun main() {
     PvbEngine(48000).use { e ->
         val p = PvbEngine.defaultParams().apply {
-            this[PvbParam.VB_ON]=1f; this[PvbParam.VB_ALGO]=5f; this[PvbParam.VB_LEVEL_DB]=9f
+            this[PvbParam.VB_ON]=1f; this[PvbParam.VB_ALGO]=6f; this[PvbParam.VB_LEVEL_DB]=9f
             this[PvbParam.OUT_DB]=-18f; this[PvbParam.RAMP_MS]=0f
         }
         e.setParams(p); e.setDiagnosticCapture(true)
-        val n=4096
+        val n=2048
         val src=FloatArray(n); val out=FloatArray(n); val layer=FloatArray(n); val full=FloatArray(n)
         val trace=FloatArray(BuzzRing.DETAIL_FIELDS)
         val hops=FloatArray(HarmonicHistory.ROWS*HarmonicHistory.FIELDS)
         var seenHops=0
         var phase=0
         var heardLayer=false
-        repeat(100) {
+        repeat(200) {
             for(i in 0 until n/2) {
                 val x=(.1*sin(2*PI*55*(phase++)/48000)).toFloat()
                 src[2*i]=x;src[2*i+1]=x

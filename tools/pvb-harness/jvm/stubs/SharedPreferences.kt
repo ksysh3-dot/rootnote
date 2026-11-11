@@ -12,6 +12,8 @@ interface SharedPreferences {
         fun putString(key: String, value: String?): Editor
         fun putInt(key: String, value: Int): Editor
         fun putFloat(key: String, value: Float): Editor
+        fun putBoolean(key: String, value: Boolean): Editor = error("read-only stub")
+        fun remove(key: String): Editor = error("read-only stub")
         fun apply()
     }
 }

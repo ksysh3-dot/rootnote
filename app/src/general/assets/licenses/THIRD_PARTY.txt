@@ -23,7 +23,7 @@ Public domain or MIT No Attribution (text below):
 
 MIT License (text below):
   CodeView, Copyright (c) 2020 AmrDeveloper (Amr Hesham).
-  Bankstown (virtual bass algorithm, ported to C++ in the engine), Copyright 2023 James Calligeros
+  Bankstown (historical C++ virtual bass port; removed from current app builds), Copyright 2023 James Calligeros
   (https://github.com/chadmed/bankstown).
 
 ----------------------------------------------------------------------

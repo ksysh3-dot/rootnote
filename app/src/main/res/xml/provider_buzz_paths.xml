@@ -2,4 +2,5 @@
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
     <files-path name="buzz_reports" path="buzz_reports/" />
     <files-path name="live_ab_export" path="live_ab_export/" />
+    <files-path name="s91_telemetry_export" path="s91_telemetry_export/" />
 </paths>

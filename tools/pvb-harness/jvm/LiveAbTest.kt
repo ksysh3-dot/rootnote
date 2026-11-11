@@ -160,9 +160,9 @@ private fun catalogue() {
     val C = LiveAbComparisons
     val ids = C.ALL.map { it.id }
     check(ids.toSet().size == ids.size)
-    check(C.ALL.size >= 4 && C.ALL.any { it.sides.size == 3 })
+    check(C.ALL.size == 4 && C.ALL.all { it.sides.size == 2 })
     val user = PvbSettings(xtcMode = PvbSettings.XTC_FULL, xtcStrengthDb = -4.5f, xtcPortrait = PvbSettings.XTC_PORTRAIT_MONO,
-        xtcDistanceCm = 33f, xtcHatCm = 60f, vbOn = false, vbAlgo = PvbModels.GENTLE12, vbLevelDb = 7f, vbVolLink = true,
+        xtcDistanceCm = 33f, xtcHatCm = 60f, vbOn = false, vbAlgo = 3, vbLevelDb = 7f, vbVolLink = true,
         vbVolRefPct = 30f, vbVolSlope = 0.3f, vbVolMaxDb = 9f, outDb = -9f, hsDb = -4f, hpHz = 150f, dynOn = true, volLink = true)
     for (cmp in C.ALL) {
         check(cmp.sides.size in 2..3)
@@ -204,10 +204,13 @@ private fun catalogue() {
     check(lower.sides[0].apply(user).vbAlgo == PvbModels.P1 && lower.sides[1].apply(user).vbAlgo == PvbModels.P1)
     check(lower.sides.map { it.label(user) } == listOf("P1 +7 dB", "P1 +4 dB (3 dB 작게)"))
     check(lower.sides[1].apply(user.copy(vbLevelDb = 0f)).vbLevelDb == -3f)
-    check(C.byId("p1_vs_d2")!!.sides.map { it.apply(user).vbAlgo } == listOf(PvbModels.P1, PvbModels.D2))
-    check(C.byId("p1_vs_id4")!!.sides.map { it.apply(user).vbAlgo } == listOf(PvbModels.P1, PvbModels.REFERENCE))
-    check(PvbModels.D2 == 7 && PvbModels.REFERENCE == 4)
-    check(C.byId("p1_vs_d2_vs_id4")!!.sides.map { it.apply(user).vbAlgo } == listOf(PvbModels.P1, PvbModels.D2, PvbModels.REFERENCE))
+    check(C.byId("p1_vs_d2")==null && C.byId("p1_vs_id4")==null)
+    check(C.byId("resultant_v16_vs_v16d")==null)
+    // negative strength: the user's -6 stays -6, "3 dB smaller" is -9 (above the -18 floor)
+    check(C.userLevel(user.copy(vbLevelDb = -6f)) == -6f && C.loweredLevel(user.copy(vbLevelDb = -6f)) == -9f)
+    check(C.byId("p1_vs_p1_minus3")!!.sides[1].apply(user.copy(vbLevelDb = -6f)).vbLevelDb == -9f)
+    check(LiveAbRecord.CHIPS.containsAll(listOf("쿠훙", "가각", "지직", "훙훙", "저음 약함", "저음 풍성")) && "쿠쿠쿵" in LiveAbRecord.CHIPS &&
+        LiveAbRecord.CHIPS.toSet().size == LiveAbRecord.CHIPS.size)
     // link comparison: at 80 % (index 13 of 15) the "on" side plays (80-30)*0.3 = 15 -> max 9 dB less, the "off" side not
     val link = C.byId("p1_link_on_vs_off")!!
     val on = link.sides[0].apply(user)

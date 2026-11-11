@@ -103,6 +103,7 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
     private lateinit var pvbController: PvbController
     // Alpha 3.1 per-song level memory (reads media sessions through sessionManager)
     private lateinit var trackLevelWatcher: TrackLevelWatcher
+    private lateinit var stageCTelemetry: me.timschneeberger.rootlessjamesdsp.pvb.StageCTelemetry
     private lateinit var buzzDiagnostics: BuzzDiagnostics
     @Volatile private var diagnosticGain = 1f
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -234,8 +235,12 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
         engine.syncWithPreferences()
 
         // Setup PVB engine and its control layer
-        pvbEngine = PvbEngine(48000)
+        pvbEngine = PvbEngine(48000).also { engine ->
+            me.timschneeberger.rootlessjamesdsp.pvb.StageCApp.prepare(this, engine, 48000)
+        }
+        stageCTelemetry = me.timschneeberger.rootlessjamesdsp.pvb.StageCTelemetry(this, pvbEngine)
         pvbController = PvbController(this, pvbEngine)
+        pvbController.onStageCChange = { restartRecording() }
         // JamesDSP -> PVB chain: seal the overlapping JamesDSP modules while PVB processes (never written to prefs)
         pvbController.onSealChanged = { sealed, spatial ->
             engine.pvbSeal = sealed
@@ -666,8 +671,12 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
             Timber.d("Sampling rate changed to ${sampleRate}Hz")
             engine.sampleRate = sampleRate.toFloat()
         }
+        // Previous AudioWorker has ended (including the lingering path) before preparing any model.
+        stageCTelemetry.close()
+        me.timschneeberger.rootlessjamesdsp.pvb.StageCApp.prepare(this, pvbEngine, sampleRate)
         pvbEngine.setSampleRate(sampleRate)
         pvbController.attachTrack(track)
+        stageCTelemetry.start()
 
         val w = AudioWorker(encoding, encodingFormat, sampleRate, bufferSize, bufferSizeBytes, recorder, track)
         worker = w
@@ -723,6 +732,7 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
 
     /** Frees the native engines. Only called when no audio thread can use them any more. */
     private fun closeEngines() {
+        stageCTelemetry.close()
         if (enginesClosed) return
         enginesClosed = true
         engine.close()
@@ -964,6 +974,7 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
 
         /** A failed or empty read: retry after a short pause, recreate the recorder after many in a row. */
         private fun onReadProblem(code: Int, failures: Int): Boolean {
+            stageCTelemetry.readGap()
             ++readProblems; lastReadCode = code
             buzzDiagnostics.audioDiscontinuity("capture_read_gap")
             if (code == AudioRecord.ERROR_DEAD_OBJECT || failures >= MAX_IO_FAILURES) {
@@ -975,6 +986,7 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
 
         /** Handles a failed write of one block; the rest of that block is dropped. */
         private fun onWriteProblem(code: Int): Boolean {
+            stageCTelemetry.droppedBlock()
             ++writeProblems; lastWriteCode = code
             buzzDiagnostics.audioDiscontinuity("playback_write_gap")
             if (code == AudioTrack.ERROR_DEAD_OBJECT || ++writeFailures >= MAX_IO_FAILURES) {
@@ -993,6 +1005,7 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
             if (r < 0) return onWriteProblem(r)
             if (r == n) writeFailures = 0
             else if (r >= 0 && !stopRequested) {
+                stageCTelemetry.droppedBlock()
                 ++writeProblems; lastWriteCode = 0; buzzDiagnostics.audioDiscontinuity("playback_partial_drop")
             }
             return !stopRequested
@@ -1005,6 +1018,7 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
             if (r < 0) return onWriteProblem(r)
             if (r == n) writeFailures = 0
             else if (r >= 0 && !stopRequested) {
+                stageCTelemetry.droppedBlock()
                 ++writeProblems; lastWriteCode = 0; buzzDiagnostics.audioDiscontinuity("playback_partial_drop")
             }
             return !stopRequested
@@ -1068,6 +1082,11 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
                     recreateRecorderRequested = false
                     Timber.d("Recreating recorder without stopping thread...")
                     if (!replaceRecorder()) return
+                    // Recreated capture is a new source clock: clear the shared PVB histories
+                    // on its next block even when the processing route did not change.
+                    pvbWasActive = false
+                    buzzDiagnostics.audioDiscontinuity("capture_recreated")
+                    Timber.d("PVB stream reset: capture_recreated")
                     carry = 0
                 }
 
@@ -1114,6 +1133,11 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
                 if (rebuildOnResume) {
                     rebuildOnResume = false
                     if (!replaceRecorder()) return
+                    // Recreated capture is a new source clock: clear the shared PVB histories
+                    // on its next block even when the processing route did not change.
+                    pvbWasActive = false
+                    buzzDiagnostics.audioDiscontinuity("capture_recreated")
+                    Timber.d("PVB stream reset: capture_recreated")
                     carry = 0
                 }
 
@@ -1212,6 +1236,7 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
                     // engine and speaker path. Nothing changes while none plays.
                     if (isShort) me.timschneeberger.rootlessjamesdsp.pvb.DevTestSound.render(shortBuffer, samples / 2, sampleRate)
                     else me.timschneeberger.rootlessjamesdsp.pvb.DevTestSound.render(floatBuffer, samples / 2, sampleRate)
+                    val stageCStartedNs = if (stageCTelemetry.enabled) System.nanoTime() else 0L
                     val inputSilent = if (isShort) SilenceGate.isSilent(shortBuffer, samples) else SilenceGate.isSilent(floatBuffer, samples)
                     val diagnosticRing = buzzDiagnostics.ring
                     val detailed = diagnosticRing?.detailed == true && !diagnosticRing.frozen
@@ -1254,6 +1279,8 @@ class RootlessAudioProcessorService : BaseAudioProcessorService() {
                             if (haveDetail) diagnosticTrace else null, android.os.SystemClock.elapsedRealtimeNanos(),
                             if (harmonicRows >= 0) harmonicTrace else null, harmonicRows)
                     }
+                    if (stageCTelemetry.enabled) stageCTelemetry.callback(samples / 2,
+                        System.nanoTime() - stageCStartedNs, track.underrunCount)
                     // Long silence: the output rests (track paused) while the engines go on processing the silent
                     // input, so settings, switches and fades still happen in the silence and the sound returns
                     // exactly as it would have. Never in a research mode or with a test sound; follows the

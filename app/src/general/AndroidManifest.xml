@@ -146,7 +146,6 @@
 
         <activity android:name="me.timschneeberger.rootlessjamesdsp.activity.BuzzReportsActivity" tools:node="remove" />
         <service android:name="me.timschneeberger.rootlessjamesdsp.service.BuzzMicrophoneService" tools:node="remove" />
-        <provider android:name="me.timschneeberger.rootlessjamesdsp.activity.BuzzFileProvider" tools:node="remove" />
         <activity android:name="me.timschneeberger.rootlessjamesdsp.activity.LiveAbActivity" tools:node="remove" />
         <activity android:name="me.timschneeberger.rootlessjamesdsp.activity.LiveAbResultsActivity" tools:node="remove" />
         <activity android:name="me.timschneeberger.rootlessjamesdsp.activity.TrackLevelsActivity" tools:node="remove" />

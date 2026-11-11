@@ -45,6 +45,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import me.timschneeberger.rootlessjamesdsp.R
+import me.timschneeberger.rootlessjamesdsp.pvb.StrengthDisplay
 import me.timschneeberger.rootlessjamesdsp.pvb.BassFitSession
 import me.timschneeberger.rootlessjamesdsp.pvb.BreakupStaircase
 import me.timschneeberger.rootlessjamesdsp.pvb.CheckRound
@@ -486,12 +487,12 @@ private fun Result(ui: FitUi) {
         null -> keep
     })
     if (r.layerAudible == true) RnNavRow(stringResource(R.string.fit_r_strength), onClick = null, chevron = false,
-        value = if (r.preferredDb != null && r.strengthConsistent) stringResource(R.string.fit_db, signed(r.preferredDb.toDouble())) else unsure)
+        value = if (r.preferredDb != null && r.strengthConsistent) stringResource(R.string.fit_db, signed(StrengthDisplay.UI.toDisplay(r.preferredDb.toFloat()).toDouble())) else unsure)
     RnNavRow(stringResource(R.string.fit_r_limit), onClick = null, chevron = false, value = when {
         r.limitDb == null -> stringResource(R.string.fit_r_not_found)
         !r.limitReliable -> unsure
         r.breakupDb == null -> stringResource(R.string.fit_r_limit_none)
-        else -> stringResource(R.string.fit_db, signed(r.limitDb))
+        else -> stringResource(R.string.fit_db, signed(StrengthDisplay.UI.toDisplay(r.limitDb.toFloat()).toDouble()))
     })
     if (r.breakupKind != null && r.breakupDb != null && r.limitReliable && r.limitDb != null && r.limitDb < 12.0) RnNavRow(stringResource(R.string.fit_r_kind), onClick = null, chevron = false,
         value = stringResource(if (r.breakupKind == BreakupStaircase.Answer.RATTLE) R.string.fit_r_kind_rattle else R.string.fit_r_kind_buzz))

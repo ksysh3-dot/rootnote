@@ -166,22 +166,36 @@ fun main(args: Array<String>) {
         check(s.snap(Float.NaN) == s.snap(s.default) && s.snap(1e9f) == s.valueAt(s.steps) && s.snap(-1e9f) == s.valueAt(0),
             "${s.id}: NaN -> default, out of range -> clamped")
     }
-    check(DevParams.group(DevGroup.BAND).size == 12 && DevParams.group(DevGroup.TIME).size == 5 &&
-        DevParams.group(DevGroup.SIZE).size == 5, "groups: band 12, time 5, level 5")
+    check(DevParams.group(DevGroup.BAND).size == 12 && DevParams.group(DevGroup.TIME).size == 2 &&
+        DevParams.group(DevGroup.SIZE).size == 4, "groups: band 12, time 5, level 5")
     check(DevParams.STRENGTH.max == 12f && DevParams.HP.min == 80f, "strength up to +12, high-pass from 80 Hz (general cap)")
     check(DevParams.ATTACK.default == 32f / 3f && abs(DevParams.RELEASE.snap(DevParams.RELEASE.default) - 32f) < 1e-4f,
         "attack 2 hops (10.7 ms), release 6 hops (32 ms) = model")
-    check(DevParams.rolloffRange(PvbModels.P1) == -24f..24f && DevParams.rolloffRange(PvbModels.GENTLE12) == -12f..24f,
+    check(DevParams.rolloffRange(PvbModels.P1) == -24f..24f && DevParams.rolloffRange(3) == -24f..24f,
         "roll-off offset range keeps the absolute slope within 0..48 dB/oct")
     // engine indices and defaults
     check(PvbParam.DEV_ON == 33 && PvbParam.DEV_METER == 34 && PvbParam.D_BOUNDARY_HZ == 35 && PvbParam.D_RELEASE_MS == 46 &&
-        PvbParam.COUNT == 57 && PvbParam.D_TABLE_SCALE == 56, "parameter indices follow pvb_engine.h")
+        PvbParam.COUNT == 58 && PvbParam.D_TABLE_SCALE == 56, "parameter indices follow pvb_engine.h")
     val dp = PvbEngine.defaultParams()
     check(dp.size == PvbParam.COUNT && dp[PvbParam.DEV_ON] == 0f && dp[PvbParam.DEV_METER] == 0f &&
         dp[PvbParam.D_BOUNDARY_HZ] == 190f && dp[PvbParam.D_OUT_LO_HZ] == 150f && dp[PvbParam.D_OUT_HI_HZ] == 600f &&
         (PvbParam.D_H2_DB..PvbParam.D_PERC_DB).all { dp[it] == 0f } && dp[PvbParam.D_ATTACK_MS] == 32f / 3f &&
         dp[PvbParam.D_RELEASE_MS] == 32f, "defaultParams: developer mode off, model values")
-    check(PvbDevMeter.SIZE == 32 + 2 * 512 && PvbDevMeter.T3_H2_DB + 7 == PvbDevMeter.FIELDS, "meter layout 32 + 2 x 512")
+    check(PvbDevMeter.STAGE_START == 32 + 2 * 512 && PvbDevMeter.SIZE == 32 + 11 * 512 &&
+        PvbDevMeter.T3_H2_DB + 7 == PvbDevMeter.FIELDS, "meter prefix preserved; 9 stage fields appended per bin")
+    run {
+        val m = FloatArray(PvbDevMeter.SIZE) { -120f }
+        val first = PvbDevMeter.STAGE_START
+        val last = first + 511 * PvbDevMeter.STAGE_FIELDS
+        m[first] = -20f; m[first + 1] = -38f; m[first + 2] = -26f
+        m[first + 3] = 55f; m[first + 4] = 8f; m[last + 8] = 3.2f
+        val s = DevSnapshot.fromMeters(m, -6f, 0f, -1f, 50f, true, 0f, -15f)
+        check(s.stages.size == 512 * 9 && s.stages[0] == -20f && s.stages[1] == -38f &&
+            s.stages[3] == 55f && s.stages[4] == 8f && s.stages.last() == 3.2f,
+            "stage snapshot preserves source, generator, actual trace reasons and last-bin attenuation")
+        m[first] = 0f
+        check(s.stages[0] == -20f, "frozen snapshot owns immutable history copy")
+    }
     run {
         // two bass notes held together: both drawn, the quieter one's harmonics judged against the loudest level
         val m = FloatArray(PvbDevMeter.SIZE) { -120f }
@@ -250,9 +264,15 @@ fun main(args: Array<String>) {
     val decDef = DevShareCode.decode(allDef, defaults)
     check(decDef is DevShareCode.Result.Ok && decDef.moved == 0 && decDef.model == "Pixel_9", "all defaults: short code, 0 moved")
     check(allDef.length < code.length, "unchanged values are not stored")
+    // Historical RN1 fixture: four old X switch bits ON, no slider payload.
+    check(specs.withIndex().filter { DevParams.retired(it.value) }.map { it.index } == listOf(13,14,15,20),
+        "RN1 reserved X positions remain stable")
+    val archived = DevShareCode.decode("RN1-Archive-1.0-040E-0400-4553", defaults)
+    check(archived is DevShareCode.Result.Ok && archived.values.contentEquals(defaults) && archived.moved==0,
+        "legacy RN1 X ON values import OFF without shifting any slider")
     // every value at both ends of its range
     for (end in listOf(0, 1)) {
-        val v = FloatArray(specs.size) { specs[it].valueAt(if (end == 0) 0 else specs[it].steps) }
+        val v = FloatArray(specs.size) { if (DevParams.retired(specs[it])) 0f else specs[it].valueAt(if (end == 0) 0 else specs[it].steps) }
         val r = DevShareCode.decode(DevShareCode.encode("X", "1", v, defaults), defaults)
         check(r is DevShareCode.Result.Ok && r.values.contentEquals(v), "round trip with every value at its ${if (end == 0) "minimum" else "maximum"}")
     }
@@ -260,7 +280,7 @@ fun main(args: Array<String>) {
     val rnd = java.util.Random(20261022)
     var allOk = true
     repeat(300) {
-        val v = FloatArray(specs.size) { specs[it].valueAt(rnd.nextInt(specs[it].steps + 1)) }
+        val v = FloatArray(specs.size) { if (DevParams.retired(specs[it])) 0f else specs[it].valueAt(rnd.nextInt(specs[it].steps + 1)) }
         val r = DevShareCode.decode(DevShareCode.encode("SM-A546E", "0.9.${rnd.nextInt(9)}", v, defaults), defaults)
         if (r !is DevShareCode.Result.Ok || !r.values.contentEquals(v) || r.model != "SM-A546E") allOk = false
     }

@@ -56,6 +56,7 @@ void sanitizeParams(float* v) {
     defaultParams(d);
     for (int i = 0; i < P_COUNT; ++i)
         if (!isFiniteBits(v[i])) v[i] = d[i];
+    v[P_P1PPP] = std::nearbyint(clampv(v[P_P1PPP],0.f,2.f));
     v[P_ENABLED] = v[P_ENABLED] >= 0.5f ? 1.f : 0.f;
     v[P_HP_HZ] = clampv(v[P_HP_HZ], 10.f, 400.f);
     v[P_LOW_HZ] = clampv(v[P_LOW_HZ], 40.f, 2000.f);
@@ -79,14 +80,19 @@ void sanitizeParams(float* v) {
     v[P_GATE_DB] = clampv(v[P_GATE_DB], -120.f, 0.f);
     v[P_TAG] = std::nearbyint(clampv(v[P_TAG], 0.f, 1.0e7f));
     v[P_VB_ON] = v[P_VB_ON] >= 0.5f ? 1.f : 0.f;
-    v[P_VB_ALGO] = clampv(std::nearbyint(v[P_VB_ALGO]), 0.f, static_cast<float>(VB_ALGO_COUNT - 1));
+    v[P_VB_ALGO] = (v[P_VB_ALGO] == VB_ALPHA2_P1
+#if defined(PVB_HOST_RESULTANT_REFERENCE)
+        || v[P_VB_ALGO] == VB_RESULTANT_V16
+#endif
+        )
+        ? v[P_VB_ALGO] : static_cast<float>(VB_ALPHA2_P1);
     v[P_VB_LEVEL_DB] = clampv(v[P_VB_LEVEL_DB], -120.f, 12.f);
     v[P_DIAGNOSTIC_SOLO] = v[P_DIAGNOSTIC_SOLO] >= 0.5f ? 1.f : 0.f;
     v[P_FLAT] = v[P_FLAT] >= 0.5f ? 1.f : 0.f;
     v[P_MATCH_HOLD] = v[P_MATCH_HOLD] >= 0.5f ? 1.f : 0.f;
     v[P_MATCH_SEED_DB] = clampv(v[P_MATCH_SEED_DB], static_cast<float>(LoudnessMatcher::kMinDb),
                                 static_cast<float>(LoudnessMatcher::kMaxDb));
-    for (int i : {P_X_SMOOTH, P_X_RISE, P_X_S1M, P_X_DENSE}) v[i] = v[i] >= 0.5f ? 1.f : 0.f;
+    for (int i : {P_X_SMOOTH, P_X_RISE, P_X_S1M, P_X_DENSE}) v[i] = 0.f; // reserved, retired
     // Developer mode: hard engine limits (the app's sliders stay inside them).
     v[P_DEV_ON] = v[P_DEV_ON] >= 0.5f ? 1.f : 0.f;
     v[P_DEV_METER] = v[P_DEV_METER] >= 0.5f ? 1.f : 0.f;
@@ -152,7 +158,7 @@ void defaultParams(float* v) {
     v[P_GATE_DB] = 0.f;          // output gate open
     v[P_TAG] = 0.f;
     v[P_VB_ON] = 0.f;            // virtual bass: off (experimental)
-    v[P_VB_ALGO] = 0.f;          // hpv
+    v[P_VB_ALGO] = VB_ALPHA2_P1; // stable default, including short JNI/root packets
     v[P_VB_LEVEL_DB] = 0.f;      // 'faithful' level
     v[P_FLAT] = 0.f;             // bypass = the plain input
     v[P_MATCH_HOLD] = 0.f;
@@ -182,6 +188,7 @@ void defaultParams(float* v) {
     v[P_XTC_BAL_LO_DB] = 0.f;        // speakers taken as equal
     v[P_XTC_BAL_HI_DB] = 0.f;
     v[P_D_TABLE_SCALE] = 1.f;
+    v[P_P1PPP] = 0.f;
 }
 
 double estimatePhoneLimiterGr(double levelDb) { return PhoneModel::staticGr(levelDb); }
@@ -199,6 +206,7 @@ Engine::Engine(int sampleRate) {
     for (auto& v : devFields_) v.store(0.f, std::memory_order_relaxed);
     for (auto& v : devRingDry_) v.store(-120.f, std::memory_order_relaxed);
     for (auto& v : devRingLay_) v.store(-120.f, std::memory_order_relaxed);
+    p1pppFade_.snap(1.0);
     gate_.snap(1.0);
     vbX_.snap(1.0);
     vbGain_.snap(1.0);
@@ -206,8 +214,145 @@ Engine::Engine(int sampleRate) {
     soloX_.snap(0.0);
     defaultParams(active_);
     defaultParams(pending_);
-    scratch_.reserve(16384);
+    scratch_.resize(2048,0.f);  // allocate and touch before streaming
     configure(sampleRate);
+    // The48kHz-only shadow is fully prepared and touched before streaming.
+    peak44P1_.configure(48000);peak44P1_.setAlpha2Profile(VB_ALPHA2_P1);
+    peak44P1_.bindEq(&hp_,&lo_,&hi_,&hs_,48000);
+}
+
+void Engine::configureDryLowCut() {
+    SvfCoef c = svfHighpass(sr_, dryLowCutHz_, kButterworthQ);
+    if (dryLowCutMode_ == 2) {
+        // H(z) = [(s^2 + sqrt(2)*r*w*s + r^2*w^2) /
+        //          (s^2 + sqrt(2)*w*s + w^2)]^2, prewarped w.
+        // r = 10^(dB/80): two biquads give the requested DC attenuation.
+        const double r = std::pow(10.0, dryLowCutDb_ / 80.0);
+        c.m0 = 1.0; c.m1 = std::sqrt(2.0) * (r - 1.0); c.m2 = r*r - 1.0;
+    }
+    if (dryLowCutOrder_ == 2) {
+        auto c2 = svfHighpass(sr_, dryLowCutHz_, kButterworthQ);
+        if (dryLowCutMode_ == 2) {
+            const double r = std::pow(10.0, dryLowCutDb_ / 40.0);
+            c2.m0=1.0; c2.m1=std::sqrt(2.0)*(r-1.0); c2.m2=r*r-1.0;
+        }
+        dryLowCut_[0].snap(c2);
+    } else if (dryLowCutOrder_ == 4) {
+        // Exact S30 coefficient operations, including rounding, are retained above.
+        for (auto& f : dryLowCut_) f.snap(c);
+    } else {
+        // Squared fourth-order Butterworth prototype, zero frequencies scaled
+        // by r. Four biquads, DC=r^8, high-frequency gain=1. Minimum phase.
+        constexpr double q[4] = {0.541196100146197, 1.306562964876377,
+                                 0.541196100146197, 1.306562964876377};
+        const double r = std::pow(10.0, dryLowCutDb_ / 160.0);
+        for (int j=0; j<4; ++j) {
+            auto c8 = svfHighpass(sr_, dryLowCutHz_, q[j]);
+            if (dryLowCutMode_ == 2) {
+                c8.m0=1.0; c8.m1=(r-1.0)/q[j]; c8.m2=r*r-1.0;
+            }
+            dryLowCut_[j].snap(c8);
+        }
+    }
+    for (auto& channel : sDryLowCut_) for (auto& state : channel) state.reset();
+    peakBudgetDryEnv_ = peakBudgetLayerEnv_ = 0.0;
+    layerPeak42_.reset();dryPeak44_.reset();
+    for(auto& a:sDryPeak44Eq_)for(auto& v:a)v.reset();
+    for(auto& a:sDryPeak44Shelf_)for(auto& v:a)v.reset();
+    if(dryPeak44Mode_)peak44P1_.reset();
+}
+
+bool Engine::setDryLowCutResearch(int mode, double hz, double db) {
+    if (mode < 0 || mode > 2 || !std::isfinite(hz) || !std::isfinite(db) ||
+        (hz != 60.0 && hz != 80.0 && hz != 100.0 && hz != 120.0) ||
+        (db != -6.0 && db != -12.0 && db != -18.0)) return false;
+    if (mode == dryLowCutMode_ && hz == dryLowCutHz_ && db == dryLowCutDb_) return true;
+    dryLowCutMode_ = mode; dryLowCutHz_ = hz; dryLowCutDb_ = db;
+    configureDryLowCut();
+    return true;
+}
+
+bool Engine::setDryLowCutOrderResearch(int order) {
+    if (order != 2 && order != 4 && order != 8) return false;
+    if (order == dryLowCutOrder_) return true;
+    dryLowCutOrder_ = order;
+    configureDryLowCut();
+    return true;
+}
+
+bool Engine::setLayerGainResearch(double requestedGain, double gainCap) {
+    if (!std::isfinite(requestedGain) || !std::isfinite(gainCap) ||
+        requestedGain < 0.0 || requestedGain > 4.0 ||
+        (gainCap != 0.0 && (gainCap < 1.0 || gainCap > 4.0))) return false;
+    researchLayerGain_ = requestedGain; researchLayerGainCap_ = gainCap;
+    return true;
+}
+
+bool Engine::setPeakBudgetResearch(int enabled, double cap, double ceilingDb,
+                                  double referenceOutDb, double releaseMs, double blend) {
+    if ((enabled != 0 && enabled != 1) || !std::isfinite(cap) ||
+        !std::isfinite(ceilingDb) || !std::isfinite(referenceOutDb) ||
+        !std::isfinite(releaseMs) || !std::isfinite(blend) ||
+        cap < 1.0 || cap > 4.0 || ceilingDb < -20.0 || ceilingDb > 0.0 ||
+        referenceOutDb < -30.0 || referenceOutDb > 0.0 ||
+        releaseMs < 1.0 || releaseMs > 1000.0 || blend < 0.0 || blend > 1.0) return false;
+    peakBudgetOn_ = enabled != 0; peakBudgetCap_ = cap; peakBudgetCeilingDb_ = ceilingDb;
+    peakBudgetReferenceOutDb_ = referenceOutDb; peakBudgetReleaseMs_ = releaseMs; peakBudgetBlend_ = blend;
+    peakBudgetDryEnv_ = peakBudgetLayerEnv_ = 0.0;
+    layerPeak42_.reset();dryPeak44_.reset();
+    for(auto& a:sDryPeak44Eq_)for(auto& v:a)v.reset();
+    for(auto& a:sDryPeak44Shelf_)for(auto& v:a)v.reset();
+    if(dryPeak44Mode_)peak44P1_.reset();
+    return true;
+}
+
+void Engine::setHandoverHost(bool on){vbAlpha2_.setHandover(on);}
+void Engine::setFadeTrimHost(bool on){vbAlpha2_.setFadeInertia(on);layerTrim_=on?kFt3mTrim:1.0;}
+void Engine::setFitRelaxHost(bool on){vbAlpha2_.setFitRelax(on);layerTrim_=on?kCf375mTrim:(vbAlpha2_.fadeInertia()?kFt3mTrim:1.0);}
+bool Engine::prepareStageC(int mode,const unsigned char* data,size_t bytes,bool worker,bool telemetry,int sampleRate) {
+    if(mode<0 || mode>4 || (worker && mode!=3))return false;
+    if((mode==2 || mode==4) && (!data || bytes!=531208))return false;
+    if(mode==3 && (!data || bytes!=425640))return false;
+    setStream91(false,false,0);
+    stable_.unload();
+    worker91_.reset();
+    if((mode==2 || mode==4) && !loadStableWeights(data,bytes))return false;
+    if(mode==3 && (!loadControl91(data,bytes) || (worker && !loadWorker91(data,bytes))))return false;
+    control91_.telemetry=telemetry;
+    if(worker91_)worker91_->stream.telemetry=telemetry;
+    // Reproduce a fresh engine's transition clock via the existing configure/reset path.
+    // All file reads, model/FFT preparation and optional thread creation precede audio.
+    {
+        std::lock_guard<std::mutex> lock(mtx_);
+        defaultParams(active_);defaultParams(pending_);hasPending_=false;pendingSr_=0;
+    }
+    stableEffective_=false;separatorPeak70_=false;setP1pppControls(false);
+    // s95: strong and conducted hold a missing track 12 hops; the other modes were not measured with it.
+    vbAlpha2_.setHoldHops(mode==1 || mode==3 ? 12 : 0);
+    // s103/s104: the handover with the energy-matched 3rd harmonic was measured on the conducted mode only.
+    vbAlpha2_.setHandover(mode==3);
+    // s106/s107: confirmed tracks lower the fit-gate fade 3x slower (FT3M).
+    // s110: a conductor candidate within 50 cents relaxes the fit gate that drives fade (CF375M), with the
+    // layer trimmed -0.161 dB and a further -0.4644 dB as measured. Measured on the conducted mode only.
+    vbAlpha2_.setFadeInertia(mode==3);vbAlpha2_.setFitRelax(mode==3);layerTrim_=mode==3?kCf375mTrim:1.0;
+    processed_=false;resetRequested_.store(false);configure(sampleRate);
+    if(mode==3 && !setStream91(true,worker,0))return false;
+    control91_.observedCount.store(0);control91_.observedMax.store(0);
+    for(auto& bin:control91_.observedHistogram)bin.store(0);
+    if(worker91_){worker91_->stream.observedCount.store(0);worker91_->stream.observedMax.store(0);for(auto& bin:worker91_->stream.observedHistogram)bin.store(0);}
+    stageCTelemetry_=telemetry;stageCLateBase_=0;separatorTicks88_=0;stageCLate_.store(0);stageCSeparatorTicks_.store(0);
+    stageCMode_.store(mode);
+    stageCFlags_.store((stream91Enabled_?1:0)|(worker91Enabled_?2:0)|(stable_.loaded()?4:0));
+    return true;
+}
+void Engine::copyStageC(int64_t* out)const {
+    const int flags=stageCFlags_.load();
+    const auto& s=(flags&2) && worker91_?worker91_->stream:control91_;
+    out[0]=s.observedCount.load(std::memory_order_acquire);out[1]=s.observedMax.load();
+    out[2]=stageCLate_.load();out[3]=(flags&2) && worker91_?worker91_->dropped.load():0;
+    out[4]=stageCSeparatorTicks_.load();out[5]=stageCMode_.load();out[6]=flags;
+    out[7]=p1pppState();out[8]=latencyFrames();out[9]=33;out[10]=8;out[11]=stageCTelemetry_?1:0;
+    for(int i=0;i<2000;++i)out[12+i]=s.observedHistogram[i].load(std::memory_order_relaxed);
 }
 
 void Engine::setSampleRate(int sampleRate) {
@@ -215,13 +360,91 @@ void Engine::setSampleRate(int sampleRate) {
     pendingSr_ = sampleRate;
 }
 
-void Engine::setParams(const float* values, int count) {
-    if (values == nullptr || count <= 0) return;
+bool Engine::validP1ppp(const float* p) const {
+    float d[P_COUNT];defaultParams(d);
+    // Only the transport tag, attenuating final gate, an attenuating layer level and display/match controls may vary.
+    for(int i : {P_ENABLED,P_OUT_DB,P_CEIL_DB,P_REL_MS,P_DYN_ON,
+                 P_FLAT,P_DIAGNOSTIC_SOLO,P_X_SMOOTH,P_X_RISE,P_X_S1M,P_X_DENSE,P_DEV_ON,P_XTC_MODE})
+        if(p[i]!=d[i])return false;
+    // The EQ too, unless the user opened it; opened, the low-mid gain may still not exceed the default.
+    if(fixedEqOpen_) {
+        if(!(p[P_LOW_DB]<=d[P_LOW_DB]))return false;
+    } else {
+        for(int i : {P_HP_HZ,P_LOW_HZ,P_LOW_DB,P_LOW_Q,P_HI_HZ,P_HI_DB,P_HI_Q,P_HS_HZ,P_HS_DB})
+            if(p[i]!=d[i])return false;
+    }
+    if(!(p[P_VB_LEVEL_DB]<=0.f && p[P_VB_LEVEL_DB]>=-12.f))return false;
+    return p[P_VB_ON]==1.f && p[P_VB_ALGO]==VB_ALPHA2_P1;
+}
+
+bool Engine::trySetParams(const float* values,int count) {
+    if(!values || count<=0 || count>P_COUNT)return false;
     std::lock_guard<std::mutex> lock(mtx_);
-    const int n = count < P_COUNT ? count : static_cast<int>(P_COUNT);
-    for (int i = 0; i < n; ++i) pending_[i] = values[i];
-    sanitizeParams(pending_);
-    hasPending_ = true;
+    float next[P_COUNT];std::copy_n(pending_,P_COUNT,next);
+    std::copy_n(values,count,next);
+    // An old packet must never leave the appended preset bit latched ON.
+    if(count<=P_P1PPP)next[P_P1PPP]=0.f;
+    if(!isFiniteBits(next[P_P1PPP]))return false;
+    if(next[P_P1PPP]>=.5f) {
+        if(count!=P_COUNT || (next[P_P1PPP]>=1.5f && !stable_.loaded()))return false;
+        for(int i=0;i<P_COUNT;++i)if(!isFiniteBits(next[i]))return false;
+        if((pendingSr_>0?pendingSr_:srMeter_.load(std::memory_order_relaxed))!=48000 || !validP1ppp(next))return false;
+    }
+    sanitizeParams(next);
+    std::copy_n(next,P_COUNT,pending_);hasPending_=true;return true;
+}
+void Engine::setParams(const float* values,int count) { (void)trySetParams(values,count); }
+
+bool Engine::setP1pppPreset(bool enabled) {
+    std::lock_guard<std::mutex> lock(mtx_);
+    float next[P_COUNT];std::copy_n(pending_,P_COUNT,next);next[P_P1PPP]=enabled?1.f:0.f;
+    if(enabled && ((pendingSr_>0?pendingSr_:srMeter_.load(std::memory_order_relaxed))!=48000 || !validP1ppp(next)))return false;
+    std::copy_n(next,P_COUNT,pending_);hasPending_=true;return true;
+}
+void Engine::setP1pppControls(bool on) {
+    // This batch cannot fail: its constants were validated before enqueue.
+    vbAlpha2_.setStable183Window(stableEffective_);
+    peak44P1_.setStable183Window(stableEffective_);
+    // A mode switch keeps algorithm ID 6, so vbApply() may legitimately skip it.
+    // Refresh the dry alignment when switching back from the shorter window.
+    if(vbCur_==VB_ALPHA2_P1)vbDelay_=clampv(vbAlpha2_.latencyFrames(),0,kVbDelayLen-1);
+    layerPeak42_.setStable(stableEffective_);dryPeak44_.setStable(stableEffective_);
+    p1pppEffective_=on;dryLowCutMode_=on?2:0;dryLowCutHz_=80.;dryLowCutDb_=-6.;dryLowCutOrder_=4;
+    researchLayerGain_=on?4.:1.;researchLayerGainCap_=0.;peakBudgetOn_=false;
+    dryPeak44Mode_=on?1:0;layerPeak42_.configure(on?1:0,sr_,100.);
+    genHost_=false;vbAlpha2_.prepareP1pppResearch(on);
+    configureDryLowCut();boundedPeak50_.reset();
+    boundedPeak50_.setCeilingDb(-1.);boundedPeak50_.setReleaseMs(60.,sr_);
+}
+void Engine::publishP1ppp() {
+    const int state=p1pppPhase_!=PPP_STEADY?4:p1pppEffective_?(stableEffective_?3:1):active_[P_P1PPP]>=.5f && sr_!=48000?2:0;
+    p1pppPublished_.store(state,std::memory_order_relaxed);
+}
+void Engine::commitP1ppp() {
+    const bool on=p1pppNext_[P_P1PPP]>=.5f && sr_==48000;
+    stableEffective_=on && p1pppNext_[P_P1PPP]>=1.5f;separatorPeak70_=stableEffective_;
+    setP1pppControls(on);applyParams(p1pppNext_,true);resetState();updateLatency();
+    // Both generators, controllers, EQ and delays start at the same source sample.
+    p1pppFade_.snap(0.);p1pppHold_=latencyFrames();p1pppPhase_=PPP_HOLD;p1pppQueued_=false;
+    publishP1ppp();
+}
+void Engine::queueP1ppp(const float* p) {
+    const bool on=p[P_P1PPP]>=.5f && sr_==48000;
+    if(!processed_) {
+        // Preserve the frozen fresh-start generator's original switching clock.
+        if(on){stableEffective_=p[P_P1PPP]>=1.5f;separatorPeak70_=stableEffective_;setP1pppControls(true);if(stableEffective_){stable_.reset();stableNeedsPrime_=true;stablePrimeRemaining_=49152;updateLatency();}}
+        applyParams(p,false);publishP1ppp();return;
+    }
+    if(on==p1pppEffective_ && (on && p[P_P1PPP]>=1.5f)==stableEffective_ && !p1pppQueued_ && p1pppPhase_!=PPP_FADE_OUT) {
+        if(std::memcmp(active_,p,sizeof active_)!=0)applyParams(p,false);
+        return;
+    }
+    if(p1pppQueued_ && std::memcmp(p1pppNext_,p,sizeof p1pppNext_)==0)return;
+    std::copy_n(p,P_COUNT,p1pppNext_);p1pppQueued_=true;
+    if(p1pppPhase_!=PPP_FADE_OUT) {
+        p1pppFade_.setTarget(0.,static_cast<int>(std::lround(kVbFadeS*sr_)));p1pppPhase_=PPP_FADE_OUT;
+    }
+    publishP1ppp();
 }
 
 int Engine::vbWanted() const {
@@ -231,14 +454,10 @@ int Engine::vbWanted() const {
 }
 
 bool Engine::genWanted(int algo) const {
-    return algo == VB_ALPHA2_P1 && active_[P_X_S1M] >= 0.5f;
+    (void)algo; return false; // retired S1m app option; slot 31 reserved
 }
 
 // Experimental layer options: only while a virtual bass algorithm is in the path (they blend out otherwise).
-void Engine::updateCondWanted() {
-    const bool vb = vbCur_ >= 0;
-    cond_.setWanted(vb && active_[P_X_SMOOTH] >= 0.5f, vb && active_[P_X_RISE] >= 0.5f, vb && active_[P_X_DENSE] >= 0.5f);
-}
 
 bool Engine::vbSwitchPending() const {
     const int w = vbWanted();
@@ -246,19 +465,20 @@ bool Engine::vbSwitchPending() const {
 }
 
 void Engine::updateLatency() {
-    latency_.store(lim_.latency() + (vbCur_ >= 0 ? vbDelay_ : 0), std::memory_order_relaxed);
+    latency_.store((stableEffective_?3192:0) + lim_.latency() + (stableEffective_?5516:(vbCur_ >= 0 ? vbDelay_ : 0)), std::memory_order_relaxed);
 }
 
 void Engine::vbApply(int algo, bool force) {
     const bool gen = algo >= 0 && genWanted(algo);
     if (algo == vbCur_ && gen == genCur_ && !force) return;
+    const int prev = vbCur_;
     vbCur_ = algo;
+    // Leaving algorithm 16 or 17 for a module that setAlpha2Profile does not serve: the Resultant parameters go back to the defaults.
+    if ((prev == VB_RESULTANT_V16) && algo < VB_ALPHA2_P1) vbAlpha2_.leaveResultantSet();
     // vbAlpha2_ serves all five Alpha2 profiles: the S1m envelope is set (or cleared) before the profile resets it.
     genCur_ = gen;
     // Host research (setGenResearch) keeps its own GenResearch52; the app option never overrides it.
     if (!genHost_) vbAlpha2_.setGenEnvelope(gen);
-    cond_.clearDetectors();
-    updateCondWanted();
     if (algo >= VB_ALPHA2_P1) vbAlpha2_.setAlpha2Profile(algo);
     else if (algo >= 0) vbMods_[algo]->reset();
     vbDelay_ = algo >= 0 ? clampv(vbMods_[algo]->latencyFrames(), 0, kVbDelayLen - 1) : 0;
@@ -283,12 +503,13 @@ void Engine::applyDev(const float* v) {
     }
     if (d != devApplied_) {
         devApplied_ = d;
-        for (VbHpv* m : {&vb52_, &vbGentle_, &vbGentleStrong_, &vbGentleAdaptive_, &vbAlpha2_}) m->setDev(d);
+        for (VbHpv* m : {&vbAlpha2_}) m->setDev(d);
     }
     const bool meter = v[P_DEV_METER] >= 0.5f;
     if (meter != devMeterOn_) {
+        resetDevTelemetry();
         devMeterOn_ = meter;
-        for (VbModule* m : vbMods_) m->setDevMeter(meter);
+        for (VbModule* m : vbMods_) if(m) m->setDevMeter(meter);
         for (auto& st : sDevLp_) st.reset();
         sDevBpDry_.reset(); sDevBpLay_.reset();
         devBinDry_ = devBinLay_ = devPowDry_ = devPowLay_ = 0.0;
@@ -309,6 +530,10 @@ void Engine::applyDev(const float* v) {
 
 void Engine::configure(int sampleRate) {
     sr_ = clampv(sampleRate, 8000, 192000);
+    const bool presetRequested=active_[P_P1PPP]>=.5f;
+    stableEffective_=presetRequested && active_[P_P1PPP]>=1.5f && sr_==48000 && stable_.loaded();separatorPeak70_=stableEffective_;
+    if(presetRequested || p1pppEffective_)setP1pppControls(presetRequested && sr_==48000);
+    configureDryLowCut();
     devBinLen_ = std::max(1, static_cast<int>(std::lround(0.005 * sr_)));
     devPowCoef_ = 1.0 - std::exp(-1.0 / (0.05 * sr_));
     devBp_.snap(svfBandpass(sr_, 245.0, 0.65));
@@ -316,14 +541,12 @@ void Engine::configure(int sampleRate) {
     limSolo_.configure(sr_, kLookaheadMs);
     limFlat_.configure(sr_, kLookaheadMs);  // same latency as lim_: the flat path stays aligned with wet and dry
     match_.configure(sr_);
-    cond_.configure(sr_);
     xtc_.setSampleRate(sr_);
-    for (int a = 0; a < VB_ALGO_COUNT; ++a)
-        vbOk_[a] = a > VB_ALPHA2_P1 ? vbOk_[VB_ALPHA2_P1] : vbMods_[a]->configure(sr_);
-    vb52_.bindEq(&hp_, &lo_, &hi_, &hs_, sr_);
-    vbGentle_.bindEq(&hp_, &lo_, &hi_, &hs_, sr_);
-    vbGentleStrong_.bindEq(&hp_, &lo_, &hi_, &hs_, sr_);
-    vbGentleAdaptive_.bindEq(&hp_, &lo_, &hi_, &hs_, sr_);
+    std::fill(std::begin(vbOk_),std::end(vbOk_),false);
+    vbOk_[VB_ALPHA2_P1]=vbAlpha2_.configure(sr_);
+#if defined(PVB_HOST_RESULTANT_REFERENCE)
+    vbOk_[VB_RESULTANT_V16]=vbOk_[VB_ALPHA2_P1];
+#endif
     vbAlpha2_.bindEq(&hp_, &lo_, &hi_, &hs_, sr_);
     srMeter_.store(sr_, std::memory_order_relaxed);
     phone_.configure(sr_);
@@ -334,7 +557,8 @@ void Engine::configure(int sampleRate) {
     dynFall_ = 1.0 - std::exp(-static_cast<double>(kDynStep) / (1.0 * sr_));
     applyParams(active_, true);
     resetState();
-    vbApply(vbWanted(), true);  // the latency of an algorithm depends on the rate
+    if(!stableEffective_)vbApply(vbWanted(), true);else updateLatency();  // STABLE replays the frozen fresh-start phase
+    p1pppQueued_=false;p1pppPhase_=PPP_STEADY;p1pppFade_.snap(1.);publishP1ppp();
     publishFilters();
 }
 
@@ -362,10 +586,28 @@ void Engine::publishFilters() {
     pub_[i++].store(f[3]->m1, std::memory_order_relaxed);
     pub_[i++].store(f[3]->m2, std::memory_order_relaxed);
     pub_[i++].store(flatX_.value() * match_.gainDb(), std::memory_order_relaxed);
+    // Dry low shelf of the fixed modes, drawn at its full depth (the S44 peak guard only makes it shallower briefly).
+    const int shelves = dryLowCutMode_ == 0 ? 0 : dryLowCutOrder_ == 2 ? 1 : dryLowCutOrder_ == 4 ? 2 : 4;
+    pub_[i++].store(static_cast<double>(shelves), std::memory_order_relaxed);
+    for (int q = 0; q < 4; ++q) {
+        const SvfCoef& c = dryLowCut_[q].current();
+        pub_[i++].store(q < shelves ? c.g : 0.0, std::memory_order_relaxed);
+        pub_[i++].store(q < shelves ? c.k : 0.0, std::memory_order_relaxed);
+        pub_[i++].store(q < shelves ? c.m0 : 1.0, std::memory_order_relaxed);
+        pub_[i++].store(q < shelves ? c.m1 : 0.0, std::memory_order_relaxed);
+        pub_[i++].store(q < shelves ? c.m2 : 0.0, std::memory_order_relaxed);
+    }
     pubSeq_.store(s + 2, std::memory_order_release);
 }
 
 void Engine::resetState() {
+    if(stream91Enabled_){stageCLateBase_+=vbAlpha2_.stats88().lateFrames;control91_.reset();stream91Samples_=0;vbAlpha2_.resetControl91();if(worker91Enabled_ && worker91_){worker91_->reset();worker91_->start();}}
+    resetDevTelemetry();
+    layerCap_.reset();
+    stable_.reset();stableNeedsPrime_=stableEffective_;stablePrimeRemaining_=stableEffective_?49152:0;
+    for(auto& channel:separatorEq70_)for(auto& state:channel)state.reset();
+    for(auto& channel:separatorDelay70_)std::fill(std::begin(channel),std::end(channel),0.);
+    separatorPos70_=0;
     for (int c = 0; c < 2; ++c) {
         sHp1_[c].reset();
         sHp2_[c].reset();
@@ -382,6 +624,13 @@ void Engine::resetState() {
     std::fill(std::begin(dryL_), std::end(dryL_), 0.0);
     std::fill(std::begin(dryR_), std::end(dryR_), 0.0);
     dryPos_ = 0;
+    for (auto& channel : sDryLowCut_) for (auto& state : channel) state.reset();
+    peakBudgetDryEnv_ = peakBudgetLayerEnv_ = 0.0;
+    layerPeak42_.reset();dryPeak44_.reset();
+    for(auto& a:sDryPeak44Eq_)for(auto& v:a)v.reset();
+    for(auto& a:sDryPeak44Shelf_)for(auto& v:a)v.reset();
+    if(dryPeak44Mode_)peak44P1_.reset();
+    boundedPeak50_.reset();
     lim_.reset();
     limSolo_.reset();
     std::fill(std::begin(layerDelayL_), std::end(layerDelayL_), 0.0);
@@ -402,8 +651,8 @@ void Engine::resetState() {
     vbPhase_ = VB_STEADY;
     vbX_.snap(1.0);
     if (vbCur_ >= 0) vbMods_[vbCur_]->reset();
-    cond_.clearDetectors();
     xtc_.hardReset();
+    if(stableEffective_){vbCur_=-1;vbDelay_=0;vbPhase_=VB_STEADY;vbX_.snap(1.);}
 }
 
 void Engine::applyParams(const float* v, bool snap) {
@@ -480,6 +729,20 @@ void Engine::applyParams(const float* v, bool snap) {
     if (snap) vbApply(vbWanted(), false);
 }
 
+void Engine::primeStable(int physicalFrames) {
+    // Spread exact zero prewarm over the already required separator startup delay.
+    // Sixteen logical samples per physical sample finishes at3072, before source0 at3192.
+    const int budget=std::min(stablePrimeRemaining_,std::min(physicalFrames,3072)*16);
+    stablePriming_=true;
+    const bool cap=diagnosticCapture_;diagnosticCapture_=false;
+    auto pf=p1pppFade_;auto ph=p1pppPhase_;int hold=p1pppHold_;auto recovery=fade_;
+    p1pppFade_.snap(1.);p1pppPhase_=PPP_STEADY;fade_.snap(1.);
+    float zeros[512]{};const float* previous=separatorMix70_;separatorMix70_=zeros;
+    for(int n=0;n<budget;n+=256){std::fill_n(zeros,512,0.f);process(zeros,std::min(256,budget-n));}
+    stablePrimeRemaining_-=budget;stableNeedsPrime_=stablePrimeRemaining_>0;
+    separatorMix70_=previous;p1pppFade_=pf;p1pppPhase_=ph;p1pppHold_=hold;fade_=recovery;
+    stablePriming_=false;diagnosticCapture_=cap;publishP1ppp();
+}
 void Engine::process(float* io, int frames) {
     if (io == nullptr || frames <= 0) return;
     const auto t0 = std::chrono::steady_clock::now();
@@ -499,23 +762,41 @@ void Engine::process(float* io, int frames) {
 
         if (newSr > 0 && newSr != sr_) {
             if (has) std::memcpy(active_, p, sizeof p);
+            else if(p1pppQueued_)std::memcpy(active_,p1pppNext_,sizeof active_);
             configure(newSr);  // snaps all values and clears the filter memory
             has = false;
         }
-        if (has) applyParams(p, false);
+        if (has) {
+            if(p[P_P1PPP]>=.5f || active_[P_P1PPP]>=.5f || p1pppPhase_!=PPP_STEADY)queueP1ppp(p);
+            else applyParams(p,false);
+        }
     }
+
+    if(p1pppPhase_==PPP_FADE_OUT && p1pppFade_.value()==0. && p1pppQueued_)commitP1ppp();
+    processed_=true;
 
     // The engine was out of the signal path: forget old audio and fade in instead of jumping.
     if (resetRequested_.exchange(false, std::memory_order_acq_rel)) {
+        if(p1pppQueued_)commitP1ppp();
+        if(p1pppEffective_)vbApply(vbWanted(),true);
         resetState();
-        fade_.snap(0.0);
-        fade_.setTarget(1.0, static_cast<int>(std::lround(kRecoverFadeS * sr_)));
+        if(stream91Enabled_) {
+            // Replay this mode's fresh-start 1440-sample algorithm switch clock.
+            // OFF/P1/PPP/STABLE retain the original recovery route below.
+            vbCur_=-1;vbDelay_=0;vbPhase_=VB_STEADY;vbX_.snap(1.);
+            p1pppFade_.snap(1.);p1pppHold_=0;p1pppPhase_=PPP_STEADY;publishP1ppp();
+            fade_.snap(1.);
+        } else {
+            if(p1pppEffective_) {p1pppFade_.snap(0.);p1pppHold_=latencyFrames();p1pppPhase_=PPP_HOLD;publishP1ppp();}
+            fade_.snap(0.0);
+            fade_.setTarget(1.0, static_cast<int>(std::lround(kRecoverFadeS * sr_)));
+        }
     }
 
     // Virtual bass on/off or another algorithm: switch now if nothing is audible, else fade out first.
     if (vbPhase_ == VB_STEADY && vbSwitchPending()) {
         const bool silent = gate_.value() <= kSilentGainLin || outGain_.value() <= kSilentGainLin || fade_.value() <= 0.0;
-        if (silent) {
+        if (silent && !stableEffective_) {
             vbApply(vbWanted(), false);
         } else {
             vbX_.setTarget(0.0, static_cast<int>(std::lround(kVbFadeS * sr_)));
@@ -523,14 +804,17 @@ void Engine::process(float* io, int frames) {
         }
     }
 
+    if(stableNeedsPrime_ && !stablePriming_)primeStable(frames);
     double inPeak = 0.0, outPeak = 0.0;
     bool badInput = false, badOutput = false;
     const int lat = lim_.latency();
     const uint64_t tapBase = tapFrames_.load(std::memory_order_relaxed);  // only this thread writes it
     const bool capture = diagnosticCapture_ && frames <= kDiagnosticSamples / 2;
     diagnosticSamples_ = capture ? frames * 2 : 0;
+    peak42InputSamples_ = capture && frames<=kResearchCaptureFrames ? frames*6 : 0;
+    peak44InputSamples_=capture && frames<=kResearchCaptureFrames?frames*5:0;
     harmonicCount_=0; harmonicOverflow_=false;
-    for(auto* module:vbMods_) module->setHarmonicCapture(capture);
+    for(auto* module:vbMods_) if(module) module->setHarmonicCapture(capture || (devMeterOn_ && !stablePriming_));
     double powers[5] = {}, peaks[5] = {}, mainMin = 1.0, extraMin = 1.0;
     if (capture) {
         std::fill(std::begin(diagnosticTrace_), std::end(diagnosticTrace_), 0.f);
@@ -549,7 +833,6 @@ void Engine::process(float* io, int frames) {
     uint64_t openBlock = 0;
     const bool dynOn = active_[P_DYN_ON] >= 0.5f;
     if (!dynOn) dynOff_ = 0.0;
-    updateCondWanted();  // new parameters (vbApply updates it when the algorithm changes mid-block)
     const double s1mTrim = dbToLin(kS1mTrimDb);
     // Display-only phone model: only while its meters are read (it starts fresh when it starts again).
     const bool phoneOn = tapBase < phoneUntil_.load(std::memory_order_relaxed);
@@ -560,18 +843,47 @@ void Engine::process(float* io, int frames) {
     if (matchOn && !matchRun_) match_.resetFilters();  // no stale filter memory from before the pause
     matchRun_ = matchOn;
 
+    const bool sep70=separatorPeak70_ && (stableEffective_ || separatorMix70_) && p1pppEffective_ &&
+                     vbCur_==VB_ALPHA2_P1 && sr_==48000;
     for (int n = 0; n < frames; ++n) {
         float fl = io[2 * n], fr = io[2 * n + 1];
         if (!isFiniteBits(fl)) { fl = 0.f; badInput = true; }
         if (!isFiniteBits(fr)) { fr = 0.f; badInput = true; }
+        if(stream91Enabled_ && !stablePriming_){if(stream91Samples_++>=stream91Origin_){if(worker91Enabled_)worker91_->tick(fl,fr);else control91_.tick(fl,fr);}}
         // Signals of one sample, in order (docs/ARCHITECTURE.md section 3): xl/xr the input; alignedL/R the input
         // delayed by the generator latency (vbDelay_ samples) so the dry path lines up with the layer; spatialL/R
         // after the spatial stage; eqL/R after the EQ; layL/R the generated layer; preLimitL/R the mix before the
         // limiter; limitedL/R after it; dryDelayedL/R the input delayed by the limiter latency (lat) for the
         // bypass and the matcher; yl/yr the output. Linear amplitude throughout.
+        float stableMix[2]{};
+        if(stableEffective_ && !stablePriming_) {
+            ++separatorTicks88_;
+            float sep[2];bool ready=stable_.tick(fl,fr,sep,stableMix);
+            if(!ready){
+                const double f=p1pppFade_.next();(void)f;
+                if(p1pppPhase_==PPP_HOLD && --p1pppHold_<=0){p1pppFade_.setTarget(1.,static_cast<int>(kVbFadeS*sr_));p1pppPhase_=PPP_FADE_IN;}
+                io[2*n]=io[2*n+1]=0.f;
+                if(capture){diagnosticLayer_[2*n]=diagnosticLayer_[2*n+1]=diagnosticFull_[2*n]=diagnosticFull_[2*n+1]=0.f;}
+                continue;
+            }
+            if(devMeterOn_ && devSample_==0) {
+                devSample_=3192;devRingCount_=3192/devBinLen_;devBinN_=3192%devBinLen_;
+            }
+            fl=sep[0];fr=sep[1];
+        }
         const double xl = fl, xr = fr;
+        double residual70[2]={},residualEq70[2]={},residualAligned70[2]={};
+        if(sep70)for(int c=0;c<2;++c) {
+            float v=stableEffective_ && !stablePriming_?stableMix[c]:separatorMix70_[2*n+c];
+            if(!isFiniteBits(v)){v=0.f;badInput=true;}
+            residual70[c]=static_cast<double>(v)-(c?xr:xl);
+        }
         inPeak = std::max(inPeak, std::max(std::fabs(xl), std::fabs(xr)));
 
+        const double pppFade=p1pppFade_.next();
+        if(p1pppPhase_==PPP_HOLD && --p1pppHold_<=0) {
+            p1pppFade_.setTarget(1.,static_cast<int>(std::lround(kVbFadeS*sr_)));p1pppPhase_=PPP_FADE_IN;
+        } else if(p1pppPhase_==PPP_FADE_IN && pppFade==1.) {p1pppPhase_=PPP_STEADY;publishP1ppp();}
         // Virtual bass switching state (see pvb_engine.h).
         double vbx = 1.0;
         if (vbPhase_ != VB_STEADY) {
@@ -606,7 +918,15 @@ void Engine::process(float* io, int frames) {
             alignedR = vbDR_[rd];
         }
         if (++vbPos_ >= kVbDelayLen) vbPos_ = 0;
-        const double vg = vbGain_.next();
+        double vg = vbGain_.next();
+        const double peak42BaseVg=vg;
+        // Bypass the multiply at the default. This changes only post-generator
+        // gain, including the isolated diagnostics; it never feeds tracking.
+        if (researchLayerGain_ != 1.0 || researchLayerGainCap_ != 0.0 || layerTrim_ != 1.0) {
+            const double rg = (researchLayerGainCap_ > 0.0
+                ? std::min(researchLayerGain_, researchLayerGainCap_) : researchLayerGain_) * layerTrim_;
+            if (rg != 1.0) vg *= rg;
+        }
 
         if (dynOn) {
             // Slow level follower: above the reference take boost back (the phone limiter would squash it),
@@ -653,6 +973,17 @@ void Engine::process(float* io, int frames) {
         double eqR = hp_.tick(sHp2_[1], hp_.tick(sHp1_[1], spatialR));
         eqL = hs_.tick(sHs_[0], hi_.tick(sHi_[0], lo_.tick(sLo_[0], eqL)));
         eqR = hs_.tick(sHs_[1], hi_.tick(sHi_[1], lo_.tick(sLo_[1], eqR)));
+        if(sep70) {
+            for(int c=0;c<2;++c) {
+                auto* st=separatorEq70_[c];
+                double v=hp_.tick(st[1],hp_.tick(st[0],residual70[c]));
+                v=hs_.tick(st[4],hi_.tick(st[3],lo_.tick(st[2],v)));
+                residualEq70[c]=v;separatorDelay70_[c][separatorPos70_]=v;
+                residualAligned70[c]=separatorDelay70_[c][(separatorPos70_-vbDelay_+16384)&16383];
+            }
+            separatorPos70_=(separatorPos70_+1)&16383;
+            eqL+=residualAligned70[0];eqR+=residualAligned70[1];
+        }
         // virtual bass layer after the EQ filters, before the output gain and the limiter; generated from the
         // undelayed pre-EQ input (hpv) or from the EQ output itself (Bankstown)
         double layL = 0.0, layR = 0.0;
@@ -662,12 +993,22 @@ void Engine::process(float* io, int frames) {
             else m->tick(xl, xr, layL, layR);
             // Experimental options (all off: neither branch runs, the layer is untouched).
             if (genCur_) { layL *= s1mTrim; layR *= s1mTrim; }
-            if (!cond_.idle()) {
-                const double cg = cond_.tick(layL, layR, 0.5 * (alignedL + alignedR));
-                layL *= cg;
-                layR *= cg;
-            }
-            if(capture) if(const auto* hop=m->takeHarmonicTrace()) {
+            if(capture || (devMeterOn_ && !stablePriming_)) if(const auto* hop=m->takeHarmonicTrace()) {
+                if(devMeterOn_ && !stablePriming_) {
+                    DevDecision q; q.reason=hop->data[13]; float strongest=-1;
+                    for(int t=0;t<HarmonicTrace::kTracks;++t) {
+                        const float* r=hop->data+HarmonicTrace::kHeader+t*HarmonicTrace::kTrack;
+                        if(r[1]>=1 && r[1]<=3 && r[4]>strongest) {
+                            strongest=r[4];q.f=r[2];q.state=r[1];q.fit=r[12];q.reason=static_cast<float>(static_cast<int>(q.reason)|static_cast<int>(r[10]));
+                        }
+                    }
+                    // Trace grain centre is in host samples relative to this tick; add shared limiter delay.
+                    const int ahead=std::max(0,static_cast<int>(std::lround(hop->data[10]))+lim_.latency());
+                    devDecisionQueue_[(devSample_+ahead)&16383]=q;
+                    // Use state=-1 as a valid no-track observation (zero otherwise means no new hop).
+                    if(q.state==0)devDecisionQueue_[(devSample_+ahead)&16383].state=-1;
+                }
+                if(capture) {
                 if(harmonicCount_>=HarmonicTrace::kBlockRows) harmonicOverflow_=true;
                 else {
                     float* row=harmonicRows_+harmonicCount_++*HarmonicTrace::kFields;
@@ -677,32 +1018,91 @@ void Engine::process(float* io, int frames) {
                 }
             }
         }
+        } // harmonic capture
         // Developer meter: the layer as generated (before the routing below), like its dry reference from before XTC.
         const double layMid = 0.5 * (layL + layR);
         // Upright split or mono: the layer goes where the music's low part goes (not to the earpiece). Models that
         // generate from the EQ output (inputAfterEq, Bankstown) already follow the split: left as they are.
         if (vbCur_ >= 0 && !vbMods_[vbCur_]->inputAfterEq() && !xtc_.idle()) xtc_.routeLayer(layL, layR);
-        if (devMeterOn_) {
+        if (devMeterOn_ && !stablePriming_) {
             // Developer-mode display only (nothing here reaches the output): dry low band (aligned with the layer),
             // layer, and both in the 150-400 Hz band where the phone's protection acts.
             double low = 0.5 * (alignedL + alignedR);
             for (int i = 0; i < kDevLpSections; ++i) low = devLp_[i].tick(sDevLp_[i], low);
             const double lay = vg * layMid * og;
             devBinDry_ += low * low;
-            devBinLay_ += lay * lay;
+
             const double bd = devBp_.tick(sDevBpDry_, 0.5 * (eqL + eqR) * og);
             const double bl = devBp_.tick(sDevBpLay_, lay);
             devPowDry_ += (bd * bd - devPowDry_) * devPowCoef_;
             devPowLay_ += (bl * bl - devPowLay_) * devPowCoef_;
-            if (++devBinN_ >= devBinLen_) {
-                const int slot = static_cast<int>(devRingCount_ % kDevRing);
-                devRingDry_[slot].store(dbOrFloor(std::sqrt(2.0 * devBinDry_ / devBinLen_)), std::memory_order_relaxed);
-                devRingLay_[slot].store(dbOrFloor(std::sqrt(2.0 * devBinLay_ / devBinLen_)), std::memory_order_relaxed);
-                ++devRingCount_;
-                devRingPub_.store(devRingCount_, std::memory_order_release);
-                devBinDry_ = devBinLay_ = 0.0;
-                devBinN_ = 0;
+        }
+
+        double peak44UncutL=eqL,peak44UncutR=eqR,peak44DryL=eqL,peak44DryR=eqR;
+        double peak44RefLayL=layL,peak44RefLayR=layR;
+        if(dryPeak44Mode_ && vbCur_==VB_ALPHA2_P1) {
+            if(dryPeak44Mode_==1) {
+            // Current fixed EQ is evaluated on undelayed dry in parallel.
+            double ed[2]={xl,xr},es[2];
+            for(int c=0;c<2;++c) {
+                auto* st=sDryPeak44Eq_[c];
+                ed[c]=hp_.tick(st[1],hp_.tick(st[0],ed[c]));
+                ed[c]=hs_.tick(st[4],hi_.tick(st[3],lo_.tick(st[2],ed[c])));
+                es[c]=ed[c];
+                if(dryLowCutMode_)for(int q=0;q<dryLowCutOrder_/2;++q)es[c]=dryLowCut_[q].tick(sDryPeak44Shelf_[c][q],es[c]);
             }
+            if(sep70)for(int c=0;c<2;c++){ed[c]+=residualEq70[c];es[c]+=residualEq70[c];}
+            dryPeak44_.process(ed[0],ed[1],es[0],es[1],vbDelay_,peak44DryL,peak44DryR);
+            }
+            // Original phase0 P1; candidate phase12 must never define its own budget.
+            peak44P1_.tick(sep70?xl+residual70[0]:xl,sep70?xr+residual70[1]:xr,peak44RefLayL,peak44RefLayR);
+        }
+        // S34 retains the uncut P1 dry for exact fallback and affine certification.
+        const double budgetDryL = eqL, budgetDryR = eqR;
+        double peak42RefL=0.,peak42RefR=0.;
+        if(layerPeak42_.enabled() || peak42InputSamples_>0) {
+            peak42RefL=(eqL+peak42BaseVg*peak44RefLayL)*og;peak42RefR=(eqR+peak42BaseVg*peak44RefLayR)*og;
+        }
+        // S30: cut only the processed dry signal, after generator input/trace
+        // and before summation. P1 (6) and Resultant (15) share this point.
+        // OFF executes no filter/arithmetic on eqL/R; old bits are preserved.
+        if (dryLowCutMode_ != 0) {
+            if(sep70){eqL-=residualAligned70[0];eqR-=residualAligned70[1];}
+            for (int section = 0; section < dryLowCutOrder_ / 2; ++section) {
+                eqL = dryLowCut_[section].tick(sDryLowCut_[0][section], eqL);
+                eqR = dryLowCut_[section].tick(sDryLowCut_[1][section], eqR);
+            }
+        }
+
+        if(sep70){eqL+=residualAligned70[0];eqR+=residualAligned70[1];}
+        if(peak44InputSamples_>0) {
+            const double vals[5]={peak44UncutL*og,peak44UncutR*og,eqL*og,eqR*og,dryPeak44_.alpha()};
+            std::copy_n(vals,5,peak44Inputs_+5*n);
+        }
+        if(dryPeak44Mode_==1 && vbCur_==VB_ALPHA2_P1 && dryLowCutMode_) {eqL=peak44DryL;eqR=peak44DryR;}
+        if (peakBudgetOn_) {
+            const double release = std::exp(-1.0 / (peakBudgetReleaseMs_ * 0.001 * sr_));
+            peakBudgetDryEnv_ = std::max(std::max(std::fabs(eqL), std::fabs(eqR)), peakBudgetDryEnv_ * release);
+            peakBudgetLayerEnv_ = std::max(std::max(std::fabs(layL), std::fabs(layR)), peakBudgetLayerEnv_ * release);
+            const double budget = dbToLin(peakBudgetCeilingDb_ - peakBudgetReferenceOutDb_);
+            const double room = (budget - peakBudgetDryEnv_) /
+                                std::max(peakBudgetLayerEnv_ * std::fabs(vg), 1e-30);
+            const double target = clampv(room, 1.0, peakBudgetCap_);
+            if (peakBudgetBlend_ == 0.0) {
+                // Restores P1 without extra add/subtract rounding, including when shelf ON.
+                eqL = budgetDryL; eqR = budgetDryR;
+            } else {
+                eqL = budgetDryL + peakBudgetBlend_ * (eqL - budgetDryL);
+                eqR = budgetDryR + peakBudgetBlend_ * (eqR - budgetDryR);
+                vg *= 1.0 + peakBudgetBlend_ * (target - 1.0);
+            }
+        }
+        // Speaker guard, after the layer and output gains and before the dry sum (position of the s94 research cap).
+        const float layerCapDb=layerCapDb_.load(std::memory_order_relaxed);
+        if(layerCapDb!=layerCapActiveDb_){layerCapActiveDb_=layerCapDb;layerCap_.set(layerCapDb);}
+        if(layerCap_.enabled && p1pppEffective_) {
+            const double capGain=layerCap_.gain(0.5*(layL+layR)*vg*og);
+            layL*=capGain;layR*=capGain;
         }
         // Keep this small delay warm even when diagnostics are off: exact component alignment on arming.
         const double preL = vg * layL * og, preR = vg * layR * og;
@@ -717,7 +1117,58 @@ void Engine::process(float* io, int frames) {
 
         double limitedL = 0.0, limitedR = 0.0;
         lim_.process(preLimitL, preLimitR, limitedL, limitedR);
+        double peak42LayerL=delayedLayerL,peak42LayerR=delayedLayerR;
+        if(peak42InputSamples_>0) {
+            const double vals[6]={eqL*og,eqR*og,preL,preR,peak42RefL,peak42RefR};
+            std::copy_n(vals,6,peak42Inputs_+6*n);
+        }
+        if(p1pppEffective_ && vbWanted()==VB_ALPHA2_P1 && sr_==48000)
+            lim_.capCurrentGain(boundedPeak50_.process(eqL*og,eqR*og,preL,preR));
+        if(layerPeak42_.enabled() && (!p1pppEffective_ || (vbWanted()==VB_ALPHA2_P1 && sr_==48000))) {
+            double ddL=0.,ddR=0.;
+            layerPeak42_.process(eqL*og,eqR*og,preL,preR,peak42RefL,peak42RefR,lat,
+                                 ddL,ddR,peak42LayerL,peak42LayerR);
+            limitedL=(ddL+peak42LayerL)*lim_.currentGain();
+            limitedR=(ddR+peak42LayerR)*lim_.currentGain();
+        }
 
+        if(devMeterOn_ && !stablePriming_) {
+            double common=0.5*(stableEffective_&&!stablePriming_?stableMix[0]+stableMix[1]:xl+xr);
+            double source=0.5*(xl+xr);
+            for(int i=0;i<kDevLpSections;++i) {
+                common=devLp_[i].tick(devCommonState_[i],common);
+                source=devLp_[i].tick(devSourceState_[i],source);
+            }
+            const int write=static_cast<int>(devSample_&16383);
+            devInputDelay_[0][write]=static_cast<float>(common);devInputDelay_[1][write]=static_cast<float>(source);
+            const int delay=clampv(vbDelay_+lat,0,16383),read=(write-delay+16384)&16383;
+            const double commonAligned=devInputDelay_[0][read],sourceAligned=devInputDelay_[1][read];
+            devStagePower_[0]+=commonAligned*commonAligned;devStagePower_[1]+=sourceAligned*sourceAligned;
+            // Stereo power, same gain and same physical time before/after dedicated layer control.
+            const double requested=.5*(delayedLayerL*delayedLayerL+delayedLayerR*delayedLayerR);
+            const double actual=.5*(peak42LayerL*peak42LayerL+peak42LayerR*peak42LayerR);
+            devStagePower_[2]+=requested;
+            // Replace the earlier pre-control accumulator; that tap is deliberately no longer presented as actual.
+            devBinLay_+=actual;
+            const auto q=devDecisionQueue_[write];
+            if(q.state!=0)devDecision_=q;
+            devDecisionQueue_[write]=DevDecision{};
+            devBinFinalGr_=std::max(devBinFinalGr_,dbOrFloor(1./std::max(lim_.currentGain(),1e-30)));
+            if(++devBinN_>=devBinLen_) {
+                const int slot=static_cast<int>(devRingCount_%kDevRing);
+                float vals[kDevStageFields]={dbOrFloor(std::sqrt(2*devStagePower_[0]/devBinLen_)),
+                    dbOrFloor(std::sqrt(2*devStagePower_[1]/devBinLen_)),dbOrFloor(std::sqrt(2*devStagePower_[2]/devBinLen_)),
+                    devDecision_.f,devDecision_.reason,devDecision_.fit,devDecision_.state,devBinFinalGr_,
+                    static_cast<float>(std::max(0.,10*std::log10(std::max(devStagePower_[2],1e-30)/std::max(devBinLay_,1e-30))))};
+                for(int j=0;j<kDevStageFields;++j)devStages_[slot][j].store(vals[j],std::memory_order_relaxed);
+                devRingDry_[slot].store(vals[1],std::memory_order_relaxed);
+                devRingLay_[slot].store(dbOrFloor(std::sqrt(2*std::max(0.,devBinLay_)/devBinLen_)),std::memory_order_relaxed);
+                devRingPub_.store(++devRingCount_,std::memory_order_release);
+                devBinDry_=devBinLay_=0;devBinN_=0;devBinFinalGr_=0;
+                std::fill_n(devStagePower_,3,0.);
+            }
+            ++devSample_;
+        }
         // Isolate the actual generator contribution, not the difference between two reruns.
         // The full sum above still drives its original limiter and the loudness matcher below.
         const double sx = soloX_.next();
@@ -765,15 +1216,15 @@ void Engine::process(float* io, int frames) {
         const double normalL = mix * limitedL + (1.0 - mix) * bl;
         const double normalR = mix * limitedR + (1.0 - mix) * br;
         // No bypass leaks into a settled solo monitor; VB-off/zero-layer means silence.
-        const double yl = (sx == 0.0 ? normalL : (1.0 - sx) * normalL + sx * mix * sl) * fade * gate * vbx;
-        const double yr = (sx == 0.0 ? normalR : (1.0 - sx) * normalR + sx * mix * sr) * fade * gate * vbx;
+        const double yl = (sx == 0.0 ? normalL : (1.0 - sx) * normalL + sx * mix * sl) * fade * gate * vbx * pppFade;
+        const double yr = (sx == 0.0 ? normalR : (1.0 - sx) * normalR + sx * mix * sr) * fade * gate * vbx * pppFade;
         // checked as written (float): a finite double past the float range would still leave as Inf
         if (!isFiniteBits(static_cast<float>(yl)) || !isFiniteBits(static_cast<float>(yr))) badOutput = true;
 
         if (capture) {
-            const double sharedGate = mix * fade * gate * vbx * lim_.currentGain();
-            const double gl = delayedLayerL * sharedGate, gr = delayedLayerR * sharedGate;
-            const double fullL = normalL * fade * gate * vbx, fullR = normalR * fade * gate * vbx;
+            const double sharedGate = mix * fade * gate * vbx * pppFade * lim_.currentGain();
+            const double gl = peak42LayerL * sharedGate, gr = peak42LayerR * sharedGate;
+            const double fullL = normalL * fade * gate * vbx * pppFade, fullR = normalR * fade * gate * vbx * pppFade;
             diagnosticLayer_[2*n] = static_cast<float>(gl); diagnosticLayer_[2*n+1] = static_cast<float>(gr);
             diagnosticFull_[2*n] = static_cast<float>(fullL); diagnosticFull_[2*n+1] = static_cast<float>(fullR);
             const double pairs[10] = {xl,xr,preL,preR,gl,gr,fullL,fullR,yl,yr};
@@ -831,8 +1282,7 @@ void Engine::process(float* io, int frames) {
     }
     if (dynEnv_ < 1e-24) dynEnv_ = 0.0;
     if (matchOn) match_.flushTiny();
-    cond_.flushTiny();
-    if (devMeterOn_) {
+    if (devMeterOn_ && !stablePriming_) {
         for (auto& st : sDevLp_) st.flushTiny();
         sDevBpDry_.flushTiny(); sDevBpLay_.flushTiny();
         if (devPowDry_ < 1e-24) devPowDry_ = 0.0;
@@ -875,6 +1325,10 @@ void Engine::process(float* io, int frames) {
     mMatchMeasured_.store(match_.measured(), std::memory_order_relaxed);
     mEstLevel_.store(phoneOn ? static_cast<float>(std::max(-120.0, phone_.maxLevelDb())) : -120.f, std::memory_order_relaxed);
     mEstGr_.store(phoneOn ? static_cast<float>(phone_.grDb(1)) : 0.f, std::memory_order_relaxed);
+    if(stageCTelemetry_ && !stablePriming_){
+        stageCLate_.store(stageCLateBase_+vbAlpha2_.stats88().lateFrames,std::memory_order_relaxed);
+        stageCSeparatorTicks_.store(separatorTicks88_,std::memory_order_relaxed);
+    }
     mBlocks_.fetch_add(1, std::memory_order_relaxed);
     const auto research = vbCur_ >= 0 ? vbMods_[vbCur_]->researchStats() : VbResearchStats{};
     mVbScene_.store(research.scene, std::memory_order_relaxed);
@@ -985,6 +1439,17 @@ void Engine::devUpdateSlots(const DevHarmonics& h, bool have, double level, doub
     }
 }
 
+void Engine::resetDevTelemetry() {
+    for(auto& s:devCommonState_)s.reset();
+    for(auto& s:devSourceState_)s.reset();
+    std::memset(devInputDelay_,0,sizeof devInputDelay_);
+    std::fill_n(devDecisionQueue_,16384,DevDecision{});
+    devBinDry_=devBinLay_=0;devBinN_=0;devRingCount_=0;devRingPub_.store(0,std::memory_order_relaxed);
+    for(auto& v:devRingDry_)v.store(-120.f,std::memory_order_relaxed);
+    for(auto& v:devRingLay_)v.store(-120.f,std::memory_order_relaxed);
+    devDecision_=DevDecision{};devSample_=0;devBinFinalGr_=0;std::fill_n(devStagePower_,3,0.);
+    for(auto& row:devStages_)for(int j=0;j<kDevStageFields;++j)row[j].store(j<3?-120.f:0.f,std::memory_order_relaxed);
+}
 int Engine::copyDevMeters(float* out, int capacity) const {
     if (out == nullptr || capacity < kDevMeterSize) return 0;
     const uint32_t count = devRingPub_.load(std::memory_order_acquire);
@@ -995,6 +1460,10 @@ int Engine::copyDevMeters(float* out, int capacity) const {
         const int slot = static_cast<int>((count + static_cast<uint32_t>(i)) % kDevRing);
         out[kDevFields + 2 * i] = devRingDry_[slot].load(std::memory_order_relaxed);
         out[kDevFields + 2 * i + 1] = devRingLay_[slot].load(std::memory_order_relaxed);
+    }
+    for(int i=0;i<kDevRing;++i) {
+        const int slot=static_cast<int>((count+static_cast<uint32_t>(i))%kDevRing);
+        for(int j=0;j<kDevStageFields;++j)out[kDevFields+2*kDevRing+i*kDevStageFields+j]=devStages_[slot][j].load(std::memory_order_relaxed);
     }
     return kDevMeterSize;
 }
@@ -1008,13 +1477,16 @@ int Engine::copyHarmonicTrace(float* out,int capacity) const {
 
 void Engine::processInt16(const int16_t* in, int16_t* out, int frames) {
     if (in == nullptr || out == nullptr || frames <= 0) return;
-    const size_t n = static_cast<size_t>(frames) * 2;
-    if (scratch_.size() < n) scratch_.resize(n);  // grows only when a longer block shows up
-    for (size_t i = 0; i < n; ++i) scratch_[i] = in[i] * (1.0f / 32768.0f);
-    process(scratch_.data(), frames);
-    for (size_t i = 0; i < n; ++i) {
-        const float v = std::nearbyint(scratch_[i] * 32768.0f);
-        out[i] = static_cast<int16_t>(clampv(v, -32768.0f, 32767.0f));
+    for(int offset=0;offset<frames;) {
+        const int block=std::min(frames-offset,static_cast<int>(scratch_.size()/2));
+        const size_t n=static_cast<size_t>(block)*2;
+        for(size_t i=0;i<n;++i)scratch_[i]=in[2*offset+i]*(1.0f/32768.0f);
+        process(scratch_.data(),block);
+        for(size_t i=0;i<n;++i) {
+            const float v=std::nearbyint(scratch_[i]*32768.0f);
+            out[2*offset+i]=static_cast<int16_t>(clampv(v,-32768.0f,32767.0f));
+        }
+        offset+=block;
     }
 }
 
@@ -1039,6 +1511,7 @@ void Engine::readMeters(float* out, int count) {
     if (out == nullptr || count <= 0) return;
     wantPhoneModel();
     float m[M_COUNT];
+    m[M_P1PPP_STATE]=static_cast<float>(p1pppPublished_.load(std::memory_order_relaxed));
     m[M_DIAGNOSTIC_SOLO_BLEND] = mSoloBlend_.load(std::memory_order_relaxed);
     m[M_DIAGNOSTIC_SOLO_EXTRA_GR_DB] = static_cast<float>(std::max(0.0, -linToDb(mSoloExtraMin_.exchange(1.f, std::memory_order_relaxed))));
     m[M_IN_PEAK_DB] = dbOrFloor(mInPeak_.exchange(0.f, std::memory_order_relaxed));
@@ -1069,4 +1542,3 @@ void Engine::readMeters(float* out, int count) {
 }
 
 }  // namespace pvb
-

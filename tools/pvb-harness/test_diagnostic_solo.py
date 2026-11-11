@@ -11,7 +11,7 @@ lib.pvb_set_diagnostic_capture.argtypes = [ctypes.c_void_p, ctypes.c_int]
 lib.pvb_copy_diagnostic.argtypes = [ctypes.c_void_p, FP, FP, ctypes.c_int, FP, ctypes.c_int]
 lib.pvb_copy_diagnostic.restype = ctypes.c_int
 FIELDS = 32 + lib.pvb_param_count()
-assert FIELDS == 89  # 32 observed + 57 parameters (33 + 14 developer-mode + 9 crosstalk-cancellation values + table scale)
+assert FIELDS == 90  # 32 observed + 58 stable parameters (s50 atomic preset appended)
 
 def capture(e, x, block=4096):
     lib.pvb_set_diagnostic_capture(e.h, 1)
@@ -31,7 +31,7 @@ def signal(sr,seconds,amp=.09):
 
 for sr in [44100,48000]:
     x=signal(sr,2.2)
-    for algo in range(6):
+    for algo in [6]:
         kw=dict(vb_on=1,vb_algo=algo,vb_level_db=9,out_db=-18,ramp_ms=0)
         normal=Engine(lib,sr,**kw); solo=Engine(lib,sr,**kw)
         # Warm up identical states; then switch only the monitor.
@@ -50,11 +50,11 @@ for sr in [44100,48000]:
         exp=normal.process(x[:sr]); got=solo.process(x[:sr])
         assert np.array_equal(exp[int(.11*sr):],got[int(.11*sr):])
         normal.close();solo.close()
-print('PASS: all six algorithms, 44.1/48k: hidden full mix and matcher unchanged, solo=actual component, same latency, exact return')
+print('PASS: P1, 44.1/48k: hidden full mix and matcher unchanged, solo=actual component, same latency, exact return')
 
 # Independent additive reference: with limiter inactive, full-layer equals level-muted generator path.
 x=signal(48000,3,.025)
-for algo in [0,1,5]:
+for algo in [6]:
     e=Engine(lib,48000,vb_on=1,vb_algo=algo,vb_level_db=9,out_db=-20,ramp_ms=0)
     zero=Engine(lib,48000,vb_on=1,vb_algo=algo,vb_level_db=-120,out_db=-20,ramp_ms=0)
     (heard,layer,full),tr=capture(e,x)
@@ -74,8 +74,8 @@ print('PASS: no layer/bypass leakage and gate cannot be escaped')
 
 # Stress isolated-layer protection, preserving the full mix exactly at high gain.
 x=signal(48000,3,.8)
-a=Engine(lib,48000,vb_on=1,vb_algo=5,vb_level_db=12,out_db=12,ramp_ms=0)
-b=Engine(lib,48000,vb_on=1,vb_algo=5,vb_level_db=12,out_db=12,ramp_ms=0,diagnostic_solo=1)
+a=Engine(lib,48000,vb_on=1,vb_algo=6,vb_level_db=12,out_db=12,ramp_ms=0)
+b=Engine(lib,48000,vb_on=1,vb_algo=6,vb_level_db=12,out_db=12,ramp_ms=0,diagnostic_solo=1)
 y=a.process(x);(solo,layer,full),tr=capture(b,x)
 assert np.array_equal(full,y)
 assert np.isfinite(solo).all() and true_peak_db(solo[24000:]) < -.8
@@ -89,8 +89,8 @@ a.close();b.close()
 print('PASS: limiter stress, finite/true-peak safe output and rejected stale capture')
 # A solo-only UI update must not shorten a volume/filter ramp already in flight.
 x=signal(48000,1)
-a=Engine(lib,48000,vb_on=1,vb_algo=5,out_db=-18,ramp_ms=0)
-b=Engine(lib,48000,vb_on=1,vb_algo=5,out_db=-18,ramp_ms=0)
+a=Engine(lib,48000,vb_on=1,vb_algo=6,out_db=-18,ramp_ms=0)
+b=Engine(lib,48000,vb_on=1,vb_algo=6,out_db=-18,ramp_ms=0)
 a.process(x);b.process(x)
 a.set(out_db=-6,low_db=8,ramp_ms=300);b.set(out_db=-6,low_db=8,ramp_ms=300)
 a.process(x[:2400]);b.process(x[:2400])

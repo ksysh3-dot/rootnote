@@ -206,9 +206,11 @@ object PvbGeneral {
     const val KEY_DEV_MIC_CORR = "dev_mic_spectrum_corr"
 
     /** Developer mode is offered: general build, research tools unlocked. */
-    val devModeAvailable: Boolean get() = PvbBuild.general && PvbBuild.researchUnlocked
+    val devModeAvailable: Boolean get() = PvbBuild.researchUi
 
-    fun openDevMode(context: Context) {
+    fun openDevMode(context: Context) = StageCApp.showDeveloperMenu(context)
+
+    fun openLegacyDevMode(context: Context) {
         if (!PvbBuild.general) return
         try {
             context.startActivity(Intent().setClassName(context.packageName, DEVMODE_ACTIVITY))

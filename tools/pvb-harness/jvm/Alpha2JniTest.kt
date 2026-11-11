@@ -27,7 +27,9 @@ fun main(args: Array<String>) {
             }
             val meters = FloatArray(PvbMeter.COUNT); check(e.readMeters(meters))
             check(meters[PvbMeter.VB].toInt() == model.id + 1)
-            check(e.latencyFrames == if (fs == 48000) 7140 else 6561)
+            // P1+ / P1++: centred HPSS waits five more 16-sample hops at the 3 kHz core (1280 / 1176 host frames)
+            val extra = 0
+            check(e.latencyFrames == (if (fs == 48000) 7140 else 6561) + extra) { "latency ${e.latencyFrames} for ${model.key} at $fs" }
             check(output.all { it.isFinite() } && output.any { abs(it) > 1e-5f })
             check(output.maxOf { abs(it) } < 1f)
             for ((suffix, x) in listOf("in" to input, "out" to output)) {
@@ -37,6 +39,6 @@ fun main(args: Array<String>) {
             }
         }
     }
-    check(PvbModels.models.size == 7)
-    println("Alpha2/3 JNI: seven selectable models (incl. gentle12 ID3) at 44.1/48kHz, finite audio, IDs and latency passed")
+    check(PvbModels.models.size == 1)
+    println("P1 JNI: stable ID 6 at 44.1/48 kHz, finite audio and latency passed")
 }
