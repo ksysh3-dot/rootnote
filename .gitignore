@@ -35,3 +35,4 @@ tools/pvb-harness/study/private/
 
 # The conducted control network is part of the app source distribution.
 !app/src/main/assets/E60KD.bin
+/.kotlin/

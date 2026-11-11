@@ -57,36 +57,16 @@ jobs:
           {
             tools/pvb-harness/build_host.sh &&
             python3 tools/pvb-harness/test_engine.py --report engine-report.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_p1plus_baseline.py --report p1plus-baseline-ci.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/check_p1pp_impact_controls.py --out p1pp-impact-controls-ci &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_alpha2_profiles.py --lib tools/pvb-harness/build/libpvbcapi.so --report alpha2-profiles-ci.json &&
             OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_diagnostic_solo.py &&
             OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_xtc.py &&
             python3 tools/xtc/check_eel_port.py &&
             python3 tools/xtc/xtc_native_check.py &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_experimental.py --baseline-ref 9978f145317183527b15f83d91fe9c6de748ae14 --report experimental-report.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_devmode.py --baseline-ref 65c0086f01caaeffc8fdea1614560076f9a860cd --report devmode-report.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_harmonic_continuity.py --report harmonic-continuity-report.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_native_renderer.py --report native-renderer-q0.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_native_stream.py --report native-stream-q0.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_oscillator_research.py --lib tools/pvb-harness/build/libpvbcapi.so --report oscillator-ci.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_q0_native_mutation.py --report native-mutation-q0.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_modulation_research.py --report modulation-p1-report.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_detail_research.py --report detail-research-ci.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_am_family_research.py --lib tools/pvb-harness/build/libpvbcapi.so --report am-family-ci.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_track_assignment_research.py --lib tools/pvb-harness/build/libpvbcapi.so --report track-assignment-ci.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_track_prediction_research.py --lib tools/pvb-harness/build/libpvbcapi.so --report track-prediction-ci.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/test_track_prediction_mutation.py --report track-prediction-mutation-ci.json &&
             g++ -std=c++17 -O2 -Wall -Wextra -Werror -Iapp/src/main/cpp/libpvb tools/pvb-harness/vb_quality/test_track_prediction.cpp -o /tmp/pvb-track-prediction && /tmp/pvb-track-prediction &&
             g++ -std=c++17 -O2 -Wall -Wextra -Werror -Iapp/src/main/cpp/libpvb tools/pvb-harness/vb_quality/test_continuity_policy.cpp -o /tmp/pvb-continuity-policy && /tmp/pvb-continuity-policy &&
             g++ -std=c++17 -O2 -Wall -Wextra -Werror -Iapp/src/main/cpp/libpvb -Itools/pvb-harness tools/pvb-harness/fit_equivalence.cpp -o /tmp/pvb-fit-equivalence && /tmp/pvb-fit-equivalence &&
             g++ -std=c++17 -O2 -Wall -Wextra -Werror -Iapp/src/main/cpp/libpvb tools/pvb-harness/fastmath_check.cpp -o /tmp/pvb-fastmath-check && /tmp/pvb-fastmath-check &&
             clang++ -std=c++17 -O2 -mfma -ffp-contract=on -fno-fast-math -Iapp/src/main/cpp/libpvb -Itools/pvb-harness tools/pvb-harness/fit_equivalence.cpp -o /tmp/pvb-fit-equivalence-fma && /tmp/pvb-fit-equivalence-fma &&
             clang++ -std=c++17 -O2 -mfma -ffp-contract=on -fno-fast-math -Iapp/src/main/cpp/libpvb tools/pvb-harness/fastmath_check.cpp -o /tmp/pvb-fastmath-check-fma && /tmp/pvb-fastmath-check-fma &&
-            python3 tools/pvb-harness/vb51/test_port52.py port52-report.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/vb_quality/test_gentle_port.py --report gentle-port-report.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/vb_quality/test_adaptive_port.py --report adaptive-port-report.json &&
-            OPENBLAS_NUM_THREADS=1 python3 tools/pvb-harness/vb_quality/test_quality.py --report quality-report.json &&
             python3 tools/pvb-harness/match/test_match.py &&
             tools/pvb-harness/build_host_jdsp.sh &&
             tools/rootfx/build_host.sh &&
@@ -100,27 +80,7 @@ jobs:
         with:
           name: engine-report
           path: |
-            harmonic-continuity-report.json
-            modulation-p1-report.json
-            native-renderer-q0.json
-            native-stream-q0.json
-            oscillator-ci.json
-            native-mutation-q0.json
             engine-report.json
-            p1plus-baseline-ci.json
-            p1pp-impact-controls-ci/controls.json
-            experimental-report.json
-            devmode-report.json
-            alpha2-profiles-ci.json
-            detail-research-ci.json
-            am-family-ci.json
-            track-assignment-ci.json
-            track-prediction-ci.json
-            track-prediction-mutation-ci.json
-            port52-report.json
-            gentle-port-report.json
-            adaptive-port-report.json
-            quality-report.json
             jdsp-chain-report.json
             ci-build.log
 

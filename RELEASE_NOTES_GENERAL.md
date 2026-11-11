@@ -1,4 +1,21 @@
 **Rootnote** — phone speaker virtual bass · unofficial RootlessJamesDSP fork
+
+## 0.9.0-beta.13 (2026-11-11)
+
+### 한국어
+- 지휘형의 저음 추적을 개선해, 이어지는 저음이 끊기거나 옥타브가 흔들리는 일을 줄였습니다.
+- 모드를 **끔·지휘형** 두 가지로 정리했습니다. 기존 강함·분리형·epoch6 설정은 지휘형으로 옮깁니다. 끔은 유지합니다.
+- 같은 소리를 만드는 계산을 줄여 처리 부하를 낮췄습니다. 호스트 비교에서 오디오 480프레임당 평균 처리 시간은 이전 지휘형 대비 30.8% 줄었습니다. 폰에서의 속도는 기기에 따라 다릅니다.
+- 새 저음 추적은 **48 kHz 출력 전용**입니다. 다른 출력 샘플레이트에서는 이전 지휘형 경로를 사용합니다.
+- 알려진 한계: 옥타브 관계인 두 음이 동시에 울리면 하나의 저음으로 묶을 수 있습니다. 깊게 처지는 구간은 남아 있습니다. 약 0.15초의 처리 지연이 있습니다.
+
+### English
+- Improved Conducted bass tracking reduces breaks in sustained bass and unstable octave changes.
+- Simplified the modes to **Off and Conducted**. Saved Strong, Separated and epoch6 choices move to Conducted; Off stays Off.
+- Reduced processing load by simplifying calculations while preserving their output. In a host comparison, mean processing time per 480 audio frames fell by 30.8% against the previous Conducted mode. Phone performance varies by device.
+- The new bass tracking requires **48 kHz output**. Other output rates use the previous Conducted processing path.
+- Known limits: two simultaneous notes an octave apart can be grouped into one bass note. Some deep dips remain. Processing adds about 0.15 seconds of delay.
+
 (폰 스피커 가상 저음 · RootlessJamesDSP 기반 비공식 포크)
 
 Beta for Android 10+ (arm64). Not made or supported by the RootlessJamesDSP/JamesDSP developers. GPL-3.0, no warranty.

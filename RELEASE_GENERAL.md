@@ -108,7 +108,7 @@ CI는 `GENERAL_KEYSTORE_B64`를 `$RUNNER_TEMP/general.jks`로 풀고 `GENERAL_KE
 
 - 호스트 JVM: `tools/pvb-harness/jvm/run_jvm_test.sh`에 `GeneralBuildTest.kt` 추가(실제 asset으로 프로파일 일치, 상한 적용, 첫 실행 게이트, ADB 명령, 백업 제외 XML).
 - 홈 화면: `HomeLogicTest.kt`(칩 선택, 상한, 첫 실행 게이트, 볼륨 연동 줄, 문자열). CI는 general APK의 런처가 `HomeActivity` 하나인지, s26u 런처가 `MainActivity`인지 확인합니다.
-- 앱 빌드는 CI에서만 합니다(로컬 Android SDK 없음). 실기기 확인은 아직 하지 않았습니다: 첫 실행 안내 흐름, Shizuku/ADB 설정, 다른 제조사 기종, 정보 화면, 언어 전환.
+- CI에서 두 판을 빌드합니다. 로컬 빌드는 설치된 SDK와 캐시를 사용할 수 있습니다. 실기기 확인은 아직 하지 않았습니다: 첫 실행 안내 흐름, Shizuku/ADB 설정, 다른 제조사 기종, 정보 화면, 언어 전환.
 
 ## 8. 알려진 과제 (known debt)
 
@@ -139,3 +139,9 @@ CI는 `GENERAL_KEYSTORE_B64`를 `$RUNNER_TEMP/general.jks`로 풀고 `GENERAL_KE
 - arm64 전용, R8 꺼짐, 재현 빌드 아님, targetSdk 34는 그대로입니다.
 - 서드파티 라이선스 목록은 `PvbGeneral.THIRD_PARTY`와 `assets/licenses/THIRD_PARTY.txt`에 손으로 적었습니다(oss-licenses 플러그인 없음). 의존성을 바꾸면 함께 고쳐야 합니다.
 - NOTICE.md의 수정 파일 목록은 `tools/list_modified_upstream.sh --write`로 갱신합니다(비교 기준인 upstream 커밋을 먼저 가져와야 함: 스크립트 머리말 참고).
+
+## beta.13 구성 / Configuration
+
+일반판과 개인판 모두 끔·지휘형만 선택합니다. 이전 강함·분리형·epoch6 설정은 지휘형으로 옮기고 끔은 유지합니다. 가족 진폭망은 네이티브 상수로 내장됩니다. 48 kHz 외 출력은 기존 지휘형 경로를 사용합니다. 개발자 메뉴의 선택형 수치 계측은 PRIVACY.md에 적었습니다.
+
+Both flavors offer Off and Conducted. Retired mode settings migrate to Conducted; Off remains Off. The family amplitude network is embedded as native constants. Other output rates use the previous Conducted path. Optional numeric telemetry is documented in PRIVACY.md.
