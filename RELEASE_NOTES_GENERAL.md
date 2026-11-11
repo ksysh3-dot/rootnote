@@ -11,9 +11,10 @@ The corresponding source is the tagged commit; `source-*.tar.gz` below contains 
 - Measured settings exist only for the Galaxy S26 Ultra; other phones start with conservative settings based on published measurements of 92 Android phones.
 - Privacy: only settings are stored; no song titles, no recordings, nothing sent (see PRIVACY.md).
 
-## 0.9.0-beta.13
+## 0.9.0-beta.14
 
 ### 한국어
+- beta.12 다음 공개판입니다. beta.13 번호는 릴리스 작업이 서명 확인 단계에서 멈춰 배포되지 않았습니다.
 - 지휘형의 저음 추적을 개선해, 이어지는 저음이 끊기거나 옥타브가 흔들리는 일을 줄였습니다.
 - 모드를 **끔·지휘형** 두 가지로 정리했습니다. 기존 강함·분리형·epoch6 설정은 지휘형으로 옮깁니다. 끔은 유지합니다.
 - 같은 소리를 만드는 계산을 줄여 처리 부하를 낮췄습니다. 호스트 비교에서 오디오 480프레임당 평균 처리 시간은 이전 지휘형 대비 30.8% 줄었습니다. 폰에서의 속도는 기기에 따라 다릅니다.
@@ -21,6 +22,7 @@ The corresponding source is the tagged commit; `source-*.tar.gz` below contains 
 - 알려진 한계: 옥타브 관계인 두 음이 동시에 울리면 하나의 저음으로 묶을 수 있습니다. 깊게 처지는 구간은 남아 있습니다. 약 0.15초의 처리 지연이 있습니다.
 
 ### English
+- This is the release after beta.12. The beta.13 number was never published: its release job stopped at the signature check.
 - Improved Conducted bass tracking reduces breaks in sustained bass and unstable octave changes.
 - Simplified the modes to **Off and Conducted**. Saved Strong, Separated and epoch6 choices move to Conducted; Off stays Off.
 - Reduced processing load by simplifying calculations while preserving their output. In a host comparison, mean processing time per 480 audio frames fell by 30.8% against the previous Conducted mode. Phone performance varies by device.
