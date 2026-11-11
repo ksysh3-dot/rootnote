@@ -241,13 +241,13 @@ Java_me_timschneeberger_rootlessjamesdsp_pvb_PvbNative_loadStableWeights(JNIEnv*
 
 // Lifecycle entry: caller has joined the previous audio generation before calling.
 extern "C" JNIEXPORT jboolean JNICALL
-Java_me_timschneeberger_rootlessjamesdsp_pvb_PvbNative_prepareStageC(JNIEnv* env,jclass,jlong handle,jint mode,jbyteArray data,jboolean worker,jboolean telemetry,jint rate){
+Java_me_timschneeberger_rootlessjamesdsp_pvb_PvbNative_prepareStageC(JNIEnv* env,jclass,jlong handle,jint mode,jbyteArray data,jboolean worker,jboolean telemetry,jint rate,jboolean familyP2){
     auto* h=fromJ(handle);if(!h)return JNI_FALSE;
     const jsize n=data?env->GetArrayLength(data):0;
     jbyte* bytes=data?env->GetByteArrayElements(data,nullptr):nullptr;
     if(data && !bytes)return JNI_FALSE;
     bool ok=false;
-    try {ok=h->engine.prepareStageC(mode,reinterpret_cast<unsigned char*>(bytes),n,worker==JNI_TRUE,telemetry==JNI_TRUE,rate);}
+    try {ok=h->engine.prepareStageC(mode,reinterpret_cast<unsigned char*>(bytes),n,worker==JNI_TRUE,telemetry==JNI_TRUE,rate,familyP2==JNI_TRUE);}
     catch(...) {ok=false;}
     if(bytes)env->ReleaseByteArrayElements(data,bytes,JNI_ABORT);
     return ok?JNI_TRUE:JNI_FALSE;

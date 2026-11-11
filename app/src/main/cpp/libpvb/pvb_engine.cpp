@@ -2,6 +2,7 @@
 //
 // Copyright (C) 2026 PVB project. Licensed under the GNU GPL v3 (same as RootlessJamesDSP).
 #include "pvb_engine.h"
+#include "pvb_family_weights.h"
 
 #include <chrono>
 #include <climits>
@@ -309,10 +310,11 @@ bool Engine::setPeakBudgetResearch(int enabled, double cap, double ceilingDb,
 void Engine::setHandoverHost(bool on){vbAlpha2_.setHandover(on);}
 void Engine::setFadeTrimHost(bool on){vbAlpha2_.setFadeInertia(on);layerTrim_=on?kFt3mTrim:1.0;}
 void Engine::setFitRelaxHost(bool on){vbAlpha2_.setFitRelax(on);layerTrim_=on?kCf375mTrim:(vbAlpha2_.fadeInertia()?kFt3mTrim:1.0);}
-bool Engine::prepareStageC(int mode,const unsigned char* data,size_t bytes,bool worker,bool telemetry,int sampleRate) {
+bool Engine::prepareStageC(int mode,const unsigned char* data,size_t bytes,bool worker,bool telemetry,int sampleRate,bool familyP2) {
     if(mode<0 || mode>4 || (worker && mode!=3))return false;
     if((mode==2 || mode==4) && (!data || bytes!=531208))return false;
     if(mode==3 && (!data || bytes!=425640))return false;
+    if(mode==3 && familyP2)worker=false; // P2 stays on the lock-free synchronous conductor route.
     setStream91(false,false,0);
     stable_.unload();
     worker91_.reset();
@@ -325,6 +327,7 @@ bool Engine::prepareStageC(int mode,const unsigned char* data,size_t bytes,bool 
     {
         std::lock_guard<std::mutex> lock(mtx_);
         defaultParams(active_);defaultParams(pending_);hasPending_=false;pendingSr_=0;
+        publishP2Settings(true,true);p2SeenSeq_=p2Seq_.load();p2SeenParams_=p2ParamTicket_.load();p2SeenRate_=p2RateTicket_.load();
     }
     stableEffective_=false;separatorPeak70_=false;setP1pppControls(false);
     // s95: strong and conducted hold a missing track 12 hops; the other modes were not measured with it.
@@ -335,6 +338,9 @@ bool Engine::prepareStageC(int mode,const unsigned char* data,size_t bytes,bool 
     // s110: a conductor candidate within 50 cents relaxes the fit gate that drives fade (CF375M), with the
     // layer trimmed -0.161 dB and a further -0.4644 dB as measured. Measured on the conducted mode only.
     vbAlpha2_.setFadeInertia(mode==3);vbAlpha2_.setFitRelax(mode==3);layerTrim_=mode==3?kCf375mTrim:1.0;
+    p2SettingsRoute_=mode==3 && sampleRate==48000 && familyP2;
+    vbAlpha2_.setFamilyP2(p2SettingsRoute_);
+    if(mode==3 && sampleRate==48000 && familyP2)layerTrim_*=family7::kLayerMultiplier;
     processed_=false;resetRequested_.store(false);configure(sampleRate);
     if(mode==3 && !setStream91(true,worker,0))return false;
     control91_.observedCount.store(0);control91_.observedMax.store(0);
@@ -358,6 +364,7 @@ void Engine::copyStageC(int64_t* out)const {
 void Engine::setSampleRate(int sampleRate) {
     std::lock_guard<std::mutex> lock(mtx_);
     pendingSr_ = sampleRate;
+    publishP2Settings(false,true);
 }
 
 bool Engine::validP1ppp(const float* p) const {
@@ -391,7 +398,7 @@ bool Engine::trySetParams(const float* values,int count) {
         if((pendingSr_>0?pendingSr_:srMeter_.load(std::memory_order_relaxed))!=48000 || !validP1ppp(next))return false;
     }
     sanitizeParams(next);
-    std::copy_n(next,P_COUNT,pending_);hasPending_=true;return true;
+    std::copy_n(next,P_COUNT,pending_);hasPending_=true;publishP2Settings(true,false);return true;
 }
 void Engine::setParams(const float* values,int count) { (void)trySetParams(values,count); }
 
@@ -399,7 +406,7 @@ bool Engine::setP1pppPreset(bool enabled) {
     std::lock_guard<std::mutex> lock(mtx_);
     float next[P_COUNT];std::copy_n(pending_,P_COUNT,next);next[P_P1PPP]=enabled?1.f:0.f;
     if(enabled && ((pendingSr_>0?pendingSr_:srMeter_.load(std::memory_order_relaxed))!=48000 || !validP1ppp(next)))return false;
-    std::copy_n(next,P_COUNT,pending_);hasPending_=true;return true;
+    std::copy_n(next,P_COUNT,pending_);hasPending_=true;publishP2Settings(true,false);return true;
 }
 void Engine::setP1pppControls(bool on) {
     // This batch cannot fail: its constants were validated before enqueue.
@@ -530,6 +537,10 @@ void Engine::applyDev(const float* v) {
 
 void Engine::configure(int sampleRate) {
     sr_ = clampv(sampleRate, 8000, 192000);
+    if(p2SettingsRoute_) {
+        vbAlpha2_.setFamilyP2(sr_==48000);
+        layerTrim_=kCf375mTrim*(sr_==48000?family7::kLayerMultiplier:1.);
+    }
     const bool presetRequested=active_[P_P1PPP]>=.5f;
     stableEffective_=presetRequested && active_[P_P1PPP]>=1.5f && sr_==48000 && stable_.loaded();separatorPeak70_=stableEffective_;
     if(presetRequested || p1pppEffective_)setP1pppControls(presetRequested && sr_==48000);
@@ -743,30 +754,48 @@ void Engine::primeStable(int physicalFrames) {
     separatorMix70_=previous;p1pppFade_=pf;p1pppPhase_=ph;p1pppHold_=hold;fade_=recovery;
     stablePriming_=false;diagnosticCapture_=cap;publishP1ppp();
 }
+
+void Engine::publishP2Settings(bool params,bool rate) {
+    p2Seq_.fetch_add(1);
+    if(params) {
+        for(int i=0;i<P_COUNT;++i)p2Params_[i].store(pending_[i]);
+        p2ParamTicket_.fetch_add(1);
+    }
+    if(rate){p2Rate_.store(pendingSr_);p2RateTicket_.fetch_add(1);}
+    p2Seq_.fetch_add(1);
+}
+bool Engine::readP2Settings(float* p,bool& has,int& rate) {
+    const uint32_t before=p2Seq_.load();
+    if((before&1u) || before==p2SeenSeq_)return false;
+    const uint32_t params=p2ParamTicket_.load(),sampleRate=p2RateTicket_.load();
+    for(int i=0;i<P_COUNT;++i)p[i]=p2Params_[i].load();
+    const int requested=p2Rate_.load();
+    if(p2Seq_.load()!=before)return false;
+    has=params!=p2SeenParams_;rate=sampleRate!=p2SeenRate_?requested:0;
+    p2SeenSeq_=before;p2SeenParams_=params;p2SeenRate_=sampleRate;return true;
+}
+
 void Engine::process(float* io, int frames) {
     if (io == nullptr || frames <= 0) return;
     const auto t0 = std::chrono::steady_clock::now();
     DenormalScope denormals;
 
-    // Pick up new settings without ever blocking the audio thread.
-    if (mtx_.try_lock()) {
-        const int newSr = pendingSr_;
-        pendingSr_ = 0;
-        float p[P_COUNT];
-        bool has = hasPending_;
-        if (has) {
-            std::memcpy(p, pending_, sizeof p);
-            hasPending_ = false;
-        }
-        mtx_.unlock();
-
-        if (newSr > 0 && newSr != sr_) {
-            if (has) std::memcpy(active_, p, sizeof p);
+    // P2: one atomic snapshot attempt. Other modes retain the s91k settings route.
+    float p[P_COUNT];bool has=false;int newSr=0;bool settings=false;
+    if(p2SettingsRoute_) {
+        settings=readP2Settings(p,has,newSr);
+    } else if(mtx_.try_lock()) {
+        newSr=pendingSr_;pendingSr_=0;has=hasPending_;
+        if(has){std::memcpy(p,pending_,sizeof p);hasPending_=false;}
+        mtx_.unlock();settings=true;
+    }
+    if(settings) {
+        if(newSr>0 && newSr!=sr_) {
+            if(has)std::memcpy(active_,p,sizeof p);
             else if(p1pppQueued_)std::memcpy(active_,p1pppNext_,sizeof active_);
-            configure(newSr);  // snaps all values and clears the filter memory
-            has = false;
+            configure(newSr);has=false;
         }
-        if (has) {
+        if(has) {
             if(p[P_P1PPP]>=.5f || active_[P_P1PPP]>=.5f || p1pppPhase_!=PPP_STEADY)queueP1ppp(p);
             else applyParams(p,false);
         }

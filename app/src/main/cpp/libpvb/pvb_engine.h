@@ -221,7 +221,7 @@ public:
     bool loadWorker91(const unsigned char* p,size_t n){worker91_=std::make_unique<ControlWorker>();return worker91_->stream.load(p,n);}
     uint64_t stale91()const{return vbAlpha2_.stats88().staleHops;}
     // Service lifecycle only: no audio generation may be alive during prepare.
-    bool prepareStageC(int mode,const unsigned char* data,size_t bytes,bool worker,bool telemetry,int sampleRate);
+    bool prepareStageC(int mode,const unsigned char* data,size_t bytes,bool worker,bool telemetry,int sampleRate,bool familyP2=true);
     // Speaker guard of the fixed modes, dBFS; 0 = off. Any thread: the audio loop reads one atomic.
     void setLayerCapDb(float db){layerCapDb_.store(db,std::memory_order_relaxed);}
     // Fixed modes: accept EQ values other than the defaults (low-mid gain still no higher than the default).
@@ -398,6 +398,17 @@ private:
     float pending_[P_COUNT] = {};
     bool hasPending_ = false;
     int pendingSr_ = 0;
+    // P2 uses a bounded atomic snapshot. Writers retain mtx_; the audio owner never takes it.
+    static_assert(std::atomic<float>::is_always_lock_free && std::atomic<uint32_t>::is_always_lock_free,
+                  "P2 parameter snapshots require lock-free 32-bit atomics");
+    bool p2SettingsRoute_=false;
+    std::atomic<uint32_t> p2Seq_{0},p2ParamTicket_{0},p2RateTicket_{0};
+    std::atomic<float> p2Params_[P_COUNT]{};
+    std::atomic<int> p2Rate_{0};
+    uint32_t p2SeenSeq_=0,p2SeenParams_=0,p2SeenRate_=0;
+    void publishP2Settings(bool params,bool rate); // mtx_ held; sequentially consistent payload and sequence.
+    bool readP2Settings(float* p,bool& has,int& rate); // one attempt, never spins.
+
 
     // Fixed diagnostic buffers; no allocation or locks in the audio callback.
     bool diagnosticCapture_ = false;

@@ -16,6 +16,7 @@ import java.util.zip.ZipOutputStream
 
 /** s91 personal test only. All preparation runs on service main, with the audio worker joined. */
 object StageCApp {
+    const val FAMILY_P2 = "pvb_family_p2"
     const val WORKER = "pvb_s91_worker"
     const val TELEMETRY = "pvb_s91_telemetry"
     internal val fileLock = Any()
@@ -39,7 +40,7 @@ object StageCApp {
             check(MessageDigest.getInstance("SHA-256").digest(data).joinToString("") { "%02x".format(it) } == expected)
         }
         check(engine.prepareStageC(mode, data, mode == 3 && p.getBoolean(WORKER, false),
-            p.getBoolean(TELEMETRY, false), rate)) { "s91 model preparation failed" }
+            p.getBoolean(TELEMETRY, false), rate, p.getBoolean(FAMILY_P2, true))) { "s91 model preparation failed" }
     }
 
     /** Existing developer entry, shared by both flavors. It never enables engine tuning implicitly. */
@@ -47,19 +48,22 @@ object StageCApp {
         val p = prefs(c)
         val telemetry = p.getBoolean(TELEMETRY, false)
         val worker = p.getBoolean(WORKER, false)
+        val familyP2 = p.getBoolean(FAMILY_P2, true)
         val halRate = (c.getSystemService(Context.AUDIO_SERVICE) as AudioManager)
             .getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE) ?: "?"
-        val items = mutableListOf("epoch6 안정 비교 선택", "지휘형 작업 스레드: " + if (worker) "켬" else "끔 (기본)",
+        val items = mutableListOf("epoch6 안정 비교 선택", "지휘형 작업 스레드 (P2 끔일 때): " + if (worker) "켬" else "끔 (기본)",
             "시험 계측 파일: " + if (telemetry) "켬" else "끔 (기본)", "계측 파일 모두 내보내기")
+        items += "지휘형 P2 가족 추적: " + if (familyP2) "켬 (기본)" else "끔 (s91k)"
         if (PvbBuild.general) items += "기존 개발자 설정"
-        MaterialAlertDialogBuilder(c).setTitle("s91 개인 시험 · 개발자 메뉴 · 출력 $halRate Hz")
+        MaterialAlertDialogBuilder(c).setTitle("p2port 개인 시험 · 개발자 메뉴 · 출력 $halRate Hz")
             .setItems(items.toTypedArray()) { _, index ->
                 when (index) {
                     0 -> p.edit().putString(PvbSettings.KEY_BASS_MODE, "stable").apply()
                     1 -> p.edit().putBoolean(WORKER, !worker).apply()
                     2 -> p.edit().putBoolean(TELEMETRY, !telemetry).apply()
                     3 -> export(c)
-                    4 -> PvbGeneral.openLegacyDevMode(c)
+                    4 -> p.edit().putBoolean(FAMILY_P2, !familyP2).apply()
+                    5 -> PvbGeneral.openLegacyDevMode(c)
                 }
             }.setNeutralButton("로그 위치") { _, _ ->
                 MaterialAlertDialogBuilder(c).setTitle("계측 파일")

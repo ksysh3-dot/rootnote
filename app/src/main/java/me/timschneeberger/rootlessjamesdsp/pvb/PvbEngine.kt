@@ -210,8 +210,8 @@ class PvbEngine(sampleRate: Int) : AutoCloseable {
     }
 
     /** Main/lifecycle only, after the service has joined its audio generation. */
-    fun prepareStageC(mode: Int, data: ByteArray?, worker: Boolean, telemetry: Boolean, rate: Int): Boolean =
-        use(false) { PvbNative.prepareStageC(it, mode, data, worker, telemetry, rate) }.also { if (it) sampleRateHz = rate }
+    fun prepareStageC(mode: Int, data: ByteArray?, worker: Boolean, telemetry: Boolean, rate: Int, familyP2: Boolean = true): Boolean =
+        use(false) { PvbNative.prepareStageC(it, mode, data, worker, telemetry, rate, familyP2) }.also { if (it) sampleRateHz = rate }
     fun copyStageC(out: LongArray): Boolean = use(false) { PvbNative.copyStageC(it, out) }
 
     fun loadStableWeights(data: ByteArray): Boolean = use(false) { PvbNative.loadStableWeights(it,data) }

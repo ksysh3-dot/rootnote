@@ -274,6 +274,7 @@ void VbHpv::renderTrack52(Track52& actual,const double src[2][256],const int ns[
             mask=envelope(e,w[k-2],target);
         } else mask=((stageFlags_&StageBypassPermission) || (s38Flags_&2))?1.:
             continuity_.enabled?tr.permission[k-2].step(evidence,continuity_,fast):(on?1.:0.);
+        if(familyP2_)mask=1.;
         if(ht) {
             ht[1]=static_cast<float>(amp*w[k-2]*mask); ht[2]=static_cast<float>(mask);
             if(!on) ht[4]=static_cast<float>(static_cast<int>(ht[4])|HarmonicTrace::Grid);
@@ -351,6 +352,7 @@ void VbHpv::renderTrack52(Track52& actual,const double src[2][256],const int ns[
             }
             st.found[j]=found;st.bin[j]=ii;st.last[j]=i_;
         }
+        if(familyP2_)adjustment=0.;
         tr.off[k-2]+=adjustment;
         // Trace field3 describes the old offset step, not the oscillator's
         // separate bounded endpoint correction. Do not report it as applied.
@@ -531,6 +533,7 @@ void VbHpv::pvFrame52() {
     if(control88_.enabled)control88_.hop(static_cast<double>(n_));
     beginHarmonic52();
     if(devMeter_) devBeginFrame();
+    if(familyP2_){familyFrame7();return;}
     // Study 3 C4: the v0.3 impact context (percussive envelope above a quarter of the harmonic one, held 24 hops =
     // 128 ms) suspends the wider low grid, so an impact's own low tail is judged as before
     if(stageFlags_&StageLowGridOutsideImpact) lowGridHold52_=percEnv52_>.25*harmEnv52_?24:std::max(0,lowGridHold52_-1);
@@ -1180,7 +1183,7 @@ double VbHpv::core52(double d) {
     const int future=hpssLookahead(),hpssDelay=hpN_-1+future;
     md52_[slot]=d; md2_52_[slot]=i>=hpssDelay?md52_[(i-hpssDelay)&(kRing-1)]:0;
     double b=d; for(auto& s:band_) b=s.tick(b); bRing_[slot]=b;
-    if((i+1)%16==0) hpssFrame();
+    if((i+1)%16==0 && !familyP2_) hpssFrame();
     double bh=0,bp=0,bhA=0;
     if(i>=hpssDelay) {
         const int64_t t=i-hpssDelay; const int s=t&(kRing-1); const double ws=wsumHp_[t%16];
@@ -1260,11 +1263,12 @@ double VbHpv::core52(double d) {
         devGain_=c*devGain_+(1-c)*appliedGain; appliedGain=devGain_;
     }
     if(s38Flags_&8) appliedGain=apv>0?1.:0.;
+    if(familyP2_)appliedGain=1.;
     if(resultantOn_) appliedGain=1.;   // Resultant core: the layer's level is the input's own, no envelope imposition
     const int pslot=(i-defer)&(kRing-1);
     const double target=i>=defer?polyT52_[pslot]:1.; if(i>=defer) polyT52_[pslot]=1;
     a=std::exp(-1./(target<poly52_?60:600)); poly52_=a*poly52_+(1-a)*target;
-    const double hp=i>=envelopeDelay_+defer?hpRing_[(i-envelopeDelay_-defer)&(kRing-1)]*poly52_:0;
+    const double hp=!familyP2_ && i>=envelopeDelay_+defer?hpRing_[(i-envelopeDelay_-defer)&(kRing-1)]*poly52_:0;
     // Developer mode "지속음 / 타격음 비율": path gains, only while one of them differs from 0 dB.
     double preFilter=devMix_?out*appliedGain*devSustLin_+(tonalOnly_?0:hp)*devPercLin_:out*appliedGain+(tonalOnly_?0:hp);
     if(control88_.enabled && (control88_.modules&32))preFilter*=std::max(control88_.g,.1);
@@ -1284,7 +1288,7 @@ double VbHpv::core52(double d) {
     if(resultantOn_ && resultant_.hpOn()) y=resultant_.hpTick(y);   // Resultant 19.7: layer high-pass in series with the output band filter
 #endif
     if(harmonicReady_) {
-        harmonicTrace_.data[17]=static_cast<float>(gen_.envelope?appliedGain:gain); harmonicTrace_.data[18]=static_cast<float>(poly52_);
+        harmonicTrace_.data[17]=static_cast<float>(familyP2_ || gen_.envelope?appliedGain:gain); harmonicTrace_.data[18]=static_cast<float>(poly52_);
         harmonicTrace_.data[19]=static_cast<float>(out);
     }
     if(stageSink_) {
@@ -1334,7 +1338,7 @@ void VbHpv::spectrum52(const double* ring, int64_t s0, double* re, double* im) {
     for (int n = 0; n < pvN_; ++n) frame[n] = ring[(s0 + n) & (kRing - 1)] * winPv_[n];
     // zero-phase arrangement fr = [frame[half:], zeros, frame[:half]] (2048 points), real FFT: the even samples go into
     // the real and the odd ones into the imaginary part of a 1024-point complex FFT.
-    
+
     std::fill(std::begin(zr_), std::end(zr_), 0.0);
     std::fill(std::begin(zi_), std::end(zi_), 0.0);
     auto put = [&](int pos, double v) {
@@ -1365,3 +1369,74 @@ namespace pvb { void VbHpv::warmShortKernel() { (void)kernel52(0.,true); (void)m
 #endif
 
 
+
+#include "pvb_family_weights.h"
+namespace pvb {
+void VbHpv::familyFrame7() {
+
+    // Same observation centre and output placement as P1, but mixed FFT, no H/P audio.
+    const int64_t s0=static_cast<int64_t>(i_)-(pvN_-1);
+    spectrum52(md2_52_,s0,xr52_,xi52_);
+    const int lo=std::max(1,int(std::ceil(20./binHz_))),hi=std::min(kHalfFft-1,int(std::floor(600./binHz_)));
+    int bins[512],nb=0;double mag[kHalfFft+1]={},mx=0;
+    for(int b=lo-1;b<=hi+1;++b){mag[b]=std::hypot(xr52_[b],xi52_[b]);mx=std::max(mx,mag[b]);}
+    for(int b=lo;b<=hi;++b)if(mag[b]>=mag[b-1] && mag[b]>mag[b+1])bins[nb++]=b;
+    std::sort(bins,bins+nb,[&](int a,int b){return mag[a]==mag[b]?a>b:mag[a]>mag[b];});
+    fam2::Peak peaks[8];int n=0;
+    if(mx*2/pvWsum_>=pvAbs_)for(int j=0;j<nb && n<8;++j){
+        int b=bins[j];if(mag[b]<mx*pvRel_)break;
+        double a=std::log(mag[b-1]+1e-30),v=std::log(mag[b]+1e-30),c=std::log(mag[b+1]+1e-30);
+        double off=offset52(a,v,c);
+        peaks[n++]={(b+off)*binHz_,std::exp(v-.25*(a-c)*off)*2/pvWsum_};
+    }
+    families7_.step(peaks,n);
+
+    double grain[32]={},nominal=0;const double src[2][256]={};const int ns[2]={};
+    nt52_=0;int live=0,held=0;
+    for(int s=0;s<6;++s){
+        auto& fam=families7_.family[s];auto& tr=voices7_[s];
+        if(!fam.active){
+            if(tr.id){tr.a=0;tr.life=0;traceTrack52(s,tr,HarmonicTrace::End,HarmonicTrace::Lost);tr=Track52{};}
+            continue;
+        }
+        auto& h=fam.h[fam.selected];
+        const bool born=tr.id!=fam.id;
+        if(born && tr.id){tr.life=0;tr.a=0;traceTrack52(s+6,tr,HarmonicTrace::End,HarmonicTrace::Lost);}
+        if(born){tr=Track52{};tr.id=fam.id;for(int k=0;k<7;++k)tr.off[k]=vbt::kPsi[k];}
+        tr.f=h.f;tr.dfdt=h.df;tr.phi=h.phase;tr.age=fam.age;tr.missing=h.missing;
+        tr.fade=1.;tr.life=std::max(0.,1.-double(h.missing)/(fam2::Tracker::max_missing+1.));tr.a=std::exp(h.loga);tr.residual=tr.rawResidual=-200;
+        // Family80 features use mixed observations only.
+        {
+    auto db=[](double a){return clampv(20*std::log10(std::max(a,1e-6)),-120.,20.)/40.;};
+    float* v=features7_;v[0]=std::log2(std::max(tr.f,1.)/55.);v[1]=db(tr.a);v[2]=clampv(tr.residual,-120.,40.)/40.;
+    v[3]=std::log1p(tr.age)/5.;v[4]=clampv(tr.missing/50.,0.,2.);v[5]=clampv(tr.dfdt/400.,-2.,2.);
+    v[6]=clampv(tr.rawResidual,-120.,40.)/40.;v[7]=tr.life;
+    int j=8;
+    for(int k=1;k<=8;++k)for(int d=-2;d<=2;++d){const int b=clampv(int(std::nearbyint(k*tr.f/binHz_))+d,1,kHalfFft-1);v[j++]=db(std::hypot(xr52_[b],xi52_[b])*2/pvWsum_);}
+    for(int band=0;band<20;++band){const double lo=20*std::pow(30.,band/20.),hi=20*std::pow(30.,(band+1)/20.);
+        const int a=clampv(int(std::floor(lo/binHz_)),1,kHalfFft-1),b=clampv(int(std::ceil(hi/binHz_)),a+1,kHalfFft);
+        double sum=0;for(int q=a;q<b;++q)sum+=xr52_[q]*xr52_[q]+xi52_[q]*xi52_[q];
+        v[j++]=db(std::sqrt(sum/(b-a))*2/pvWsum_);}
+            int support=0;
+            for(int k=1;k<=8;++k){
+                double a=0;for(int p=0;p<n;++p)if(std::abs(peaks[p].f-k*tr.f)<=std::max(1.5,.015*k*tr.f))a=std::max(a,peaks[p].a);
+                if(a>0)++support;
+                v[67+k]=db(a);
+            }
+            v[76]=support/8.f;v[77]=h.uncertainty/10.;v[78]=h.score/4.;v[79]=h.dloga/80.;
+            for(int j=0;j<80;++j)v[j]=float((_Float16)v[j]);
+        }
+        {tr.a=nb5::step(state7_[s],features7_,family7::weights,fam.id,int64_t(i_));}
+        int state=born?HarmonicTrace::Birth:(h.missing?HarmonicTrace::Held:HarmonicTrace::Tracked);
+        traceTrack52(s,tr,state,h.missing?HarmonicTrace::Lost:0);
+        renderTrack52(tr,src,ns,false,false,s,grain,nominal);
+        tr52_[nt52_++]=tr;++live;if(h.missing)++held;
+    }
+    ++hop52_;addGrain52(static_cast<int64_t>(i_)+16,grain,nominal);
+    if(harmonicCapture_){
+        auto* h=harmonicTrace_.data;h[11]=n;h[12]=held;h[14]=mx*2/pvWsum_;h[22]=held;
+        double e=0;for(double x:grain)e+=x*x;h[20]=std::sqrt(e/32);
+    }
+    if(devMeter_)devEndFrame();
+}
+}

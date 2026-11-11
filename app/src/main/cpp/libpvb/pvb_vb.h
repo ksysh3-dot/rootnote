@@ -21,6 +21,8 @@
 //
 // Copyright (C) 2026 PVB project. Licensed under the GNU GPL v3 (same as RootlessJamesDSP).
 #pragma once
+#include "pvb_family_tracker.h"
+#include "pvb_family_net.h"
 #include "s88_control.h"
 
 #include <algorithm>
@@ -216,6 +218,8 @@ public:
     void setFadeInertia(bool on) { fadeInertia_ = on; }
     // s110 CF375M: a live track whose fit residual lies in (-15, -3.75] dB keeps the fade target of a fit when a
     // conductor candidate (salience >= .5) lies within 50 cents of it. Fade only. Audio must be stopped.
+    // Only called during stopped-audio prepareStageC; fixed storage, no runtime loading.
+    void setFamilyP2(bool on) { familyP2_=on; }
     void setFitRelax(bool on) { fitRelax_ = on; fitRelaxHops_ = 0; }
     bool fadeInertia() const { return fadeInertia_; }
     uint64_t fitRelaxHops() const { return fitRelaxHops_; }
@@ -531,6 +535,10 @@ private:
         double envPeak=0; // S1 research: largest harmonic envelope after the last render
         double r4Share=1; // Resultant R4-L v2: share of the register corner and level (StageReentrySlow; 1 otherwise)
     };
+    bool familyP2_=false;
+    fam2::Tracker families7_;
+    Track52 voices7_[6]; nb5::State state7_[6]; float features7_[80]={};
+    void familyFrame7();
     Track52 tr52_[12];
     unsigned s32HostFlags_=0, s32Flags_=0;
     int s41HostMode_=0,s41Mode_=0,s41LogCapacity_=0,s41LogCount_=0;

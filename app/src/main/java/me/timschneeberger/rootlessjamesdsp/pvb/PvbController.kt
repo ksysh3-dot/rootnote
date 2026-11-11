@@ -351,7 +351,7 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
         effectiveSettings = effective(userSettings)
         updateActive()
         if (old.volRefPct != effectiveSettings.volRefPct) readVolume()
-        if (key in setOf(PvbSettings.KEY_BASS_MODE, PvbSettings.KEY_P1PPP, "pvb_s91_worker", "pvb_s91_telemetry") && onStageCChange != null) {
+        if (key in setOf(PvbSettings.KEY_BASS_MODE, PvbSettings.KEY_P1PPP, "pvb_s91_worker", "pvb_s91_telemetry", StageCApp.FAMILY_P2) && onStageCChange != null) {
             onStageCChange?.invoke()
         } else push(rampMs = EDIT_RAMP_MS)
     }

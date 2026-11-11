@@ -347,6 +347,7 @@ void VbHpv::Hilbert::tick(double x, double& re, double& im) {
 }
 
 void VbHpv::reset() {
+    families7_.reset(); for(auto& s:state7_)s=nb5::State{}; for(auto& t:voices7_)t=Track52{};
     ++harmonicEpoch_; nextTrackId_=0; harmonicReady_=false;
     research_ = {};
     research_.upperBlend = research_.upperTarget = upperMode_==0 ? 0 : 1;

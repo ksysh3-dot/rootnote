@@ -25,6 +25,7 @@ class StageCTelemetry(private val context: Context, private val engine: PvbEngin
     private var file: File? = null
     private var mode = "off"
     private var worker = false
+    private var familyP2 = false
     private var rate = 48000
     private val native = LongArray(2012)
 
@@ -34,6 +35,8 @@ class StageCTelemetry(private val context: Context, private val engine: PvbEngin
         if (!p.getBoolean(StageCApp.TELEMETRY, false)) return
         val s = PvbSettings.load(p)
         mode = s.bassMode; worker = s.conducted && p.getBoolean(StageCApp.WORKER, false); rate = engine.sampleRateHz
+        familyP2 = mode == "conducted" && rate == 48000 && p.getBoolean(StageCApp.FAMILY_P2, true)
+        if (familyP2) worker = false
         callbacks.set(0); overruns.set(0); underruns.set(0); readGaps.set(0); droppedBlocks.set(0); lastUnderruns = 0
         file = File(context.filesDir, "s91_telemetry/s91-" + System.currentTimeMillis() + "-" + mode + ".jsonl")
         enabled = true
@@ -69,6 +72,7 @@ class StageCTelemetry(private val context: Context, private val engine: PvbEngin
             }
             val json = JSONObject().put("schema", "s91c-v1").put("utc_ms", System.currentTimeMillis())
                 .put("reason", reason).put("build_id", BuildConfig.COMMIT_SHA).put("build_time", BuildConfig.BUILD_TIME)
+                .put("family_p2", familyP2)
                 .put("package_id", context.packageName).put("mode", mode).put("worker", worker).put("sample_rate_hz", rate)
                 .put("control_frames", native[0]).put("control_frame_p50_ns", percentile(.50) ?: JSONObject.NULL)
                 .put("control_frame_p99_ns", percentile(.99) ?: JSONObject.NULL).put("control_frame_max_ns", native[1])

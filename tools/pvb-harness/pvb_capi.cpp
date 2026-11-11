@@ -513,3 +513,5 @@ extern "C" int pvb_set_diag88b(void* e,float* out,int count) {
 extern "C" int pvb_stats88b(void* e,double* out,int n){return e?static_cast<pvb::Engine*>(e)->stats88b(out,n):0;}
 
 extern "C" int pvb_set_control_floor89(void* e,float epsilon){if(!e || (epsilon!=.25f && epsilon!=.5f))return 0;static_cast<pvb::Engine*>(e)->setFloor89(epsilon);return 1;}
+
+extern "C" int pvb_prepare_p2(void* e,int mode,const unsigned char* p,int n,int on){return e && static_cast<pvb::Engine*>(e)->prepareStageC(mode,p,n,false,false,48000,on!=0);}
