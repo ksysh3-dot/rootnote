@@ -14,9 +14,14 @@ add_library(rootnotefx SHARED
         ${CMAKE_CURRENT_LIST_DIR}/../libpvb/pvb_engine.cpp
         ${CMAKE_CURRENT_LIST_DIR}/../libpvb/pvb_analysis.cpp
         ${CMAKE_CURRENT_LIST_DIR}/../libpvb/pvb_vb52.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/../libpvb/pvb_vb.cpp)
+        ${CMAKE_CURRENT_LIST_DIR}/../libpvb/pvb_vb.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/../libpvb/pvb_control_stream.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/../libpvb/pvb_stable.cpp)
 target_include_directories(rootnotefx PRIVATE ${ROOTFX_JDSP} ${ROOTFX_JDSP}/jdsp ${CMAKE_CURRENT_LIST_DIR}
-        ${CMAKE_CURRENT_LIST_DIR}/../libpvb)
+        ${CMAKE_CURRENT_LIST_DIR}/../libpvb ${CMAKE_CURRENT_LIST_DIR}/../libpvb/stable_vendor)
+# Same contraction rule as the app build (libpvb/CMakeLists.txt).
+set_source_files_properties(${CMAKE_CURRENT_LIST_DIR}/../libpvb/pvb_control_stream.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/../libpvb/pvb_stable.cpp PROPERTIES COMPILE_OPTIONS "-ffp-contract=off")
 # no DEBUG logging inside audioserver (the project-wide flags define it)
 target_compile_options(rootnotefx PRIVATE -UDEBUG $<$<COMPILE_LANGUAGE:C>:-std=gnu11 -O2 -w -Wno-error=implicit-function-declaration -Wno-error=incompatible-function-pointer-types -Wno-error=int-conversion -Wno-error=implicit-int>
         $<$<COMPILE_LANGUAGE:CXX>:-std=c++17 -O2 -fno-fast-math -fvisibility-inlines-hidden>)
