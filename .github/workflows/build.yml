@@ -319,7 +319,8 @@ jobs:
           "$tools/apksigner" verify --verbose --print-certs "dist-release/Rootnote-$VERSION.apk" > dist-release/signature.txt
           expected=$(keytool -exportcert -keystore "$key" -alias "$GENERAL_KEY_ALIAS" \
             -storepass:env GENERAL_KEYSTORE_PASSWORD | sha256sum | cut -d' ' -f1)
-          actual=$(sed -n 's/^Signer #1 certificate SHA-256 digest: //p' dist-release/signature.txt | tr -d ':' | tr '[:upper:]' '[:lower:]')
+          # Older apksigner prints "Signer #1 certificate ..."; build-tools 37 prints one "V2 Signer: certificate ..." line per scheme.
+          actual=$(sed -En 's/^(Signer #1|V[0-9.]+ Signer:) certificate SHA-256 digest: //p' dist-release/signature.txt | tr -d ':' | tr '[:upper:]' '[:lower:]' | sort -u)
           test "$actual" = "$expected"
           cp "release-inputs/source-${SOURCE_SHA::7}.tar.gz" dist-release/
           (cd dist-release && sha256sum *.apk source-*.tar.gz > SHA256SUMS)
