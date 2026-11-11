@@ -203,6 +203,7 @@ public:
     void tick(double inL, double inR, double& outL, double& outR) override;
     VbResearchStats researchStats() const override { return research_; }
     void setHarmonicCapture(bool on) override { harmonicCapture_ = on; if (!on) harmonicReady_ = false; }
+    void setFitCache(ModulationFitCache* cache) { fitCache_ = cache; }
     const HarmonicTrace* takeHarmonicTrace() override {
         if (!harmonicReady_) return nullptr;
         harmonicReady_ = false; return &harmonicTrace_;
@@ -455,6 +456,7 @@ private:
     uint64_t n_ = 0, m_ = 0, mDue_ = 0;    // next input index, next decimated index and its input index
     bool supported_ = false;
     int latency_ = 0;
+    ModulationFitCache* fitCache_ = nullptr;
 
     // 3 kHz core
     uint64_t i_ = 0;                       // core sample index

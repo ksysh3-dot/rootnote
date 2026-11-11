@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <cmath>
 #include <complex>
+#include <cstdint>
 #include <cstring>
 #include "pvb_fastmath.h"
 #include "pvb_simd.h"
@@ -36,5 +37,43 @@ namespace modulation183 {
 #define PVB_MODULATION_SAMPLES 288
 #include "pvb_vb_modulation_impl.inc"
 #undef PVB_MODULATION_SAMPLES
+}
+struct ModulationFitCache {
+    bool valid = false;
+    int n = 0;
+    int count = 0;
+    double seed = 0;
+    double neighbors[3] = {};
+    double frame[384] = {};
+    ModulationFit result{};
+    uint64_t hits = 0;
+    uint64_t misses = 0;
+};
+inline ModulationFit fitCached(ModulationFitCache* cache, bool shortWindow, const double* x, double seed,
+                               const double* neighbors = nullptr, int count = 0) {
+    const int n = shortWindow ? 288 : 384;
+    const int nn = neighbors ? std::max(0, std::min(3, count)) : 0;
+    if (cache) {
+        if (cache->valid && cache->n == n && cache->count == nn &&
+            std::memcmp(&cache->seed, &seed, sizeof(double)) == 0 &&
+            (nn == 0 || std::memcmp(cache->neighbors, neighbors, static_cast<size_t>(nn) * sizeof(double)) == 0) &&
+            std::memcmp(cache->frame, x, static_cast<size_t>(n) * sizeof(double)) == 0) {
+            ++cache->hits;
+            return cache->result;
+        }
+        ++cache->misses;
+    }
+    const ModulationFit m = shortWindow ? modulation183::fit(x, seed, neighbors, count)
+                                        : modulation::fit(x, seed, neighbors, count);
+    if (cache) {
+        cache->valid = true;
+        cache->n = n;
+        cache->count = nn;
+        std::memcpy(&cache->seed, &seed, sizeof(double));
+        if (nn > 0) std::memcpy(cache->neighbors, neighbors, static_cast<size_t>(nn) * sizeof(double));
+        std::memcpy(cache->frame, x, static_cast<size_t>(n) * sizeof(double));
+        cache->result = m;
+    }
+    return m;
 }
 } // namespace pvb

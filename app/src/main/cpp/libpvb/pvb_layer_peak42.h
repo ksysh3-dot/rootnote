@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include "pvb_simd.h"
 #include "pvb_tp50_coeff.h"
 #ifndef PVB_TP_FLOAT32
 #define PVB_TP_FLOAT32 0
@@ -67,11 +68,35 @@ public:
    // Phase lanes are independent accumulators with the original tap order.
    // The transposed coefficient bank and mirrored histories permit NEON/SSE
    // vector lanes without fast-math, a horizontal reduction, or FMA.
+#if !PVB_TP_FLOAT32 && PVB_TP_FACTOR==8
+   for(int p=0;p<8;p+=2) {
+    simd::d2 ds0={},ds1={},ls0={},ls1={},absls0={},absls1={},refs0={},refs1={};
+    for(int k=0;k<41;++k) {
+     const simd::d2 z=simd::load(&kTp50Bank[k][p]);
+     const int q=hp+24+k;
+     const simd::d2 l0=z*simd::splat(hist_[2][q]);
+     const simd::d2 l1=z*simd::splat(hist_[3][q]);
+     ds0+=z*simd::splat(hist_[0][q]);
+     ds1+=z*simd::splat(hist_[1][q]);
+     ls0+=z*simd::splat(hist_[2][q]);
+     ls1+=z*simd::splat(hist_[3][q]);
+     absls0+=simd::d2{std::abs(l0[0]),std::abs(l0[1])};
+     absls1+=simd::d2{std::abs(l1[0]),std::abs(l1[1])};
+     refs0+=z*simd::splat(hist_[4][q]);
+     refs1+=z*simd::splat(hist_[5][q]);
+    }
+    ds[p][0]=ds0[0];ds[p+1][0]=ds0[1];ds[p][1]=ds1[0];ds[p+1][1]=ds1[1];
+    ls[p][0]=ls0[0];ls[p+1][0]=ls0[1];ls[p][1]=ls1[0];ls[p+1][1]=ls1[1];
+    absls[p][0]=absls0[0];absls[p+1][0]=absls0[1];absls[p][1]=absls1[0];absls[p+1][1]=absls1[1];
+    refs[p][0]=refs0[0];refs[p+1][0]=refs0[1];refs[p][1]=refs1[0];refs[p+1][1]=refs1[1];
+   }
+#else
    for(int k=0;k<41;++k)for(int p=0;p<8;p+=8/PVB_TP_FACTOR)for(int c=0;c<2;++c) {
     const TpScalar50 z=kTp50Bank[k][p];const int q=hp+24+k;
     ds[p][c]+=z*hist_[c][q];ls[p][c]+=z*hist_[c+2][q];
     absls[p][c]+=std::abs(z*hist_[c+2][q]);refs[p][c]+=z*hist_[c+4][q];
    }
+#endif
    for(int p=0;p<8;p+=8/PVB_TP_FACTOR)for(int c=0;c<2;++c)
     refPeak_=std::max(refPeak_,static_cast<double>(std::abs(refs[p][c])));
    double need=1.;bool bad=false,positive=false;
@@ -80,11 +105,11 @@ public:
    for(int p=0;p<8;p+=8/PVB_TP_FACTOR)for(int c=0;c<2;++c) {
     const double room=ceiling-std::abs(ds[p][c]);
     if(room < -1e-12)bad=true;
-    if(std::abs(ls[p][c])>1e-20) {
+    if(!positive && !(room>=0.) && std::abs(ls[p][c])>1e-20) {
      double a=(-ceiling-ds[p][c])/ls[p][c],b=(ceiling-ds[p][c])/ls[p][c];
      if(std::min(a,b)>1e-9)positive=true;
     }
-    if(absls[p][c]>1e-20)need=std::min(need,std::clamp(room/absls[p][c],0.,1.));
+    if(absls[p][c]>1e-20 && !(room>=absls[p][c]))need=std::min(need,std::clamp(room/absls[p][c],0.,1.));
    }
    if(bad)++infeasible_;
    if(positive)++lower_;

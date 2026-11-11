@@ -220,6 +220,8 @@ Engine::Engine(int sampleRate) {
     // The48kHz-only shadow is fully prepared and touched before streaming.
     peak44P1_.configure(48000);peak44P1_.setAlpha2Profile(VB_ALPHA2_P1);
     peak44P1_.bindEq(&hp_,&lo_,&hi_,&hs_,48000);
+    vbAlpha2_.setFitCache(&fitCache_);
+    peak44P1_.setFitCache(&fitCache_);
 }
 
 void Engine::configureDryLowCut() {
@@ -1016,6 +1018,7 @@ void Engine::process(float* io, int frames) {
         // virtual bass layer after the EQ filters, before the output gain and the limiter; generated from the
         // undelayed pre-EQ input (hpv) or from the EQ output itself (Bankstown)
         double layL = 0.0, layR = 0.0;
+        fitCache_.valid = false;
         if (vbCur_ >= 0) {
             VbModule* m = vbMods_[vbCur_];
             if (m->inputAfterEq()) m->tick(eqL, eqR, layL, layR);

@@ -463,6 +463,7 @@ private:
     double peak42Inputs_[6*kResearchCaptureFrames+1]={};int peak42InputSamples_=0;
     ModeLayerPeak42 layerPeak42_;
     int dryPeak44Mode_=0;ModeDryPeak44 dryPeak44_;
+    ModulationFitCache fitCache_;
     VbHpv peak44P1_{true,true,1};
     SvfState sDryPeak44Eq_[2][5],sDryPeak44Shelf_[2][4];
     double peak44Inputs_[5*kResearchCaptureFrames+1]={};int peak44InputSamples_=0;

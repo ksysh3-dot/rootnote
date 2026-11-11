@@ -633,7 +633,7 @@ void VbHpv::pvFrame52() {
             }
             if(family.valid) {np=1;pk[0].family=family;familyApplied52_=true;}
         }
-        auto m=family.valid?family.trajectory():(shortWindow_?modulation183::fit(frame,pk[0].f,neighbors,nn):modulation::fit(frame,pk[0].f,neighbors,nn));
+        auto m=family.valid?family.trajectory():fitCached(fitCache_,shortWindow_,frame,pk[0].f,neighbors,nn);
         if(m.valid && !family.valid && (stageFlags_&StageShortDetail)) {
             double local[detail::N];const int64_t centre=s0+pvN_/2;
             for(int n=0;n<detail::N;++n) local[n]=detailRing52_[(centre-detail::N/2+n)&(kRing-1)];

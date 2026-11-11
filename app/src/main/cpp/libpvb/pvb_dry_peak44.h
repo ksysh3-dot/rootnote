@@ -2,6 +2,7 @@
 // Fixed parameters, P1, no dynamic EQ/XTC. No audio delay is added.
 #pragma once
 #include "pvb_layer_peak42.h"
+#include "pvb_simd.h"
 namespace pvb {
 class DryPeak44 {
 public:
@@ -22,6 +23,27 @@ public:
   const int64_t t=n_-20;
   if(t>=0) {
    TpScalar50 b[8][2]={},e[8][2]={};
+#if !PVB_TP_FLOAT32 && PVB_TP_FACTOR == 8
+   const int k0=t<20?static_cast<int>(-t):-20;
+   const double *const h0=&hist_[0][hp+44],*const h1=&hist_[1][hp+44];
+   const double *const h2=&hist_[2][hp+44],*const h3=&hist_[3][hp+44];
+   for(int p=0;p<8;p+=4) {
+    simd::d2 b0={0.,0.},b1={0.,0.},e0={0.,0.},e1={0.,0.};
+    simd::d2 b2={0.,0.},b3={0.,0.},e2={0.,0.},e3={0.,0.};
+    for(int k=k0;k<=20;++k) {
+     const simd::d2 c01=simd::load(&kTp50Bank[k+20][p]);
+     const simd::d2 c23=simd::load(&kTp50Bank[k+20][p+2]);
+     const simd::d2 x0=simd::splat(h0[k]),x1=simd::splat(h1[k]);
+     const simd::d2 x2=simd::splat(h2[k]),x3=simd::splat(h3[k]);
+     b0+=c01*x0; b1+=c01*x1; e0+=c01*x2; e1+=c01*x3;
+     b2+=c23*x0; b3+=c23*x1; e2+=c23*x2; e3+=c23*x3;
+    }
+    b[p][0]=b0[0];   b[p+1][0]=b0[1];   b[p][1]=b1[0];   b[p+1][1]=b1[1];
+    e[p][0]=e0[0];   e[p+1][0]=e0[1];   e[p][1]=e1[0];   e[p+1][1]=e1[1];
+    b[p+2][0]=b2[0]; b[p+3][0]=b2[1];   b[p+2][1]=b3[0]; b[p+3][1]=b3[1];
+    e[p+2][0]=e2[0]; e[p+3][0]=e2[1];   e[p+2][1]=e3[0]; e[p+3][1]=e3[1];
+   }
+#else
    for(int k=-20;k<=20;++k) {
     if(t+k<0)continue;
     for(int p=0;p<8;p+=8/PVB_TP_FACTOR)for(int c=0;c<2;++c) {
@@ -29,6 +51,7 @@ public:
      b[p][c]+=cf*hist_[c][hp+44+k];e[p][c]+=cf*hist_[c+2][hp+44+k];
     }
    }
+#endif
    for(int p=0;p<8;p+=8/PVB_TP_FACTOR)for(int c=0;c<2;++c)
     peak_=std::max(peak_,static_cast<double>(std::abs(b[p][c])));
    double need=1.;
