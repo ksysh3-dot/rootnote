@@ -240,8 +240,9 @@ data class PvbSettings(
          */
         fun migrateVirtualBassModel(p: SharedPreferences) {
             val all = p.all
-            if (KEY_BASS_MODE !in all && all[KEY_P1PPP] == true)
-                p.edit().putString(KEY_BASS_MODE, "strong").apply()
+            val mode = normalizedBassMode(all)
+            if (all[KEY_BASS_MODE] != mode)
+                p.edit().putString(KEY_BASS_MODE, mode).apply()
             val raw = all[KEY_VB_ALGO]
             val old = raw?.toString() ?: PvbModels.DEFAULT_KEY
             val schema = try { p.getInt(KEY_VB_MODEL_SCHEMA, 0) } catch (_: ClassCastException) { 0 }
@@ -278,14 +279,17 @@ data class PvbSettings(
          * The settings as the engine plays them. The last step is [PvbBuild.finish]: in the general build the
          * first-run gate and the safe caps ([SafeCaps.GENERAL]); in the s26u build it changes nothing.
          */
+        internal fun normalizedBassMode(all: Map<String, *>): String = when (all[KEY_BASS_MODE]) {
+            "conducted", "strong", "separated", "stable", "epoch6" -> "conducted"
+            null -> if (all[KEY_P1PPP] == true) "conducted" else "off"
+            else -> "off"
+        }
+
         fun load(p: SharedPreferences): PvbSettings {
             val d = PvbSettings()
             return PvbBuild.finish(PvbSettings(
                 enabled = p.bool(KEY_ENABLE, d.enabled),
-                separated = (p.all[KEY_BASS_MODE] as? String) == "separated",
-                conducted = (p.all[KEY_BASS_MODE] as? String) == "conducted",
-                stable = (p.all[KEY_BASS_MODE] as? String) == "stable",
-                p1ppp = ((p.all[KEY_BASS_MODE] as? String)?.let { it == "strong" } ?: p.bool(KEY_P1PPP, false)),
+                conducted = normalizedBassMode(p.all) == "conducted",
                 matchOnDisable = p.bool(KEY_MATCH_ON_DISABLE, d.matchOnDisable),
                 speakerOnly = p.bool(KEY_SPEAKER_ONLY, d.speakerOnly),
                 hpHz = p.float(KEY_HP_HZ, d.hpHz),

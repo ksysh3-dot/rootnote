@@ -249,10 +249,10 @@ fun PvbSection(host: RnAdvancedActivity, showIcons: Boolean) {
                 }
             })
         RnChoiceRow(stringResource(R.string.pvb_bass_mode),
-            listOf(RnChoice("off", "끔"), RnChoice("strong", "강함"),
-                RnChoice("separated", "분리형"), RnChoice("conducted", "지휘형")),
+            listOf(RnChoice("off", stringResource(R.string.pvb_mode_off)),
+                RnChoice("conducted", stringResource(R.string.pvb_mode_conducted))),
             s.bassMode, { p.put(P.KEY_BASS_MODE, it) }, enabled = vbOn,
-            line = (if (s.stable) "현재: epoch6 안정 (개발자 비교)\n" else "") + stringResource(R.string.pvb_bass_mode_summary))
+            line = stringResource(R.string.pvb_bass_mode_summary))
         if (s.fixedBass) {
             PrefSlider(p, P.KEY_FIXED_LEVEL_DB, stringResource(R.string.pvb_fixed_level), 0f, P.FIXED_LEVEL_MIN..0f, 1f, "dB", 0,
                 line = stringResource(R.string.pvb_fixed_level_summary), enabled = vbOn, strictStep = true)

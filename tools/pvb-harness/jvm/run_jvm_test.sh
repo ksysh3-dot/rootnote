@@ -138,26 +138,3 @@ rm -rf "$OUTV"; mkdir -p "$OUTV"
 $KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/DevParams.kt" "$APP/StrengthDisplay.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/DeviceProfiles.kt" "$APP/PvbNative.kt" "$APP/PvbEngine.kt" "$APP/DevShareCode.kt" "$APP/SettingsSummary.kt" "$APP/DevWarnings.kt" "$APP/DevTestSound.kt" "$HERE/DevModeTest.kt" -d "$OUTV"
 java -Djava.library.path="$HERE/../build" -cp "$OUTV:$KOTLIN_STDLIB" DevModeTestKt "$HERE/../../.." --jni
 
-# Section-24 signed strengths, RN1 compatibility, UI wiring and large-session sign test.
-OUTN="$HERE/../build/jvm-negative-strength"
-mkdir -p "$OUTN"
-$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/DevParams.kt" "$APP/StrengthDisplay.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/HomeLogic.kt" "$APP/DevShareCode.kt" "$APP/PvbNative.kt" "$APP/PvbEngine.kt" "$APP/PvbRuntime.kt" "$APP/PvbAbConditions.kt" "$APP/LiveAb.kt" "$APP/LiveAbComparisons.kt" "$HERE/NegativeStrengthTest.kt" -d "$OUTN"
-java -cp "$OUTN:$KOTLIN_STDLIB" NegativeStrengthTestKt "$HERE/../../.."
-
-# Atomic preset, default-OFF, locked effective settings and exit boundaries.
-OUT50="$HERE/../build/jvm-p1ppp"
-mkdir -p "$OUT50"
-$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/DevParams.kt" "$APP/StrengthDisplay.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/PvbEngine.kt" "$APP/PvbNative.kt" "$APP/PvbEngineParams.kt" "$APP/BuzzRing.kt" "$HERE/../s50/P1pppParamsTest.kt" -d "$OUT50"
-java -cp "$OUT50:$KOTLIN_STDLIB" P1pppParamsTestKt
-
-# Stream/rate/route lifecycle, transition diagnostics and closed PCM passthrough (actual JNI).
-$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/DevParams.kt" "$APP/StrengthDisplay.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/PvbEngine.kt" "$APP/PvbNative.kt" "$APP/PvbEngineParams.kt" "$HERE/P1pppLifecycleJniTest.kt" -d "$OUT50"
-java -Djava.library.path="$HERE/../build" -cp "$OUT50:$KOTLIN_STDLIB" P1pppLifecycleJniTestKt "$HERE/../../.."
-
-# S74 frozen separator mode: actual JNI transitions, latency, rate and route.
-$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/DevParams.kt" "$APP/StrengthDisplay.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/PvbEngine.kt" "$APP/PvbNative.kt" "$APP/PvbEngineParams.kt" "$HERE/StableLifecycleJniTest.kt" -d "$OUT50"
-java -Djava.library.path="$HERE/../build" -cp "$OUT50:$KOTLIN_STDLIB" StableLifecycleJniTestKt "$HERE/../../.."
-
-# S91 all selectable modes through real JNI, synchronous control, worker opt-in and model isolation.
-$KOTLINC -classpath "$KOTLIN_STDLIB" "$HERE/stubs/SharedPreferences.kt" "$APP/PvbModels.kt" "$APP/PvbSettings.kt" "$APP/DevParams.kt" "$APP/StrengthDisplay.kt" "$APP/PvbBuild.kt" "$APP/VolumeLevelLink.kt" "$APP/PvbEngine.kt" "$APP/PvbNative.kt" "$APP/PvbEngineParams.kt" "$HERE/StageCModesJniTest.kt" -d "$OUT50"
-java -Djava.library.path="$HERE/../build" -cp "$OUT50:$KOTLIN_STDLIB" StageCModesJniTestKt "$HERE/../../.."

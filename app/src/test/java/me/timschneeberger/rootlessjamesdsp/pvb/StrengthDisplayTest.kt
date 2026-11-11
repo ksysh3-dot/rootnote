@@ -51,7 +51,7 @@ class StrengthDisplayTest {
             val writes = p.writes
             PvbSettings.migrateVirtualBassModel(p.proxy)
             assertEquals(writes, p.writes)
-            assertTrue(PvbSettings.load(p.proxy).p1ppp)
+            assertTrue(PvbSettings.load(p.proxy).conducted)
             for (offset in listOf(0, 3, -2)) {
                 val scale = StrengthDisplay(offset)
                 val stored = p.values[PvbSettings.KEY_VB_STRENGTH_DB] as Float
@@ -122,19 +122,30 @@ class StrengthDisplayTest {
         }
     }
 
-    @Test fun stableModeMigrationAndFixedStrength() {
-        PvbBuild.general = false
-        val legacy = MemoryPrefs(mapOf(PvbSettings.KEY_P1PPP to true))
-        PvbSettings.migrateVirtualBassModel(legacy.proxy)
-        assertEquals("strong", PvbSettings.load(legacy.proxy).bassMode)
-        for (mode in listOf("off", "strong", "stable")) {
-            val prefs = MemoryPrefs(mapOf(PvbSettings.KEY_BASS_MODE to mode,
-                PvbSettings.KEY_P1PPP to true, PvbSettings.KEY_VB_STRENGTH_DB to 9f))
-            val settings = PvbSettings.load(prefs.proxy)
-            assertEquals(mode, settings.bassMode)
-            assertEquals(mode != "off", settings.fixedBass)
-            assertEquals(mode == "stable", settings.stable)
-            assertEquals(9f, settings.vbLevelDb, 0f)
+    @Test fun retiredModesMigrateToConductedAndOffStaysOff() {
+        for (general in listOf(false, true)) {
+            PvbBuild.general = general; PvbBuild.firstRunConfirmed = true
+            val legacy = MemoryPrefs(mapOf(PvbSettings.KEY_P1PPP to true))
+            PvbSettings.migrateVirtualBassModel(legacy.proxy)
+            assertEquals("conducted", PvbSettings.load(legacy.proxy).bassMode)
+            for (mode in listOf("off", "strong", "separated", "stable", "epoch6", "conducted")) {
+                val prefs = MemoryPrefs(mapOf(PvbSettings.KEY_BASS_MODE to mode,
+                    PvbSettings.KEY_P1PPP to true, PvbSettings.KEY_VB_STRENGTH_DB to 9f,
+                    PvbSettings.KEY_FIXED_LEVEL_DB to -3f, PvbSettings.KEY_VB_ON to false))
+                val expected = if (mode == "off") "off" else "conducted"
+                assertEquals(expected, PvbSettings.load(prefs.proxy).bassMode)
+                PvbSettings.migrateVirtualBassModel(prefs.proxy)
+                val settings = PvbSettings.load(prefs.proxy)
+                assertEquals(expected, settings.bassMode)
+                assertEquals(expected, prefs.values[PvbSettings.KEY_BASS_MODE])
+                assertEquals(mode != "off", settings.fixedBass)
+                assertFalse(settings.stable || settings.separated || settings.p1ppp || settings.vbOn)
+                assertEquals(9f, settings.vbLevelDb, 0f)
+                assertEquals(-3f, settings.fixedLevelDb, 0f)
+                val writes = prefs.writes
+                PvbSettings.migrateVirtualBassModel(prefs.proxy)
+                assertEquals(writes, prefs.writes)
+            }
         }
     }
 

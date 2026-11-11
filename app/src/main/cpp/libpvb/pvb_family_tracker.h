@@ -137,7 +137,7 @@ struct Tracker {
         }
 
         bool peak_claimed[8] = {false};
-        bool hyp_direct[6][2] = {{false}};
+        [[maybe_unused]] bool hyp_direct[6][2] = {{false}};
         int prev_sel_arr[6] = {0};
         double prev_sel_f_arr[6] = {0.0};
 

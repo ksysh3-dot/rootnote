@@ -443,7 +443,6 @@ class PreferenceGroupFragment : PreferenceFragmentCompat(), KoinComponent {
         findPreference<androidx.preference.ListPreference>(PvbSettings.KEY_BASS_MODE)?.let { choice ->
             preferenceManager.sharedPreferences?.let { prefs ->
                 choice.value = PvbSettings.load(prefs).bassMode
-                if (choice.value == "stable") choice.summary = "현재: epoch6 안정 (개발자 비교)\n" + getString(R.string.pvb_bass_mode_summary)
             }
         }
         refreshStrength()

@@ -54,6 +54,23 @@ fun main() {
         PvbSettings.migrateVirtualBassModel(p);check(PvbSettings.load(p).vbAlgo==6 && !PvbSettings.load(p).p1ppp)
     }
     // An existing explicit opt-in survives migration; deletion never manufactures one.
-    val p=Prefs(mapOf(PvbSettings.KEY_P1PPP to true));PvbSettings.migrateVirtualBassModel(p);check(PvbSettings.load(p).p1ppp)
+    val p=Prefs(mapOf(PvbSettings.KEY_P1PPP to true));PvbSettings.migrateVirtualBassModel(p);check(PvbSettings.load(p).conducted)
+    for (general in listOf(false, true)) {
+        PvbBuild.general = general; PvbBuild.firstRunConfirmed = true
+        for (old in listOf("off", "strong", "separated", "stable", "epoch6", "conducted", "unknown")) {
+            val prefs = Prefs(mapOf(PvbSettings.KEY_BASS_MODE to old, PvbSettings.KEY_P1PPP to true,
+                PvbSettings.KEY_VB_ON to false, PvbSettings.KEY_FIXED_LEVEL_DB to -3f))
+            val expected = old in listOf("strong", "separated", "stable", "epoch6", "conducted")
+            check(PvbSettings.load(prefs).conducted == expected) // restored file before migration
+            PvbSettings.migrateVirtualBassModel(prefs)
+            val loaded = PvbSettings.load(prefs)
+            check(loaded.stageCId == if (expected) 3 else 0)
+            check(!loaded.separated && !loaded.stable && !loaded.p1ppp && !loaded.vbOn)
+            check(loaded.fixedLevelDb == -3f)
+            check(prefs.all[PvbSettings.KEY_BASS_MODE] == if (expected) "conducted" else "off")
+            val writes = prefs.writes
+            PvbSettings.migrateVirtualBassModel(prefs); check(prefs.writes == writes)
+        }
+    }
     PvbBuild.reset();println("Pruned model/migration contracts: $cases plus corrupt numeric IDs passed")
 }

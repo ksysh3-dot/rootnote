@@ -14,7 +14,7 @@ import java.security.MessageDigest
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
-/** s91 personal test only. All preparation runs on service main, with the audio worker joined. */
+/** Model preparation. All preparation runs on service main, with the audio worker joined. */
 object StageCApp {
     const val FAMILY_P2 = "pvb_family_p2"
     const val WORKER = "pvb_s91_worker"
@@ -24,20 +24,12 @@ object StageCApp {
     fun prepare(c: Context, engine: PvbEngine, rate: Int) {
         val p = prefs(c)
         val requested = PvbSettings.load(p).stageCId
-        // The separator and conductor models are 48 kHz only: elsewhere their clock and pitch axis are wrong.
-        val mode = if (rate != 48000 && requested >= 2) 0 else requested
-        if (mode != requested) Toast.makeText(c, "출력이 $rate Hz라 분리형·지휘형을 쓸 수 없습니다. 48 kHz에서만 동작합니다.",
-            Toast.LENGTH_LONG).show()
-        val asset = when (mode) { 2 -> "T3a16_96.bin"; 3 -> "E60KD.bin"; 4 -> "stable_ab_1218.bin"; else -> null }
-        val data = asset?.let { c.assets.open(it).use { f -> f.readBytes() } }
+        val mode = requested
+        val data = if (mode == 3) c.assets.open("E60KD.bin").use { it.readBytes() } else null
         if (data != null) {
-            val expected = when (mode) {
-                2 -> "e7be71d65f05c7a84527e1c58a71edde05012a86034069c933288a597051906d"
-                3 -> "8fd3284cd08c101754fff524988e5987ea7e3cf897b494c44ce845e900c80310"
-                else -> "70f4a90c34568f46d4677e4799397991a2cb2f6577988fb3ea704332330c9b98"
-            }
-            check(data.size == if (mode == 3) 425640 else 531208)
-            check(MessageDigest.getInstance("SHA-256").digest(data).joinToString("") { "%02x".format(it) } == expected)
+            check(data.size == 425640)
+            check(MessageDigest.getInstance("SHA-256").digest(data).joinToString("") { "%02x".format(it) } ==
+                "8fd3284cd08c101754fff524988e5987ea7e3cf897b494c44ce845e900c80310")
         }
         check(engine.prepareStageC(mode, data, mode == 3 && p.getBoolean(WORKER, false),
             p.getBoolean(TELEMETRY, false), rate, p.getBoolean(FAMILY_P2, true))) { "s91 model preparation failed" }
@@ -51,19 +43,18 @@ object StageCApp {
         val familyP2 = p.getBoolean(FAMILY_P2, true)
         val halRate = (c.getSystemService(Context.AUDIO_SERVICE) as AudioManager)
             .getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE) ?: "?"
-        val items = mutableListOf("epoch6 안정 비교 선택", "지휘형 작업 스레드 (P2 끔일 때): " + if (worker) "켬" else "끔 (기본)",
+        val items = mutableListOf("지휘형 작업 스레드 (P2 끔일 때): " + if (worker) "켬" else "끔 (기본)",
             "시험 계측 파일: " + if (telemetry) "켬" else "끔 (기본)", "계측 파일 모두 내보내기")
-        items += "지휘형 P2 가족 추적: " + if (familyP2) "켬 (기본)" else "끔 (s91k)"
+        items += "지휘형 P2 가족 추적: " + if (familyP2) "켬 (기본)" else "끔 (기존 처리)"
         if (PvbBuild.general) items += "기존 개발자 설정"
-        MaterialAlertDialogBuilder(c).setTitle("p2port 개인 시험 · 개발자 메뉴 · 출력 $halRate Hz")
+        MaterialAlertDialogBuilder(c).setTitle("개발자 메뉴 · 출력 $halRate Hz")
             .setItems(items.toTypedArray()) { _, index ->
                 when (index) {
-                    0 -> p.edit().putString(PvbSettings.KEY_BASS_MODE, "stable").apply()
-                    1 -> p.edit().putBoolean(WORKER, !worker).apply()
-                    2 -> p.edit().putBoolean(TELEMETRY, !telemetry).apply()
-                    3 -> export(c)
-                    4 -> p.edit().putBoolean(FAMILY_P2, !familyP2).apply()
-                    5 -> PvbGeneral.openLegacyDevMode(c)
+                    0 -> p.edit().putBoolean(WORKER, !worker).apply()
+                    1 -> p.edit().putBoolean(TELEMETRY, !telemetry).apply()
+                    2 -> export(c)
+                    3 -> p.edit().putBoolean(FAMILY_P2, !familyP2).apply()
+                    4 -> PvbGeneral.openLegacyDevMode(c)
                 }
             }.setNeutralButton("로그 위치") { _, _ ->
                 MaterialAlertDialogBuilder(c).setTitle("계측 파일")
