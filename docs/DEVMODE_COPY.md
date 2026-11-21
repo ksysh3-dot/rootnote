@@ -135,4 +135,4 @@
 - Texas Instruments TAS2563 데이터시트 (스피커 보호, 배터리 추적 리미터). https://ti.com/lit/gpn/tas2563
 - Cirrus Logic 스마트 앰프 소개 (Android Authority, 후원 기사). https://androidauthority.com/cirrus-logic-smart-amplifier-1199823
 - Larsen, Aarts, "Audio Bandwidth Extension" (Wiley, 2004): 저역 심리음향 대역 확장의 교재. 본문은 확인하지 못해 개별 수치에는 인용하지 않음. https://www.sps.tue.nl/rmaarts/BWE_Book/AartsLarsenBWE.pdf
-- Rootnote 실측: pvb-s26u 저장소의 SPEAKER_BUZZ_20261019.md(1~20차 청취), REW 측정 기록(2026-10-21).
+- Rootnote 실측: 갤럭시 S26 Ultra의 스피커 측정과 청취 결과.

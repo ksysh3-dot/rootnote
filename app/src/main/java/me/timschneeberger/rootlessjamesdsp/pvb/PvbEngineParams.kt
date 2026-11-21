@@ -22,6 +22,8 @@ package me.timschneeberger.rootlessjamesdsp.pvb
  *   [PvbSettings.xtcBalRotation] the rotation the balance was set in.
  */
 object PvbEngineParams {
+    fun supportsComboRate(rate: Int) = rate == 44100 || rate == 48000
+
     /** `android.view.Surface.ROTATION_90` / `ROTATION_270` (kept here so this file needs no Android classes). */
     private const val ROTATION_90 = 1
     private const val ROTATION_270 = 3
@@ -50,6 +52,9 @@ object PvbEngineParams {
         val gateDb: Float,
         val measuring: Boolean,
         val devMeter: Boolean,
+        /** Requested stream rate; unsupported presets fall back to saved P1 settings before JNI. */
+        val sampleRate: Int = 48000,
+        val holdWithoutLayer: Boolean = false,
     )
 
     class Encoded(
@@ -83,7 +88,7 @@ object PvbEngineParams {
         // bass limiter sits after the volume control).
         p[PvbParam.DYN_REF_DB] = s.dynRefDb
         p[PvbParam.DYN_DOWN_RATIO] = 0.5f
-        p[PvbParam.DYN_DOWN_MAX_DB] = 0f   // loud passages: no take-back (album study, 2026-10-16)
+        p[PvbParam.DYN_DOWN_MAX_DB] = 0f   // loud passages: no take-back
         p[PvbParam.DYN_UP_RATIO] = 0.19f   // same equal-loudness slope as the volume link
         p[PvbParam.DYN_UP_MAX_DB] = s.dynUpMaxDb
         p[PvbParam.HS_HZ] = s.hsHz
@@ -92,21 +97,20 @@ object PvbEngineParams {
         p[PvbParam.TAG] = if (i.abActive) i.abTag.toFloat() else 0f
         // In matched bypass, retain the processed reference and equal delay, but only the flat path is audible.
         // A route bypass still removes virtual bass and its delay.
-        p[PvbParam.VB_ON] = if (s.vbOn && (processing || matchedBypassReady)) 1f else 0f
-        p[PvbParam.VB_ALGO] = s.vbAlgo.toFloat()
+        p[PvbParam.VB_ON] = if (s.vbOn && s.combo && (processing || matchedBypassReady)) 1f else 0f
+        p[PvbParam.VB_ALGO] = PvbModels.P1.toFloat() // only supported app model
         p[PvbParam.VB_LEVEL_DB] = vbAppliedLevelDb
         p[PvbParam.FLAT] = if (matchedBypassReady) 1f else 0f
         p[PvbParam.MATCH_HOLD] = if (i.abActive || i.measuring || !routeAllowed) 1f else 0f
         p[PvbParam.MATCH_SEED_DB] = i.matchSeedDb
-        val soloAllowed = processing && s.vbOn && !i.abActive && !i.measuring
+        val soloAllowed = processing && s.vbOn && s.combo && !i.abActive && !i.measuring
         val diagnosticSolo = i.diagnosticSolo && soloAllowed
-        p[PvbParam.DIAGNOSTIC_SOLO] = if (diagnosticSolo) 1f else 0f
-        // Experimental layer options: only with virtual bass on (the engine also ignores them without it).
-        val vbIn = p[PvbParam.VB_ON] == 1f
-        p[PvbParam.X_SMOOTH] = if (vbIn && s.xSmooth) 1f else 0f
-        p[PvbParam.X_RISE] = if (vbIn && s.xRise) 1f else 0f
-        p[PvbParam.X_S1M] = if (vbIn && s.xS1m) 1f else 0f
-        p[PvbParam.X_DENSE] = if (vbIn && s.xDense) 1f else 0f
+        p[PvbParam.DIAGNOSTIC_SOLO] = when {
+            (i.holdWithoutLayer || s.listenWithoutLayer) && soloAllowed -> -1f
+            diagnosticSolo -> 1f
+            else -> 0f
+        }
+        // Reserved JNI slots 29-32 stay zero; legacy X_* settings cannot reach the engine.
         // Developer mode (general build only: PvbSettings.load keeps devOn false elsewhere). Off = every value ignored.
         val dev = s.devOn && !i.abActive
         p[PvbParam.DEV_ON] = if (dev) 1f else 0f
@@ -151,6 +155,24 @@ object PvbEngineParams {
         val balanceSign = if (s.xtcBalRotation != 0 && landscape && i.rotation != s.xtcBalRotation) -1f else 1f
         p[PvbParam.XTC_BAL_LO_DB] = if (i.upright) 0f else balanceSign * s.xtcBalLoDb   // the balance is a sideways one
         p[PvbParam.XTC_BAL_HI_DB] = if (i.upright) 0f else balanceSign * s.xtcBalHiDb
+        // One atomic packet. Saved EQ/model/links survive OFF; this preset locks only effective values.
+        // Comparisons, measurements, solo and bypass exit through the same native fade/reset path.
+        val preset = s.fixedBass && supportsComboRate(i.sampleRate) && processing && s.vbOn && !i.abActive && !i.measuring
+        if (preset) {
+            val frozen = PvbEngine.defaultParams()
+            // Opened EQ (after the warning): the user's EQ plays, the low-mid gain no higher than the default
+            // (the layer level and peak budget of these modes assume it). Everything else stays frozen.
+            val eq = intArrayOf(PvbParam.HP_HZ, PvbParam.LOW_HZ, PvbParam.LOW_DB, PvbParam.LOW_Q,
+                PvbParam.HI_HZ, PvbParam.HI_DB, PvbParam.HI_Q, PvbParam.HS_HZ, PvbParam.HS_DB)
+            if (!s.fixedEqOpen) for (k in eq) p[k] = frozen[k]
+            else p[PvbParam.LOW_DB] = minOf(p[PvbParam.LOW_DB], frozen[PvbParam.LOW_DB])
+            for (k in intArrayOf(PvbParam.OUT_DB, PvbParam.CEIL_DB, PvbParam.REL_MS, PvbParam.DYN_ON, PvbParam.FLAT,
+                PvbParam.X_SMOOTH, PvbParam.X_RISE, PvbParam.X_S1M, PvbParam.X_DENSE, PvbParam.DEV_ON,
+                PvbParam.XTC_MODE)) p[k] = frozen[k]
+            p[PvbParam.VB_LEVEL_DB] = s.fixedLevelDb   // 0 dB is the validated level; the user may only go below it
+            p[PvbParam.VB_ALGO] = PvbModels.P1.toFloat()
+            p[PvbParam.P1PPP] = 0f // COMBO replaces the retired preset
+        }
         return Encoded(p, diagnosticSolo)
     }
 }

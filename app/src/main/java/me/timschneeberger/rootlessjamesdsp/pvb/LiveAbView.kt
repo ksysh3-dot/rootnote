@@ -442,8 +442,8 @@ class LiveAbView(context: Context) : LinearLayout(context) {
         PvbRuntime.setAb(true, lastCond, muted = true)   // fade out: the next trial starts from silence
         playing = -1
         val w = r.winner()
-        reveal.text = "공개 · " + r.sides.joinToString(", ") { "${it.letter} = ${it.label}" } + "\n" +
-            (if (w == null) "판정: 차이 모름" else "고른 쪽: ${w.letter} = ${w.label}") +
+        reveal.text = "공개 · " + r.sides.joinToString(", ") { "${it.letter} = ${LiveAbComparisons.displayLabel(it.id, it.label, it.levelDb)}" } + "\n" +
+            (if (w == null) "판정: 차이 모름" else "고른 쪽: ${w.letter} = ${LiveAbComparisons.displayLabel(w.id, w.label, w.levelDb)}") +
             (if (r.chips.isEmpty()) "" else "\n증상: ${r.chips.joinToString(", ")}")
         reveal.visibility = VISIBLE
         nextBtn.visibility = VISIBLE

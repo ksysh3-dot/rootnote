@@ -1,7 +1,7 @@
 #pragma once
 // Frozen copy of the original modulation fit (before the 2026-10-22 speed-up), for fit_equivalence.cpp only.
 // Uses pvb::ModulationFit from the current header.
-// P1 host research: 128-ms complex polynomial envelope, not source separation.
+// P1 host diagnostics: 128-ms complex polynomial envelope, not source separation.
 // Numerical fit acceptance is NOT an instrument/buzz/quality probability.
 #include <algorithm>
 #include <cmath>

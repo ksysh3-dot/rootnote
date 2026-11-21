@@ -36,7 +36,9 @@ import me.timschneeberger.rootlessjamesdsp.preference.EqualizerPreference
 import me.timschneeberger.rootlessjamesdsp.preference.FileLibraryPreference
 import me.timschneeberger.rootlessjamesdsp.preference.MaterialSeekbarPreference
 import me.timschneeberger.rootlessjamesdsp.preference.SwitchPreferenceGroup
+import me.timschneeberger.rootlessjamesdsp.pvb.StrengthDisplay
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbBuild
+import me.timschneeberger.rootlessjamesdsp.pvb.PvbGeneral
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbSettings
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbModels
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbRuntime
@@ -367,7 +369,9 @@ class PreferenceGroupFragment : PreferenceFragmentCompat(), KoinComponent {
             }
         }
         val level = findPreference<MaterialSeekbarPreference>(PvbSettings.KEY_VB_STRENGTH_DB)?.apply {
-            valueLabelOverride = { v -> PvbSettings.clampLevel(v).roundToInt().let { if (it > 0) "+$it dB" else "$it dB" } }
+            toDisplayValue = { StrengthDisplay.UI.toDisplay(it) }
+            fromDisplayValue = { StrengthDisplay.UI.toActual(it, getMax()) }
+            valueLabelOverride = { v -> StrengthDisplay.UI.sliderValue(v).roundToInt().let { if (it > 0) "+$it dB" else "$it dB" } }
         }
         findPreference<ListPreference>(PvbSettings.KEY_VB_MODE)?.let { mode ->
             fun item(title: String, description: String): CharSequence = SpannableStringBuilder(title).apply {
@@ -380,12 +384,10 @@ class PreferenceGroupFragment : PreferenceFragmentCompat(), KoinComponent {
                 // only listed with the research tools (the model list is visible then).
                 fun title(key: String) = when (key) {
                     PvbModels.PRESET_FULLNESS -> getString(R.string.vb_preset_fullness_title)
-                    PvbModels.PRESET_DEEP -> getString(R.string.vb_preset_deep_title)
                     else -> getString(R.string.vb_preset_custom_title)
                 }
                 fun desc(key: String) = when (key) {
                     PvbModels.PRESET_FULLNESS -> getString(R.string.vb_preset_fullness_desc)
-                    PvbModels.PRESET_DEEP -> getString(R.string.vb_preset_deep_desc)
                     else -> getString(R.string.vb_preset_custom_desc)
                 }
                 val keys = PvbModels.presets.map { it.key } +
@@ -426,6 +428,54 @@ class PreferenceGroupFragment : PreferenceFragmentCompat(), KoinComponent {
                 if (key == PvbSettings.KEY_VB_ALGO || key == PvbSettings.KEY_VB_STRENGTH_DB) refresh()
             }.also { preferenceManager.sharedPreferences?.registerOnSharedPreferenceChangeListener(it) }
         }
+        fun refreshStrength() {
+            val fixed = preferenceManager.sharedPreferences?.let { PvbSettings.load(it).fixedBass } == true
+            level?.isEnabled = !fixed
+            findPreference<MaterialSeekbarPreference>(PvbSettings.KEY_FIXED_LEVEL_DB)?.isVisible = fixed
+            val capOn = preferenceManager.sharedPreferences?.let { PvbSettings.load(it).layerCapOn } == true
+            findPreference<Preference>(PvbSettings.KEY_LAYER_CAP_ON)?.isVisible = fixed
+            findPreference<Preference>(PvbSettings.KEY_LAYER_CAP_DB)?.isVisible = fixed && capOn
+            level?.summary = if (fixed) getString(R.string.pvb_strength_not_applicable) else null
+            level?.valueLabelOverride = { v ->
+                if (fixed) getString(R.string.pvb_strength_not_applicable)
+                else StrengthDisplay.UI.sliderValue(v).roundToInt().let { if (it > 0) "+$it dB" else "$it dB" }
+            }
+        }
+        val choice = findPreference<ListPreference>(PvbSettings.KEY_BASS_MODE)
+        val sw = findPreference<SwitchPreferenceCompat>(PvbSettings.KEY_VB_ON)
+        val bassPrefs = preferenceManager.sharedPreferences ?: return
+        fun refreshBass() {
+            val settings = PvbSettings.load(bassPrefs)
+            choice?.value = settings.bassMode
+            sw?.isChecked = settings.combo
+        }
+        fun selectBass(on: Boolean) {
+            PvbSettings.selectBass(bassPrefs, on) { save ->
+                if (PvbBuild.general) {
+                    PvbGeneral.showFirstRunNotice(requireActivity(), onConfirmed = save)
+                } else {
+                    AlertDialog.Builder(requireContext())
+                        .setTitle(R.string.pvb_vb_warning_title)
+                        .setMessage(R.string.pvb_vb_warning)
+                        .setPositiveButton(R.string.pvb_vb_warning_ok) { _, _ -> save() }
+                        .setNegativeButton(android.R.string.cancel, null)
+                        .show()
+                }
+            }
+        }
+        refreshBass()
+        choice?.setOnPreferenceChangeListener { _, value -> selectBass(value == "combo"); false }
+        sw?.setOnPreferenceChangeListener { _, value -> selectBass(value == true); false }
+        refreshStrength()
+        val modeListener = pvbModeListener
+        pvbModeListener = SharedPreferences.OnSharedPreferenceChangeListener { prefs, key ->
+            if (key == PvbSettings.KEY_BASS_MODE || key == PvbSettings.KEY_VB_ON) refreshBass()
+            modeListener?.onSharedPreferenceChanged(prefs, key)
+            if (key == PvbSettings.KEY_P1PPP || key == PvbSettings.KEY_BASS_MODE || key == PvbSettings.KEY_LAYER_CAP_ON) refreshStrength()
+        }.also { listener ->
+            modeListener?.let { preferenceManager.sharedPreferences?.unregisterOnSharedPreferenceChangeListener(it) }
+            preferenceManager.sharedPreferences?.registerOnSharedPreferenceChangeListener(listener)
+        }
         setupPvbXtc()
         if (PvbBuild.recordFeatures) setupPvbTrackMemory(algo, level)  // general: per-song memory does not exist
         setupPvbVolumeLink()
@@ -450,19 +500,7 @@ class PreferenceGroupFragment : PreferenceFragmentCompat(), KoinComponent {
             }
             true
         }
-        val sw = findPreference<SwitchPreferenceCompat>(PvbSettings.KEY_VB_ON) ?: return
-        sw.setOnPreferenceChangeListener { _, newValue ->
-            if (newValue != true) return@setOnPreferenceChangeListener true
-            // General build: the confirmed first-run notice already carries this warning (one consent, FirstRun).
-            if (PvbBuild.general && PvbBuild.firstRunConfirmed) return@setOnPreferenceChangeListener true
-            AlertDialog.Builder(requireContext())
-                .setTitle(R.string.pvb_vb_warning_title)
-                .setMessage(R.string.pvb_vb_warning)
-                .setPositiveButton(R.string.pvb_vb_warning_ok) { _, _ -> sw.isChecked = true }
-                .setNegativeButton(android.R.string.cancel, null)
-                .show()
-            false  // stays off until confirmed (cancel, back or tapping outside keep it off)
-        }
+
     }
 
     /**
@@ -475,7 +513,7 @@ class PreferenceGroupFragment : PreferenceFragmentCompat(), KoinComponent {
         val memory = findPreference<SwitchPreferenceCompat>(PvbSettings.KEY_VB_TRACK_MEMORY)
         val list = findPreference<Preference>(PvbSettings.KEY_VB_TRACK_LIST)
 
-        fun db(v: Float) = PvbSettings.clampLevel(v).roundToInt().let { if (it > 0) "+$it dB" else "$it dB" }
+        fun db(v: Float) = StrengthDisplay.UI.sliderValue(v).roundToInt().let { if (it > 0) "+$it dB" else "$it dB" }
         fun update() {
             if (!isAdded) return
             val i = levels.indicator(ctx)
@@ -561,8 +599,8 @@ class PreferenceGroupFragment : PreferenceFragmentCompat(), KoinComponent {
             val slope = num(s.vbVolSlope, 2)
             val maxDb = num(s.vbVolMaxDb)
             link.summary = if (reduction >= 0.05f)
-                getString(R.string.pvb_vb_vol_link_on, pct, signedDb(-reduction), signedDb(applied), ref, slope, maxDb)
-            else getString(R.string.pvb_vb_vol_link_on_none, pct, signedDb(applied), ref, slope, maxDb)
+                getString(R.string.pvb_vb_vol_link_on, pct, signedDb(-reduction), signedDb(StrengthDisplay.UI.toDisplay(applied)), ref, slope, maxDb)
+            else getString(R.string.pvb_vb_vol_link_on_none, pct, signedDb(StrengthDisplay.UI.toDisplay(applied)), ref, slope, maxDb)
         }
 
         // 0.05 dB steps (the XML attribute only takes integers)

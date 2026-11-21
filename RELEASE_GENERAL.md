@@ -9,7 +9,7 @@
 | Gradle 변형 | `rootlessFdroidS26uRelease` | `rootlessFdroidGeneralRelease` (다른 조합은 비활성) |
 | 패키지 | `kr.ksysh3.pvb.s26u` | `kr.ksysh3.rootnote` (`AndroidConfig.GENERAL_APPLICATION_ID`) |
 | 앱 이름 | PVB | Rootnote (`AndroidConfig.GENERAL_BRAND_NAME` → 리소스 `app_brand_name`) |
-| 버전 | 1.6.23-alpha3.3 / 61 | 0.9.0-beta.13 / 1012 (`generalVersionName`/`generalVersionCode`) |
+| 버전 | 1.6.23-alpha3.3 / 61 | 0.9.0-beta.15 / 1014 (`generalVersionName`/`generalVersionCode`) |
 | 서명 | 개인 채널 키 `app/pvb-signing.jks` (공개 저장소에는 없음: 파일이 없으면 디버그 키 = 시험용) | 환경 변수(GitHub Secrets)의 배포 키, 없으면 디버그 키 = 시험용 |
 | `RESEARCH_UI` | true (연구 도구 항상 표시) | false (정보 화면의 버전을 7번 누르면 "개발자/연구" 표시) |
 | `RECORD_FEATURES` | true | false: 곡별 세기 기억, 실청·고정 블라인드 비교 기록, 버즈 진단(녹음·마이크·5초 음악 클립·내보내기), 측정이 없음 |
@@ -68,8 +68,8 @@ CI는 `GENERAL_KEYSTORE_B64`를 `$RUNNER_TEMP/general.jks`로 풀고 `GENERAL_KE
 
 1. 이 저장소(`ksysh3-dot/rootnote`, GPL-3.0 대응 소스)에 위 Secrets 4개를 넣습니다. 저장소 주소가 바뀌면 `source_url`도 고칩니다.
 2. `main`의 CI(엔진 시험 + 두 빌드)가 통과했는지 확인합니다.
-3. 태그를 올립니다(태그 이름의 버전은 `AndroidConfig.generalVersionName`과 같게): `git tag general-v0.9.0-beta.13 && git push origin general-v0.9.0-beta.13`.
-4. CI가 엔진 시험 → 두 빌드 → 서명 확인(키가 없으면 실패) → 릴리스를 만듭니다. 첨부: `Rootnote-0.9.0-beta.13.apk`, `.sha256`, `source-<커밋>.tar.gz`(서브모듈 포함 소스). 버전에 `-`가 있으면 사전 릴리스로 표시됩니다.
+3. 태그를 올립니다(태그 이름의 버전은 `AndroidConfig.generalVersionName`과 같게): `git tag general-v0.9.0-beta.15 && git push origin general-v0.9.0-beta.15`.
+4. CI가 엔진 시험 → 두 빌드 → 서명 확인(키가 없으면 실패) → 릴리스를 만듭니다. 첨부: `Rootnote-0.9.0-beta.15.apk`, `.sha256`, `source-<커밋>.tar.gz`(서브모듈 포함 소스). 버전에 `-`가 있으면 사전 릴리스로 표시됩니다.
 5. 다음 버전은 `AndroidConfig.generalVersionName`/`generalVersionCode`를 올린 뒤 새 태그를 붙입니다.
 
 브랜치 푸시와 풀 리퀘스트는 두 빌드를 아티팩트로만 올리고 릴리스를 만들지 않습니다. s26u 변형(개인 채널)은 이 공개 저장소에서 시험 빌드(디버그 키, 아티팩트 `PVB-S26U-test-apk`)만 하며 릴리스하지 않습니다.
@@ -99,7 +99,7 @@ CI는 `GENERAL_KEYSTORE_B64`를 `$RUNNER_TEMP/general.jks`로 풀고 `GENERAL_KE
 - 맨 위 줄 전체가 처리 스위치입니다. 켜기 = `pvb_enable` + `pvb_vb_enable` 켜고 서비스가 꺼져 있으면 캡처 권한 요청. 끄기 = `pvb_enable`만 끔(서비스는 계속 돌아 다시 켤 때 캡처 창이 다시 뜨지 않음). 첫 실행 안내 전에는 켤 수 없고(안내를 먼저 띄움), 가상 저음이 꺼져 있던 상태에서 켜면 고급 화면과 같은 실험 기능 경고를 띄웁니다.
 - 첫 실행 안내는 일곱 쪽짜리 전체 화면입니다(`home/WelcomeActivity.kt`, `WelcomeScreen.kt`, 문자열 `welcome_*`). 한 쪽에 한 메시지: "반가워요!"(가운데, 앱 표시가 움직임으로 그려짐) / 가상 저음(이 폰의 시작값 포함) / 공간감(위에서 본 그림) / 약 0.15초 지연과 앱별 제외 / 켜기 전에 알아 두세요(볼륨 주의, 실험 기능, 내장 스피커만, 다른 효과 앱) / 준비는 한 번이면 돼요(권한, 캡처 동의 창, Android 15 개발자 옵션) / 이제 시작해 볼까요?(동의 문장, 개인정보, 라이선스, [나중에] [확인하고 시작하기]). 그림은 그 쪽에 올 때 한 번 재생되고 멈춥니다. 확인·동의 창 줄은 그 폰의 Android 버전에 맞는 것만 보입니다. "확인하고 시작하기"가 예전 "확인하고 켜기"와 같은 하나의 동의입니다. "나중에"를 고르면 그 실행 동안 홈이 다시 띄우지 않고, 처리를 켤 때 마지막 쪽부터 엽니다. 처음 실행에서 권한이 없으면 시작 안내 다음에 설정 화면으로 갑니다.
 - 문장: 저음을 채우고 있어요(서비스 + PVB + 가상 저음) / 스피커 보정만 쓰고 있어요(가상 저음만 꺼짐) / 원래 소리로 듣고 있어요.
-- 세기 슬라이더 0~9 dB(general 상한), 칩 3개는 고급 화면 모드 목록과 같은 규칙(모델 + 세기)으로 선택이 정해집니다. "사용자 지정"을 누르면 프리셋 칩을 누를 때까지 그 상태로 남습니다.
+- COMBO 세기는 고급 화면에서 −12~0 데시벨(dB)로 조절합니다.
 - 볼륨 연동 줄은 컨트롤러가 쓰는 `VolumeLevelLink` 계산 그대로입니다(서비스가 돌 때는 컨트롤러가 공개한 볼륨, 아니면 같은 AudioManager 값).
 - 판단 로직은 `pvb/HomeLogic.kt`(순수 Kotlin), 시험은 `tools/pvb-harness/jvm/HomeLogicTest.kt`(문자열 영어/한국어 짝 확인 포함).
 - 시스템 "애니메이션 제거"(애니메이터 배율 0)이면 모든 움직임이 즉시 바뀝니다.
@@ -108,7 +108,7 @@ CI는 `GENERAL_KEYSTORE_B64`를 `$RUNNER_TEMP/general.jks`로 풀고 `GENERAL_KE
 
 - 호스트 JVM: `tools/pvb-harness/jvm/run_jvm_test.sh`에 `GeneralBuildTest.kt` 추가(실제 asset으로 프로파일 일치, 상한 적용, 첫 실행 게이트, ADB 명령, 백업 제외 XML).
 - 홈 화면: `HomeLogicTest.kt`(칩 선택, 상한, 첫 실행 게이트, 볼륨 연동 줄, 문자열). CI는 general APK의 런처가 `HomeActivity` 하나인지, s26u 런처가 `MainActivity`인지 확인합니다.
-- 앱 빌드는 CI에서만 합니다(로컬 Android SDK 없음). 실기기 확인은 아직 하지 않았습니다: 첫 실행 안내 흐름, Shizuku/ADB 설정, 다른 제조사 기종, 정보 화면, 언어 전환.
+- CI에서 두 판을 빌드합니다. 로컬 빌드는 설치된 SDK와 캐시를 사용할 수 있습니다. 실기기 확인은 아직 하지 않았습니다: 첫 실행 안내 흐름, Shizuku/ADB 설정, 다른 제조사 기종, 정보 화면, 언어 전환.
 
 ## 8. 알려진 과제 (known debt)
 
@@ -139,3 +139,10 @@ CI는 `GENERAL_KEYSTORE_B64`를 `$RUNNER_TEMP/general.jks`로 풀고 `GENERAL_KE
 - arm64 전용, R8 꺼짐, 재현 빌드 아님, targetSdk 34는 그대로입니다.
 - 서드파티 라이선스 목록은 `PvbGeneral.THIRD_PARTY`와 `assets/licenses/THIRD_PARTY.txt`에 손으로 적었습니다(oss-licenses 플러그인 없음). 의존성을 바꾸면 함께 고쳐야 합니다.
 - NOTICE.md의 수정 파일 목록은 `tools/list_modified_upstream.sh --write`로 갱신합니다(비교 기준인 upstream 커밋을 먼저 가져와야 함: 스크립트 머리말 참고).
+
+## beta.15 구성 / Configuration
+
+두 판에서 끔과 COMBO 가상 저음을 선택할 수 있습니다. 배음 생성은 48 kHz에서 동작합니다.
+이전 저음 선택은 COMBO로 옮기고 끔은 유지합니다.
+
+Both flavors offer Off and COMBO virtual bass. Both 44.1 and 48 kHz output are supported. Harmonic synthesis runs internally at 48 kHz.

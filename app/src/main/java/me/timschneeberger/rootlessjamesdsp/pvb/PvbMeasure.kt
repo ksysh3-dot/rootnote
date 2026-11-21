@@ -346,7 +346,7 @@ class PvbMeasure(
         private const val PREFS = "pvb_measure"
         private const val KEY_LAST = "last"
         private const val KEY_RESTORE = "restore_volume"
-        private const val P0_DBFS = -18.0   // usual RMS of EQ v1.1 output (album study)
+        private const val P0_DBFS = -18.0   // usual RMS of EQ v1.1 output
 
         private fun prefs(context: Context) = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 

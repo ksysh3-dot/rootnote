@@ -24,6 +24,7 @@ import androidx.core.content.ContextCompat
 import me.timschneeberger.rootlessjamesdsp.BuildConfig
 import me.timschneeberger.rootlessjamesdsp.R
 import me.timschneeberger.rootlessjamesdsp.pvb.BassFitSession
+import me.timschneeberger.rootlessjamesdsp.pvb.BassFitStore
 import me.timschneeberger.rootlessjamesdsp.pvb.BassFitSettings
 import me.timschneeberger.rootlessjamesdsp.pvb.CheckRound
 import me.timschneeberger.rootlessjamesdsp.pvb.DevParams
@@ -46,6 +47,7 @@ import me.timschneeberger.rootlessjamesdsp.pvb.SweepDistortion
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbBuild
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbGeneral
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbRuntime
+import me.timschneeberger.rootlessjamesdsp.pvb.PvbEngineParams
 import me.timschneeberger.rootlessjamesdsp.pvb.PvbSettings
 import me.timschneeberger.rootlessjamesdsp.pvb.SpeakerProbe
 import me.timschneeberger.rootlessjamesdsp.pvb.ValidationLog
@@ -97,7 +99,7 @@ class BassFitActivity : RnActivity() {
     private var startVolume = -1
     private var oldSettings: PvbSettings? = null
     private var newSettings: PvbSettings? = null
-    private var newValues: FloatArray? = null
+    private var fitChanges: Map<String, Any> = emptyMap()
     // validation mode: the block's runs, the hidden condition now, the UMIK-1 sounds
     private var plan: ValidationPlan? = null
     private var planIndex = 0
@@ -143,17 +145,19 @@ class BassFitActivity : RnActivity() {
 
     // ------------------------------------------------------------------------------------------------ helpers
 
+    private fun supportedRate() = PvbEngineParams.supportsComboRate(PvbRuntime.engine?.sampleRateHz ?: 0)
+
     private fun engineReady(): Boolean {
         val st = PvbRuntime.status
-        return BaseAudioProcessorService.activeServices > 0 && st.processing && st.speaker && !PvbRuntime.abActive
+        return BaseAudioProcessorService.activeServices > 0 && st.processing && st.speaker && supportedRate() && !PvbRuntime.abActive
     }
 
     private fun stored(): PvbSettings = PvbSettings.load(prefs)
 
     private fun introState(): FitUi = FitUi(
         ready = engineReady(),
-        lastRecord = flags.getString(KEY_FIT_RECORD, null),
-        canRestore = flags.getString(KEY_FIT_BEFORE, null) != null,
+        lastRecord = prefs.getString(BassFitStore.RECORD, flags.getString(BassFitStore.RECORD, null)),
+        canRestore = BassFitStore.canRestore(prefs, flags),
         noiseCorr = flags.getBoolean(KEY_FIT_NOISE_CORR, false),
     )
 
@@ -199,7 +203,7 @@ class BassFitActivity : RnActivity() {
     private fun pauseReason(): FitPause? {
         val st = PvbRuntime.status
         return when {
-            BaseAudioProcessorService.activeServices <= 0 || !st.processing || PvbRuntime.abActive -> FitPause.ENGINE
+            BaseAudioProcessorService.activeServices <= 0 || !st.processing || !supportedRate() || PvbRuntime.abActive -> FitPause.ENGINE
             !st.speaker -> FitPause.ROUTE
             startVolume >= 0 && st.volumeIndex != startVolume -> FitPause.VOLUME
             else -> null
@@ -235,7 +239,7 @@ class BassFitActivity : RnActivity() {
         val st = PvbRuntime.status
         startVolume = st.volumeIndex
         val seed = SecureRandom().nextLong()
-        session = BassFitSession(seed, stored().vbLevelDb.toDouble())
+        session = BassFitSession(seed, stored().fixedLevelDb.toDouble(), adjustableVoicing = false)
         latencyS = FitLatency.TYPICAL_S
         roomBands = null
         ui = FitUi(screen = FitScreen.ROOM, seedText = seedText(seed), volumeText = volumeText())
@@ -247,18 +251,6 @@ class BassFitActivity : RnActivity() {
             return
         }
         roomCheck()
-    }
-
-    /** "배음 모양만 맞추기": step 4 alone (A/B preferences on music, no microphone, no room check). */
-    private fun startShape() {
-        if (!engineReady()) { ui = ui.copy(ready = false); return }
-        stopAll()
-        keepScreenOn(true)
-        startVolume = PvbRuntime.status.volumeIndex
-        val seed = SecureRandom().nextLong()
-        session = BassFitSession(seed, stored().vbLevelDb.toDouble(), FitScope.SHAPE)
-        ui = FitUi(screen = FitScreen.TEST, seedText = seedText(seed), volumeText = volumeText())
-        beginTest()
     }
 
     /**
@@ -402,8 +394,8 @@ class BassFitActivity : RnActivity() {
         val (variant, material, toneHz) = when (p) {
             is FitPrompt.Abx -> Triple(when (label) { "A" -> p.a; "B" -> p.b; else -> if (p.xIsA) p.a else p.b }, p.material, p.toneHz)
             is FitPrompt.Prefer -> Triple(if (label == "A") p.a else p.b, p.material, p.toneHz)
-            // "R": the clean reference, the same clip with the virtual bass off (what a catch trial plays)
-            is FitPrompt.Buzz -> Triple(if (label == "R") p.variant.copy(vbOn = false, levelDb = 0.0) else p.variant, FitMaterial.LOW, 0.0)
+            // "R": the clean reference, the same clip with its final harmonic layer omitted (what a catch trial plays)
+            is FitPrompt.Buzz -> Triple(if (label == "R") p.variant.copy(vbOn = false) else p.variant, FitMaterial.LOW, 0.0)
             else -> return
         }
         token++
@@ -445,20 +437,23 @@ class BassFitActivity : RnActivity() {
         mic?.stop(); mic = null
         keepScreenOn(false)
         val r = s.result
-        val cur = DevParams.read(stored())
-        val next = r.applyTo(cur)
-        newValues = next
+        val settings = stored()
+        val cur = DevParams.read(settings)
+        fitChanges = BassFitStore.changes(settings, r)
+        val next = DevParams.read(BassFitStore.preview(settings, fitChanges))
+        val levelChanged = r.strengthDb != null && r.strengthDb.toFloat() != settings.fixedLevelDb
         ui = ui.copy(screen = FitScreen.RESULT, result = r, prompt = null, playing = null, paused = null,
-            current = cur, proposed = next, changes = (cur.indices).any { DevParams.ALL[it].indexOf(cur[it]) != DevParams.ALL[it].indexOf(next[it]) },
+            current = cur, proposed = next, currentFixedLevel = settings.fixedLevelDb,
+            compareStrength = settings.combo && settings.vbOn && levelChanged,
+            changes = fitChanges.isNotEmpty(),
             vbAlgo = stored().vbAlgo)
     }
 
     private fun startCheck() {
         val s = session ?: return
-        val values = newValues ?: return
         val st = stored()
         oldSettings = st
-        newSettings = DevParams.apply(st, values).copy(devOn = true)
+        newSettings = BassFitStore.preview(st, fitChanges)
         check = CheckRound(s.seed xor CHECK_SALT)
         ui = ui.copy(screen = FitScreen.CHECK, checkNumber = 1, checkTrials = check!!.trials, checkSide = 1)
         PvbRuntime.calibrating = false
@@ -495,30 +490,14 @@ class BassFitActivity : RnActivity() {
     }
 
     private fun save() {
-        val values = newValues ?: return
         val r = ui.result ?: return
-        val before = DevParams.read(stored())
-        val e = prefs.edit()
-        DevParams.write(values, { k, v -> e.putFloat(k, v) }, { k, v -> e.putBoolean(k, v) })
-        e.putBoolean(DevParams.KEY_DEV_ON, true)      // the values act only with developer mode on (as the check played them)
-        e.apply()
-        val f = flags.edit().putString(KEY_FIT_BEFORE, before.joinToString(",")).putString(KEY_FIT_RECORD, record(r))
-        r.floor?.let { f.putFloat(KEY_FIT_FLOOR_HZ, it.speakerFloorHz.toFloat()) }
-        f.apply()
+        BassFitStore.save(prefs, flags, fitChanges, record(r), r.floor?.speakerFloorHz?.toFloat())
         stopAll()
         ui = ui.copy(screen = FitScreen.DONE)
     }
 
     private fun restoreBefore() {
-        val raw = flags.getString(KEY_FIT_BEFORE, null) ?: return
-        val v = raw.split(",").map { it.trim().toFloatOrNull() }
-        // index by index: a value that doesn't parse, or one added since (an older, shorter list), keeps its current value
-        val cur = DevParams.read(stored())
-        val values = FloatArray(cur.size) { v.getOrNull(it)?.takeIf { x -> x.isFinite() } ?: cur[it] }
-        val e = prefs.edit()
-        DevParams.write(values, { k, x -> e.putFloat(k, x) }, { k, x -> e.putBoolean(k, x) })
-        e.apply()
-        flags.edit().remove(KEY_FIT_BEFORE).remove(KEY_FIT_RECORD).remove(KEY_FIT_FLOOR_HZ).apply()
+        BassFitStore.restore(prefs, flags)
         Toast.makeText(this, R.string.fit_restored, Toast.LENGTH_SHORT).show()
         ui = introState()
     }
@@ -527,7 +506,7 @@ class BassFitActivity : RnActivity() {
     private fun record(r: FitResult): String {
         val date = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT).format(Date())
         val floor = r.floor?.let { getString(R.string.fit_hz, it.speakerFloorHz.toInt()) } ?: getString(R.string.fit_r_keep)
-        val strength = newValues?.let { getString(R.string.fit_db, signed(it[DevParams.ALL.indexOf(DevParams.STRENGTH)].toDouble())) }
+        val strength = r.strengthDb?.let { getString(R.string.fit_db, signed(it)) }
             ?: getString(R.string.fit_r_keep)
         return getString(R.string.fit_record, date, floor, strength, ui.volumeText, ui.seedText) +
             if (ui.noisy) " · " + getString(R.string.fit_record_noisy) else ""
@@ -538,7 +517,6 @@ class BassFitActivity : RnActivity() {
     private val actions = FitActions(
         onBack = { finish() },
         onStart = { start() },
-        onShapeOnly = { startShape() },
         onNoiseCorr = { on -> flags.edit().putBoolean(KEY_FIT_NOISE_CORR, on).apply(); ui = ui.copy(noiseCorr = on) },
         onRestore = { restoreBefore() },
         onRoomRetry = { stopAll(); if (ui.validating) { endValidation(); ui = validateState() } else ui = introState() },
@@ -629,7 +607,7 @@ class BassFitActivity : RnActivity() {
         if (planIndex >= p.runs.size) { stopAll(); endValidation(); ui = validateState(); toast(R.string.fit_val_logged); return }
         conditionHp = p.runs[planIndex]
         planIndex++
-        session = BassFitSession(SecureRandom().nextLong(), stored().vbLevelDb.toDouble(), ui.valScope)
+        session = BassFitSession(SecureRandom().nextLong(), stored().fixedLevelDb.toDouble(), ui.valScope, adjustableVoicing = false)
             .also { if (ui.noiseCorr) applyNoise(it, roomBands, roomRaw == true) }
         // the microphone (silent-interval checks) only for the step-1 runs
         if (ui.valScope == FitScope.FLOOR && mic == null &&
@@ -899,13 +877,7 @@ class BassFitActivity : RnActivity() {
 
     companion object {
         const val FS = 48000
-        /** Developer values before the last saved fit (comma-separated, DevParams.ALL order). */
-        const val KEY_FIT_BEFORE = "bass_fit_before"
-        /** One line describing the last saved fit. */
-        const val KEY_FIT_RECORD = "bass_fit_record"
         const val KEY_FIT_NOISE_CORR = "bass_fit_noise_corr"
-        /** Speaker floor found by the last saved fit (Hz): the developer-mode graphs draw it instead of the profile's. */
-        const val KEY_FIT_FLOOR_HZ = "bass_fit_floor_hz"
         private const val CHECK_SALT = 0x5EEDC0DEL
         /** The validation log in the app's own files (copied or sent from the screen). */
         const val LOG_FILE = "bass_fit_validation.csv"

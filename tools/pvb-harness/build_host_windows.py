@@ -40,13 +40,14 @@ def main():
                     '__declspec(dllexport) ', source, flags=re.M)
     generated.write_text(source, encoding='utf-8')
     inputs = [src / n for n in ('pvb_engine.cpp', 'pvb_analysis.cpp',
-                                'pvb_vb.cpp', 'pvb_vb52.cpp')]
+                                'pvb_vb.cpp', 'pvb_vb52.cpp', 'combo1/pvb_vb.cpp',
+                                'combo1/pvb_vb52.cpp', 'combo1/way3alt1_synth.cpp')]
     cmd = [str(args.zig.resolve()), 'c++', '-std=c++17', '-O2',
            '-fno-fast-math', '-Wall', '-Wextra', '-Wpedantic', '-Werror',
            '-pthread', '-shared', '-I' + str(src), *map(str, inputs),
            str(generated), '-o', str(out / 'pvbcapi.dll')]
     subprocess.run(cmd, env=env, check=True)
-    files = sorted(src.glob('*.h')) + inputs + [capi]
+    files = sorted(src.rglob('*.h')) + sorted(src.rglob('*.inc')) + inputs + [capi]   # .inc: pvb_resultant.inc is part of pvb_vb52.cpp
     manifest = {p.relative_to(root).as_posix():
                 hashlib.sha256(p.read_bytes()).hexdigest() for p in files}
     (out / 'source_hashes.json').write_text(json.dumps(manifest, indent=2), encoding='utf-8')

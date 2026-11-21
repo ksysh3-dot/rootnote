@@ -101,6 +101,7 @@ object PvbGeneral {
         val p = profile(context)
         val edit = prefs.edit()
         for ((k, v) in DeviceProfiles.valuesFor(p, PvbBuild.caps)) {
+            if (k == PvbSettings.KEY_VB_ON && prefs.contains(k)) continue
             when (v) {
                 is Float -> edit.putFloat(k, v)
                 is Boolean -> edit.putBoolean(k, v)
@@ -116,7 +117,12 @@ object PvbGeneral {
         PvbBuild.firstRunConfirmed = true
         val prefs = context.applicationContext.getSharedPreferences(PvbSettings.PREFS_NAME, Context.MODE_PRIVATE)
         val edit = prefs.edit()
-        FirstRun.valuesOnConfirm().forEach { (k, v) -> if (v is Boolean) edit.putBoolean(k, v) }
+        FirstRun.valuesOnConfirm().forEach { (key, value) ->
+            when (value) {
+                is Boolean -> edit.putBoolean(key, value)
+                is String -> edit.putString(key, value)
+            }
+        }
         edit.apply()
     }
 
@@ -206,9 +212,11 @@ object PvbGeneral {
     const val KEY_DEV_MIC_CORR = "dev_mic_spectrum_corr"
 
     /** Developer mode is offered: general build, research tools unlocked. */
-    val devModeAvailable: Boolean get() = PvbBuild.general && PvbBuild.researchUnlocked
+    val devModeAvailable: Boolean get() = PvbBuild.researchUi
 
-    fun openDevMode(context: Context) {
+    fun openDevMode(context: Context) = StageCApp.showDeveloperMenu(context)
+
+    fun openLegacyDevMode(context: Context) {
         if (!PvbBuild.general) return
         try {
             context.startActivity(Intent().setClassName(context.packageName, DEVMODE_ACTIVITY))

@@ -301,8 +301,10 @@ int Engine::analyze(float* inDb, float* outDb, float* diffDb, float* eqDb, int n
         if (A.bands[i].none) {
             eqDb[i] = kNaN;
         } else {
+            double shelfDb = 0.0;  // dry low shelf of the fixed modes (0 sections otherwise)
+            for (int q = 0; q < static_cast<int>(c[24]); ++q) shelfDb += svfMagDb(c + 25 + 5 * q, f, sr);
             eqDb[i] = static_cast<float>(2.0 * svfMagDb(c + 0, f, sr) + svfMagDb(c + 5, f, sr) + svfMagDb(c + 10, f, sr) +
-                                         svfMagDb(c + 18, f, sr));
+                                         svfMagDb(c + 18, f, sr) + shelfDb);
         }
     }
 

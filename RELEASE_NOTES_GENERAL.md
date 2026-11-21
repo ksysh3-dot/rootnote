@@ -1,4 +1,5 @@
 **Rootnote** — phone speaker virtual bass · unofficial RootlessJamesDSP fork
+
 (폰 스피커 가상 저음 · RootlessJamesDSP 기반 비공식 포크)
 
 Beta for Android 10+ (arm64). Not made or supported by the RootlessJamesDSP/JamesDSP developers. GPL-3.0, no warranty.
@@ -10,12 +11,65 @@ The corresponding source is the tagged commit; `source-*.tar.gz` below contains 
 - Measured settings exist only for the Galaxy S26 Ultra; other phones start with conservative settings based on published measurements of 92 Android phones.
 - Privacy: only settings are stored; no song titles, no recordings, nothing sent (see PRIVACY.md).
 
-## 0.9.0-beta.13
+## 0.9.0-beta.15
 
-- "가로채기 캡처"를 고르면 켤 때 화면 공유 동의를 묻지 않아요. beta.12는 방식과 상관없이 동의부터 받은 뒤 가로채기를 시도했어요. 이제 Shizuku가 켜져 있으면 바로 시작하고, 가로채기를 못 쓸 때(Shizuku 꺼짐 등)만 화면 공유 동의를 받아요. 앱이 열려 있으면 바로 묻고, 아니면 알림으로 알려요. 안드로이드 15의 "화면 공유 보호" 안내도 가로채기를 쓸 때는 띄우지 않아요.
-- 가로채기 캡처가 어느 폰에서도 시작되지 않던 문제를 고쳤어요(beta.12). Rootnote 자신과 제외한 앱을 빼는 규칙을 잘못된 방법으로 넣어 시스템이 거부했어요. 가로채기를 못 쓸 때는 알림과 설정에 시스템이 알려 준 이유를 그대로 보여 줘요.
-- 가로채기에서는 소리 캡처를 막는 앱도 처리돼요. Chrome과 (개조하지 않은) Spotify에서 확인했어요. 화면 공유 방식에서는 예전처럼 처리되지 않아요.
-- 개발 도구를 더했어요(앱 동작은 같아요): 가로채기 시작 판단과 실패 문구를 표로 확인하는 시험, 안드로이드 메서드 이름·매니페스트·시작 순서·버전 일치를 CI에서 확인하는 점검, 움직임 규칙 검사의 빈틈(타입을 붙인 300 ms 초과 호출) 수정.
+### 한국어
+
+**새 가상 저음 엔진: COMBO**
+- 가상 저음을 새 엔진 "COMBO 가상 저음"으로 바꿨어요. 저음의 높이를 따라가며 그 음에 맞는 배음(2~8배음)을 정해진 계산식으로 만들어 원음에 더해요. 학습된 모델은 쓰지 않아요.
+- 드럼·킥 소리가 배음으로 잘못 따라오지 않게 했어요. 저음이 사라지거나 다른 대역에서 큰 타격음이 들어오면 남아 있던 배음을 더 빨리 줄여요(64 ms → 16 ms). 개발 중 앞선 판과 컴퓨터로 비교했을 때 드럼 누출은 줄고 원하는 저음은 곡 중앙값으로 줄지 않았어요. beta.12 엔진과 직접 비교한 값은 없어요.
+- 베이스 소리가 잠깐 약해질 때 배음이 끊기는 일을 줄이는 장치를 넣었어요(개발 중 앞선 판과 비교).
+- 출력이 44.1 kHz와 48 kHz일 때 동작해요. 44.1 kHz에서는 배음 계산만 안에서 48 kHz로 바꿔 돌려, 두 표본율에서 같은 배음을 만들어요. 지연은 48 kHz에서 약 0.149초, 44.1 kHz에서 약 0.151초예요. 그 밖의 출력에서는 원음과 EQ만 나오고, 설정 화면에 그렇게 알려 줘요.
+
+**설정**
+- 베이스 모드는 "끔 / COMBO 가상 저음" 두 가지이고, 가상 저음 스위치와 함께 움직여요. beta.12에서 가상 저음을 켜 두셨다면 COMBO로, 꺼 두셨다면 끔으로 이어져요. 세기와 EQ 값은 그대로 남아요.
+- COMBO는 검증한 기본 EQ로 재생해요. EQ를 바꾸려면 "EQ 조절 풀기"를 눌러요. 저중역은 기본값(+3 dB)보다 올릴 수 없고, "기본값으로 되돌리고 잠그기"로 언제든 돌아가요.
+- "스피커 보호 상한 (실험)"을 넣었어요. 100–500 Hz 배음 층이 정한 크기를 넘는 순간에만 층을 눌러요. 원곡 소리는 줄이지 않아요.
+- 홈 화면의 "초저역 강조 (실험)" 프리셋은 빠졌어요.
+
+**캡처**
+- 가로채기 캡처가 어느 폰에서도 시작되지 않던 문제를 고쳤어요. 실패하면 "시작하지 못함" 대신 시스템이 알려 준 이유를 보여 줘요.
+- 가로채기 캡처는 Shizuku가 준비돼 있으면 화면 공유 동의 없이 시작해요. 소리 캡처를 막는 앱도 처리해요(Chrome, Spotify로 확인).
+- 가로채기 캡처에서 소리가 빨리 감기듯 나오던 문제를 고쳤어요.
+
+**그 밖에**
+- 설정 가져오기가 중간에 실패해도 기존 설정 파일이 지워지지 않아요.
+
+**알려진 한계**
+- 이 판은 폰에서 듣거나 재는 시험을 아직 하지 않았어요. 위 내용은 컴퓨터 계산(합성 신호와 음악)으로 확인한 거예요.
+- 55 Hz와 82 Hz처럼 5도 차이 나는 두 음이 같은 크기로 울리고 둘의 위상이 1/4 주기 어긋나면, 실제로 없는 더 낮은 음(가짜 기음)의 배음이 만들어질 수 있어요. 고치지 않았고, 실제로 얼마나 들리는지는 아직 재지 않았어요.
+- 음악으로 잰 수치는 모두 48 kHz 기준이에요. 44.1 kHz 경로는 합성 신호로 48 kHz와 같은 배음이 나오는 것(배음 크기 차 0.02 dB 이내)만 확인했어요. 44.1 kHz에서는 처리량이 48 kHz의 약 2배라 폰이 조금 더 일해요.
+- 드럼·킥이 배음으로 따라오는 일이 완전히 없어지지는 않아요.
+- 약 0.15초 지연이 있어 영상에서는 입 모양과 소리가 조금 어긋날 수 있어요.
+
+### English
+
+**New virtual bass engine: COMBO**
+- Virtual bass now uses a new engine, "COMBO virtual bass". It follows the pitch of the bass and synthesizes the matching harmonics (2nd to 8th) with a fixed formula, then adds them to the original sound. No learned model is used.
+- Drums and kicks are kept from being followed as bass. When the bass disappears, or a loud hit arrives in other bands, the remaining harmonics fade faster (64 ms → 16 ms). Compared by computer with an earlier development build, drum leak went down and the wanted bass did not go down (median over songs). There is no direct comparison with the beta.12 engine.
+- Added a step that reduces harmonic dropouts when the bass note briefly gets quieter (compared with an earlier development build).
+- Works when the output runs at 44.1 kHz or 48 kHz. At 44.1 kHz only the harmonic calculation runs internally at 48 kHz, so both rates make the same harmonics. Delay is about 0.149 s at 48 kHz and about 0.151 s at 44.1 kHz. At other output rates you hear the original sound with the EQ, and the settings screen says so.
+
+**Settings**
+- Bass mode is "Off / COMBO virtual bass" and moves together with the virtual bass switch. If virtual bass was on in beta.12, it continues as COMBO; if it was off, it stays off. Strength and EQ values are kept.
+- COMBO plays with its tested default EQ. To change the EQ, tap "Unlock EQ". The low-mid band cannot go above its default (+3 dB), and "Reset and lock" returns to the defaults at any time.
+- New "Speaker protection cap (experimental)": it pushes the 100–500 Hz harmonic layer down only at the moments it goes above the set level. The original sound is not reduced.
+- The "Deep bass (experimental)" preset on the home screen is gone.
+
+**Capture**
+- Fixed intercept capture failing to start on every phone. When it fails, the app shows the reason given by the system instead of "could not start".
+- When Shizuku is ready, intercept capture starts without the screen-share consent, and also processes apps that block audio capture (checked with Chrome and Spotify).
+- Fixed intercept capture sometimes playing audio as if fast-forwarded.
+
+**Other**
+- A failed settings import no longer deletes the existing settings file.
+
+**Known limits**
+- This build has not been listened to or measured on a phone yet. The points above were checked by computer analysis (synthetic signals and music).
+- When two notes a fifth apart, such as 55 Hz and 82 Hz, play at the same level and a quarter cycle out of phase, harmonics of a lower note that is not in the music (a false fundamental) can appear. This is not fixed, and how audible it is has not been measured.
+- All numbers measured with music are for 48 kHz. For the 44.1 kHz path we only checked, with synthetic signals, that it makes the same harmonics as 48 kHz (harmonic levels within 0.02 dB). At 44.1 kHz the processing load is about twice that at 48 kHz.
+- Drums and kicks can still leak into the harmonics.
+- About 0.15 s of delay, so lips and sound can look slightly out of sync in video.
 
 ## 0.9.0-beta.12
 

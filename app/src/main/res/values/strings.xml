@@ -716,4 +716,7 @@ Tap on \'Tutorial\' below for detailed instructions.</string>
     <string name="android_15_screenshare_keyguard_warning">Android 15 introduces a restriction that stops screen sharing when the device is locked. To workaround this issue, the \'PROJECT_MEDIA\' permission must be granted using Shizuku or ADB.
 
 Please press \'Continue\' below to re-do the setup wizard.</string>
+    <string name="pvb_p1ppp">COMBO virtual bass</string>
+    <string name="pvb_p1ppp_summary">Supports 44.1 and 48 kHz output. The harmonic generator runs internally at 48 kHz.</string>
+    <string name="pvb_strength_not_applicable">Level is set under the bass mode</string>
 </resources>

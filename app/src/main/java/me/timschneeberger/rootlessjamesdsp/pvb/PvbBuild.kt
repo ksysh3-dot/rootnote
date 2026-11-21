@@ -96,7 +96,10 @@ object FirstRun {
      * profile already wrote. The notice carries the virtual-bass warning, so confirming it is the one consent; the
      * home switch does not ask again.
      */
-    fun valuesOnConfirm(): Map<String, Any> = mapOf(PvbSettings.KEY_ENABLE to true, PvbSettings.KEY_VB_ON to true)
+    fun valuesOnConfirm(): Map<String, Any> = mapOf(
+        PvbSettings.KEY_ENABLE to true, PvbSettings.KEY_VB_ON to true,
+        PvbSettings.KEY_BASS_MODE to PvbSettings.bassModeFor(true),
+    )
 
     /** Shell commands granting the capture permissions to [applicationId] (ADB setup, shown in the notice). */
     fun adbCommands(applicationId: String): List<String> = listOf(

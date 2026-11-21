@@ -115,7 +115,7 @@ data class FitResult(
             set(DevParams.OUT_LO, it.outLoHz)
             set(DevParams.TABLE_FLOOR, it.tableScale * BassFitMapping.REF_FLOOR_HZ)
         }
-        strengthDb?.let { set(DevParams.STRENGTH, it) }
+        // COMBO strength is stored separately from the developer sliders.
         shape?.let { cell ->
             set(DevParams.ROLLOFF, cell.rolloffDbOct)
             val h = BassFitMapping.harmonicOffsets(cell.lowOrderDb)
@@ -129,7 +129,8 @@ data class FitResult(
 /** What a run asks: everything, one step alone (validation mode), or only the harmonic shape (step 4 by itself). */
 enum class FitScope { ALL, FLOOR, BREAKUP, SHAPE }
 
-class BassFitSession(val seed: Long, val storedStrengthDb: Double, val scope: FitScope = FitScope.ALL) {
+class BassFitSession(val seed: Long, val storedStrengthDb: Double, val scope: FitScope = FitScope.ALL,
+    private val adjustableVoicing: Boolean = true) {
     private val seeds = FitRng(seed)
     private fun sub(): Long = seeds.next()
 
@@ -165,8 +166,8 @@ class BassFitSession(val seed: Long, val storedStrengthDb: Double, val scope: Fi
     private val shape = ShapeGrid(sub())
     private var shapeTried = false
 
-    /** Strength the edge and layer checks play at: the stored one, at least +4 and at most +8. */
-    val probeDb: Double = storedStrengthDb.coerceIn(4.0, 8.0)
+    /** Strength the edge and layer checks play at: the stored one, between -8 and -4 dB. */
+    val probeDb: Double = storedStrengthDb.coerceIn(-8.0, -4.0)
 
     init {
         if (scope == FitScope.BREAKUP) startBreakup()
@@ -199,7 +200,7 @@ class BassFitSession(val seed: Long, val storedStrengthDb: Double, val scope: Fi
             }
             FitStage.BREAKUP -> when (val t = breakup!!.current) {
                 is BreakupStaircase.Trial.Level -> FitPrompt.Buzz(FitVariant(true, t.db, floor, edgeHz), number)
-                is BreakupStaircase.Trial.Catch -> FitPrompt.Buzz(FitVariant(false, 0.0, floor, edgeHz), number)
+                is BreakupStaircase.Trial.Catch -> FitPrompt.Buzz(FitVariant(false, breakup!!.levelDb, floor, edgeHz), number)
             }
             FitStage.SHAPE_OFFER -> FitPrompt.ShapeOffer
             FitStage.SHAPE -> shape.current!!.let { (i, j, iIsA) ->
@@ -233,7 +234,7 @@ class BassFitSession(val seed: Long, val storedStrengthDb: Double, val scope: Fi
         edgeHz = floor?.boundaryHz
         if (scope == FitScope.FLOOR) { enter(FitStage.DONE); return }
         // the edge check needs room above the floor's edge (the engine stops at 280 Hz)
-        if (floor != null && raisedEdge() / floor!!.boundaryHz >= 1.1) {
+        if (adjustableVoicing && floor != null && raisedEdge() / floor!!.boundaryHz >= 1.1) {
             edgeAbx = AbxRun(edgeSeed)
             enter(FitStage.EDGE)
         } else enter(FitStage.LAYER)
@@ -318,7 +319,7 @@ class BassFitSession(val seed: Long, val storedStrengthDb: Double, val scope: Fi
         val b = breakup!!
         b.answer(a)
         number++
-        if (b.done) enter(if (scope == FitScope.BREAKUP) FitStage.DONE else FitStage.SHAPE_OFFER)
+        if (b.done) enter(if (scope == FitScope.BREAKUP || !adjustableVoicing) FitStage.DONE else FitStage.SHAPE_OFFER)
     }
 
     /** The optional shape step: take it (about 18 pairs) or finish. */
@@ -338,7 +339,8 @@ class BassFitSession(val seed: Long, val storedStrengthDb: Double, val scope: Fi
         refTest.reliable && refTest.thresholdDb() != null && floorTest.reliable && !floorTest.cappedNearFloor()
 
     private fun startBreakup() {
-        breakup = BreakupStaircase(breakupSeed, max(2.0, preferred()?.toDouble() ?: storedStrengthDb))
+        breakup = BreakupStaircase(breakupSeed, preferred()?.toDouble() ?: storedStrengthDb,
+            minDb = PvbSettings.FIXED_LEVEL_MIN.toDouble(), maxDb = 0.0)
         enter(FitStage.BREAKUP)
     }
 
@@ -430,7 +432,7 @@ object BassFitSettings {
      */
     fun of(stored: PvbSettings, v: FitVariant): PvbSettings {
         var s = stored.copy(devOn = true, vbVolLink = false, dynOn = false, xtcMode = PvbSettings.XTC_OFF)
-        if (v.raw) return s.copy(vbOn = false, hpHz = RAW_HP_HZ, lowDb = 0f, hiDb = 0f, hsDb = 0f)
+        if (v.raw) return s.copy(combo = false, vbOn = false, hpHz = RAW_HP_HZ, lowDb = 0f, hiDb = 0f, hsDb = 0f)
         v.floor?.let { f ->
             s = s.copy(
                 hpHz = DevParams.HP.snap(f.hpHz.toFloat()),
@@ -448,6 +450,6 @@ object BassFitSettings {
                 devH4Db = DevParams.H4.snap(h[2].toFloat()), devH5Db = DevParams.H5.snap(h[3].toFloat()),
             )
         }
-        return s.copy(vbOn = v.vbOn, vbLevelDb = DevParams.STRENGTH.snap(v.levelDb.toFloat()))
+        return s.copy(combo = true, vbOn = true, listenWithoutLayer = !v.vbOn, fixedLevelDb = PvbSettings.clampFixedLevel(v.levelDb.toFloat()))
     }
 }

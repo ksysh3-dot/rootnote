@@ -32,3 +32,5 @@ tools/pvb-harness/study/private/
 /tools/rootfx/build/
 /tools/rootfx/build-android/
 /dist-root/
+
+/.kotlin/

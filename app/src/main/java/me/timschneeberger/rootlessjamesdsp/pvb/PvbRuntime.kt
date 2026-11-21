@@ -40,6 +40,7 @@ object PvbRuntime {
         val targetLowDb: Float = 0f,
         val dynRefDb: Float = Float.NaN,       // quiet-passage bass threshold in use (NaN = off)
         val abActive: Boolean = false,         // a blind comparison is running: hide everything that reveals it
+        val p1pppRequested: Boolean = false,
         val vbOn: Boolean = false,             // virtual bass setting (what the engine plays is in its meters)
         val vbAlgo: Int = PvbModels.P1,
         val vbLevelDb: Float = PvbSettings.VB_LEVEL_DEFAULT,   // slider (requested) level
@@ -248,6 +249,25 @@ object PvbRuntime {
         devMeter = on
         devListeners.forEach { it() }
     }
+
+    /** The developer detailed debug log ([DevDetailLog]) runs: the engine computes its meters even off-screen. */
+    @Volatile
+    var devLog: Boolean = false
+        private set
+
+    fun setDevLog(on: Boolean) {
+        if (devLog == on) return
+        devLog = on
+        devListeners.forEach { it() }
+    }
+
+    @Volatile
+    var holdWithoutLayer = false
+        set(value) {
+            if (field == value) return
+            field = value
+            devListeners.forEach { it() }
+        }
 
     fun setDevOverride(s: PvbSettings?) {
         if (devOverride == s) return

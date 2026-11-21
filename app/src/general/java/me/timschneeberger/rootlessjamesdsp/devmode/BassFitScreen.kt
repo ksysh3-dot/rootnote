@@ -120,6 +120,8 @@ data class FitUi(
     val seedText: String = "",
     // result
     val result: FitResult? = null,
+    val compareStrength: Boolean = false,
+    val currentFixedLevel: Float = 0f,
     val current: FloatArray? = null,
     val proposed: FloatArray? = null,
     val changes: Boolean = false,
@@ -158,7 +160,6 @@ data class FitUi(
 class FitActions(
     val onBack: () -> Unit,
     val onStart: () -> Unit,
-    val onShapeOnly: () -> Unit,
     val onNoiseCorr: (Boolean) -> Unit,
     val onRestore: () -> Unit,
     val onRoomRetry: () -> Unit,
@@ -493,7 +494,7 @@ private fun Result(ui: FitUi) {
         r.breakupDb == null -> stringResource(R.string.fit_r_limit_none)
         else -> stringResource(R.string.fit_db, signed(r.limitDb))
     })
-    if (r.breakupKind != null && r.breakupDb != null && r.limitReliable && r.limitDb != null && r.limitDb < 12.0) RnNavRow(stringResource(R.string.fit_r_kind), onClick = null, chevron = false,
+    if (r.breakupKind != null && r.breakupDb != null && r.limitReliable && r.limitDb != null && r.limitDb < 0.0) RnNavRow(stringResource(R.string.fit_r_kind), onClick = null, chevron = false,
         value = stringResource(if (r.breakupKind == BreakupStaircase.Answer.RATTLE) R.string.fit_r_kind_rattle else R.string.fit_r_kind_buzz))
     if (r.breakupCatchRattles + r.breakupCatchBuzzes > 0) RnNote(stringResource(R.string.fit_r_catch_broke), warning = true)
     }
@@ -512,6 +513,11 @@ private fun Result(ui: FitUi) {
         return
     }
     RnSectionTitle(stringResource(R.string.fit_changes_title))
+    r.strengthDb?.takeIf { it != ui.currentFixedLevel.toDouble() }?.let { level ->
+        RnNavRow(stringResource(R.string.pvb_fixed_level), onClick = null, chevron = false,
+            value = stringResource(R.string.fit_change, signed(ui.currentFixedLevel.toDouble()), signed(level)),
+            valueColor = LocalRn.current.accentText)
+    }
     DevParams.ALL.forEachIndexed { i, spec ->
         if (spec.indexOf(cur[i]) != spec.indexOf(next[i])) {
             RnNavRow(stringResource(DevModeTexts.of(spec).name), onClick = null, chevron = false,
@@ -686,7 +692,6 @@ private fun BottomAnswers(ui: FitUi, actions: FitActions) {
         when (ui.screen) {
             FitScreen.INTRO -> {
                 RnButtonRow { RnFilledButton(stringResource(R.string.fit_start), Modifier.weight(1f), enabled = ui.ready, onClick = actions.onStart) }
-                RnButtonRow { RnOutlineButton(stringResource(R.string.fit_shape_only), Modifier.weight(1f), enabled = ui.ready, onClick = actions.onShapeOnly) }
                 RnButtonRow {
                     if (ui.canRestore) RnOutlineButton(stringResource(R.string.fit_restore), Modifier.weight(1f), onClick = actions.onRestore)
                     RnOutlineButton(stringResource(R.string.fit_val_open), Modifier.weight(1f), onClick = actions.onValidate)
@@ -746,7 +751,7 @@ private fun BottomAnswers(ui: FitUi, actions: FitActions) {
                 else -> Unit
             }
             FitScreen.RESULT -> if (ui.changes) {
-                RnButtonRow { RnFilledButton(stringResource(R.string.fit_check_start), Modifier.weight(1f), onClick = actions.onCheckStart) }
+                if (ui.compareStrength) RnButtonRow { RnFilledButton(stringResource(R.string.fit_check_start), Modifier.weight(1f), onClick = actions.onCheckStart) }
                 RnButtonRow {
                     RnOutlineButton(stringResource(R.string.fit_discard), Modifier.weight(1f), onClick = actions.onClose)
                     RnOutlineButton(stringResource(R.string.fit_check_skip), Modifier.weight(1f), onClick = actions.onCheckSkip)

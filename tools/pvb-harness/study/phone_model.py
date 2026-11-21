@@ -126,7 +126,7 @@ def drc(x, fs, variant='oct'):
 # Octave-band processor, applied with an STFT. Each band reduces itself by the measured static curve; loud
 # content elsewhere pulls a band down by  s(f_masker) * exp(-distance_octaves / LAMBDA) * its own reduction,
 # with s = 1 at >= 1 kHz falling to 0.5 at <= 300 Hz ("most sensitive to 2 kHz, little to 50 Hz").
-# Fitted to the masker tests: 2 kHz -> 315 Hz 0.40 (model 0.41), 200 Hz -> 1 kHz 0.24 (model 0.23).
+# Fitted to the masker tests: 2 kHz -> 315 Hz 0.40 (prediction 0.41), 200 Hz -> 1 kHz 0.24 (prediction 0.23).
 OCT_CENTERS = np.array([31.25, 62.5, 125, 250, 500, 1000, 2000, 4000, 8000, 16000])
 LAMBDA = 3.0
 STFT_N, STFT_HOP = 1024, 256

@@ -54,8 +54,8 @@ def load_jdsp(path):
 class Jdsp:
     """One JamesDSP instance. sealed=True sends what JdspChain.output sends while PVB processes."""
 
-    def __init__(self, lib, sealed=True, eq=None, comp=None, user_output=(-0.1, 60.0, 0.0)):
-        self.lib, self.h = lib, lib.jdsp_create(SR)
+    def __init__(self, lib, sealed=True, eq=None, comp=None, user_output=(-0.1, 60.0, 0.0), rate=SR):
+        self.lib, self.h = lib, lib.jdsp_create(rate)
         thr, rel, gain = user_output
         if sealed:
             lib.jdsp_set_output(self.h, NEUTRAL_LIMITER_DB, rel, 0.0)
@@ -219,6 +219,18 @@ def main():
     a = ap.parse_args()
     pvb_lib = T.load_lib(a.pvb)
     jlib = load_jdsp(a.jdsp)
+    rate = 44100
+    jd = Jdsp(jlib, eq=LOW_SHELF_6, rate=rate)
+    x = T.stereo(.15 * np.sin(2*np.pi*55*np.arange(rate)/rate))
+    chain = np.concatenate([jd.block(x[i:i+441]) for i in range(0, rate, 441)])
+    jd.close()
+    wet = T.Engine(pvb_lib, rate, vb_on=1, vb_algo=6, ramp_ms=0)
+    dry = T.Engine(pvb_lib, rate, vb_on=1, vb_algo=6, vb_level_db=-120, ramp_ms=0)
+    delta = np.max(np.abs(wet.process(chain) - dry.process(chain)))
+    T.check('44.1 kHz equalized input produces harmonics', wet.latency() == 6646 and delta > .001,
+            layer_difference=float(delta))
+    wet.close()
+    dry.close()
     t_neutral(jlib, pvb_lib)
     lat = t_latency(jlib, pvb_lib)
     rows = t_levels(jlib, pvb_lib)

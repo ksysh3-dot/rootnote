@@ -48,6 +48,9 @@ class MaterialSeekbarPreference : Preference {
     var mUpdatesContinuously/* synthetic access */ = false
 
     var valueLabelOverride: ((Float) -> String)? = null
+    /** Presentation coordinates only; stored value, min/max/default and listeners keep their original units. */
+    var toDisplayValue: (Float) -> Float = { it }
+    var fromDisplayValue: (Float) -> Float = { it }
 
     /**
      * Listener reacting to the [SeekBar] changing value by the user
@@ -58,7 +61,7 @@ class MaterialSeekbarPreference : Preference {
                 syncValueInternal(slider)
             } else {
                 // We always want to update the text while the seekbar is being dragged
-                updateLabelValue(value)
+                updateLabelValue(fromDisplayValue(value))
             }
         }
     private val mSeekBarTouchListener = object :  Slider.OnSliderTouchListener {
@@ -68,7 +71,7 @@ class MaterialSeekbarPreference : Preference {
 
         override fun onStopTrackingTouch(seekBar: Slider) {
             mTrackingTouch = false
-            if (seekBar.value != mSeekBarValue) {
+            if (fromDisplayValue(seekBar.value) != mSeekBarValue) {
                 syncValueInternal(seekBar)
             }
         }
@@ -170,15 +173,15 @@ class MaterialSeekbarPreference : Preference {
         mSeekBar.clearOnSliderTouchListeners()
         mSeekBar.addOnChangeListener(mSeekBarChangeListener)
         mSeekBar.addOnSliderTouchListener(mSeekBarTouchListener)
-        mSeekBar.valueFrom = mMin
-        mSeekBar.valueTo = mMax
+        mSeekBar.valueFrom = toDisplayValue(mMin)
+        mSeekBar.valueTo = toDisplayValue(mMax)
         // Ignore: If the increment is not zero, use that. Otherwise, use the default mKeyProgressIncrement
         // in AbsSeekBar when it's zero. This default increment value is set by AbsSeekBar
         // after calling setMax. That's why it's important to call setKeyProgressIncrement after
         // calling setMax() since setMax() can change the increment value.
         mSeekBar.stepSize = mSeekBarIncrement
 
-        mSeekBar.value = validateValue(mSeekBarValue)
+        mSeekBar.value = toDisplayValue(validateValue(mSeekBarValue))
         updateLabelValue(mSeekBarValue)
         mSeekBar.isEnabled = isEnabled
 
@@ -187,14 +190,15 @@ class MaterialSeekbarPreference : Preference {
                 LayoutInflater.from(context), 
                 context.getString(R.string.slider_dialog_title),
                 title?.toString(),
-                "%.${mPrecision}f".format(Locale.ROOT, getValue()),
+                "%.${mPrecision}f".format(Locale.ROOT, toDisplayValue(getValue())),
                 true,
                 mUnit
             ) {
                 it ?: return@showInputAlert
                 try {
-                    if(mSeekBar.stepSize <= 0 || valueLandsOnTick(it.toFloat())) {
-                        setValue(it.toFloat())
+                    val actual = fromDisplayValue(it.toFloat())
+                    if(mSeekBar.stepSize <= 0 || valueLandsOnTick(actual)) {
+                        setValue(actual)
                     }
                     else {
                         context.toast(
@@ -411,12 +415,12 @@ class MaterialSeekbarPreference : Preference {
      * set the [SeekBar]'s value to the stored value.
      */
     fun  /* synthetic access */syncValueInternal(seekBar: Slider) {
-        val seekBarValue = seekBar.value
+        val seekBarValue = fromDisplayValue(seekBar.value)
         if (seekBarValue != mSeekBarValue) {
             if (callChangeListener(seekBarValue)) {
                 setValueInternal(seekBarValue, false)
             } else {
-                seekBar.value = validateValue(mSeekBarValue)
+                seekBar.value = toDisplayValue(validateValue(mSeekBarValue))
                 updateLabelValue(mSeekBarValue)
             }
         }
@@ -434,7 +438,7 @@ class MaterialSeekbarPreference : Preference {
             if(valueLabelOverride == null)
             {
                 // unit appended after formatting, so a unit such as "%" is not read as a format specifier
-                mSeekBarValueTextView!!.text = "%.${mPrecision}f".format(Locale.ROOT, value) + mUnit
+                mSeekBarValueTextView!!.text = "%.${mPrecision}f".format(Locale.ROOT, toDisplayValue(value)) + mUnit
             }
             else
             {

@@ -109,7 +109,7 @@ fun main(args: Array<String>) {
         PvbSettings.KEY_VB_STRENGTH_DB to 12f, PvbSettings.KEY_HI_DB to 3f,
     ))
     PvbBuild.reset()
-    check(PvbModels.fullnessLevelDb == 6f, "s26u fullness preset stays +6")
+    check(PvbModels.fullnessLevelDb == 4f, "s26u fullness preset stays +4 (cbc393b)")
     val s26uLoad = PvbSettings.load(extreme)
     check(s26uLoad.outDb == 0f && s26uLoad.ceilDb == 0f && s26uLoad.lowDb == 9f && s26uLoad.lowQ == 3f &&
         s26uLoad.hpHz == 40f && s26uLoad.releaseMs == 10f && s26uLoad.vbLevelDb == 12f && s26uLoad.enabled,
@@ -155,7 +155,7 @@ fun main(args: Array<String>) {
     check(!PvbBuild.processingAllowed, "PvbBuild.processingAllowed follows the gate")
     PvbBuild.firstRunConfirmed = true
     check(PvbSettings.load(extreme).enabled && PvbBuild.processingAllowed, "confirmed: settings as stored")
-    check(FirstRun.valuesOnConfirm() == mapOf(PvbSettings.KEY_ENABLE to true, PvbSettings.KEY_VB_ON to true),
+    check(FirstRun.valuesOnConfirm() == mapOf(PvbSettings.KEY_ENABLE to true, PvbSettings.KEY_VB_ON to true, PvbSettings.KEY_BASS_MODE to "combo"),
         "confirm turns processing and virtual bass on (one consent)")
     check(FirstRun.valuesOnConfirm().keys.none { it == PvbSettings.KEY_VB_STRENGTH_DB }, "confirm keeps the profile's strength")
     val cmds = FirstRun.adbCommands("kr.ksysh3.rootnote")

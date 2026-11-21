@@ -28,6 +28,7 @@ import me.timschneeberger.rootlessjamesdsp.activity.BaseActivity
 import me.timschneeberger.rootlessjamesdsp.pvb.BassFitSettings
 import me.timschneeberger.rootlessjamesdsp.pvb.DevEvidenceText
 import me.timschneeberger.rootlessjamesdsp.pvb.DevMath
+import me.timschneeberger.rootlessjamesdsp.pvb.BassFitStore
 import me.timschneeberger.rootlessjamesdsp.pvb.DevParams
 import me.timschneeberger.rootlessjamesdsp.pvb.DevShareCode
 import me.timschneeberger.rootlessjamesdsp.pvb.DevSnapshot
@@ -170,19 +171,19 @@ class DevModeActivity : BaseActivity() {
             values = DevParams.read(s),
             defaults = profileDefaults(),
             vbAlgo = s.vbAlgo,
-            s1mOn = s.xS1m,
             volumeLinkOn = s.vbVolLink,
             measuredBadge = badge,
             thresholdMeasured = DevEvidenceText.thresholdMeasured(profile),
             measuredOnName = badge.deviceName,
             // the floor a saved "저음 맞추기" found, else the device profile's
-            speakerFloorHz = flags.getFloat(BassFitActivity.KEY_FIT_FLOOR_HZ, profile.speakerFloorHz),
+            speakerFloorHz = prefs.getFloat(BassFitStore.FLOOR, flags.getFloat(BassFitStore.FLOOR, profile.speakerFloorHz)),
             gaugeVu = flags.getBoolean(PvbGeneral.KEY_DEV_GAUGE_VU, false),
             hiddenCount = tracker.hiddenTypes().size,
             canUndo = undo.isNotEmpty(),
             consentNeeded = consentNeeded,
             serviceRunning = BaseAudioProcessorService.activeServices > 0,
             shareCode = shareCode(DevParams.read(s)),
+            fixedStrength = s.fixedBass,
         )
     }
 
@@ -190,9 +191,9 @@ class DevModeActivity : BaseActivity() {
         val s = settings()
         val values = DevParams.read(s)
         update {
-            it.copy(values = values, vbAlgo = s.vbAlgo, s1mOn = s.xS1m, volumeLinkOn = s.vbVolLink,
+            it.copy(values = values, vbAlgo = s.vbAlgo, volumeLinkOn = s.vbVolLink, fixedStrength = s.fixedBass,
                 canUndo = undo.isNotEmpty(), hiddenCount = tracker.hiddenTypes().size, shareCode = shareCode(values),
-                speakerFloorHz = flags.getFloat(BassFitActivity.KEY_FIT_FLOOR_HZ, profile.speakerFloorHz))
+                speakerFloorHz = prefs.getFloat(BassFitStore.FLOOR, flags.getFloat(BassFitStore.FLOOR, profile.speakerFloorHz)))
         }
     }
 
@@ -554,7 +555,7 @@ class DevModeActivity : BaseActivity() {
             DevWarning.BUZZ_ZONE, DevWarning.NEAR_CEILING -> {
                 pushUndo()
                 val cur = ui?.values?.get(DevParams.ALL.indexOf(DevParams.STRENGTH)) ?: DevParams.STRENGTH.default
-                write(DevParams.STRENGTH, (cur - 2f).coerceAtLeast(0f))
+                write(DevParams.STRENGTH, DevParams.lowerStrength(cur))
             }
             DevWarning.TAIL -> {
                 pushUndo()

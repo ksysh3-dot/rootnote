@@ -61,7 +61,7 @@ import android.app.NotificationManager
  * settings"; the s26u build keeps MainActivity as its launcher and never contains this class.
  *
  * The master row is the general build's processing switch: on = PVB processing (pvb_enable) and virtual bass
- * (pvb_vb_enable) on, with the audio service running; off = pvb_enable off (the service keeps running, so turning
+ * (pvb_vb_enable) on in COMBO mode, with the audio service running; off disables both (the service keeps running, so turning
  * it back on is instant). The first-run notice (the welcome screen, WelcomeActivity) gates it exactly as it gates the
  * service (FirstRun / PvbBuild); the welcome carries the virtual-bass warning and confirming it turns virtual bass on,
  * so the switch never asks again.
@@ -114,7 +114,7 @@ class HomeActivity : BaseActivity() {
         // temporary: the user's settings as played, layer silent (same model and latency); never stored
         onHoldWithoutVb = { held ->
             holdingWithoutVb = held
-            PvbRuntime.setDevOverride(if (held) PvbSettings.load(prefs).copy(vbLevelDb = PvbSettings.VB_LEVEL_OFF) else null)
+            PvbRuntime.holdWithoutLayer = held
         },
         onAdvanced = { startActivity(me.timschneeberger.rootlessjamesdsp.advanced.RnAdvancedActivity.intent(this)) },
         onAbout = {
@@ -261,7 +261,7 @@ class HomeActivity : BaseActivity() {
     }
 
     override fun onStop() {
-        if (holdingWithoutVb) { holdingWithoutVb = false; PvbRuntime.setDevOverride(null) }
+        if (holdingWithoutVb) { holdingWithoutVb = false; PvbRuntime.holdWithoutLayer = false }
         if (::prefs.isInitialized) {
             prefs.unregisterOnSharedPreferenceChangeListener(prefListener)
             PvbRuntime.removeStatusListener(statusListener)
@@ -315,6 +315,7 @@ class HomeActivity : BaseActivity() {
             xtcBalLoDb = s.xtcBalLoDb,
             xtcBalHiDb = s.xtcBalHiDb,
             limiterPressure = limiterPressure,
+            fixedStrength = s.fixedBass,
         )
     }
 
@@ -356,17 +357,14 @@ class HomeActivity : BaseActivity() {
             return
         }
         // The confirmed first-run notice is the virtual-bass consent (it carries the warning): no second dialog.
-        prefs.edit()
-            .putBoolean(PvbSettings.KEY_VB_ON, true)
-            .putBoolean(PvbSettings.KEY_ENABLE, true)
-            .apply()
+        PvbSettings.setHomePower(prefs, true)
         ensureRunning()
     }
 
     private fun turnOff() {
         // The service keeps running (no new capture prompt when turning back on); PVB passes the sound through.
         startPending = false
-        prefs.edit().putBoolean(PvbSettings.KEY_ENABLE, false).apply()
+        PvbSettings.setHomePower(prefs, false)
         FirstWeekStore.onUserTurnedOff(this)
         refresh()
     }

@@ -18,14 +18,22 @@ private fun inputs(
 ) = PvbEngineParams.Inputs(
     rampMs = 20f, speaker = speaker, upright = upright, rotation = rotation, volumeIndex = volumeIndex, volumeMax = 15,
     lowDb = 3f, matchSeedDb = -6f, diagnosticSolo = diagnosticSolo, abActive = abActive, abHidden = abHidden,
-    abTag = abTag, gateDb = gateDb, measuring = measuring, devMeter = devMeter,
+    abTag = abTag, gateDb = gateDb, measuring = measuring, devMeter = devMeter, sampleRate = 46000,
 )
 
 private fun encode(s: PvbSettings, i: PvbEngineParams.Inputs = inputs()) = PvbEngineParams.encode(s, i)
 private fun FloatArray.on(slot: Int) = this[slot] == 1f
 
 fun main() {
-    val base = PvbSettings(enabled = true, matchOnDisable = true, speakerOnly = true, vbOn = true)
+    val base = PvbSettings(enabled = true, matchOnDisable = true, speakerOnly = true, vbOn = true, combo = true)
+    for (rate in listOf(44100, 48000)) {
+        val frozen = encode(base, inputs().copy(sampleRate = rate)).params
+        check(frozen.on(PvbParam.VB_ON) && !frozen.on(PvbParam.FLAT))
+        check(frozen[PvbParam.VB_LEVEL_DB] == base.fixedLevelDb)
+    }
+    check(!PvbEngineParams.supportsComboRate(46000))
+    val off = encode(base.copy(combo = false), inputs().copy(sampleRate = 48000))
+    check(off.params[PvbParam.VB_ON] == 0f)
 
     // on, on the speaker: processing, the flat path kept ready, virtual bass in
     encode(base).params.let {
@@ -116,11 +124,11 @@ fun main() {
     }
 
     // developer options: on outside a comparison; experimental layer options only with virtual bass
-    encode(dev.copy(devH2Db = -4f, xSmooth = true), inputs(devMeter = true)).params.let {
+    encode(dev.copy(devH2Db = -4f), inputs(devMeter = true)).params.let {
         check(it.on(PvbParam.DEV_ON) && it[PvbParam.D_H2_DB] == -4f && it.on(PvbParam.DEV_METER)) { "developer on" }
-        check(it.on(PvbParam.X_SMOOTH)) { "layer option with virtual bass" }
+        check(!it.on(PvbParam.X_SMOOTH)) { "layer option with virtual bass" }
     }
-    check(!encode(base.copy(vbOn = false, xSmooth = true)).params.on(PvbParam.X_SMOOTH)) { "layer option needs vb" }
+    check(!encode(base.copy(vbOn = false)).params.on(PvbParam.X_SMOOTH)) { "layer option needs vb" }
     check(!encode(base).params.on(PvbParam.DEV_ON)) { "developer off" }
 
     println("PvbEngineParamsTest: all checks passed")

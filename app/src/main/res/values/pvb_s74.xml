@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+ <string name="pvb_bass_mode">Bass mode</string>
+ <string name="pvb_fixed_level">COMBO strength</string>
+ <string name="pvb_fixed_level_summary">0 dB is the tested level. Lowering it reduces both harsh sounds and the bass feel.</string>
+ <string name="pvb_layer_cap">Speaker protection cap (experimental)</string>
+ <string name="pvb_layer_cap_summary">Pushes the 100–500 Hz layer down only at the moments it goes above the level below. Use it to hear whether kick and bass distortion gets smaller. The original sound is not reduced.</string>
+ <string name="pvb_layer_cap_level">Cap level</string>
+ <string name="pvb_layer_cap_level_summary">Lower values push down more often. Start listening at −24 dB.</string>
+ <string name="pvb_bass_mode_summary">COMBO follows bass families and calculates harmonic levels with a fixed formula. It uses a −5 dB output; you can lower its strength. Harmonics are available at 44.1 kHz (150.7 ms delay) and 48 kHz (148.8 ms delay).</string>
+ <string name="pvb_fixed_eq_locked">This mode plays with its tested default EQ. The values below are not used for the sound now. This mode also lowers the original sound below 80 Hz by −6 dB (shown on the EQ curve).</string>
+ <string name="pvb_fixed_eq_open">Unlock EQ</string>
+ <string name="pvb_fixed_eq_open_summary">Uses the values below for the sound, in this mode only</string>
+ <string name="pvb_fixed_eq_warning_title">Unlock the EQ of this mode?</string>
+ <string name="pvb_fixed_eq_warning">This mode was tuned and measured with its default EQ (layer level and peak limit). Changing the EQ goes outside that testing, and dropouts, booming and limiter behavior can change. The low-mid band cannot go above its default (+3 dB). EQ stays unlocked when you switch off and return to COMBO. Choose Reset and lock to restore the defaults and lock it again.</string>
+ <string name="pvb_fixed_eq_warning_ok">Unlock</string>
+ <string name="pvb_fixed_eq_opened">Playing with an untested EQ. The low-mid band is used only up to its default (+3 dB).</string>
+ <string name="pvb_fixed_eq_reset">Reset and lock</string>
+ <string name="pvb_fixed_eq_reset_summary">Returns all EQ values to the defaults</string>
+ <string-array name="pvb_bass_modes"><item>@string/pvb_mode_off</item><item>@string/pvb_mode_combo</item></string-array>
+ <string-array name="pvb_bass_mode_values"><item>off</item><item>combo</item></string-array>
+
+ <string name="pvb_mode_off">Off</string>
+ <string name="pvb_mode_combo">COMBO virtual bass</string>
+ <string name="pvb_rate_fallback">COMBO supports 44.1 and 48 kHz. No harmonic layer is added at the current output rate.</string>
+</resources>

@@ -605,8 +605,8 @@ class RefLevelStaircase(
 // ------------------------------------------------------------------------------------------------ step 2b: strength
 
 /**
- * Preferred virtual-bass strength in {0, 3, 6, 9} dB by blind A/B pairs ("어느 쪽이 더 좋나요 / 차이 없음"),
- * climbing from the middle: 3 vs 6; then 0 vs 3 or 6 vs 9. (Was 2 dB apart: a listener on the S26 Ultra could not
+ * Preferred virtual-bass strength in {-9, -6, -3, 0} dB by blind A/B pairs ("어느 쪽이 더 좋나요 / 차이 없음"),
+ * climbing from the middle: -6 vs -3; then -9 vs -6 or -3 vs 0. (Was 2 dB apart: a listener on the S26 Ultra could not
  * tell the pairs apart and answered at random.) "No difference" counts as a win for
  * the lower level (virtual bass is a spice). At most three pairs, then the first pair again with the sides swapped:
  * a reversed answer marks the result inconsistent (not applied).
@@ -616,7 +616,7 @@ class StrengthBracket(private val seed: Long) {
     data class Pair(val lo: Int, val hi: Int, val loIsA: Boolean)
 
     private val rng = FitRng(seed)
-    private val first = Pair(3, 6, rng.bit())
+    private val first = Pair(-6, -3, rng.bit())
     var current: Pair? = first; private set
     var result: Int? = null; private set
     var consistent = true; private set
@@ -642,7 +642,7 @@ class StrengthBracket(private val seed: Long) {
         }
         if (asked == 1) firstWinner = w
         val next: Pair? = when {
-            p.lo == 3 && p.hi == 6 -> if (keep == 3) Pair(0, 3, rng.bit()) else Pair(6, 9, rng.bit())
+            p == first -> if (keep == first.lo) Pair(-9, -6, rng.bit()) else Pair(-3, 0, rng.bit())
             else -> null
         }
         if (next == null) { result = keep; current = Pair(first.lo, first.hi, !first.loIsA) } else current = next
@@ -654,7 +654,7 @@ class StrengthBracket(private val seed: Long) {
 // ------------------------------------------------------------------------------------------------ step 3: break-up
 
 /**
- * Break-up limit: the bass clip with the layer at a level in 0..[maxDb], [stepDb] apart, answered "깨끗해요",
+ * Break-up limit: the bass clip with the layer at a level in [minDb]..[maxDb], [stepDb] apart, answered "깨끗해요",
  * "떨려요" (rattle: the body or the cone flapping, a fluttering hum) or "지직거려요" (buzz: crackling, torn sound).
  * Either kind of break-up lowers the next level, "clean" raises it (1-up/1-down: converges where the listener hears
  * break-up half the time); the kind is kept apart for the result (which one comes first on this device). About one
@@ -674,6 +674,7 @@ class BreakupStaircase(
     val maxDb: Double = 12.0,
     val maxTrials: Int = 24,
     val stopReversals: Int = 6,
+    val minDb: Double = 0.0,
 ) {
     enum class Answer { CLEAN, RATTLE, BUZZ;
         val broke: Boolean get() = this != CLEAN
@@ -684,7 +685,8 @@ class BreakupStaircase(
     }
 
     private val rng = FitRng(seed)
-    private var levelDb = (Math.round(startDb / stepDb) * stepDb).coerceIn(0.0, maxDb)
+    var levelDb = (Math.round(startDb / stepDb) * stepDb).coerceIn(minDb, maxDb)
+        private set
     private var lastDir = 0
     private val reversals = ArrayList<Double>()
     var levelTrials = 0; private set
@@ -736,7 +738,7 @@ class BreakupStaircase(
                 val atTop = levelDb >= maxDb - 1e-9
                 cleanAtMax = if (a == Answer.CLEAN && atTop) cleanAtMax + 1 else 0
                 if (a.broke && atTop) buzzAtMax++
-                levelDb = (levelDb + dir * stepDb).coerceIn(0.0, maxDb)
+                levelDb = (levelDb + dir * stepDb).coerceIn(minDb, maxDb)
             }
         }
         if (!done) current = next()
@@ -750,7 +752,7 @@ class BreakupStaircase(
         get() = when {
             !done -> null
             cleanAtTop || breakAnswers == 0 -> maxDb
-            else -> breakupDb()?.let { kotlin.math.floor(it - 3.0).coerceIn(0.0, maxDb) }
+            else -> breakupDb()?.let { kotlin.math.floor(it - 3.0).coerceIn(minDb, maxDb) }
         }
 
     /**

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pvb_p1ppp">COMBO 가상 저음</string>
+    <string name="pvb_p1ppp_summary">44.1·48 kHz 출력을 지원하며 배음 생성기는 내부에서 48 kHz로 동작합니다.</string>
+    <string name="pvb_strength_not_applicable">세기는 베이스 모드 바로 아래에서 조절</string>
+</resources>

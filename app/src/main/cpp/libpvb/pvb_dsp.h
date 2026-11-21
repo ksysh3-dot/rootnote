@@ -211,13 +211,11 @@ private:
 
 // ------------------------------------------------------------------------------------------------
 // Coarse model of the phone's own dynamics processor (before the volume control), for display only.
-// Fitted to the measurements in tools/pvb-harness/study/phone_model.py ('octx' variant):
 //   - octave bands 125 Hz .. 8 kHz; each band reduces itself by the measured static curve of stepped
 //     1 kHz sines (0 dB at -34 dBFS ... 6.0 at -16, 10.2 at -13, 19.9 at -1);
 //   - loud content in band m pulls band b down by s(f_m) * exp(-|octaves between| / 3) times the measured
 //     cross-band curve of the masker level (equal to the static curve at -1 dBFS, but falling much faster:
 //     8.0 at -4, 4.5 at -8, 2.4 at -12 dBFS), s = 0.5 at <= 300 Hz rising to 1 at >= 1 kHz.
-//     Masker tests: 2 kHz -> 315 Hz -7.9/-3.1/-2.3/-1.3 dB at -1/-4/-8/-12 dBFS, model -8.0/-3.2/-1.8/-1.0;
 //   - level: mean square over 1024 samples (like the model's 1024-point frames), fast rise, 50 ms fall;
 //     reduction: 5 ms rise, 250 ms recovery;
 //   - each band filters left and right separately and averages their powers, so out-of-phase content
@@ -437,6 +435,9 @@ public:
     // Gain applied to the delayed sample by the most recent process() call. Audio thread only.
     double currentGain() const { return g_; }
 
+    // Audio owner only: a parallel, conservative post-controller certificate. No delay added.
+    void capCurrentGain(double bound) { g_=std::min(g_,bound);minGain_=std::min(minGain_,g_); }
+
     // Lowest gain applied since the last call (for metering).
     double takeMinGain() {
         const double m = minGain_;
@@ -579,8 +580,7 @@ private:
 // Live loudness match ("끌 때 음량 맞춤"): the gain that makes the unprocessed input as loud as the processed output.
 //
 // Loudness here is a proxy: energy after an approximate K-shaped weighting times the measured response of the
-// phone speaker (third octaves 125 Hz - 16 kHz, tools/pvb-harness/study/phone_model.py), fitted with six RBJ biquads
-// (shape error after removing constant offset, 125 Hz to 12.5 kHz: rms <0.7 dB, max <2 dB at 44.1/48 kHz).
+// phone speaker from 125 Hz to 16 kHz, approximated with six RBJ biquads.
 // It approximates the spectral weighting used by the blind-comparison trims. The speaker weighting discounts
 // sub-bass that the speaker cannot play. This detector omits the nonlinear phone model used for those trims;
 // agreement with ISO 532-1 or perceived loudness has not been established.

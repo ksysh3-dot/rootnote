@@ -27,7 +27,7 @@ only; headphones and Bluetooth are bypassed.
 
 ## Status
 
-**Beta** (`0.9.0-beta.13`, Android 10 or later, arm64).
+**Beta** (`0.9.0-beta.15`, Android 10 or later, arm64).
 
 - The default settings were measured on a **Galaxy S26 Ultra** (model `SM-S948*`). Every other phone starts
   with a conservative neutral profile (120 Hz low cut, low-mid +2 dB, treble -2 dB, output -3 dB, limiter -1 dBTP; see docs/SPEAKER_ESTIMATES.md) and a
@@ -102,14 +102,21 @@ tools/pvb-harness/jvm/run_jvm_test.sh
 
 The full list of host tests that CI runs is in [.github/workflows/build.yml](.github/workflows/build.yml).
 
-### P1+ research baseline
+### Virtual bass modes
 
-On 2026-10-26, the HQ refinement of P1 was provisionally named **P1+** as the fixed
-baseline for **P1++** research. It combines phase preservation with centered HPSS
-and adds 26.667 ms of algorithmic delay. The source, reproducible measurements and
-known regressions are committed; Android defaults and APK rollout are separate.
-See [P1+ adoption](docs/P1PLUS_BASELINE.md), [results](research/p1plus/2026-10-26/README.md)
-and [P1++ research](docs/P1PP_RESEARCH.md).
+The app offers Off and COMBO. COMBO tracks bass families and sets their levels with a fixed amplitude formula,
+median smoothing and fixed onset attenuation, then synthesizes all harmonics 2–8 with fixed ratios.
+The synthesizer receives amplitude, frequency and phase. COMBO supports 44.1 and 48 kHz output and generates harmonics internally at 48 kHz.
+Saved bass selections migrate to COMBO or Off.
+The existing EQ-unlock control and attenuating speaker guard remain available; reference parity uses the locked
+default EQ and the default guard setting.
+
+The default V0 path sums delayed original audio and the limited harmonic branch before the common filters.
+V1 is a build option only: `-Prootnote.dryUnfiltered=true` passes `-DROOTNOTE_DRY_UNFILTERED=ON` to CMake and moves
+the common filters onto the harmonic branch. The original path then has only delay and gain before the shared
+limiter. OFF excludes V1 routing; ON excludes V0 original-path filtering. There is no runtime V1 setting.
+Use `assembleRootlessFdroidGeneralDebug --offline --max-workers=4` with the property to build the debug variant.
+See [release notes](RELEASE_NOTES_GENERAL.md) for changes and limitations.
 
 ## License and credits
 
@@ -159,7 +166,7 @@ RootlessJamesDSP의 루트 없는 시스템 오디오 캡처는 그대로 쓰고
 
 ### 상태
 
-**베타**(`0.9.0-beta.13`, Android 10 이상, arm64)입니다.
+**베타**(`0.9.0-beta.15`, Android 10 이상, arm64)입니다.
 
 - 기본 설정은 **갤럭시 S26 Ultra**(모델 `SM-S948*`)에서 측정했습니다. 다른 폰은 보수적인 중립 설정(보호용 저역 차단
   100 Hz, 평탄한 EQ, 출력 −3 dB, 리미터 −1 dBTP)으로 시작하고 "측정되지 않은 기기" 안내를 한 번 띄웁니다. 들으면서
@@ -171,10 +178,7 @@ RootlessJamesDSP의 루트 없는 시스템 오디오 캡처는 그대로 쓰고
 
 ### 설치와 설정
 
-연구 상태(2026-10-26): 현재 HQ 정교화를 **P1+**로 명명하고 **P1++**의 비교 기준으로 임시 채택했습니다.
-채택 범위는 연구 코드와 측정 기준이며 Android 기본 모드 반영은 별도입니다.
-[P1+ 결정·실행 방법](docs/P1PLUS_BASELINE.md), [측정 기록](research/p1plus/2026-10-26/README.md),
-[P1++ 연구 방향](docs/P1PP_RESEARCH.md)을 보세요.
+모드는 끔·COMBO 두 가지입니다. COMBO는 저음 묶음을 추적하고 고정된 크기 계산식·중앙값·고정 시작 감쇠로 크기를 정합니다. 44.1 kHz와 48 kHz 출력을 지원하며, 배음 생성기는 내부에서 48 kHz로 동작합니다. 출력 −3 dB 상한·리미터 −1 dBTP 상한은 유지합니다. 기본 V0는 원음과 배음을 합친 뒤 공통 필터를 적용합니다. `-Prootnote.dryUnfiltered=true`로 빌드하는 V1은 그 필터를 배음 가지에만 적용하며 앱 설정에는 이 스위치가 없습니다. 변화와 한계는 [릴리스 노트](RELEASE_NOTES_GENERAL.md)를 보세요.
 
 이 저장소의 [릴리스](https://github.com/ksysh3-dot/rootnote/releases)에서 APK를 받고 옆의 `.sha256` 파일로 확인하세요.
 패키지 이름은 `kr.ksysh3.rootnote`입니다. 원본 RootlessJamesDSP와 함께 설치할 수 있지만 둘을 동시에 켜지는 마세요.

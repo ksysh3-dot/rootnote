@@ -350,9 +350,9 @@
         <me.timschneeberger.rootlessjamesdsp.preference.MaterialSeekbarPreference
             android:key="pvb_vb_strength_db"
             android:title="@string/pvb_vb_level"
-            android:defaultValue="6"
+            android:defaultValue="4"
             android:dependency="pvb_vb_enable"
-            app:minValue="0"
+            app:minValue="-6"
             app:maxValue="12"
             app:seekBarIncrement="1"
             app:precision="0"
@@ -448,33 +448,46 @@
             android:persistent="false"
             android:selectable="false"
             app:iconSpaceReserved="false" />
-        <me.timschneeberger.rootlessjamesdsp.preference.MaterialSwitchPreference
-            android:key="pvb_x_smooth"
-            android:title="@string/pvb_x_smooth"
-            android:summary="@string/pvb_x_smooth_summary"
-            android:defaultValue="false"
-            android:dependency="pvb_vb_enable"
+        <ListPreference
+            android:key="pvb_bass_mode"
+            android:title="@string/pvb_bass_mode"
+            android:summary="@string/pvb_bass_mode_summary"
+            android:entries="@array/pvb_bass_modes"
+            android:entryValues="@array/pvb_bass_mode_values"
+            android:defaultValue="off" />
+        <me.timschneeberger.rootlessjamesdsp.preference.MaterialSeekbarPreference
+            android:key="pvb_fixed_level_db"
+            android:title="@string/pvb_fixed_level"
+            android:summary="@string/pvb_fixed_level_summary"
+            android:defaultValue="0"
+            app:minValue="-12"
+            app:maxValue="0"
+            app:seekBarIncrement="1"
+            app:precision="0"
+            app:unit="dB"
+            app:allowDividerAbove="false"
+            app:updatesContinuously="true"
+            app:showSeekBarValue="true"
             app:iconSpaceReserved="false" />
         <me.timschneeberger.rootlessjamesdsp.preference.MaterialSwitchPreference
-            android:key="pvb_x_rise"
-            android:title="@string/pvb_x_rise"
-            android:summary="@string/pvb_x_rise_summary"
+            android:key="pvb_layer_cap_on"
+            android:title="@string/pvb_layer_cap"
+            android:summary="@string/pvb_layer_cap_summary"
             android:defaultValue="false"
-            android:dependency="pvb_vb_enable"
             app:iconSpaceReserved="false" />
-        <me.timschneeberger.rootlessjamesdsp.preference.MaterialSwitchPreference
-            android:key="pvb_x_s1m"
-            android:title="@string/pvb_x_s1m"
-            android:summary="@string/pvb_x_s1m_summary"
-            android:defaultValue="false"
-            android:dependency="pvb_vb_enable"
-            app:iconSpaceReserved="false" />
-        <me.timschneeberger.rootlessjamesdsp.preference.MaterialSwitchPreference
-            android:key="pvb_x_dense"
-            android:title="@string/pvb_x_dense"
-            android:summary="@string/pvb_x_dense_summary"
-            android:defaultValue="false"
-            android:dependency="pvb_vb_enable"
+        <me.timschneeberger.rootlessjamesdsp.preference.MaterialSeekbarPreference
+            android:key="pvb_layer_cap_db"
+            android:title="@string/pvb_layer_cap_level"
+            android:summary="@string/pvb_layer_cap_level_summary"
+            android:defaultValue="-24"
+            app:minValue="-30"
+            app:maxValue="-18"
+            app:seekBarIncrement="1"
+            app:precision="0"
+            app:unit="dB"
+            app:allowDividerAbove="false"
+            app:updatesContinuously="true"
+            app:showSeekBarValue="true"
             app:iconSpaceReserved="false" />
         <Preference
             android:key="pvb_x_feedback"

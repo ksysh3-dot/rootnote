@@ -2,7 +2,7 @@
 #include <algorithm>
 
 namespace pvb {
-// Research candidate C1. Music amplitude is never filtered by this policy.
+// Track continuity rules leave the input amplitude unchanged.
 // Bounds are in 16/3000-second hops; default hold32ms, release32ms.
 struct ContinuityParams {
     bool enabled = false;

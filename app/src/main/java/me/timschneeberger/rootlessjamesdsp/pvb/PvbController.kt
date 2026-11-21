@@ -328,25 +328,32 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
     }
 
     /** Called by the service whenever it creates the output track; its routed device tells us where sound goes. */
+    @androidx.annotation.MainThread
     fun attachTrack(newTrack: AudioTrack) {
-        main.post {
-            if (!started) return@post
-            track?.removeOnRoutingChangedListener(routingListener)
-            track = newTrack
-            newTrack.addOnRoutingChangedListener(routingListener, main)
-            updateRoute(push = true)
-        }
+        if (!started) return
+        track?.removeOnRoutingChangedListener(routingListener)
+        track = newTrack
+        newTrack.addOnRoutingChangedListener(routingListener, main)
+        // The service calls this on main before starting its new audio worker. Enqueue the
+        // complete rate-specific packet now, including when the route itself did not change;
+        // posting it would let the first new-rate block run with the old frozen settings.
+        updateRoute(push = false)
+        push(rampMs = EDIT_RAMP_MS)
     }
 
     // ------------------------------------------------------------------------------------------ inputs
 
-    private val prefListener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ ->
+    /** Service reuses stopRecording/startRecording; bass mode preparation follows the completed join. */
+    var onStageCChange: (() -> Unit)? = null
+    private val prefListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         val old = effectiveSettings
         userSettings = PvbSettings.load(prefs)
         effectiveSettings = effective(userSettings)
         updateActive()
         if (old.volRefPct != effectiveSettings.volRefPct) readVolume()
-        push(rampMs = EDIT_RAMP_MS)
+        if (key in setOf(PvbSettings.KEY_BASS_MODE, PvbSettings.KEY_P1PPP, StageCApp.TELEMETRY) && onStageCChange != null) {
+            onStageCChange?.invoke()
+        } else push(rampMs = EDIT_RAMP_MS)
     }
 
     private val settingsObserver = object : ContentObserver(main) {
@@ -515,15 +522,20 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
             abTag = PvbRuntime.abTag,
             gateDb = gateDb(),
             measuring = PvbRuntime.measuring,
-            devMeter = PvbRuntime.devMeter,
+            devMeter = PvbRuntime.devMeter || PvbRuntime.devLog,
+            sampleRate = engine.sampleRateHz,
+            holdWithoutLayer = PvbRuntime.holdWithoutLayer,
         )
         val encoded = PvbEngineParams.encode(effectiveSettings, inputs)
         diagnosticSolo = encoded.diagnosticSolo
         lastGate = inputs.gateDb
         lastTag = inputs.abTag
+        val eqOpen = effectiveSettings.fixedEqOpen && !PvbRuntime.abActive
+        engine.setFixedEqOpen(eqOpen)
         engine.setParams(encoded.params)
-        lastParams = encoded.params.copyOf()
-        paramSink?.invoke(encoded.params)
+        engine.setLayerCap(effectiveSettings.layerCapEngineDb)
+        lastParams = encoded.params.copyOf() to eqOpen
+        paramSink?.invoke(encoded.params, eqOpen)
         publish(lowDb)
     }
 
@@ -531,10 +543,10 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
      * Root build: where the parameters really go (the Rootnote audio effect of every session, ROOT_BUILD_PLAN.md);
      * the in-process [engine] then only keeps the controller's own bookkeeping. Called on the main thread.
      */
-    var paramSink: ((FloatArray) -> Unit)? = null
+    var paramSink: ((FloatArray, Boolean) -> Unit)? = null
 
     /** The last parameter array sent (a session that opens later gets it at once). */
-    var lastParams: FloatArray? = null
+    var lastParams: Pair<FloatArray, Boolean>? = null
         private set
 
     private fun publish(lowDb: Float) {
@@ -560,6 +572,7 @@ class PvbController(private val context: Context, private val engine: PvbEngine)
             targetLowDb = lowDb,
             dynRefDb = if (s.enabled && s.dynOn) dynRefNow() else Float.NaN,
             abActive = PvbRuntime.abActive,
+            p1pppRequested = userSettings.fixedBass,
             vbOn = s.vbOn,
             vbAlgo = s.vbAlgo,
             vbLevelDb = s.vbLevelDb,

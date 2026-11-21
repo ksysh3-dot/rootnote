@@ -129,9 +129,10 @@ class JamesDspRemoteEngine(
      * Rootnote root build: the PVB engine's parameter array (PvbEngineParams.encode) to the Rootnote effect library
      * (app/src/main/cpp/rootfx, command 41000). The stock JamesDSP library ignores it.
      */
-    fun setPvbParams(values: FloatArray): Boolean {
-        lastPvbParams = values.copyOf()
-        return effect.setParameterFloatArray(PVB_CMD_PARAMS, values) == AudioEffect.SUCCESS
+    fun setPvbParams(values: FloatArray, eqOpen: Boolean): Boolean {
+        val packet = if (eqOpen && (rootnoteVersion ?: 0) >= 2) values + 1f else values.copyOf()
+        lastPvbParams = packet
+        return effect.setParameterFloatArray(PVB_CMD_PARAMS, packet) == AudioEffect.SUCCESS
     }
 
     /** Sent again after the effect is re-created ([rebootEngine]): a new effect starts with the engine bypassed. */

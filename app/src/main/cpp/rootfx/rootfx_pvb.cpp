@@ -13,7 +13,11 @@ void rfx_pvb_set_sample_rate(void* e, int sampleRate) {
 }
 
 void rfx_pvb_set_params(void* e, const float* values, int count) {
-    if (e && values && count > 0) static_cast<pvb::Engine*>(e)->setParams(values, count);
+    if (!e || !values || count <= 0 || count > pvb::P_COUNT + 1) return;
+    auto* engine = static_cast<pvb::Engine*>(e);
+    const bool hasUnlock = count == pvb::P_COUNT + 1;
+    engine->setFixedEqOpen(hasUnlock && values[pvb::P_COUNT] == 1.f);
+    engine->setParams(values, hasUnlock ? pvb::P_COUNT : count);
 }
 
 void rfx_pvb_process_f32(void* e, float* io, int frames) {

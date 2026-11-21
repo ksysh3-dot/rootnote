@@ -28,14 +28,14 @@ typedef void (*params_f)(void *, const float *, int);
 typedef void (*process_f)(void *, float *, int);
 typedef void (*defaults_f)(float *);
 
-static effect_handle_t make(audio_effect_library_t *lib, int format) {
+static effect_handle_t make(audio_effect_library_t *lib, int format, int rate) {
     effect_uuid_t uuid = { 0xf27317f4, 0xc984, 0x4de6, 0x9a90, { 0x54, 0x57, 0x59, 0x49, 0x5b, 0xf2 } };
     effect_handle_t h = NULL;
     int r = lib->create_effect(&uuid, 0, 0, &h);
     if (r != 0 || h == NULL) return NULL;
     effect_config_t cfg;
     memset(&cfg, 0, sizeof cfg);
-    cfg.inputCfg.samplingRate = cfg.outputCfg.samplingRate = 48000;
+    cfg.inputCfg.samplingRate = cfg.outputCfg.samplingRate = rate;
     cfg.inputCfg.channels = cfg.outputCfg.channels = AUDIO_CHANNEL_OUT_STEREO;
     cfg.inputCfg.format = cfg.outputCfg.format = (uint8_t)format;
     cfg.inputCfg.accessMode = EFFECT_BUFFER_ACCESS_READ;
@@ -69,10 +69,10 @@ static int get_int(effect_handle_t h, int32_t cmd) {
 }
 
 /* a bass line with some mids: 41-110 Hz notes, 2nd harmonic, a 440 Hz tone */
-static void signal(float *x, int frames) {
+static void signal(float *x, int frames, int rate) {
     for (int i = 0; i < frames; i++) {
-        double t = i / 48000.0;
-        double f = (i / 24000) % 2 ? 55.0 : 82.4;
+        double t = (double)i / rate;
+        double f = (i / (rate / 2)) % 2 ? 55.0 : 82.4;
         double s = 0.3 * sin(2 * M_PI * f * t) + 0.08 * sin(4 * M_PI * f * t) + 0.05 * sin(2 * M_PI * 440 * t);
         x[2 * i] = (float)s; x[2 * i + 1] = (float)(0.9 * s);
     }
@@ -114,56 +114,78 @@ int main(int argc, char **argv) {
     defaults_f pdefaults = (defaults_f)dlsym(capi, "pvb_default_params");
     int n = harness_param_count();
 
-    const int frames = 48000 * 2, block = 480;
-    float *in = malloc(sizeof(float) * 2 * frames), *a = malloc(sizeof(float) * 2 * frames);
-    float *b = malloc(sizeof(float) * 2 * frames), *ref = malloc(sizeof(float) * 2 * frames);
-    signal(in, frames);
+    const int rates[] = {48000, 44100};
+    for (int k = 0; k < 2; ++k) {
+        const int rate = rates[k], frames = rate * 2, block = rate / 100;
+        float *in = malloc(sizeof(float) * 2 * frames), *a = malloc(sizeof(float) * 2 * frames);
+        float *b = malloc(sizeof(float) * 2 * frames), *ref = malloc(sizeof(float) * 2 * frames);
+        signal(in, frames, rate);
 
-    // 1/2: JamesDSP alone (no parameters sent): finite, and PVB stays out
-    effect_handle_t plain = make(lib, AUDIO_FORMAT_PCM_FLOAT);
-    check(plain != NULL, "create + SET_CONFIG (48 kHz float stereo) + ENABLE");
-    check(get_int(plain, RFX_CMD_VERSION) == RFX_VERSION && get_int(plain, RFX_CMD_PVB_ACTIVE) == 0,
-          "version command answers; engine not active before parameters");
-    run(plain, in, a, frames, block);
-    int finite = 1; for (int i = 0; i < 2 * frames; i++) if (!isfinite(a[i])) finite = 0;
-    check(finite, "JamesDSP chain output finite");
+        // 1/2: JamesDSP alone (no parameters sent): finite, and PVB stays out
+        effect_handle_t plain = make(lib, AUDIO_FORMAT_PCM_FLOAT, rate);
+        check(plain != NULL, "create + SET_CONFIG (float stereo) + ENABLE");
+        check(get_int(plain, RFX_CMD_VERSION) == RFX_VERSION && get_int(plain, RFX_CMD_PVB_ACTIVE) == 0,
+              "version command answers; engine not active before parameters");
+        run(plain, in, a, frames, block);
+        int finite = 1; for (int i = 0; i < 2 * frames; i++) if (!isfinite(a[i])) finite = 0;
+        check(finite, "JamesDSP chain output finite");
 
-    // 3: with parameters: virtual bass on, strength +6
-    float *v = malloc(sizeof(float) * n);
-    pdefaults(v);
-    v[0] = 1.f;                 // P_ENABLED (PvbEngine.kt PvbParam.ENABLED = 0)
-    float *v2 = malloc(sizeof(float) * n);
-    memcpy(v2, v, sizeof(float) * n);
-    effect_handle_t fx = make(lib, AUDIO_FORMAT_PCM_FLOAT);
-    check(set_pvb(fx, v, n) == 0 && get_int(fx, RFX_CMD_PVB_ACTIVE) == 1, "SET_PARAM 41000 with the parameter array: accepted, engine active");
-    check(set_pvb(fx, v, 0) == -EINVAL, "empty parameter array rejected");
-    run(fx, in, b, frames, block);
-    void *pe = pcreate(48000);
-    pparams(pe, v2, n);
-    memcpy(ref, a, sizeof(float) * 2 * frames);
-    for (int o = 0; o < frames; o += block) pprocess(pe, ref + 2 * o, frames - o < block ? frames - o : block);
-    double maxd = 0, diffFromPlain = 0;
-    for (int i = 0; i < 2 * frames; i++) {
-        double dd = fabs((double)b[i] - ref[i]); if (dd > maxd) maxd = dd;
-        double dp = fabs((double)b[i] - a[i]); if (dp > diffFromPlain) diffFromPlain = dp;
+        // 3: with parameters: virtual bass on, strength +6
+        float *v = malloc(sizeof(float) * (n+1));
+        pdefaults(v);
+        v[0] = 1.f;                 // P_ENABLED (PvbEngine.kt PvbParam.ENABLED = 0)
+        v[22] = 1.f; v[23] = 6.f; // COMBO
+        float *v2 = malloc(sizeof(float) * n);
+        memcpy(v2, v, sizeof(float) * n);
+        effect_handle_t fx = make(lib, AUDIO_FORMAT_PCM_FLOAT, rate);
+        check(set_pvb(fx, v, n) == 0 && get_int(fx, RFX_CMD_PVB_ACTIVE) == 1, "SET_PARAM 41000 with the parameter array: accepted, engine active");
+        check(set_pvb(fx, v, 0) == -EINVAL, "empty parameter array rejected");
+        run(fx, in, b, frames, block);
+        void *pe = pcreate(rate);
+        pparams(pe, v2, n);
+        memcpy(ref, a, sizeof(float) * 2 * frames);
+        for (int o = 0; o < frames; o += block) pprocess(pe, ref + 2 * o, frames - o < block ? frames - o : block);
+        double maxd = 0, diffFromPlain = 0;
+        for (int i = 0; i < 2 * frames; i++) {
+            double dd = fabs((double)b[i] - ref[i]); if (dd > maxd) maxd = dd;
+            double dp = fabs((double)b[i] - a[i]); if (dp > diffFromPlain) diffFromPlain = dp;
+        }
+        printf("       max |effect - (JamesDSP then PVB C API)| = %g, max |effect - JamesDSP alone| = %g\n", maxd, diffFromPlain);
+        check(maxd == 0.0, "float: effect = JamesDSP chain then the PVB engine, bit exact");
+        check(diffFromPlain > 1e-4, "float: the engine changes the sound (it is really in the path)");
+
+        // The first packet with unlocked EQ must already use its high-pass frequency.
+        effect_handle_t opened = make(lib, AUDIO_FORMAT_PCM_FLOAT, rate);
+        void *open_ref = pcreate(rate);
+        v[1] = 170.f;
+        v[n] = 1.f;
+        check(set_pvb(opened, v, n+1) == 0, "first unlocked EQ packet accepted");
+        ((int (*)(void *, int))dlsym(capi, "pvb_set_fixed_eq_open"))(open_ref, 1);
+        pparams(open_ref, v, n);
+        memcpy(ref, a, sizeof(float) * 2 * frames);
+        for (int o = 0; o < frames; o += block) pprocess(open_ref, ref + 2 * o, frames - o < block ? frames - o : block);
+        run(opened, in, b, frames, block);
+        check(memcmp(ref, b, sizeof(float) * 2 * frames) == 0, "first unlocked output matches the reference");
+        ((void (*)(void *))dlsym(capi, "pvb_destroy"))(open_ref);
+        lib->release_effect(opened);
+
+        // 16-bit buffers
+        int16_t *i16 = malloc(sizeof(int16_t) * 2 * frames), *o16 = malloc(sizeof(int16_t) * 2 * frames);
+        int16_t *p16 = malloc(sizeof(int16_t) * 2 * frames);
+        for (int i = 0; i < 2 * frames; i++) i16[i] = (int16_t)lrintf(in[i] * 32767.f);
+        effect_handle_t fx16 = make(lib, AUDIO_FORMAT_PCM_16_BIT, rate);
+        effect_handle_t plain16 = make(lib, AUDIO_FORMAT_PCM_16_BIT, rate);
+        check(fx16 != NULL && set_pvb(fx16, v, n) == 0, "16-bit: configured, parameters accepted");
+        run16(fx16, i16, o16, frames, block);
+        run16(plain16, i16, p16, frames, block);
+        long changed = 0; for (int i = 0; i < 2 * frames; i++) if (o16[i] != p16[i]) changed++;
+        check(changed > frames / 4, "16-bit: the engine is in the path");
+
+        lib->release_effect(plain); lib->release_effect(fx); lib->release_effect(fx16); lib->release_effect(plain16);
+        ((void (*)(void *))dlsym(capi, "pvb_destroy"))(pe);
+        free(in); free(a); free(b); free(ref); free(v); free(v2);
+        free(i16); free(o16); free(p16);
     }
-    printf("       max |effect - (JamesDSP then PVB C API)| = %g, max |effect - JamesDSP alone| = %g\n", maxd, diffFromPlain);
-    check(maxd == 0.0, "float: effect = JamesDSP chain then the PVB engine, bit exact");
-    check(diffFromPlain > 1e-4, "float: the engine changes the sound (it is really in the path)");
-
-    // 16-bit buffers
-    int16_t *i16 = malloc(sizeof(int16_t) * 2 * frames), *o16 = malloc(sizeof(int16_t) * 2 * frames);
-    int16_t *p16 = malloc(sizeof(int16_t) * 2 * frames);
-    for (int i = 0; i < 2 * frames; i++) i16[i] = (int16_t)lrintf(in[i] * 32767.f);
-    effect_handle_t fx16 = make(lib, AUDIO_FORMAT_PCM_16_BIT);
-    effect_handle_t plain16 = make(lib, AUDIO_FORMAT_PCM_16_BIT);
-    check(fx16 != NULL && set_pvb(fx16, v, n) == 0, "16-bit: configured, parameters accepted");
-    run16(fx16, i16, o16, frames, block);
-    run16(plain16, i16, p16, frames, block);
-    long changed = 0; for (int i = 0; i < 2 * frames; i++) if (o16[i] != p16[i]) changed++;
-    check(changed > frames / 4, "16-bit: the engine is in the path");
-
-    lib->release_effect(plain); lib->release_effect(fx); lib->release_effect(fx16); lib->release_effect(plain16);
     printf("test_rootfx: %d checks passed\n", passed);
     return 0;
 }

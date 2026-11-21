@@ -21,6 +21,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.Checkbox
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.input.pointer.pointerInput
+import me.timschneeberger.rootlessjamesdsp.pvb.PvbDevMeter
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -214,60 +224,91 @@ internal fun HarmonicPage(state: DevUiState) {
 @Composable
 internal fun TimePage(state: DevUiState) {
     val c = LocalDevPalette.current
-    val snap = state.snapshot
+    var frozen by remember { mutableStateOf<DevSnapshot?>(null) }
+    var fraction by remember { mutableStateOf(1f) }
+    var showRequest by remember { mutableStateOf(false) }
+    val latestSnapshot by rememberUpdatedState(state.snapshot)
+    val snap = frozen ?: state.snapshot
     val tm = rememberTextMeasurer()
+    val green = Color(0xFF70B77E)
+    val n = snap?.ringLayer?.size ?: 0
+    val index = (fraction * (n - 1).coerceAtLeast(0)).roundToInt()
+    fun stage(i: Int, field: Int): Float = snap?.stages?.getOrNull(i * PvbDevMeter.STAGE_FIELDS + field) ?: -120f
+    val available = snap?.stages?.size == PvbDevMeter.STAGE_FIELDS * n && n > 0
     val span = snap?.let { DevMath.tailSpan(it.ringDry, it.ringLayer) }
-    val tailMs = state.tailMs?.roundToInt()
-    val a11y = if (tailMs != null) stringResource(R.string.dev_a11y_time, tailMs) else stringResource(R.string.dev_a11y_time_none)
-    val tailLabel = stringResource(R.string.dev_time_tail)
-    val now = stringResource(R.string.dev_time_axis_now)
-    val secLabels = (1..2).map { stringResource(R.string.dev_time_axis_s, it) }
-    val hl = state.highlight()
+    val ageMs = if (snap != null) (n - 1 - index) * snap.binMs else 0f
     Column(Modifier.fillMaxWidth()) {
-        GraphHeader(stringResource(R.string.dev_graph_time), stringResource(R.string.dev_graph_time_sub))
-        Spacer(Modifier.height(8.dp))
-        Canvas(Modifier.fillMaxWidth().height(176.dp).clearAndSetSemantics { contentDescription = a11y }) {
-            val axisY = size.height - 22.dp.toPx()
-            val top = 8.dp.toPx()
-            fun y(db: Float) = top + (axisY - top) * (1f - ((db.coerceIn(-60f, 0f) + 60f) / 60f))
-            drawLine(c.chevron.copy(alpha = 0.6f), Offset(0f, axisY), Offset(size.width, axisY), strokeWidth = 1.dp.toPx())
-            if (snap == null) return@Canvas
-            val n = min(snap.ringDry.size, snap.ringLayer.size)
-            if (n < 2) return@Canvas
-            fun x(i: Int) = size.width * i / (n - 1).toFloat()
-            // tail: from the dry note end to the layer's end, filled under the layer curve, dashed frame
-            if (span != null && span.end > span.start) {
-                val tail = Path()
-                tail.moveTo(x(span.start), axisY)
-                for (i in span.start..span.end) tail.lineTo(x(i), y(snap.ringLayer[i]))
-                tail.lineTo(x(span.end), axisY)
-                tail.close()
-                drawPath(tail, Orange.copy(alpha = 0.30f))
-                val warn = DevWarning.TAIL in state.active
-                drawRect(if (warn) c.warnText else c.accentText, Offset(x(span.start), top),
-                    Size(max(2f, x(span.end) - x(span.start)), axisY - top), style = Stroke(width = 1.5f.dp.toPx(), pathEffect = Dash))
-                label(tm, tailLabel, (x(span.start) + x(span.end)) / 2f, top + 4.dp.toPx(), c.warnText, bold = true)
+        GraphHeader("배음이 줄어드는 단계", if (frozen == null) "실시간 · 누르거나 길게 눌러 정지" else "화면 정지 · 음악은 계속 재생")
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Checkbox(checked = showRequest, onCheckedChange = { showRequest = it })
+            Text("제한 전 요청 배음", color = c.textSecondary, fontSize = 12.sp)
+            if (frozen != null) TextButton(onClick = { frozen = null; fraction = 1f }) { Text("실시간") }
+            else TextButton(onClick = { frozen = latestSnapshot; fraction = 1f }) { Text("화면 정지") }
+        }
+        Text("회색: 공통 입력 저역   연초록: 합성기 입력 저역", color = c.textSecondary, fontSize = 12.sp)
+        Text("틸 실선: 실제 배음 · 점선: 요청 배음 / 최종 리미터 전", color = c.textSecondary, fontSize = 12.sp)
+        Canvas(Modifier.fillMaxWidth().height(220.dp)
+            .pointerInput(frozen) {
+                detectTapGestures(onTap = { p -> if (frozen == null) frozen = latestSnapshot; fraction = (p.x / size.width).coerceIn(0f, 1f) },
+                    onLongPress = { p -> if (frozen == null) frozen = latestSnapshot; fraction = (p.x / size.width).coerceIn(0f, 1f) })
             }
-            fun curve(ring: FloatArray): Path {
+            .pointerInput(frozen) { detectDragGestures { change, _ ->
+                if (frozen != null) { change.consume(); fraction = (change.position.x / size.width).coerceIn(0f, 1f) }
+            } }
+            .clearAndSetSemantics { contentDescription = "공통 입력, 합성기 입력, 제한 전후 배음의 고정 dBFS 시간 그래프. 화면 정지 후 수치를 읽을 수 있습니다." }) {
+            val left = 34.dp.toPx(); val right = size.width - 4.dp.toPx()
+            val top = 8.dp.toPx(); val bottom = size.height - 46.dp.toPx()
+            fun x(i: Int) = left + (right - left) * i / (n - 1).coerceAtLeast(1)
+            fun y(v: Float) = bottom - (bottom - top) * ((v.coerceIn(-100f, 0f) + 100f) / 100f)
+            for (db in listOf(0, -20, -40, -60, -80, -100)) {
+                drawLine(c.chevron.copy(alpha = .25f), Offset(left, y(db.toFloat())), Offset(right, y(db.toFloat())), 1f)
+                label(tm, "$db", left - 5.dp.toPx(), y(db.toFloat()) - 6.dp.toPx(), c.textSecondary, align = 1f)
+            }
+            if (snap == null || n < 2 || !available) return@Canvas
+            fun curve(field: Int, actual: Boolean = false): Path {
                 val p = Path()
-                p.moveTo(x(0), y(ring[0]))
-                for (i in 1 until n) p.lineTo(x(i), y(ring[i]))
+                for (i in 0 until n) { val value = if (actual) snap.ringLayer[i] else stage(i, field)
+                    if (i == 0) p.moveTo(x(i), y(value)) else p.lineTo(x(i), y(value)) }
                 return p
             }
-            drawPath(curve(snap.ringDry), c.chevron, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round))
-            val thick = hl == DevHighlight.ATTACK || hl == DevHighlight.RELEASE || hl == DevHighlight.LAYER
-            drawPath(curve(snap.ringLayer), c.fill, style = Stroke(width = (if (thick) 3.5f else 2.5f).dp.toPx(), cap = StrokeCap.Round))
-            // seconds before now
-            val totalS = (n - 1) * snap.binMs / 1000f
-            for (s in 1..2) {
-                if (s > totalS) break
-                val lx = size.width * (1f - s / totalS)
-                drawLine(c.chevron.copy(alpha = 0.6f), Offset(lx, axisY), Offset(lx, axisY + 3.dp.toPx()), strokeWidth = 1.dp.toPx())
-                label(tm, secLabels[s - 1], lx, axisY + 4.dp.toPx(), c.textSecondary)
+            drawPath(curve(0), c.chevron, style = Stroke(2.dp.toPx()))
+            drawPath(curve(1), green, style = Stroke(2.dp.toPx()))
+            if (showRequest) drawPath(curve(2), c.fill.copy(alpha = .55f), style = Stroke(1.5f.dp.toPx(), pathEffect = Dash))
+            drawPath(curve(0, true), c.fill, style = Stroke(2.5f.dp.toPx()))
+            // Event lane: actual no-track observations / fit guard / dedicated layer reduction.
+            val lane = bottom + 6.dp.toPx()
+            for (i in 1 until n) {
+                val reason = stage(i, 4).toInt().coerceAtLeast(0)
+                if (stage(i, 6) == -1f && stage(i - 1, 6) > 0f) label(tm, "×", x(i), lane, c.textSecondary)
+                if (stage(i, 6) > 0f && stage(i - 1, 6) == -1f) label(tm, "○", x(i), lane, green)
+                if ((reason and 8) != 0) drawLine(c.textSecondary, Offset(x(i - 1), lane + 7.dp.toPx()), Offset(x(i), lane + 7.dp.toPx()), 3.dp.toPx(), pathEffect = Dash)
+                if (stage(i, 8) > .5f) drawLine(Orange, Offset(x(i - 1), lane + 13.dp.toPx()), Offset(x(i), lane + 13.dp.toPx()), 3.dp.toPx())
             }
-            label(tm, now, size.width, axisY + 4.dp.toPx(), c.textSecondary, align = 1f)
+            if (span != null && span.end > span.start) {
+                val yy = bottom + 24.dp.toPx()
+                drawLine(Orange, Offset(x(span.start), yy), Offset(x(span.end), yy), 2.dp.toPx())
+                for (i in listOf(span.start, span.end)) drawLine(Orange, Offset(x(i), yy - 5.dp.toPx()), Offset(x(i), yy + 2.dp.toPx()), 2.dp.toPx())
+            }
+            if (frozen != null) drawLine(c.textPrimary, Offset(x(index), top), Offset(x(index), bottom + 28.dp.toPx()), 1.5f.dp.toPx())
+            label(tm, "${((n - 1) * snap.binMs / 1000f).let { "%.2f".format(it) }}초 전", left, size.height - 15.dp.toPx(), c.textSecondary, align = 0f)
+            label(tm, "현재", right, size.height - 15.dp.toPx(), c.textSecondary, align = 1f)
         }
-        GraphNote(state, tailMs?.let { stringResource(R.string.dev_note_ok_time, it) })
+        Text("× 유효 트랙 없음 관측 → ○ 재관측 · 빗금: 맞춤 제한 사유 · 주황: 배음층 제한", color = c.textSecondary, fontSize = 11.sp)
+        if (frozen != null && available) {
+            val reason = stage(index, 4).toInt().coerceAtLeast(0)
+            val names = listOf(1 to "절대 크기", 2 to "상대 크기", 4 to "피크 없음", 8 to "모델 맞춤", 16 to "격자", 32 to "트랙 누락", 64 to "용량", 128 to "배음 가중치", 256 to "비유한 값", 512 to "종속 배음")
+                .filter { (bit, _) -> (reason and bit) != 0 }.joinToString(" · ") { it.second }
+            fun db(v: Float) = if (v <= -100f) "−100 이하" else "%.1f".format(v)
+            Text("선택: %.0f ms 전 · 원본 시점에 정렬한 %.0f ms bin".format(ageMs, snap!!.binMs), color = c.textPrimary, fontSize = 12.sp)
+            Text("공통 입력 ${db(stage(index, 0))} / 합성기 입력 ${db(stage(index, 1))} dBFS\n요청 ${db(stage(index, 2))} / 실제 ${db(snap.ringLayer[index])} dBFS", color = c.textPrimary, fontSize = 13.sp)
+            val trackState = when (stage(index, 6).toInt()) { 1 -> "새 트랙"; 2 -> "트랙 관측 유지"; 3 -> "트랙 유지 추정"; -1 -> "유효 트랙 없음"; else -> "관측 대기" }
+            Text("추적 상태: $trackState", color = c.textPrimary, fontSize = 12.sp)
+            val f0 = stage(index, 3)
+            Text(if (f0 > 0f) "f₀ %.1f Hz · 맞춤 잔차 %.1f dB".format(f0, stage(index, 5)) else "f₀: 해당 합성 프레임의 유효 트랙 없음/관측 대기", color = c.textPrimary, fontSize = 13.sp)
+            Text("배음층 제한 %.1f dB / 최종 리미터 최대 감쇄 %.1f dB".format(stage(index, 8).coerceAtLeast(0f), stage(index, 7).coerceAtLeast(0f)), color = c.textPrimary, fontSize = 13.sp)
+            Text("관측 사유: ${names.ifEmpty { "사유 비트 없음" }} · 신뢰도 확률이 아님", color = c.textSecondary, fontSize = 12.sp)
+            if (span != null) Text("꼬리 판정 기준: 합성기 입력 종료 ${(span.start * snap.binMs).roundToInt()} ms → 실제 배음 종료 ${(span.end * snap.binMs).roundToInt()} ms (화면 왼쪽 기준)${if (span.ongoing) " · 아직 진행 중" else ""}", color = c.warnText, fontSize = 12.sp)
+        } else if (frozen == null) GraphNote(state, null)
     }
 }
 

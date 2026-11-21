@@ -21,10 +21,8 @@
     <string name="home_db_value">%1$s dB</string>
     <string name="home_presets_label">Presets</string>
     <string name="home_chip_fullness">More fullness</string>
-    <string name="home_chip_deep">Deep bass</string>
     <string name="home_chip_custom">Custom</string>
     <string name="home_hint_fullness">A safe strength for most music.</string>
-    <string name="home_hint_deep">Adds rich bass to quiet or acoustic songs.</string>
     <string name="home_hint_custom">Set the strength you like with the slider.</string>
     <string name="home_link_title">Volume link</string>
     <string name="home_link_reduced">At %1$d%% volume: %2$s dB · playing %3$s dB</string>

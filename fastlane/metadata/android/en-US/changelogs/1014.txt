@@ -1,0 +1,6 @@
+- New virtual bass engine "COMBO": follows the bass pitch and builds harmonics with a fixed formula. No learned model.
+- Remaining harmonics fade faster so drums and kicks are not followed as bass.
+- Works at 44.1 and 48 kHz output (about 0.15 s delay).
+- Bass mode: Off / COMBO. beta.12 settings carry over.
+- Fixed intercept capture not starting and fast-forward sound.
+- Not yet listened to or measured on a phone.

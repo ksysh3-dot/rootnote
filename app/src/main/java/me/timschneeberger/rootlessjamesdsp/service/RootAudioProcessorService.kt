@@ -99,9 +99,9 @@ class RootAudioProcessorService : BaseAudioProcessorService(), KoinComponent,
         app.rootSessionDatabase.sessionList.values.forEach { (it as? RemoteEffectSession)?.effect?.let(f) }
 
     private fun startPvb() {
-        val e = PvbEngine(48000)
+        val e = PvbEngine(48000) // COMBO needs no model asset or inference preparation.
         val c = PvbController(this, e)
-        c.paramSink = { p -> forEachEffect { it.setPvbParams(p) } }
+        c.paramSink = { p, open -> forEachEffect { it.setPvbParams(p, open) } }
         c.start()
         pvbEngine = e
         pvbController = c
@@ -263,7 +263,7 @@ class RootAudioProcessorService : BaseAudioProcessorService(), KoinComponent,
     override fun onSessionChanged(sessionList: HashMap<Int, IEffectSession>) {
         updateServiceNotification()
         // a session that opened since: the current parameters at once
-        pvbController?.lastParams?.let { p -> forEachEffect { it.setPvbParams(p) } }
+        pvbController?.lastParams?.let { (p, open) -> forEachEffect { it.setPvbParams(p, open) } }
     }
 
     private fun updateServiceNotification() {

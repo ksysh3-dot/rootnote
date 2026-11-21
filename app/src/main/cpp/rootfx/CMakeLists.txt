@@ -5,16 +5,16 @@ cmake_minimum_required(VERSION 3.18...3.31)
 project(rootnotefx LANGUAGES C CXX)
 set(ROOTFX_JDSP ${CMAKE_CURRENT_LIST_DIR}/../libjamesdsp/Main/libjamesdsp/jni/jamesdsp)
 file(GLOB_RECURSE ROOTFX_JDSP_SOURCES CONFIGURE_DEPENDS ${ROOTFX_JDSP}/jdsp/*.c)
+include(${CMAKE_CURRENT_LIST_DIR}/../libpvb/combo_sources.cmake)
 add_library(rootnotefx SHARED
         ${CMAKE_CURRENT_LIST_DIR}/jamesdsp_rootnote.c
         ${CMAKE_CURRENT_LIST_DIR}/rootfx_pvb.cpp
         ${ROOTFX_JDSP}/cpthread.c
         ${ROOTFX_JDSP_SOURCES}
         ${CMAKE_CURRENT_LIST_DIR}/../EELStdOutExtension.c
-        ${CMAKE_CURRENT_LIST_DIR}/../libpvb/pvb_engine.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/../libpvb/pvb_analysis.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/../libpvb/pvb_vb52.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/../libpvb/pvb_vb.cpp)
+        ${ROOTNOTE_ENGINE_SOURCES})
+rootnote_combo_options(rootnotefx)
+
 target_include_directories(rootnotefx PRIVATE ${ROOTFX_JDSP} ${ROOTFX_JDSP}/jdsp ${CMAKE_CURRENT_LIST_DIR}
         ${CMAKE_CURRENT_LIST_DIR}/../libpvb)
 # no DEBUG logging inside audioserver (the project-wide flags define it)

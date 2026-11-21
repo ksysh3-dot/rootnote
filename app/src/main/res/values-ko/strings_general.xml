@@ -41,8 +41,6 @@
 
     <string name="vb_preset_fullness_title">풍성함 증가 (권장)</string>
     <string name="vb_preset_fullness_desc">악기의 몸통감과 풍성함, 잔향을 키웁니다. 보수적으로 동작해 버즈음이 생길 가능성이 낮습니다.</string>
-    <string name="vb_preset_deep_title">초저역 강조 (실험)</string>
-    <string name="vb_preset_deep_desc">스피커 한계보다 낮은 저음을 재현하려 합니다. 곡에 따라 차이가 크고 버즈음이 생길 수 있습니다.</string>
     <string name="vb_preset_custom_title">사용자 지정</string>
     <string name="vb_preset_custom_desc">크기를 직접 바꾼 상태입니다.</string>
     <string name="vb_mode_note">모드는 가상 저음의 방식과 크기만 정합니다. EQ·출력 등 다른 설정은 그대로입니다.</string>

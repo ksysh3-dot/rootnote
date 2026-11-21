@@ -51,7 +51,8 @@ GPL-3.0 section 5(a) asks for prominent notices that files were modified. The li
 listed; they are part of this modified work under the same licence.
 
 <!-- BEGIN GENERATED: tools/list_modified_upstream.sh -->
-Compared: RootlessJamesDSP 1.6.14 (upstream commit `60d25ae`) .. this commit.
+Compared: RootlessJamesDSP 1.6.14 (upstream commit `60d25ae`) .. the previously recorded public baseline.
+The upstream object was unavailable for this offline update; the baseline list below is retained. Current virtual-bass additions are described in the following section.
 
 Modified upstream files:
 
@@ -101,25 +102,13 @@ Removed upstream files:
 - `.github/FUNDING.yml`
 - `.github/workflows/crowdin-contributors.yml`
 
-Files added by this fork (not listed): 205. New source files carry their own GPL-3.0 header or are covered by this notice.
+Files added by this fork at that baseline (not listed): 205. New source files carry their own GPL-3.0 header or are covered by this notice.
 <!-- END GENERATED -->
 
 
-## P1+ and P1++ research modifications (2026-10-26)
+## Virtual bass updates (2026-11-18)
 
-The P1+ research baseline adds source-phase preservation, centered HPSS and the
-corresponding delay alignment to libpvb. The P1++ impact investigation adds two
-host-only fit-validation counterfactuals for analysis. These modifications affect
-`pvb_vb.h`, `pvb_vb.cpp`, `pvb_vb52.cpp`, `pvb_engine.h` and the host C API/tools.
-Research options are off by default and are not connected to Android JNI/UI.
-Sources, measured benefits/regressions and reproduction instructions are retained
-under docs/P1PLUS_BASELINE.md, docs/P1PP_IMPACT_PROTOCOL.md and research/.
-The Bankstown attribution and all prior notices above remain applicable.
-
-The P1++ recovery round adds optional host modes 3/4 to restore the normal birth
-fade after a previously rejected track obtains the declared fit evidence. Mode 4
-remembers pending recovery until both current and effective fits pass. These
-options retain the existing fit threshold and add no delay. The adopted P1+
-baseline and Android defaults remain unchanged. Definitions, selection history,
-measured gains and adverse changes are preserved in docs/P1PP_RECOVERY_PROTOCOL.md
-and research/p1pp/2026-10-26-recovery/.
+The app offers Off and COMBO. COMBO uses harmonic-family tracking, fixed harmonic ratios (orders 2–8), the
+fixed amplitude formula, median smoothing and fixed onset attenuation. A numeric-only
+synthesizer is separated from audio analysis. The default V0 sums delayed original audio and the harmonic
+branch before their common filters; the optional build-time V1 filters only the harmonic branch.

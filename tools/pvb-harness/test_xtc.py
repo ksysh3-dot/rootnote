@@ -48,7 +48,7 @@ NEUTRAL = dict(low_db=0, hi_db=0, hs_db=0, hp_hz=20, out_db=0, ceil_db=0)
 
 def main():
     lib = te.load_lib(os.path.join(HERE, 'build/libpvbcapi.so'))
-    check('parameter count 57 (47 + 9 crosstalk-cancellation values + developer table scale)', lib.pvb_param_count() == 57)
+    check('parameter count 58 (stable parameter ABI)', lib.pvb_param_count() == 58)
     d = np.zeros(lib.pvb_param_count(), np.float32)
     lib.pvb_default_params(d.ctypes.data_as(te.FP))
     check('defaults: off, gentle, 40 cm, hat 57, 15.5 cm, 400-8000 Hz, balance 0 / 0',
@@ -150,28 +150,18 @@ def main():
               lo_l[low_ch] - lo_l[hi_ch] > 20 and hi_h[hi_ch] - hi_h[low_ch] > 20 and flat < 0.5,
               f'low {lo_l[low_ch] - lo_l[hi_ch]:.1f} dB, high {hi_h[hi_ch] - hi_h[low_ch]:.1f} dB, sum within {flat:.2f} dB')
 
-    # Upright with virtual bass (code review 2026-10-23, F3): the layer is added after this stage, so it must be routed
-    # like the music: split -> only the low channel (nothing to the earpiece), mono -> the same on both.
+    # COMBO freezes XTC off. A saved orientation setting must not change its measured profile.
     t = np.arange(sr * 6) / sr
     bass = np.repeat((0.2 * np.sin(2 * np.pi * 80 * t))[:, None], 2, axis=1).astype(np.float32)
     k2 = 2 * sr
-    # Both model families: P1 (generates from the input, routed by the XTC stage) and Bankstown (generates from the
-    # EQ output, so it already follows the split and must not be routed twice). The layer's power is kept: the low
-    # channel gets the per-channel landscape level +3 dB.
-    for algo, name in ((6, 'P1'), (1, 'Bankstown')):
-        flat = band_db(te.Engine(lib, sr, xtc_mode=0, vb_on=1, vb_algo=algo, vb_level_db=4).process(bass)[k2:], 150, 800)
-        for mode, low_ch in ((4, 0), (5, 1)):
-            y = te.Engine(lib, sr, xtc_mode=mode, vb_on=1, vb_algo=algo, vb_level_db=4).process(bass)[k2:]
-            lay = band_db(y, 150, 800)
-            check(f'upright split {mode} + virtual bass ({name}): layer only on the low channel (earpiece >= 40 dB lower), '
-                  f'power kept (low = landscape + 3 dB)',
-                  lay[low_ch] - lay[1 - low_ch] >= 40 and abs(lay[low_ch] - flat[low_ch] - 3.01) < 0.2 and np.all(np.isfinite(y)),
-                  f'low {lay[low_ch]:.1f} dBFS (landscape {flat[low_ch]:.1f}), earpiece {lay[1 - low_ch]:.1f} dBFS')
     left_bass = bass.copy(); left_bass[:, 1] = 0
-    y = te.Engine(lib, sr, xtc_mode=3, vb_on=1, vb_algo=6, vb_level_db=4).process(left_bass)[k2:]
-    lay = band_db(y, 150, 800)
-    check('upright mono + virtual bass: the layer is mono too (bass on one input channel, same on both speakers)',
-          abs(lay[0] - lay[1]) < 0.1 and lay[0] > -60, f'L {lay[0]:.2f} R {lay[1]:.2f} dBFS')
+    for source in (bass, left_bass):
+        flat = te.Engine(lib, sr, xtc_mode=0, vb_on=1, vb_algo=6, vb_level_db=4).process(source)
+        for mode in (3, 4, 5):
+            y = te.Engine(lib, sr, xtc_mode=mode, vb_on=1, vb_algo=6, vb_level_db=4).process(source)
+            check(f'COMBO ignores saved XTC mode {mode} (asymmetric={source is left_bass})',
+                  np.array_equal(y, flat) and np.all(np.isfinite(y)),
+                  f'max difference {np.max(np.abs(y-flat)):.3g}')
 
     # Matched M/S widener (6 = for centre, 7 = for full; blind comparison only): mid and side have the same
     # magnitude per third octave as the canceller with the same settings, without its delay structure.

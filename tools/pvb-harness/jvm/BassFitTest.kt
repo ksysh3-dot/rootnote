@@ -219,11 +219,11 @@ fun main() {
         }
         return b
     }
-    val want = mapOf(0.0 to 0, 2.2 to 3, 5.8 to 6, 9.0 to 9)
+    val want = mapOf(-9.0 to -9, -6.8 to -6, -3.2 to -3, 0.0 to 0)
     check(want.all { (ideal, lvl) -> (0 until 20).all { s -> bracket(ideal, s.toLong()).let { it.result == lvl && it.consistent } } },
-        "strength: lands on the level nearest the listener's ideal (0, 3, 6, 9), consistent, 3 pairs at most")
-    check((0 until 20).all { s -> bracket(4.5, s.toLong()).result == 3 }, "strength: ideal halfway between 3 and 6 -> ties keep the lower")
-    check(bracket(6.0, 3, flip = true).let { !it.consistent }, "strength: a reversed answer on the repeated first pair -> inconsistent")
+        "strength: lands on the level nearest the listener's ideal (-9, -6, -3, 0), consistent, 3 pairs at most")
+    check((0 until 20).all { s -> bracket(-4.5, s.toLong()).result == -6 }, "strength: ideal halfway between -6 and -3 -> ties keep the lower")
+    check(bracket(-3.0, 3, flip = true).let { !it.consistent }, "strength: a reversed answer on the repeated first pair -> inconsistent")
 
     // --- break-up staircase: yes/no listener, logistic around the true break-up level, honest on catch trials
     fun breakup(trueDb: Double, seed: Long, start: Double = 4.0, liar: Boolean = false): BreakupStaircase {

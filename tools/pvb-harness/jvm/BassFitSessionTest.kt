@@ -98,55 +98,55 @@ fun main() {
     // ---------------------------------------------------------------------------------------- full runs
     val stored = DevParams.read(PvbSettings(vbLevelDb = 4f))
     run {
-        val l1 = Listener(floorHz = 200.0, idealDb = 6.0, breakDb = 11.0, seed = 1)
-        val s = l1.run(BassFitSession(11L, 4.0))
+        val l1 = Listener(floorHz = 200.0, idealDb = -3.0, breakDb = -1.0, seed = 1)
+        val s = l1.run(BassFitSession(11L, -4.0))
         val r = s.result
         check(s.stage == FitStage.DONE && r.floorReliable && r.floorHz != null && abs(log2(r.floorHz!! / 200.0)) < 0.25,
             "floor 200 Hz found (${r.floorHz?.toInt()} Hz), reliable")
         check(r.edgeHz == r.floor!!.boundaryHz, "edge: no difference heard -> the lower edge (${r.edgeHz?.toInt()} Hz)")
-        check(r.layerAudible == true && r.preferredDb == 6 && r.strengthConsistent, "layer heard, preferred +6")
-        check(r.limitReliable && r.limitDb != null && r.limitDb!! in 6.0..9.0 && r.strengthDb == 6.0,
-            "break-up near 11 dB -> limit ${r.limitDb}, strength +6 kept")
+        check(r.layerAudible == true && r.preferredDb == -3 && r.strengthConsistent, "layer heard, preferred -3")
+        check(r.limitReliable && r.limitDb != null && r.limitDb!! in -6.0..0.0 && r.strengthDb == minOf(-3.0, r.limitDb!!),
+            "break-up near -1 dB -> limit ${r.limitDb}, preferred strength capped")
         check(!r.shapeTried && r.shape == null, "shape skipped: roll-off and harmonics unchanged")
         val v = r.applyTo(stored)
         fun at(spec: me.timschneeberger.rootlessjamesdsp.pvb.DevSpec) = v[DevParams.ALL.indexOf(spec)]
         val m = me.timschneeberger.rootlessjamesdsp.pvb.BassFitMapping.fromFloor(r.floorHz!!)
         check(at(DevParams.TABLE_FLOOR) == DevParams.TABLE_FLOOR.snap(r.floorHz!!.toFloat()) &&
             at(DevParams.OUT_LO) == DevParams.OUT_LO.snap(m.outLoHz.toFloat()) && at(DevParams.BOUNDARY) == DevParams.BOUNDARY.snap(m.boundaryHz.toFloat()) &&
-            at(DevParams.HP) == DevParams.HP.snap(m.hpHz.toFloat()) && at(DevParams.STRENGTH) == 6f,
+            at(DevParams.HP) == DevParams.HP.snap(m.hpHz.toFloat()) && at(DevParams.STRENGTH) == 4f,
             "applied: table floor ${at(DevParams.TABLE_FLOOR)}, out low ${at(DevParams.OUT_LO)}, edge ${at(DevParams.BOUNDARY)}, HP ${at(DevParams.HP)}, strength ${at(DevParams.STRENGTH)}")
         check(at(DevParams.ROLLOFF) == stored[DevParams.ALL.indexOf(DevParams.ROLLOFF)] && at(DevParams.H2) == 0f,
             "untested values untouched")
     }
     run {
-        // preferred +9, but the speaker breaks up at 7: capped
-        val r = Listener(floorHz = 150.0, idealDb = 9.0, breakDb = 7.0, seed = 2).run(BassFitSession(22L, 4.0)).result
-        check(r.preferredDb == 9 && r.limitDb != null && r.limitDb!! <= 5.0 && r.strengthDb == r.limitDb,
-            "preferred +9, break-up at 7 -> strength capped at the limit (${r.limitDb})")
+        // preferred 0, but the speaker breaks up at 7: capped
+        val r = Listener(floorHz = 150.0, idealDb = 0.0, breakDb = -5.0, seed = 2).run(BassFitSession(22L, -4.0)).result
+        check(r.preferredDb == 0 && r.limitDb != null && r.limitDb!! <= -5.0 && r.strengthDb == r.limitDb,
+            "preferred 0, break-up at -5 -> strength capped at the limit (${r.limitDb})")
     }
     run {
         // the higher edge is heard and preferred twice
-        val s = Listener(floorHz = 160.0, idealDb = 4.0, breakDb = 12.0, seed = 3, edgeAudible = true).run(BassFitSession(33L, 4.0))
+        val s = Listener(floorHz = 160.0, idealDb = 4.0, breakDb = 12.0, seed = 3, edgeAudible = true).run(BassFitSession(33L, -4.0))
         val r = s.result
         check(r.floor != null && r.edgeHz != null && r.edgeHz!! > r.floor!!.boundaryHz * 1.25,
             "edge told apart and preferred -> 1.3 times higher (${r.floor?.boundaryHz?.toInt()} -> ${r.edgeHz?.toInt()} Hz)")
     }
     run {
         // the layer can't be heard at this volume: no strength questions; only a cap below the stored strength applies
-        val l = Listener(floorHz = 150.0, idealDb = 6.0, breakDb = 99.0, seed = 4, layerAudible = false)
-        val s = l.run(BassFitSession(44L, 4.0))
+        val l = Listener(floorHz = 150.0, idealDb = -3.0, breakDb = 99.0, seed = 4, layerAudible = false)
+        val s = l.run(BassFitSession(44L, -4.0))
         val r = s.result
         check(r.layerAudible == false && r.preferredDb == null && r.strengthDb == null && l.log.none { it.startsWith("p") && it != "p00" },
             "layer not heard -> no strength pairs, stored strength kept")
     }
     run {
         // a listener who "hears" silent trials: floor unreliable -> band values untouched
-        val r = Listener(floorHz = 150.0, idealDb = 4.0, breakDb = 12.0, seed = 5, catchLiar = true).run(BassFitSession(55L, 4.0)).result
+        val r = Listener(floorHz = 150.0, idealDb = 4.0, breakDb = 12.0, seed = 5, catchLiar = true).run(BassFitSession(55L, -4.0)).result
         check(!r.floorReliable && r.floor == null && r.applyTo(stored)[DevParams.ALL.indexOf(DevParams.HP)] == stored[DevParams.ALL.indexOf(DevParams.HP)],
             "floor unreliable -> high-pass, edge, band and table floor unchanged")
     }
     run {
-        val r = Listener(floorHz = 150.0, idealDb = 4.0, breakDb = 12.0, seed = 6, takeShape = true, shapeTarget = 2).run(BassFitSession(66L, 4.0)).result
+        val r = Listener(floorHz = 150.0, idealDb = 4.0, breakDb = 12.0, seed = 6, takeShape = true, shapeTarget = 2).run(BassFitSession(66L, -4.0)).result
         val v = r.applyTo(stored)
         check(r.shapeTried && r.shapeConsistent && r.shape == ShapeGrid(0).cells[2] &&
             v[DevParams.ALL.indexOf(DevParams.ROLLOFF)] == -6f && v[DevParams.ALL.indexOf(DevParams.H2)] == 4f &&
@@ -155,7 +155,7 @@ fun main() {
 
     // ---------------------------------------------------------------------------------------- a new order every run
     run {
-        fun order(seed: Long) = Listener(floorHz = 170.0, idealDb = 6.0, breakDb = 10.0, seed = 9).also { it.run(BassFitSession(seed, 4.0)) }.log
+        fun order(seed: Long) = Listener(floorHz = 170.0, idealDb = -3.0, breakDb = 10.0, seed = 9).also { it.run(BassFitSession(seed, 4.0)) }.log
         val a = order(1001); val b = order(1001); val c = order(2002)
         check(a == b, "same seed -> the same questions in the same order (a run can be replayed)")
         check(a != c, "another seed -> another order of the questions and other A/B/X sides")
@@ -182,7 +182,7 @@ fun main() {
     run {
         // the harmonic shape alone: no floor, layer, strength or break-up questions; the shape is found and applied
         val l = Listener(floorHz = 150.0, idealDb = 4.0, breakDb = 12.0, seed = 21, shapeTarget = 2)
-        val s = BassFitSession(2121L, 4.0, me.timschneeberger.rootlessjamesdsp.pvb.FitScope.SHAPE)
+        val s = BassFitSession(2121L, -4.0, me.timschneeberger.rootlessjamesdsp.pvb.FitScope.SHAPE)
         check((s.prompt as? FitPrompt.Prefer)?.purpose == FitPrompt.Purpose.SHAPE && s.step == 4, "shape only: starts at step 4 with a shape pair")
         l.run(s)
         val r = s.result
@@ -194,13 +194,13 @@ fun main() {
     // ---------------------------------------------------------------------------------------- one step alone
     run {
         val l = Listener(floorHz = 180.0, idealDb = 4.0, breakDb = 9.0, seed = 12)
-        val s = l.run(BassFitSession(1212L, 4.0, me.timschneeberger.rootlessjamesdsp.pvb.FitScope.FLOOR))
+        val s = l.run(BassFitSession(1212L, -4.0, me.timschneeberger.rootlessjamesdsp.pvb.FitScope.FLOOR))
         val r = s.result
         check(s.stage == FitStage.DONE && r.floorHz != null && l.log.all { it.length == 1 } && r.floorQuestions in 25..75 && r.refThresholdDb != null &&
             r.floorCatch >= 2 && r.layerAudible == null && r.limitDb == null,
             "floor only: ${r.floorQuestions} questions (${r.floorCatch} catch), floor ${r.floorHz?.toInt()} Hz, nothing else asked")
         val lb = Listener(floorHz = 180.0, idealDb = 4.0, breakDb = 9.0, seed = 13)
-        val sb = BassFitSession(1313L, 4.0, me.timschneeberger.rootlessjamesdsp.pvb.FitScope.BREAKUP)
+        val sb = BassFitSession(1313L, -4.0, me.timschneeberger.rootlessjamesdsp.pvb.FitScope.BREAKUP)
         check(sb.stage == FitStage.BREAKUP, "break-up only: starts at step 3")
         lb.run(sb)
         val rb = sb.result
@@ -232,12 +232,12 @@ fun main() {
         check(!raw.vbOn && raw.hpHz == BassFitSettings.RAW_HP_HZ && raw.lowDb == 0f && raw.hiDb == 0f && raw.hsDb == 0f &&
             raw.xtcMode == PvbSettings.XTC_OFF && !raw.vbVolLink && !raw.dynOn, "step 1 plays the speaker alone (no layer, flat, high-pass 20 Hz)")
         val f = me.timschneeberger.rootlessjamesdsp.pvb.BassFitMapping.fromFloor(200.0)
-        val on = BassFitSettings.of(base, FitVariant(true, 7.0, f))
-        check(on.devOn && on.vbOn && on.vbLevelDb == 7f && on.devTableFloorHz == 200f && on.devOutLoHz == 200f &&
+        val on = BassFitSettings.of(base, FitVariant(true, -9.0, f))
+        check(on.devOn && on.vbOn && on.fixedLevelDb == -9f && on.devTableFloorHz == 200f && on.devOutLoHz == 200f &&
             on.devBoundaryHz == 255f && on.hpHz == 135f && on.lowDb == 2f && !on.vbVolLink,
             "a clip with a found floor: table floor 200, out low 200, edge 255, HP 135, strength as asked, EQ kept")
-        val off = BassFitSettings.of(base, FitVariant(false, 7.0, f))
-        check(!off.vbOn && off.devTableFloorHz == 200f, "layer off: same band, no layer")
+        val off = BassFitSettings.of(base, FitVariant(false, -9.0, f))
+        check(off == on.copy(listenWithoutLayer = true), "layer off: same band, no layer")
         check(BassFitSettings.of(base, FitVariant(true, 4.0)).let { it.hpHz == 120f && it.devBoundaryHz == DevParams.BOUNDARY.default },
             "no floor: stored band values")
     }

@@ -3,7 +3,7 @@
 #include <cmath>
 
 namespace pvb { namespace oscillator52 {
-// Research P2-O. A control point describes the END of this16/3000s interval.
+// A control point describes the END of this 16/3000 s interval.
 // It is available before its first sample is consumed: production centre=i+16.
 // Each sample is emitted once, without overlapping independently phased grains.
 // Amplitudes are nonnegative linear ramps. Frequency is linear; phase is its
